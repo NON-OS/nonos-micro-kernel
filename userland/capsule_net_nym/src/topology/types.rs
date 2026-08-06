@@ -18,8 +18,13 @@ pub const DIR_MAGIC: [u8; 4] = *b"NYMD";
 pub const DIR_VERSION: u8 = 1;
 pub const DIR_HEADER_LEN: usize = 128;
 pub const NODE_CAP: usize = 128;
-pub const NODE_WIRE_LEN: usize = 74;
-pub const ROUTE_HOPS: usize = 5;
+/// A node record on the wire. Carries both ports a node answers on: the mix
+/// port a packet is routed to, and the websocket port a client dials.
+pub const NODE_WIRE_LEN: usize = 76;
+/// Hops a header holds a layer for: one per mix layer, then the gateway the
+/// packet leaves by. Five nodes carry a packet, but our own entry gateway is
+/// handed it directly and only forwards it, so it is not one of these.
+pub const ROUTE_HOPS: usize = 4;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Role {
@@ -34,7 +39,13 @@ pub struct Node {
     pub layer: u8,
     pub delay_ms: u16,
     pub ip: [u8; 4],
+    /// Where a packet is routed to. This is the address a header names, so
+    /// it is the mix port even for a gateway.
     pub port: u16,
+    /// Where a client dials to hold a session. Gateways answer on a
+    /// different port from the one they take packets on, so a route address
+    /// cannot double as one.
+    pub ws_port: u16,
     pub identity: [u8; 32],
     pub packet_key: [u8; 32],
 }

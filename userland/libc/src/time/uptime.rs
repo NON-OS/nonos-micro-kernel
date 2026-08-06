@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_UPTIME_MS};
+use crate::syscall::{call_raw, N_MK_TIME_MONOTONIC};
 
 /// Monotonic milliseconds since boot. Never moves backwards and is available
 /// before the wall clock is set, so it is the source for bounded timeouts.
 pub extern "C" fn mk_uptime_ms() -> i64 {
-    call_raw(N_MK_UPTIME_MS, [0; 6])
+    call_raw(N_MK_TIME_MONOTONIC, [0; 6])
 }

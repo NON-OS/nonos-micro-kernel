@@ -19,4 +19,7 @@ pub(in crate::userspace::init::spawn_plan) fn spawn() {
     super::spawn_legacy_stack::spawn_legacy_stack();
     super::spawn_nym::spawn_nym();
     super::spawn_sockets::spawn_sockets();
+    // After net.nym: the SOCKS front end resolves it at startup and would
+    // otherwise spin waiting for a service that has not registered yet.
+    super::spawn_socks5::spawn_socks5();
 }

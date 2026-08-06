@@ -17,6 +17,9 @@
 use super::constants::{OP_SOCKET, SOCKETS_MAGIC, SOCKET_FAMILY_IP4, SOCKET_KIND_STREAM};
 
 pub fn socket_open(sockets_port: u32) -> Result<u32, ()> {
+    if super::mixnet::is_on() {
+        return super::mixnet::open();
+    }
     let mut body = [0u8; 4];
     let mut rx = [0u8; 32];
     body[0..2].copy_from_slice(&SOCKET_FAMILY_IP4.to_le_bytes());

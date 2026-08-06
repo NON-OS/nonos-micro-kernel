@@ -14,18 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::establish::establish;
 use super::ws;
-use crate::protocol::E_GATEWAY_PROTO;
 use crate::state::{Gateway, Transport};
 use crate::tcp_client;
 
 pub fn connect(tcp_port: u32, mut gateway: Gateway) -> Result<Gateway, u16> {
     let stream = tcp_client::connect(tcp_port, gateway.ip, gateway.port)?;
     gateway.stream = stream;
-    if gateway.transport == Transport::WebSocket {
-        ws::handshake(tcp_port, gateway).map_err(|_| E_GATEWAY_PROTO)?;
+    match establish(tcp_port, &mut gateway) {
+        Ok(()) => Ok(gateway),
+        Err(e) => {
+            // A candidate that fails partway leaves the socket open. Closing
+            // it here is what keeps a run down the bootstrap list from
+            // stranding one connection per gateway it tried.
+            let _ = tcp_client::close(tcp_port, stream);
+            Err(e)
+        }
     }
-    Ok(gateway)
 }
 
 pub fn send(tcp_port: u32, gateway: Gateway, payload: &[u8]) -> Result<(), u16> {
@@ -35,10 +41,18 @@ pub fn send(tcp_port: u32, gateway: Gateway, payload: &[u8]) -> Result<(), u16> 
     }
 }
 
-pub fn recv(tcp_port: u32, gateway: Gateway, out: &mut [u8]) -> Result<usize, u16> {
+pub fn recv(
+    tcp_port: u32,
+    gateway: Gateway,
+    out: &mut [u8],
+    wait_ms: i64,
+) -> Result<ws::Frame, u16> {
     match gateway.transport {
-        Transport::RawTcp => tcp_client::recv(tcp_port, gateway.stream, out),
-        Transport::WebSocket => ws::recv_binary(tcp_port, gateway.stream, out),
+        // A raw link carries the same blobs with no framing of its own, so
+        // everything on it is binary by construction.
+        Transport::RawTcp => tcp_client::recv(tcp_port, gateway.stream, out)
+            .map(|len| ws::Frame { len, text: false }),
+        Transport::WebSocket => ws::recv_binary(tcp_port, gateway.stream, out, wait_ms),
     }
 }
 
@@ -54,4 +68,12 @@ pub fn close(tcp_port: u32, gateway: Gateway) -> Result<(), u16> {
         return Err(e);
     }
     Ok(())
+}
+
+/// Ping the gateway so an idle link is not closed under us.
+pub fn ping(tcp_port: u32, gateway: Gateway) -> Result<(), u16> {
+    match gateway.transport {
+        Transport::RawTcp => Ok(()),
+        Transport::WebSocket => ws::send_ping(tcp_port, gateway.stream),
+    }
 }

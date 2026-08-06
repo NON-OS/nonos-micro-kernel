@@ -36,6 +36,10 @@ pub fn next(buf: &[u8], out: &mut [u8], ctrl: &mut [u8; 125]) -> Result<Option<F
     }
     let consumed = start + len;
     match opcode {
+        // Nym's control frames are text and its mix packets binary; both carry
+        // a payload identically, so only the reported kind differs.
+        1 => read::copy_payload(buf, out, masked, len, off)
+            .map(|n| Some(frame(FrameKind::Text, n, consumed))),
         2 => read::copy_payload(buf, out, masked, len, off)
             .map(|n| Some(frame(FrameKind::Binary, n, consumed))),
         8 => Ok(Some(frame(FrameKind::Close, len, consumed))),

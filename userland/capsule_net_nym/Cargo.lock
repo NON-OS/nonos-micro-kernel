@@ -24,8 +24,16 @@ dependencies = [
 name = "nonos_capsule_net_nym"
 version = "0.2.0"
 dependencies = [
+ "nonos_tls",
  "nonos_userland_libc",
  "spin",
+]
+
+[[package]]
+name = "nonos_tls"
+version = "0.1.0"
+dependencies = [
+ "nonos_userland_libc",
 ]
 
 [[package]]

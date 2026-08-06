@@ -15,10 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::clock;
+use super::directory::{DirectoryMeta, ParsedDirectory, Provenance};
 use super::layout;
 use super::node;
 use super::store;
-use super::directory::{DirectoryMeta, ParsedDirectory};
 use super::types::{TopologyError, DIR_HEADER_LEN, DIR_MAGIC, DIR_VERSION, NODE_WIRE_LEN};
 use super::verify;
 
@@ -68,5 +68,6 @@ fn meta(body: &[u8]) -> DirectoryMeta {
         not_before_ms: layout::u64_at(body, 16),
         not_after_ms: layout::u64_at(body, 24),
         issuer,
+        provenance: Provenance::Signed,
     }
 }

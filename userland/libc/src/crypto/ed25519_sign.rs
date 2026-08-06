@@ -24,6 +24,9 @@ use crate::syscall::{call_raw, N_CRYPTO_ED25519_SIGN};
 /// Sign `message` with the 32-byte `seed`, writing a 64-byte signature to
 /// `out`. Returns 64 on success, negative errno otherwise. Deterministic: the
 /// same seed and message always produce the same signature.
+///
+/// Argument order differs from `crypto_ed25519_verify`, which takes the public
+/// key and the signature first.
 #[no_mangle]
 pub extern "C" fn crypto_ed25519_sign(
     seed: *const u8,

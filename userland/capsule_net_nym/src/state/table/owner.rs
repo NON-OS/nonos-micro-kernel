@@ -26,10 +26,6 @@ impl Table {
     }
 
     pub fn ids_for_owner(&self, owner: u32) -> Vec<u32> {
-        self.sessions
-            .iter()
-            .filter(|s| s.owner == owner)
-            .map(|s| s.id)
-            .collect()
+        self.sessions.iter().filter(|s| s.owner == owner).map(|s| s.id).collect()
     }
 }

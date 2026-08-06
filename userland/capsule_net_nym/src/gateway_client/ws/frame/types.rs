@@ -17,6 +17,7 @@
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum FrameKind {
     Binary,
+    Text,
     Close,
     Ping,
     Pong,

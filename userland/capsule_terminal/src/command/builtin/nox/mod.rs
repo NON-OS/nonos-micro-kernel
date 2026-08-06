@@ -42,6 +42,7 @@ mod mk;
 mod motd;
 mod mv;
 mod nslookup;
+mod nym;
 mod pathname;
 mod ping;
 mod pull;

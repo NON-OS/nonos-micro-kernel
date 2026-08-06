@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod number;
-mod parse;
+pub(super) mod parse;
 mod read;
 mod request;
 
@@ -26,6 +26,10 @@ use crate::tcp_client;
 
 pub fn fetch(tcp_port: u32, source: &DirectorySource) -> Result<Vec<u8>, u16> {
     let stream = tcp_client::connect(tcp_port, source.ip, source.port)?;
+    // connect returns as soon as the SYN is queued, so a write issued
+    // straight after it races the handshake and net.tcp refuses it while the
+    // socket is still opening. Every node asked this way looked dead.
+    tcp_client::wait_established(tcp_port, stream)?;
     let req = request::build(source);
     let sent = tcp_client::send_all(tcp_port, stream, &req);
     let read = sent.and_then(|()| read::response(tcp_port, stream));

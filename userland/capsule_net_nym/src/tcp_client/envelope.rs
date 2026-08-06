@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec;
+
+use super::errno::{E_CALL, E_ERRNO, E_LEN, E_MAGIC, E_OP, E_SHORT};
 use nonos_libc::mk_ipc_call;
 
 pub const HDR: usize = 20;
@@ -27,7 +29,7 @@ pub fn call(port: u32, op: u16, body: &[u8], out: &mut [u8]) -> Result<usize, u1
     let mut resp = vec![0u8; HDR + out.len()];
     let n = mk_ipc_call(port as u64, req.as_ptr(), req.len(), resp.as_mut_ptr(), resp.len());
     if n < 0 {
-        return Err(8);
+        return Err(E_CALL);
     }
     parse(op, &resp[..n as usize], out)
 }
@@ -41,15 +43,26 @@ fn write(out: &mut [u8], op: u16, len: u32) {
     out[16..20].copy_from_slice(&len.to_le_bytes());
 }
 
+/// Each rejection reports its own reason, so a log line says what was wrong
+/// with the answer rather than only that there was something.
 fn parse(op: u16, resp: &[u8], out: &mut [u8]) -> Result<usize, u16> {
-    if resp.len() < HDR || le32(resp, 0) != MAGIC {
-        return Err(4);
+    if resp.len() < HDR {
+        return Err(E_SHORT);
+    }
+    if le32(resp, 0) != MAGIC {
+        return Err(E_MAGIC);
     }
     let got_op = u16::from_le_bytes([resp[6], resp[7]]);
     let errno = u16::from_le_bytes([resp[8], resp[9]]);
     let len = le32(resp, 16) as usize;
-    if got_op != op || errno != 0 || HDR + len > resp.len() || len > out.len() {
-        return Err(errno.max(4));
+    if got_op != op {
+        return Err(E_OP);
+    }
+    if errno != 0 {
+        return Err(E_ERRNO + errno);
+    }
+    if HDR + len > resp.len() || len > out.len() {
+        return Err(E_LEN);
     }
     out[..len].copy_from_slice(&resp[HDR..HDR + len]);
     Ok(len)

@@ -57,6 +57,7 @@ pub mod capsule_net_l2;
 #[cfg(feature = "nonos-capsule-net-ntp")]
 pub mod capsule_net_ntp;
 pub mod capsule_net_nym;
+pub mod capsule_socks5;
 pub mod capsule_net_sockets;
 pub mod capsule_net_tcp;
 pub mod capsule_net_udp;

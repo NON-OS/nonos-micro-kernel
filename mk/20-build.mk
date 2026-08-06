@@ -466,6 +466,7 @@ include userland/capsule_net_dns/Capsule.mk
 include userland/capsule_net_ntp/Capsule.mk
 include userland/capsule_net_sockets/Capsule.mk
 include userland/capsule_net_nym/Capsule.mk
+include userland/capsule_socks5/Capsule.mk
 include userland/capsule_wallpaper/Capsule.mk
 include userland/capsule_attest/Capsule.mk
 include userland/capsule_power/Capsule.mk

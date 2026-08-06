@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{blocks, mask};
 use super::types::{EPK_LEN, HOP_BYTES, PREFIX_LEN, ROUTE_HEADER_LEN};
+use super::{blocks, mask};
 use crate::crypto::{fill_random, x25519_public};
 use crate::packet::PacketError;
 use crate::topology::{Node, ROUTE_HOPS};

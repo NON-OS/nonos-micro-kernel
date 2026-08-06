@@ -19,6 +19,9 @@ use alloc::vec::Vec;
 use super::constants::{OP_SEND, SOCKETS_MAGIC};
 
 pub fn socket_send(sockets_port: u32, handle: u32, payload: &[u8]) -> Result<(), ()> {
+    if super::mixnet::is_on() {
+        return super::mixnet::send(payload);
+    }
     let mut body = Vec::with_capacity(payload.len() + 4);
     let mut rx = [0u8; 20];
     body.extend_from_slice(&handle.to_le_bytes());

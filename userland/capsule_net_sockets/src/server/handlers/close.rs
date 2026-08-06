@@ -17,6 +17,7 @@
 use crate::clients::{nym, tcp, udp};
 use crate::protocol::{E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_CLOSE};
 use crate::server::handlers::io::u32_at;
+use crate::server::handlers::mixnet_residual;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::sockets::{Kind, SocketKey, SOCKETS};
@@ -44,6 +45,9 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
         }
     }
     if sock.kind == Kind::Mixnet && sock.transport_handle != 0 {
+        // Drop anything still held for this socket first, so a later socket
+        // handed the same handle does not read bytes meant for this one.
+        mixnet_residual::release(key);
         if nym::close(state::nym(), sock.transport_handle).is_err() {
             return status(pid, req, E_NO_TRANSPORT, tx);
         }

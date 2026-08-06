@@ -29,11 +29,8 @@ pub fn encode(input: &[u8], out: &mut [u8]) -> Option<usize> {
         let b2 = if i + 2 < input.len() { input[i + 2] } else { 0 };
         out[j] = TABLE[(b0 >> 2) as usize];
         out[j + 1] = TABLE[(((b0 & 3) << 4) | (b1 >> 4)) as usize];
-        out[j + 2] = if i + 1 < input.len() {
-            TABLE[(((b1 & 15) << 2) | (b2 >> 6)) as usize]
-        } else {
-            b'='
-        };
+        out[j + 2] =
+            if i + 1 < input.len() { TABLE[(((b1 & 15) << 2) | (b2 >> 6)) as usize] } else { b'=' };
         out[j + 3] = if i + 2 < input.len() { TABLE[(b2 & 63) as usize] } else { b'=' };
         i += 3;
         j += 4;

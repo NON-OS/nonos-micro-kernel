@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub(crate) mod admissible;
+mod builtin;
+mod by_identity;
 mod clock;
 mod directory;
+mod fetched;
 mod layout;
 mod node;
 mod parse;
@@ -25,9 +29,12 @@ mod store;
 mod types;
 mod verify;
 
+pub use builtin::install as install_builtin;
+pub use by_identity::node_by_identity;
+pub use directory::DirectoryMeta;
+pub use fetched::install_fetched;
 pub use parse::install;
 pub use select::route;
 pub use status::current as status;
-pub use directory::DirectoryMeta;
-pub use store::meta;
-pub use types::{Node, Role, TopologyError, TopologyStatus, ROUTE_HOPS};
+pub use store::{meta, snapshot};
+pub use types::{Node, Role, TopologyError, TopologyStatus, NODE_CAP, ROUTE_HOPS};

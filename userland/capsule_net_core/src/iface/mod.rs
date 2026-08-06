@@ -16,4 +16,5 @@
 
 pub mod build;
 pub mod dhcp;
+pub mod icmp_socket;
 pub mod poll;
