@@ -21,6 +21,7 @@ pub mod attest;
 pub mod battery;
 pub mod broker;
 pub mod capsule_load;
+pub mod capsule_verify;
 pub mod crypto;
 pub mod debug;
 pub mod graphics;
@@ -55,6 +56,7 @@ pub use broker::{
     MK_PCI_MSIX_CTRL_ENABLE, MK_PCI_MSIX_CTRL_FUNCTION_MASK,
 };
 pub use capsule_load::{mk_capsule_load, CapsuleLoadRequest};
+pub use capsule_verify::{mk_capsule_verify, CapsuleVerifyRequest, CapsuleVerifySummary};
 pub use spawn_instance::mk_spawn_instance;
 pub use store_write::mk_store_write;
 pub use tool_run::mk_tool_run;
