@@ -16,6 +16,8 @@
 
 #![no_std]
 
+mod parse;
 mod types;
 
+pub use parse::parse;
 pub use types::{PkgErr, Sections, MAGIC};
