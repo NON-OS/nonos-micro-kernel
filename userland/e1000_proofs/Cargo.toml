@@ -7,7 +7,7 @@
 # without a boot.
 [package]
 name = "e1000_proofs"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

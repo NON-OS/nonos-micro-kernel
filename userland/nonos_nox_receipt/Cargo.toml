@@ -1,6 +1,6 @@
 [package]
 name = "nonos_nox_receipt"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Verify a NOX ERC20 payment from its transaction receipt, no_std"
 license = "AGPL-3.0"

@@ -1,6 +1,6 @@
 [package]
 name = "nonos_nox_license"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "NOX pay-per-use entitlements for NONOS tool capsules, no_std"
 license = "AGPL-3.0"

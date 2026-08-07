@@ -1,6 +1,6 @@
 [package]
 name = "nonos_git"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Git object model, hashing and object store for the NONOS terminal, no_std"
 license = "AGPL-3.0"

@@ -25,7 +25,7 @@
 
 [package]
 name        = "nonos_kernel"
-version     = "0.9.0"
+version     = "0.9.1"
 edition     = "2021"
 publish     = false
 license     = "AGPL-3.0"
@@ -539,7 +539,6 @@ microkernel-desktop-base = [
   "nonos-capsule-wm",
   "nonos-capsule-desktop-shell",
   "nonos-capsule-image-codec",
-  "nonos-capsule-image-viewer",
   "nonos-capsule-clipboard",
   "nonos-capsule-attest",
   "nonos-capsule-login",
@@ -547,14 +546,11 @@ microkernel-desktop-base = [
   "nonos-capsule-wallpaper-catalog",
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
-  "nonos-capsule-audio-player",
   "nonos-capsule-audio",
   "nonos-capsule-driver-hda",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
-  "nonos-capsule-clock",
   "nonos-capsule-browser",
-  "nonos-capsule-snake",
   "nonos-capsule-wallet-nonos",
   "nonos-capsule-terminal",
   "nonos-capsule-file-manager",
@@ -887,7 +883,7 @@ perf        = "warn"
 # src/capabilities/types.rs.
 [package.metadata.nonos]
 zerostate = true
-version   = "0.9.0"
+version   = "0.9.1"
 abi       = "Mk-v0"
 
 [package.metadata.nonos.vm]

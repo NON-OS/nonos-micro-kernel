@@ -1,6 +1,6 @@
 [package]
 name = "nonos_http"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "HTTP/1.1 client framing and response parsing for NONOS, no_std"
 license = "AGPL-3.0"
