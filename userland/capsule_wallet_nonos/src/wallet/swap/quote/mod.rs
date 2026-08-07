@@ -16,8 +16,16 @@
 
 //! What a trade would do.
 
+mod amount_out;
+mod build;
+mod impact;
 mod limits;
 mod reading;
+mod reserves;
 
+pub use amount_out::{amount_out, BPS};
+pub use build::quote;
+pub use impact::impact_bps;
 pub use limits::{apply_slippage, is_dangerous, is_warning};
 pub use reading::Quote;
+pub use reserves::Reserves;

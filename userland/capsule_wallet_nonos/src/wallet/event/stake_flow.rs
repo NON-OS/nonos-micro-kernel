@@ -16,46 +16,27 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::wallet::ipc::{sign_stake, sign_stake_approve};
 use crate::wallet::state::{record_tx, State};
 use crate::wallet::tx_hash::tx_hash;
-
-const WEI_PER_NOX: u128 = 1_000_000_000_000_000_000;
 
 // The full staking lifecycle in one button. Step 0 signs and broadcasts
 // approve(stakingProxy, amount); once it lands the button advances to step 1,
 // which signs and broadcasts stake(amount). Real amount, live nonce, live fee.
 // Both transactions are ownership-gated signatures from the keyring.
 pub fn stake_flow(state: &mut State) -> EventOutcome {
-    if state.wallet_id == 0 {
-        state.status = b"generate or import a wallet first";
+    if let Some(why) = super::stake_guard::refusal(state) {
+        state.status = why;
         return EventOutcome::Repaint;
     }
-    let amount = state.stake_amount as u128 * WEI_PER_NOX;
-    if amount == 0 {
-        state.status = b"choose an amount to stake";
-        return EventOutcome::Repaint;
+    // Unstaking closes a position rather than moving an amount, so it needs
+    // neither the approve step nor a figure: the position index is what the
+    // contract is given.
+    if state.stake_unstake == 1 {
+        return super::unstake_flow::unstake_flow(state);
     }
+    let amount = super::stake_wei::stake_wei(state);
     let step = state.stake_step;
-    let raw = if step == 0 {
-        sign_stake_approve(
-            state.keyring_port,
-            state.owner_pid,
-            state.wallet_id,
-            state.live_nonce,
-            amount,
-            state.fee_wei,
-        )
-    } else {
-        sign_stake(
-            state.keyring_port,
-            state.owner_pid,
-            state.wallet_id,
-            state.live_nonce,
-            amount,
-            state.fee_wei,
-        )
-    };
+    let raw = super::stake_sign::sign_next(state, amount);
     let Ok(raw) = raw else {
         state.status = b"stake sign failed";
         return EventOutcome::Repaint;

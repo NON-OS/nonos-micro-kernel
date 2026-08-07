@@ -45,13 +45,33 @@ pub fn paint_network_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
     row(fb, x, w, y + 160, "Transfer gas", "21000", "fixed");
 }
 
+// A label on the left, its value on the right, and a tag after it.
+//
+// Everything is measured and nothing is assumed. The value used to be placed
+// at a fixed inset that reserved room for the tag, so on a narrow card the
+// label and the value ran into each other and read as one word: Chain and
+// Ethereum mainnet became ChainEthereum mainnet. When the room is not there
+// the tag is dropped first, since it is the least of the three, and the value
+// is dropped before it is allowed to overlap.
 fn row(fb: &mut PaintBuffer, x: u32, w: u32, y: u32, label: &str, val: &str, t: &str) {
-    fb.fill_rect(x + 20, y + 30, w - 40, 1, LINE());
+    fb.fill_rect(x + 20, y + 30, w.saturating_sub(40), 1, LINE());
     let _ = fb.text_ttf((x + 20) as i32, (y + 6) as i32, label, MUTED(), 16.1);
+    let lw = fb.measure_ttf(label, 16.1).max(0) as u32;
+    let floor = x + 20 + lw + 12;
     let vw = fb.measure_ttf(val, 16.1).max(0) as u32;
-    let _ = fb.text_ttf((x + w - 96 - vw) as i32, (y + 6) as i32, val, FG(), 16.1);
     let tw = fb.measure_ttf(t, 14.9).max(0) as u32;
-    let _ = fb.text_ttf((x + w - 20 - tw) as i32, (y + 7) as i32, t, GREEN(), 14.9);
+    let right = x + w.saturating_sub(20);
+    // With the tag: value, gap, tag, all inside the card.
+    if right.saturating_sub(tw + 12 + vw) >= floor {
+        let _ = fb.text_ttf(right.saturating_sub(tw) as i32, (y + 7) as i32, t, GREEN(), 14.9);
+        let _ =
+            fb.text_ttf(right.saturating_sub(tw + 12 + vw) as i32, (y + 6) as i32, val, FG(), 16.1);
+        return;
+    }
+    // Without it, if the value alone still fits.
+    if right.saturating_sub(vw) >= floor {
+        let _ = fb.text_ttf(right.saturating_sub(vw) as i32, (y + 6) as i32, val, FG(), 16.1);
+    }
 }
 
 // wei-per-gas to "N.NN gwei" with two decimals.

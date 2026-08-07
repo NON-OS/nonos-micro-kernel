@@ -34,10 +34,7 @@ fn calldata_matches_cast() {
     ];
     let cd = calldata_addr(&SEL_BALANCE_OF, &vitalik);
     let hex: String = cd.iter().map(|b| format!("{b:02x}")).collect();
-    assert_eq!(
-        hex,
-        "70a08231000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045"
-    );
+    assert_eq!(hex, "70a08231000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045");
 }
 
 /// Live mainnet: emission 8.878e17, total staked 2.170e26 -> 1290 bps (12.90%).

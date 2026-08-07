@@ -28,7 +28,7 @@ use crate::wallet::state::State;
 /// screen. A figure that belongs to the previous amount is worse than no
 /// figure at all, because it looks like an answer to the question just
 /// asked.
-pub fn swap_input(state: &mut State, code: u32) -> EventOutcome {
+pub fn swap_input(state: &mut State, code: u32) -> Option<EventOutcome> {
     let handled = match code {
         c if (b'0' as u32..=b'9' as u32).contains(&c) => digit(state, (c - b'0' as u32) as u8),
         c if c == b'.' as u32 => point(state),
@@ -41,8 +41,8 @@ pub fn swap_input(state: &mut State, code: u32) -> EventOutcome {
         _ => false,
     };
     if handled {
-        EventOutcome::Repaint
+        Some(EventOutcome::Repaint)
     } else {
-        EventOutcome::Idle
+        None
     }
 }

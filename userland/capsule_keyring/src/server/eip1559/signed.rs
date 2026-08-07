@@ -20,7 +20,7 @@ use alloc::vec::Vec;
 use super::super::rlp::{rlp_list, rlp_uint_be};
 use super::fields::{
     eth_transfer_fields, nox_approve_fields, nox_stake_approve_fields, nox_stake_fields,
-    nox_transfer_fields,
+    nox_stake_locked_fields, nox_transfer_fields, nox_unstake_fields,
 };
 
 pub fn signed_nox_transfer_tx(
@@ -45,6 +45,36 @@ pub fn signed_nox_stake_approve_tx(
     s: &[u8; 32],
 ) -> Vec<u8> {
     let mut f = nox_stake_approve_fields(parts.0, parts.1, parts.2, parts.3, parts.4);
+    f.push(rlp_uint_be(&[y_parity]));
+    f.push(rlp_uint_be(r));
+    f.push(rlp_uint_be(s));
+    let mut out = vec![0x02u8];
+    out.extend_from_slice(&rlp_list(&f));
+    out
+}
+
+pub fn signed_nox_stake_locked_tx(
+    parts: (&[u8; 32], &[u8; 32], &[u8; 32], &[u8; 32], &[u8; 32], &[u8; 32]),
+    y_parity: u8,
+    r: &[u8; 32],
+    s: &[u8; 32],
+) -> Vec<u8> {
+    let mut f = nox_stake_locked_fields(parts.0, parts.1, parts.2, parts.3, parts.4, parts.5);
+    f.push(rlp_uint_be(&[y_parity]));
+    f.push(rlp_uint_be(r));
+    f.push(rlp_uint_be(s));
+    let mut out = vec![0x02u8];
+    out.extend_from_slice(&rlp_list(&f));
+    out
+}
+
+pub fn signed_nox_unstake_tx(
+    parts: (&[u8; 32], &[u8; 32], &[u8; 32], &[u8; 32], &[u8; 32]),
+    y_parity: u8,
+    r: &[u8; 32],
+    s: &[u8; 32],
+) -> Vec<u8> {
+    let mut f = nox_unstake_fields(parts.0, parts.1, parts.2, parts.3, parts.4);
     f.push(rlp_uint_be(&[y_parity]));
     f.push(rlp_uint_be(r));
     f.push(rlp_uint_be(s));

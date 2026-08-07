@@ -21,7 +21,9 @@ mod scale;
 mod text;
 mod token;
 
-pub use quote::{apply_slippage, is_dangerous, is_warning, Quote};
+pub use quote::{
+    amount_out, apply_slippage, impact_bps, is_dangerous, is_warning, quote, Quote, Reserves, BPS,
+};
 pub use scale::scaled;
 pub use text::{
     amount_text, bps_text, gas_text, min_out_text, rate_text, route_text, slippage_text,

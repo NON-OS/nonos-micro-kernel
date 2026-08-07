@@ -80,7 +80,12 @@ pub fn new_state() -> State {
         panel: 0,
         locked: false,
         account: 0,
-        stake_amount: 4000,
+        stake_amount: 0,
+        stake_digits: 0,
+        stake_places: 0,
+        stake_point: false,
+        stake_position: 0,
+        stake_lock: 0,
         stake_step: 0,
         send_token: 0,
         import_active: false,
@@ -97,6 +102,7 @@ pub fn new_state() -> State {
         nox: crate::wallet::nox::NoxStatus::empty(),
         probe_step: 0,
         view_w: 1280,
+        view_h: 0,
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }

@@ -64,7 +64,8 @@ pub fn backspace(state: &mut State) -> bool {
     true
 }
 
-/// A quote belongs to the amount it was fetched for.
+/// A quote belongs to the amount it was fetched for, so a changed amount
+/// re-reads the pool rather than keeping the old figure.
 fn clear_quote(state: &mut State) {
-    state.swap_quote = crate::wallet::swap::Quote::default();
+    crate::wallet::event::swap_quote::refresh(state);
 }

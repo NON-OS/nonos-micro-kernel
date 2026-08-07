@@ -34,6 +34,15 @@ pub const STAKING_PROXY: [u8; 20] = [
 ];
 pub const STAKE_SELECTOR: [u8; 4] = [0xa6, 0x94, 0xfc, 0x3a];
 
+// unstakePosition(uint256) on the staking proxy. The contract closes a whole
+// position by its index; there is no call that withdraws an amount.
+pub const UNSTAKE_POSITION_SELECTOR: [u8; 4] = [0x4a, 0x23, 0x5e, 0xb6];
+
+// stakeLocked(amount, lockPeriod): the same stake, committed for a term that
+// weights it more heavily. The term is seconds, and only the five the
+// contract names are accepted.
+pub const STAKE_LOCKED_SELECTOR: [u8; 4] = [0x17, 0xb1, 0x8c, 0x89];
+
 // ERC-20 transfer(address,uint256) selector, for sending NOX.
 pub const TRANSFER_SELECTOR: [u8; 4] = [0xa9, 0x05, 0x9c, 0xbb];
 

@@ -59,7 +59,9 @@ fn next(from: u8, avoid: u8) -> u8 {
     i
 }
 
+/// A new pair is a new trade: re-read the pool, and ask for the allowance
+/// again since it was granted against the token that just changed.
 fn clear_quote(state: &mut State) {
-    state.swap_quote = crate::wallet::swap::Quote::default();
+    crate::wallet::event::swap_quote::refresh(state);
     state.swap_step = 0;
 }

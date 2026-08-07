@@ -20,9 +20,9 @@ use super::handlers;
 use crate::protocol::{
     encode_response, Request, EINVAL, OP_COUNT, OP_DELETE, OP_LIST_WALLET_RAILS, OP_LOCK,
     OP_METADATA, OP_RETRIEVE, OP_SIGN_ETH_TRANSFER, OP_SIGN_NOX_APPROVE, OP_SIGN_NOX_RECEIPT,
-    OP_SIGN_NOX_STAKE, OP_SIGN_NOX_STAKE_APPROVE, OP_SIGN_NOX_TRANSFER, OP_STORE, OP_UNLOCK,
-    OP_WALLET_ADDRESS, OP_WALLET_EXPORT, OP_WALLET_GENERATE, OP_WALLET_GENERATE_HD,
-    OP_WALLET_IMPORT, OP_WALLET_RECOVER,
+    OP_SIGN_NOX_STAKE, OP_SIGN_NOX_STAKE_APPROVE, OP_SIGN_NOX_STAKE_LOCKED, OP_SIGN_NOX_TRANSFER,
+    OP_SIGN_NOX_UNSTAKE, OP_STORE, OP_UNLOCK, OP_WALLET_ADDRESS, OP_WALLET_EXPORT,
+    OP_WALLET_GENERATE, OP_WALLET_GENERATE_HD, OP_WALLET_IMPORT, OP_WALLET_RECOVER,
 };
 use crate::store::Store;
 
@@ -45,6 +45,8 @@ pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8>
         OP_SIGN_NOX_APPROVE => handlers::sign_approve(store, req, sender_pid),
         OP_SIGN_NOX_STAKE_APPROVE => handlers::sign_stake_approve(store, req, sender_pid),
         OP_SIGN_NOX_STAKE => handlers::sign_stake(store, req, sender_pid),
+        OP_SIGN_NOX_UNSTAKE => handlers::sign_unstake(store, req, sender_pid),
+        OP_SIGN_NOX_STAKE_LOCKED => handlers::sign_stake_locked(store, req, sender_pid),
         OP_SIGN_NOX_TRANSFER => handlers::sign_nox_transfer(store, req, sender_pid),
         OP_SIGN_ETH_TRANSFER => handlers::sign_eth_transfer(store, req, sender_pid),
         OP_LIST_WALLET_RAILS => handlers::list_wallet_rails(req),

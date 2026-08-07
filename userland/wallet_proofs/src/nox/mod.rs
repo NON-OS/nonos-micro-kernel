@@ -16,15 +16,18 @@
 
 //! The real NOX read helpers from capsule_wallet_nonos, included verbatim.
 
-#[path = "../../../capsule_wallet_nonos/src/wallet/nox/constants.rs"]
-pub mod constants;
-#[path = "../../../capsule_wallet_nonos/src/wallet/nox/calldata_addr.rs"]
-pub mod calldata_addr;
-#[path = "../../../capsule_wallet_nonos/src/wallet/nox/q32_to_u128.rs"]
-pub mod q32_to_u128;
 #[path = "../../../capsule_wallet_nonos/src/wallet/nox/apr_bps.rs"]
 pub mod apr_bps;
-#[path = "../../../capsule_wallet_nonos/src/wallet/nox/format_nox.rs"]
-pub mod format_nox;
+#[path = "../../../capsule_wallet_nonos/src/wallet/nox/calldata_addr.rs"]
+pub mod calldata_addr;
+#[path = "../../../capsule_wallet_nonos/src/wallet/nox/constants.rs"]
+pub mod constants;
 #[path = "../../../capsule_wallet_nonos/src/wallet/nox/format_apr.rs"]
 pub mod format_apr;
+#[path = "../../../capsule_wallet_nonos/src/wallet/nox/format_nox.rs"]
+pub mod format_nox;
+#[path = "../../../capsule_wallet_nonos/src/wallet/nox/q32_to_u128.rs"]
+pub mod q32_to_u128;
+#[allow(dead_code)]
+#[path = "../../../capsule_wallet_nonos/src/wallet/nox/stakeable.rs"]
+pub mod stakeable;

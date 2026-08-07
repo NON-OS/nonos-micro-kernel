@@ -119,8 +119,21 @@ pub struct State {
     pub panel: u8,
     pub locked: bool,
     pub account: u8,
-    // NOX stake amount in whole NOX, adjustable via the slider (0..MAX_STAKE).
-    pub stake_amount: u32,
+    // NOX to stake, in wei. Held at chain precision rather than whole tokens
+    // so any amount can be typed, fractions included, with no ceiling beyond
+    // what the wallet actually holds.
+    pub stake_amount: u128,
+    // Decimal entry for the amount above: digits typed, places after the
+    // point, and whether a point has been started.
+    pub stake_digits: u32,
+    pub stake_places: u32,
+    pub stake_point: bool,
+    // Which staked position the Unstake tab acts on. The contract closes a
+    // position by index, not by amount.
+    pub stake_position: u64,
+    // Chosen lock term, as an index into the contract lock table. Zero is no
+    // lock, which is what plain stake() does.
+    pub stake_lock: u8,
     // Two-step staking: 0 = needs the approve, 1 = ready to stake. Advances once
     // the approve broadcasts and resets after the stake.
     pub stake_step: u8,
@@ -154,6 +167,9 @@ pub struct State {
     // The framebuffer width recorded on the last paint, so pointer handlers can
     // hit-test the same width-relative layout the screens draw.
     pub view_w: u32,
+    // Framebuffer height recorded on the last paint, so the pointer handlers
+    // hit-test the same height-relative layout the screens draw.
+    pub view_h: u32,
     // Local shielded UTXO set, reconstructed from the note secrets.
     pub notes: crate::wallet::shield::notes::NoteStore,
 }
