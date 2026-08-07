@@ -62,7 +62,7 @@ mod resolve_min_max_h;
 mod shift_down;
 mod srcset;
 mod svg_serialize;
-mod table_columns;
+pub mod table_columns;
 mod text_transform;
 mod track_widths;
 mod tree;

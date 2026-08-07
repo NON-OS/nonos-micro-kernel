@@ -23,9 +23,5 @@ pub mod image;
 pub mod js;
 pub mod manifest;
 
-// table_columns is pure (no engine deps), so it is included directly.
-#[path = "../../../capsule_browser/src/browser/layout/boxmodel/table_columns.rs"]
-pub mod table_columns;
-
 #[path = "../../../capsule_browser/src/browser/http/chunked/mod.rs"]
 pub mod chunked;
