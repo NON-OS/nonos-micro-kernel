@@ -24,11 +24,13 @@ mod protocol;
 mod server;
 mod store;
 
-use nonos_libc::{mk_exit, heap_init};
+use nonos_libc::{heap_init_sized, mk_exit};
+
+const VFS_HEAP: usize = 48 * 1024 * 1024;
 
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
+    if heap_init_sized(VFS_HEAP).is_err() {
         mk_exit(1);
     }
     server::run();

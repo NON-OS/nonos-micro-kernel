@@ -17,7 +17,7 @@
 // One descriptor per packaged file: a NUL-padded absolute vfs path, then the
 // absolute byte extent of its payload on the device. Every extent is bounded
 // against the reported capacity and against a total allocation budget before
-// any of it is read, so a hostile table cannot exhaust the 16 MB capsule heap.
+// any of it is read, so a hostile table cannot exhaust the 48 MB capsule heap.
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -26,7 +26,7 @@ use super::store_header::{le_u64, ENTRY_LEN, HEADER_LEN};
 use super::wire::SECTOR_SIZE;
 
 const NAME_LEN: usize = 96;
-const MAX_TOTAL_BYTES: u64 = 8 * 1024 * 1024;
+const MAX_TOTAL_BYTES: u64 = 16 * 1024 * 1024;
 
 pub struct TocEntry {
     pub name: String,
