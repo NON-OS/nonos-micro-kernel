@@ -21,8 +21,10 @@ name = "installer"
 path = "src/main.rs"
 
 [dependencies]
+blake3 = { version = "1", default-features = false }
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
+nonos_pack_core = { package = "nonos-pack-core", path = "../../tools/nonos-pack/core" }
 
 [profile.release]
 panic = "abort"
