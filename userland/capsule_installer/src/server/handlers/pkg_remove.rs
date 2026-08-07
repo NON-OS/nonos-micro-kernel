@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use nonos_app_skeleton::clients::vfs::{stat, store_remove, unlink};
+use nonos_app_skeleton::clients::vfs::{stat, store_uninstall};
 use nonos_libc::mk_getpid;
 
 use super::load_by_name::valid_name;
@@ -48,10 +48,7 @@ pub fn pkg_remove(req: Request<'_>) -> Vec<u8> {
         return encode_response(req.seq, ENOENT, &[]);
     }
     for path in &present {
-        if unlink(pid, path).is_err() {
-            return encode_response(req.seq, EIO, &[]);
-        }
-        if store_remove(path).is_err() {
+        if store_uninstall(path).is_err() {
             return encode_response(req.seq, EIO, &[]);
         }
     }

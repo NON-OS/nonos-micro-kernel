@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use nonos_app_skeleton::clients::vfs::{persist, read_file, write_file};
+use nonos_app_skeleton::clients::vfs::{read_file, store_install};
 use nonos_libc::mk_getpid;
 
 use super::load_by_name::valid_name;
@@ -60,7 +60,7 @@ pub fn pkg_commit(req: Request<'_>) -> Vec<u8> {
     let blobs = [v.sections.elf, v.sections.manifest, v.sections.id_cert, v.sections.zk_trailer];
     for (ext, blob) in EXTS.iter().zip(blobs) {
         let path = artifact_path(name, ext);
-        if write_file(pid, &path, blob).is_err() || persist(pid, &path).is_err() {
+        if store_install(&path, blob).is_err() {
             return encode_response(req.seq, EIO, &[]);
         }
     }

@@ -17,6 +17,7 @@
 mod chmod;
 mod close;
 mod copy;
+mod install;
 mod lookup;
 mod mkdir;
 mod new;
