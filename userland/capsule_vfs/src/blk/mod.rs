@@ -19,6 +19,7 @@ mod digest;
 mod error;
 mod reply;
 mod request;
+pub(crate) mod status;
 mod store;
 mod store_header;
 mod store_toc;

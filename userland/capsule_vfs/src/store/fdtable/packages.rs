@@ -31,7 +31,10 @@ impl Store {
     pub(super) fn seed_packages(&mut self) {
         let staged = match crate::blk::load() {
             Ok(staged) => staged,
-            Err(_) => return,
+            Err(e) => {
+                crate::blk::status::record(&e);
+                return;
+            }
         };
         for entry in staged {
             self.stage(entry.name, entry.data);
