@@ -39,6 +39,7 @@ pub mod capsule_desktop_shell;
 pub mod capsule_driver_i2c_hid;
 pub mod capsule_driver_usb_hid;
 pub mod capsule_driver_usb_msc;
+pub mod capsule_flacprobe;
 pub mod capsule_file_manager;
 pub mod capsule_hello;
 pub mod capsule_image_codec;
