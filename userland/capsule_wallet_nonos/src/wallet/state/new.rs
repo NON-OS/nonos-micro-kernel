@@ -20,6 +20,16 @@ use super::{
 };
 pub fn new_state() -> State {
     State {
+        // NOX out, USDC in: the asset this wallet is for is the one a reader
+        // most often pays with.
+        swap_from: 0,
+        swap_to: 2,
+        swap_in: 0,
+        swap_quote: crate::wallet::swap::Quote::default(),
+        // Half a percent, which is where a pool with real depth sits. A
+        // tolerance set high enough to always succeed protects nobody.
+        swap_slippage_bps: 50,
+        swap_step: 0,
         keyring_port: 0,
         owner_pid: 0,
         wallet_id: 0,

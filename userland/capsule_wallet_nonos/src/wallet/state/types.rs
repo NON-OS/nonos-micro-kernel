@@ -30,6 +30,7 @@ pub const VIEW_SHIELD: u8 = 6;
 pub const VIEW_UNSHIELD: u8 = 7;
 pub const VIEW_SHIELDED: u8 = 8;
 pub const VIEW_NOX: u8 = 9;
+pub const VIEW_SWAP: u8 = 10;
 pub const SEND_FIELD_TO: u8 = 0;
 pub const SEND_FIELD_AMOUNT: u8 = 1;
 pub const SEND_FIELD_NONCE: u8 = 2;
@@ -46,6 +47,18 @@ pub struct Rail {
 }
 
 pub struct State {
+    /// Which token the trade pays out of, as an index into the token list.
+    pub swap_from: u8,
+    /// Which token the trade buys.
+    pub swap_to: u8,
+    /// Amount to pay, in the paying token's smallest unit.
+    pub swap_in: u128,
+    /// What the pool last said this trade returns.
+    pub swap_quote: crate::wallet::swap::Quote,
+    /// Slippage the reader will accept, in hundredths of a percent.
+    pub swap_slippage_bps: u32,
+    /// Zero while the router still needs an allowance, one once it has one.
+    pub swap_step: u8,
     pub keyring_port: u32,
     pub owner_pid: u32,
     pub wallet_id: u32,
