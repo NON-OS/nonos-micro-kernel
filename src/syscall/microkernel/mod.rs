@@ -18,6 +18,7 @@ pub mod attest;
 pub mod battery;
 pub mod capability;
 pub mod capsule_load;
+pub mod capsule_verify;
 pub mod debug;
 #[cfg(feature = "nonos-user-entry-proof")]
 pub mod debug_diag;
