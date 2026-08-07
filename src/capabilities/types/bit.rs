@@ -46,6 +46,7 @@ impl Capability {
             Self::SpawnBroker => 8388608,
             Self::SpawnWindow => 16777216,
             Self::ProcessControl => 33554432,
+            Self::StoreWrite => 67108864,
         }
     }
 }

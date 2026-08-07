@@ -83,6 +83,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
 
         SyscallNumber::MkDebug => caps.can_debug(),
         SyscallNumber::MkStdoutWrite => caps.can_ipc(),
+        SyscallNumber::MkStoreWrite => caps.can_store_write(),
 
         SyscallNumber::MkSurfaceRegister
         | SyscallNumber::MkSurfaceShare

@@ -17,7 +17,7 @@
 use super::Capability;
 
 impl Capability {
-    pub const fn all() -> [Capability; 26] {
+    pub const fn all() -> [Capability; 27] {
         [
             Self::CoreExec,
             Self::IO,
@@ -45,6 +45,7 @@ impl Capability {
             Self::SpawnBroker,
             Self::SpawnWindow,
             Self::ProcessControl,
+            Self::StoreWrite,
         ]
     }
 

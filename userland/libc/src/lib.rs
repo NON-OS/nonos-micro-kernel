@@ -34,6 +34,7 @@ pub mod proc_output;
 pub mod process;
 pub mod procstat;
 pub mod spawn_instance;
+pub mod store_write;
 pub mod tool_run;
 pub mod surface_registry;
 mod syscall;
@@ -55,6 +56,7 @@ pub use broker::{
 };
 pub use capsule_load::{mk_capsule_load, CapsuleLoadRequest};
 pub use spawn_instance::mk_spawn_instance;
+pub use store_write::mk_store_write;
 pub use tool_run::mk_tool_run;
 pub use crypto::{
     crypto_decrypt, crypto_decrypt_aad, crypto_ed25519_verify, crypto_encrypt,

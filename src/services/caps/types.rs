@@ -49,7 +49,11 @@ pub const CAP_SHELL: u64 = 1 << 13;
 pub const CAP_KERNEL: u64 = 1 << 14;
 pub const CAP_ENTROPY: u64 = 1 << 15;
 pub const CAP_KEYRING: u64 = 1 << 16;
-pub const CAP_STORAGE: u64 = 1 << 17;
+// CAP_STORAGE must equal the kernel StoreWrite bit, not an independent 1<<17
+// that no PCB ever carries. It gates the block surface for the runtime store
+// path (sys_store_write runs in the caller's context), so it has to match the
+// same authority vfs already holds to persist installed capsules.
+pub const CAP_STORAGE: u64 = crate::capabilities::Capability::StoreWrite.bit();
 pub const CAP_UDEV: u64 = 1 << 18;
 pub const CAP_WALLET: u64 = 1 << 19;
 pub const CAP_TLS: u64 = 1 << 20;

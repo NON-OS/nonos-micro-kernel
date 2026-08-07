@@ -55,6 +55,7 @@ pub const SYS_STDIN_READ: u64 = tag4(b"MSRD");
 // writes nothing to serial. Gated on the IPC capability so a capsule without
 // `Capability::Debug` still has a stdout.
 pub const SYS_STDOUT_WRITE: u64 = tag4(b"MSOW");
+pub const SYS_STORE_WRITE: u64 = tag4(b"MSWR");
 pub const SYS_ATTEST_STATUS: u64 = tag4(b"MAST");
 pub const SYS_CAP_GRANT: u64 = tag4(b"MCGT");
 pub const SYS_CAP_REVOKE: u64 = tag4(b"MCRV");

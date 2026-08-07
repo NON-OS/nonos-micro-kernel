@@ -48,7 +48,7 @@ pub fn spawn_vfs_capsule() -> Result<(), SpawnError> {
         manifest_bytes: VFS_MANIFEST_BYTES,
         attestation_trailer: VFS_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit() | Capability::Memory.bit(),
+        requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::StoreWrite.bit(),
         debug_tag: b"[VFS-DEBUG] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

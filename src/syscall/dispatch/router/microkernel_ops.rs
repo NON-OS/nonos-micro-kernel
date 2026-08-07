@@ -74,6 +74,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkPioRelease
             | MkDebug
             | MkStdoutWrite
+            | MkStoreWrite
             | MkSpawnInstance
             | MkToolRun
     )

@@ -14,21 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Caller-side cap gate. The kernel-side virtio-blk client is
-//! reachable only by callers holding `CAP_DRIVER`; a future
-//! storage service that wants to fold the block surface into a
-//! filesystem-backing role layers `CAP_STORAGE` on top.
+use crate::syscall::{call_raw, N_MK_STORE_WRITE};
 
-use super::error::DriverBlkError;
-use crate::services::caps::{has_capability, CAP_DRIVER, CAP_STORAGE};
-
-pub(super) fn gate_call() -> Result<u32, DriverBlkError> {
-    let pid = match crate::process::current_pid() {
-        Some(p) => p,
-        None => return Err(DriverBlkError::NoCallerPid),
-    };
-    if !has_capability(pid, CAP_DRIVER) && !has_capability(pid, CAP_STORAGE) {
-        return Err(DriverBlkError::AccessDenied);
+pub fn mk_store_write(lba: u64, buf: *const u8, len: usize) -> i64 {
+    if buf.is_null() || len == 0 {
+        return -22;
     }
-    Ok(pid)
+    call_raw(N_MK_STORE_WRITE, [lba, buf as u64, len as u64, 0, 0, 0])
 }
