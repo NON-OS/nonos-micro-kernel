@@ -66,8 +66,9 @@ pub(super) fn build_radio(mapped: Option<Mapped>, stage: Stage) -> (Radio, Stage
         status::line(b"[rtl8821ce] dma ring mapping failed\n");
         return (Radio::Down, Stage::NoDma);
     };
-    if !phy_setup(&m.regs) {
-        return (Radio::Down, Stage::EfuseFailed);
+    match phy_setup(&m.regs, m.efuse) {
+        Ok(()) => {}
+        Err(stage) => return (Radio::Down, stage),
     }
     let our_mac = read_mac(&m.regs);
     let link = RtlLink::new(m.regs, tx_ring, tx_buffers, rx_ring, rx_buffers, our_mac);
@@ -104,11 +105,31 @@ fn map(device_id: u64, claim_epoch: u64, bytes: usize) -> Option<Grant> {
 // route the antenna into the receive amplifier, set transmit power, and tune the
 // default channel. Without a good efuse read the RF front-end is unknown, so the
 // radio is left unconfigured rather than programmed with the wrong tables.
-fn phy_setup(regs: &Regs) -> bool {
-    let Some(info) = efuse::read(regs) else {
-        status::line(b"[rtl8821ce] efuse read failed, radio not configured\n");
-        return false;
+fn phy_setup(regs: &Regs, efuse: Option<efuse::EfuseInfo>) -> Result<(), Stage> {
+    // Taken during bring-up, on a freshly powered MAC, which is where rtw88 reads
+    // it. Read here instead, after the firmware download and the MAC tables, the
+    // efuse control and LDO registers answered zero on real silicon.
+    // Preferably the read taken during bring-up, on a freshly powered MAC, which
+    // is where rtw88 takes it. If that came back unreadable, try again here, which
+    // is where this driver read it when the radio last came up on real hardware.
+    // Never fall through with a map that failed validation: an all-ones efuse
+    // yields front-end 0x1F, and programming the RF tables from it wedges the chip
+    // hard enough that its register window stops answering at all.
+    let info = match efuse.or_else(|| efuse::read(regs)) {
+        Some(info) => info,
+        None => {
+            status::line(b"[rtl8821ce] efuse read failed, radio not configured\n");
+            return Err(Stage::EfuseFailed);
+        }
     };
+    // rtw88 refuses a front-end it has no table for rather than programming the
+    // nearest one. The radio tables are indexed off this, so a wrong value is not
+    // a degraded radio, it is a chip driven with settings for hardware that is not
+    // on this board.
+    if !rxpath::rfe_is_supported(info.rfe) {
+        status::line(b"[rtl8821ce] unsupported rf front-end, radio not configured\n");
+        return Err(Stage::EfuseFailed);
+    }
     let cond = PhyCond { cut: info.cut, pkg: info.pkg, intf: INTF_PCIE, rfe: info.rfe };
     power_on(regs);
     rxpath::pre_tables(regs);
@@ -121,13 +142,13 @@ fn phy_setup(regs: &Regs) -> bool {
         Some(mac) => program_mac(regs, &mac),
         None => {
             status::line(b"[rtl8821ce] no entropy for station address\n");
-            return false;
+            return Err(Stage::NoStationAddress);
         }
     }
     let rfe_btg = rxpath::rfe_is_btg(info.rfe);
     rxpath::set_channel(regs, DEFAULT_CHANNEL, Bw::W20, rfe_btg);
     status::line(b"[rtl8821ce] phy configured\n");
-    true
+    Ok(())
 }
 
 // Write the six-byte station MAC into the MAC-ID registers so the transmitter

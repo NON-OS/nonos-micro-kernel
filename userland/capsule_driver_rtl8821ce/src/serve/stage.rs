@@ -35,4 +35,9 @@ pub enum Stage {
     /// The efuse never read back, so the PHY could not be configured for this
     /// board and the radio was left dark rather than programmed with guesses.
     EfuseFailed = 6,
+    /// No entropy for a station address, so the radio was left dark rather than
+    /// transmitting under a predictable one. Separate from `EfuseFailed` because
+    /// both were once reported under that name, and a stage that names the wrong
+    /// step sends every investigation to the wrong register.
+    NoStationAddress = 7,
 }

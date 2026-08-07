@@ -39,6 +39,17 @@ pub struct DataPath {
     pub rx_eth: u32,
     pub netif_reqs: u32,
     pub rx_err: u32,
+    /// The efuse control, address and LDO registers as the last stalled read left
+    /// them. All zero means no read has stalled since boot, so a radio that
+    /// reports the efuse stage with zeros here never entered the polling loop.
+    pub efuse_ctl: u32,
+    pub efuse_addr: u32,
+    pub efuse_ldo: u32,
+    /// The BAR the register window was taken from and the low half of its
+    /// address. rtw88 uses bar_id 2 on this chip, so anything else means the
+    /// registers are being read from the wrong window.
+    pub bar_index: u32,
+    pub window_va: u32,
 }
 
 /// Query the driver for its data-path counts. `None` when the driver service is
@@ -57,7 +68,7 @@ pub fn driver_datapath() -> Option<DataPath> {
     let mut req = [0u8; WIFI_HDR];
     req[0..4].copy_from_slice(&WIFI_MAGIC.to_le_bytes());
     req[4..6].copy_from_slice(&OP_STATUS.to_le_bytes());
-    let mut resp = [0u8; WIFI_HDR + 25];
+    let mut resp = [0u8; WIFI_HDR + 45];
     let n = mk_ipc_call_timeout(
         port as u64,
         req.as_ptr(),
@@ -70,12 +81,22 @@ pub fn driver_datapath() -> Option<DataPath> {
         return None;
     }
     let b = &resp[WIFI_HDR + 1..];
+    // The efuse words are newer than the counters, so a driver built before them
+    // answers the shorter reply and those three stay zero rather than failing the
+    // whole read.
+    let long = n >= (WIFI_HDR + 45) as i64;
+    let word = |i: usize| u32::from_le_bytes([b[i], b[i + 1], b[i + 2], b[i + 3]]);
     Some(DataPath {
-        tx_ok: u32::from_le_bytes([b[0], b[1], b[2], b[3]]),
-        tx_drop: u32::from_le_bytes([b[4], b[5], b[6], b[7]]),
-        rx_ring: u32::from_le_bytes([b[8], b[9], b[10], b[11]]),
-        rx_eth: u32::from_le_bytes([b[12], b[13], b[14], b[15]]),
-        netif_reqs: u32::from_le_bytes([b[16], b[17], b[18], b[19]]),
-        rx_err: u32::from_le_bytes([b[20], b[21], b[22], b[23]]),
+        tx_ok: word(0),
+        tx_drop: word(4),
+        rx_ring: word(8),
+        rx_eth: word(12),
+        netif_reqs: word(16),
+        rx_err: word(20),
+        efuse_ctl: if long { word(24) } else { 0 },
+        efuse_addr: if long { word(28) } else { 0 },
+        efuse_ldo: if long { word(32) } else { 0 },
+        bar_index: if long { word(36) } else { 0xFFFF_FFFF },
+        window_va: if long { word(40) } else { 0 },
     })
 }
