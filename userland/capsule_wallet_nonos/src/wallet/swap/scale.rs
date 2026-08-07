@@ -14,11 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The assets a trade can be made of.
+//! The typed figure as the chain counts it.
 
-mod kind;
-mod list;
-mod lookup;
+use crate::wallet::state::State;
+use crate::wallet::swap::token;
 
-pub use kind::Token;
-pub use lookup::{count, token};
+/// Scale the amount to the paying token's decimals.
+///
+/// A reader types a figure in whole units with a fraction; a contract wants
+/// the smallest unit. Places beyond what the token divides into are dropped
+/// rather than rounded, because rounding up would spend more than was typed.
+pub fn scaled(state: &State) -> u128 {
+    let decimals = token(state.swap_from).decimals as u32;
+    let places = state.swap_places.min(decimals);
+    let mut v = state.swap_in;
+    let mut shift = decimals - places;
+    while shift > 0 {
+        v = v.saturating_mul(10);
+        shift -= 1;
+    }
+    v
+}

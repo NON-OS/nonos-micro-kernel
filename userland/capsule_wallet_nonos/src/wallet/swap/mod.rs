@@ -17,11 +17,13 @@
 //! Trading one asset for another.
 
 mod quote;
+mod scale;
 mod text;
 mod token;
 
 pub use quote::{apply_slippage, is_dangerous, is_warning, Quote};
+pub use scale::scaled;
 pub use text::{
     amount_text, bps_text, gas_text, min_out_text, rate_text, route_text, slippage_text,
 };
-pub use token::{token, Token};
+pub use token::{count, token, Token};

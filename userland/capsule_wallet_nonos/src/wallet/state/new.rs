@@ -30,6 +30,9 @@ pub fn new_state() -> State {
         // tolerance set high enough to always succeed protects nobody.
         swap_slippage_bps: 50,
         swap_step: 0,
+        swap_digits: 0,
+        swap_places: 0,
+        swap_point: false,
         keyring_port: 0,
         owner_pid: 0,
         wallet_id: 0,

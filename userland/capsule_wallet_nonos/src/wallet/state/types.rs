@@ -59,6 +59,13 @@ pub struct State {
     pub swap_slippage_bps: u32,
     /// Zero while the router still needs an allowance, one once it has one.
     pub swap_step: u8,
+    /// How many digits the reader has typed, so a correction knows what to
+    /// take back.
+    pub swap_digits: u32,
+    /// Digits typed after the point.
+    pub swap_places: u32,
+    /// Whether the reader has started a fraction.
+    pub swap_point: bool,
     pub keyring_port: u32,
     pub owner_pid: u32,
     pub wallet_id: u32,

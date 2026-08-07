@@ -22,7 +22,9 @@ use crate::wallet::state::State;
 /// The amount on one side, or a bare zero before anything is entered.
 pub fn amount_text(state: &State, pay: bool, out: &mut [u8]) -> usize {
     let (v, idx) = if pay {
-        (state.swap_in, state.swap_from)
+        // The typed figure scaled to the token's decimals, so what is shown
+        // is the amount a contract would be given rather than the digits.
+        (crate::wallet::swap::scaled(state), state.swap_from)
     } else {
         (state.swap_quote.out_amount, state.swap_to)
     };

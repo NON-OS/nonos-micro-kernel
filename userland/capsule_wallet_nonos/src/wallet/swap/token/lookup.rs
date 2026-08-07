@@ -24,3 +24,8 @@ use super::list::TOKENS;
 pub fn token(index: u8) -> &'static Token {
     &TOKENS[(index as usize) % TOKENS.len()]
 }
+
+/// How many tokens are on the list.
+pub fn count() -> u8 {
+    TOKENS.len() as u8
+}

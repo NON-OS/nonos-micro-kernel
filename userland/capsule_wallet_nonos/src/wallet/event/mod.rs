@@ -37,6 +37,9 @@ mod sign_eth;
 mod sign_nox;
 mod sign_result;
 mod stake_flow;
+mod swap_amount;
+mod swap_input;
+mod swap_pair;
 mod tx_freshen;
 
 pub use on_event::on_event;
