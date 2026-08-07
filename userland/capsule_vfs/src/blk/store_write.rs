@@ -78,7 +78,7 @@ fn write_payload(next_off: u64, data: &[u8]) -> Result<(), BlkError> {
     Ok(())
 }
 
-fn commit(region: &[u8]) -> Result<(), BlkError> {
+pub(super) fn commit(region: &[u8]) -> Result<(), BlkError> {
     let mut off = SECTOR_SIZE;
     while off < region.len() {
         let take = core::cmp::min(MAX_WRITE_BYTES, region.len() - off);

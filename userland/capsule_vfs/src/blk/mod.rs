@@ -22,6 +22,7 @@ mod request;
 pub(crate) mod status;
 mod store;
 mod store_header;
+pub(crate) mod store_remove;
 mod store_toc;
 pub(crate) mod store_write;
 mod transport;
