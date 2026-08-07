@@ -90,6 +90,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MTRN", SyscallNumber::MkToolRun, "MkToolRun"),
     e(b"MSOW", SyscallNumber::MkStdoutWrite, "MkStdoutWrite"),
     e(b"MSWR", SyscallNumber::MkStoreWrite, "MkStoreWrite"),
+    e(b"MCVF", SyscallNumber::MkCapsuleVerify, "MkCapsuleVerify"),
 ];
 
 const fn e(tag: &[u8; 4], variant: SyscallNumber, name: &'static str) -> AbiEntry {

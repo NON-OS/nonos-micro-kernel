@@ -31,6 +31,7 @@ pub const SYS_MMAP: u64 = tag4(b"MMAP");
 pub const SYS_MUNMAP: u64 = tag4(b"MUMP");
 pub const SYS_SPAWN: u64 = tag4(b"MSPN");
 pub const SYS_CAPSULE_LOAD: u64 = tag4(b"MCLD");
+pub const SYS_CAPSULE_VERIFY: u64 = tag4(b"MCVF");
 pub const SYS_EXIT: u64 = tag4(b"MEXT");
 pub const SYS_PID_ALIVE: u64 = tag4(b"MPAL");
 pub const SYS_WAIT: u64 = tag4(b"MWAT");
