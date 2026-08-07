@@ -19,16 +19,17 @@ use super::machine::Conn;
 use crate::wire::{self, REPLY_LEN};
 
 impl Conn {
-    /// Report the tunnel-open result: success replies and relays, failure
-    /// replies host-unreachable and closes.
-    pub fn opened(&mut self, ok: bool) -> ([u8; REPLY_LEN], usize) {
+    /// Report the tunnel-open result under the reply code the attempt earned:
+    /// success replies and relays, anything else replies with the code that
+    /// says which step refused, and closes.
+    pub fn opened(&mut self, code: u8) -> ([u8; REPLY_LEN], usize) {
         let mut buf = [0u8; REPLY_LEN];
-        if ok {
+        if code == wire::REP_OK {
             let len = wire::reply(wire::REP_OK, &mut buf);
             return (buf, len);
         }
         self.phase = Phase::Closed;
-        let len = wire::reply(wire::REP_HOST_UNREACH, &mut buf);
+        let len = wire::reply(code, &mut buf);
         (buf, len)
     }
 }

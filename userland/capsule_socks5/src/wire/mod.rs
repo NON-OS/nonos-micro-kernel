@@ -51,6 +51,11 @@ pub const ATYP_IPV6: u8 = 0x04;
 /// Reply codes (the `REP` field).
 pub const REP_OK: u8 = 0x00;
 pub const REP_GENERAL_FAIL: u8 = 0x01;
+/// No route to the network the destination is on. Used when the mixnet itself
+/// is not reachable, which is a different fault from an exit that will not take
+/// the destination, and a client that cannot tell them apart cannot be debugged
+/// on a machine with no console.
+pub const REP_NET_UNREACH: u8 = 0x03;
 pub const REP_HOST_UNREACH: u8 = 0x04;
 pub const REP_CONN_REFUSED: u8 = 0x05;
 pub const REP_CMD_UNSUPP: u8 = 0x07;
