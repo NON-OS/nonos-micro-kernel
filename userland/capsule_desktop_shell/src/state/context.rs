@@ -72,6 +72,9 @@ pub struct Context {
     /// Open-with broker: path handed to a target app's service name by
     /// `OP_OPEN_WITH`, pulled once via `OP_TAKE_OPEN_ARG` after the app wakes.
     pub pending_open: alloc::collections::BTreeMap<alloc::string::String, alloc::string::String>,
+    /// Name of the runtime-installed app whose launch is awaiting the consent
+    /// modal, or None when no dialog is up.
+    pub pending_consent: Option<alloc::vec::Vec<u8>>,
 }
 
 impl Context {

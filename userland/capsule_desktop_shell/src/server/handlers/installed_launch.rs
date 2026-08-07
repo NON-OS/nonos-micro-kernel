@@ -48,11 +48,30 @@ pub fn launch(ctx: &mut Context, name: &[u8]) {
             ctx.installed_pids.insert(name.to_vec(), pid);
             boot(pid);
         }
+        Err(ERR_EXIST) => focus_running(ctx, name),
         Err(status) => report_failure(ctx, status),
     }
 }
 
 const ERR_REJECTED: i32 = -13;
+/// The kernel refuses a second spawn on a service endpoint a live instance
+/// still holds, and the installer forwards that as this errno. It means the
+/// app is already running, not that the launch failed, so it must raise the
+/// running window instead of the failure toast.
+const ERR_EXIST: i32 = -17;
+
+/// A collision names an instance the top-of-launch registry probe missed --
+/// another client loaded it in the interim. Re-probe and focus it; if the
+/// window is already gone, stay silent rather than cry a false failure.
+fn focus_running(ctx: &mut Context, name: &[u8]) {
+    if let Some(pid) = already_running(name) {
+        ctx.installed_pids.insert(name.to_vec(), pid);
+        if focus(pid) {
+            return;
+        }
+        ctx.installed_pids.remove(name);
+    }
+}
 
 /// A refused load used to look exactly like nothing happening; say why on
 /// screen, and call out a verification rejection distinctly since it means

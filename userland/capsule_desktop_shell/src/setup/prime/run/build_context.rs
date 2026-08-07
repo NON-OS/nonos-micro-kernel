@@ -54,5 +54,6 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         drag_x: 0,
         drag_y: 0,
         pending_open: alloc::collections::BTreeMap::new(),
+        pending_consent: None,
     }
 }

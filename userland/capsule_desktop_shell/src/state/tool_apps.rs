@@ -13,12 +13,11 @@ pub struct ToolApp {
 }
 
 /// Every installed tool, generated from `userland/apps.list`.
-pub const TOOL_APPS: [ToolApp; 8] = [
+pub const TOOL_APPS: [ToolApp; 7] = [
     ToolApp { label: b"grex", service: b"tool.grex" },
     ToolApp { label: b"dotenv-linter", service: b"tool.dotenv-linter" },
     ToolApp { label: b"pastel", service: b"tool.pastel" },
     ToolApp { label: b"jsonxf", service: b"tool.jsonxf" },
-    ToolApp { label: b"choose", service: b"tool.choose" },
     ToolApp { label: b"tokei", service: b"tool.tokei" },
     ToolApp { label: b"huniq", service: b"tool.huniq" },
     ToolApp { label: b"csview", service: b"tool.csview" },

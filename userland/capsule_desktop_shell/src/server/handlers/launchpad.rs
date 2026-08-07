@@ -8,7 +8,7 @@
 //! spawn table, so it goes to the installer rather than the dock's spawn path.
 
 use crate::render::launchpad::{hit, target, Target};
-use crate::server::handlers::{installed_launch, launcher_request};
+use crate::server::handlers::launcher_request;
 use crate::server::repaint::repaint;
 use crate::state::{Context, LAUNCHER_APPS};
 
@@ -32,7 +32,7 @@ pub fn click(ctx: &mut Context, px: u32, py: u32) {
             }
             Target::Installed(i) => {
                 if let Some(name) = ctx.installed_apps.get(i).cloned() {
-                    installed_launch::launch(ctx, &name);
+                    ctx.pending_consent = Some(name);
                 }
             }
         }

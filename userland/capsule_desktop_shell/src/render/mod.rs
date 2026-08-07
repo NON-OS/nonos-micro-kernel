@@ -16,6 +16,7 @@
 
 mod bottom_taskbar;
 pub mod chrome;
+pub mod consent;
 pub mod desktop_icons;
 pub mod desktop_menu;
 pub mod fill;
