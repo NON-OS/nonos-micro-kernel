@@ -17,6 +17,7 @@
 mod apply;
 mod apply_rules;
 mod apply_style_attr;
+mod auto_repeat;
 mod bg_url;
 mod border_parts;
 mod budget;
@@ -25,7 +26,7 @@ mod calc;
 mod calc_factor;
 mod calc_term;
 mod collect;
-mod color;
+pub mod color;
 mod compute;
 mod computed;
 mod content_text;
@@ -42,7 +43,7 @@ mod matching;
 mod matching_paren;
 mod named;
 mod one_track;
-mod parse;
+pub mod parse;
 mod parse_grow;
 mod parse_line_height;
 mod parse_px;
@@ -52,11 +53,11 @@ mod rgb_fn;
 mod rule;
 mod rule_index;
 mod select;
-mod selector;
+pub mod selector;
 mod set_len;
 mod sides;
 mod size_resolve;
-mod specificity;
+pub mod specificity;
 mod strip_unit;
 mod ua;
 mod vars;
@@ -70,8 +71,8 @@ pub use color::parse_color;
 pub use compute::compute;
 pub use computed::Shadow;
 pub use computed::{
-    Align, BgSize, Clear, Computed, Float, GridTrack, Justify, ObjectFit, Position, Size,
-    TextAlign, TextTransform, WhiteSpace,
+    Align, AutoRepeat, BgSize, Clear, Computed, Float, GridTrack, Justify, ObjectFit, Position,
+    Size, TextAlign, TextTransform, WhiteSpace,
 };
 pub use grid_spec::GridSpec;
 pub use matches::{closest, matches};

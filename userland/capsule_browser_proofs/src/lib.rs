@@ -5,6 +5,8 @@
 extern crate alloc;
 
 pub mod browser;
+pub mod grid_page;
+pub mod render;
 
 #[cfg(test)]
 mod cascade_tests;
@@ -18,6 +20,12 @@ mod color_tests;
 mod dom_tests;
 #[cfg(test)]
 mod entity_tests;
+#[cfg(test)]
+mod grid_auto_tests;
+#[cfg(test)]
+mod grid_clip_tests;
+#[cfg(test)]
+mod grid_tests;
 #[cfg(test)]
 mod selector_tests;
 #[cfg(test)]

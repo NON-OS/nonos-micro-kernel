@@ -24,7 +24,7 @@ mod media_matches;
 mod nth;
 mod parse_into;
 mod pseudo;
-mod selectors;
+pub mod selectors;
 mod simple;
 mod strip_comments;
 mod stylesheet;

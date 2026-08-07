@@ -22,7 +22,9 @@ mod dispatch;
 mod drag;
 mod drain_ipc;
 mod ensure_primed;
+#[cfg(feature = "runtime")]
 mod entry;
+#[cfg(feature = "runtime")]
 mod ephemeral;
 mod fail;
 mod fit_display;
@@ -43,5 +45,6 @@ mod run_loop;
 mod service_frame;
 mod teardown;
 
+#[cfg(feature = "runtime")]
 pub use entry::run;
 pub use run_loop::run_loop;

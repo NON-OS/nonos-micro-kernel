@@ -20,6 +20,7 @@ use super::abs_out_of_flow::out_of_flow;
 use super::ctx::Ctx;
 use super::display_list::DisplayList;
 use super::layout_box::layout_box;
+use super::shift_down::shift_down;
 use super::track_widths::track_widths;
 use super::tree::BoxNode;
 
@@ -41,14 +42,16 @@ pub(super) fn grid_children(
     ctx: Ctx,
 ) -> i32 {
     let s = &node.style;
-    let cols = track_widths(s, w);
-    let n = cols.len().max(1);
     let gap = s.gap as i32;
     let items: Vec<&BoxNode> = node
         .children
         .iter()
         .filter(|it| it.kind.block_level() && !out_of_flow(&it.style))
         .collect();
+    // The item count comes first: an auto-fit template sizes its tracks from
+    // how many items there are to put in them.
+    let cols = track_widths(s, w, items.len());
+    let n = cols.len().max(1);
     // Occupancy per row; explicit items reserve their cells first so the
     // auto-flow items fill around them.
     let mut used: Vec<Vec<bool>> = Vec::new();
@@ -141,11 +144,7 @@ pub(super) fn grid_children(
         let Some(&(a, b)) = ranges.get(i) else {
             continue;
         };
-        if dy != 0 {
-            for f in frags.iter_mut().take(b).skip(a) {
-                f.y += dy;
-            }
-        }
+        shift_down(frags, a, b, dy, ctx.clip);
     }
     acc
 }
