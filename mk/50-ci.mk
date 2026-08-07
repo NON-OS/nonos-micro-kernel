@@ -95,6 +95,11 @@ nonos-mk-distclean: nonos-mk-clean-all
 	@rm -rf $(BOOTLOADER_DIR)/target target
 	@rm -f $(SIGNING_KEY) $(KERNEL_MLDSA65_KEY) $(KERNEL_MLDSA65_PUB)
 	@rm -rf $(ZK_KEYS_DIR)
+	@# The std startup object is emitted into target/ by a crate that keeps its
+	@# own target directory. Leaving that behind means cargo calls the crate fresh
+	@# on the next build, never runs rustc, and so never re-emits the object that
+	@# every std capsule links against.
+	@rm -rf toolchain/nonos-rt/target
 
 nonos-mk-fmt:
 	@RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) fmt
