@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::ui;
+use super::super::ui;
 use crate::wallet::swap::Token;
 use crate::wallet::theme::INK;
 

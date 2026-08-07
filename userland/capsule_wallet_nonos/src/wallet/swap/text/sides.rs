@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Trading one asset for another.
+//! The two amounts either side of the trade.
 
-mod quote;
-mod text;
-mod token;
+use super::amount::amount;
+use crate::wallet::state::State;
 
-pub use quote::{apply_slippage, is_dangerous, is_warning, Quote};
-pub use text::{
-    amount_text, bps_text, gas_text, min_out_text, rate_text, route_text, slippage_text,
-};
-pub use token::{token, Token};
+/// The amount on one side, or a bare zero before anything is entered.
+pub fn amount_text(state: &State, pay: bool, out: &mut [u8]) -> usize {
+    let (v, idx) = if pay {
+        (state.swap_in, state.swap_from)
+    } else {
+        (state.swap_quote.out_amount, state.swap_to)
+    };
+    if v == 0 {
+        out[0] = b'0';
+        return 1;
+    }
+    amount(v, crate::wallet::swap::token(idx).decimals, out)
+}

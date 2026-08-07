@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Trading one asset for another.
+//! One labelled figure in the terms panel.
 
-mod quote;
-mod text;
-mod token;
+use nonos_app_skeleton::PaintBuffer;
 
-pub use quote::{apply_slippage, is_dangerous, is_warning, Quote};
-pub use text::{
-    amount_text, bps_text, gas_text, min_out_text, rate_text, route_text, slippage_text,
-};
-pub use token::{token, Token};
+use crate::wallet::theme::MUTED;
+
+/// Label left, value right, so a column of figures lines up.
+pub fn row(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &str, value: &[u8], tone: u32) {
+    let _ = fb.text_ttf((x + 20) as i32, y as i32, label, MUTED(), 13.4);
+    let v = core::str::from_utf8(value).unwrap_or("");
+    let vw = fb.measure_ttf(v, 14.2).max(0) as u32;
+    let _ = fb.text_ttf((x + w - 20 - vw) as i32, (y - 1) as i32, v, tone, 14.2);
+}

@@ -14,14 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Trading one asset for another.
+//! Which colour a price impact is worth.
 
-mod quote;
-mod text;
-mod token;
+use crate::wallet::swap::{is_dangerous, is_warning};
+use crate::wallet::theme::{CYAN, GREEN, WARN};
 
-pub use quote::{apply_slippage, is_dangerous, is_warning, Quote};
-pub use text::{
-    amount_text, bps_text, gas_text, min_out_text, rate_text, route_text, slippage_text,
-};
-pub use token::{token, Token};
+/// Green while a trade is unremarkable, cyan once it is worth noticing,
+/// and the warning colour once it stops being a trade at all.
+pub fn impact_tone(bps: u32) -> u32 {
+    if is_dangerous(bps) {
+        WARN()
+    } else if is_warning(bps) {
+        CYAN()
+    } else {
+        GREEN()
+    }
+}

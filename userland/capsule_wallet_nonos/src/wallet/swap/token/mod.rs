@@ -14,14 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Trading one asset for another.
+//! The assets a trade can be made of.
 
-mod quote;
-mod text;
-mod token;
+mod kind;
+mod list;
+mod lookup;
 
-pub use quote::{apply_slippage, is_dangerous, is_warning, Quote};
-pub use text::{
-    amount_text, bps_text, gas_text, min_out_text, rate_text, route_text, slippage_text,
-};
-pub use token::{token, Token};
+pub use kind::Token;
+pub use lookup::token;

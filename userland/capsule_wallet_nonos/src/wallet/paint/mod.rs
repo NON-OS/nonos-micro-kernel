@@ -44,13 +44,12 @@ mod paint_send_side;
 mod paint_sidebar;
 mod paint_statusbar;
 mod paint_statusline;
-mod paint_swap;
 mod paint_sysbar;
 mod paint_topbar;
 mod paint_tx;
 mod panel;
-mod swap_mark;
-mod swap_terms;
+mod swap;
+
 mod ui;
 
 pub use paint::paint;
