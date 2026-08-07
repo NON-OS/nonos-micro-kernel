@@ -14,21 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use super::super::spec::{CapsuleSpecVerified, SpawnError};
 
-use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL};
-
-const MAX_ARTIFACT: usize = 16 * 1024 * 1024;
-
-// Copy one artifact blob out of user memory after bounds-checking the length and
-// validating the user range. Returns a negative errno on a bad length or fault.
-pub(crate) fn read_blob(ptr: u64, len: u32) -> Result<Vec<u8>, i64> {
-    let n = len as usize;
-    if n == 0 || n > MAX_ARTIFACT {
-        return Err(ERRNO_INVAL);
+pub(crate) fn publisher_gate(
+    spec: &CapsuleSpecVerified,
+    namespace: &str,
+    attest_caps: u64,
+) -> Result<(), SpawnError> {
+    if !matches!(super::tier::classify(namespace), super::tier::Tier::Publisher) {
+        return Err(SpawnError::AttestationRejected);
     }
-    if crate::usercopy::validate_user_read(ptr, n).is_err() {
-        return Err(ERRNO_FAULT);
+    if spec.attestation_trailer.is_empty() {
+        crate::sys::bench::mark_named(b"capsule_attest_pub", spec.name.as_bytes());
+        crate::sys::serial::print(b"[ZK-ATTEST] pub ");
+        crate::sys::serial::print(spec.name.as_bytes());
+        crate::sys::serial::print(b"\n");
+        return Ok(());
     }
-    crate::usercopy::read_user_bytes(ptr, n).map_err(|_| ERRNO_FAULT)
+    super::attest_gate::attest_gate(spec, attest_caps)
 }

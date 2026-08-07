@@ -20,3 +20,4 @@ mod handle;
 mod request;
 
 pub use handle::sys_capsule_load;
+pub(crate) use copy::read_blob;

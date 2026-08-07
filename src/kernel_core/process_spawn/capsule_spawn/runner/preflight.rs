@@ -58,8 +58,14 @@ pub(crate) fn run(
         &declared,
     )?;
     let install_caps = verification.1;
-
-    super::attest_gate::attest_gate(spec, install_caps)?;
+    let required_caps = verification.0.manifest.required_caps;
+    let namespace = verification.0.manifest.namespace_str();
+    match super::tier::classify(namespace) {
+        super::tier::Tier::Enrolled => super::attest_gate::attest_gate(spec, required_caps)?,
+        super::tier::Tier::Publisher => {
+            super::publisher_gate::publisher_gate(spec, namespace, required_caps)?
+        }
+    }
 
     Ok(Preflighted { install_caps })
 }

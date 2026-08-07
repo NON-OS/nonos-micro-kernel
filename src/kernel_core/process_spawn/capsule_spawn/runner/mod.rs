@@ -19,9 +19,12 @@ mod install;
 #[cfg(feature = "nonos-dev-unverified-capsules")]
 mod legacy;
 pub(crate) mod preflight;
+mod publisher_gate;
+mod tier;
 mod verified;
 
 #[cfg(feature = "nonos-dev-unverified-capsules")]
 pub use legacy::spawn;
 pub use verified::spawn_verified;
 pub(crate) use verified::spawn_verified_as;
+pub(crate) use tier::{classify as classify_tier, Tier};

@@ -14,21 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+pub(crate) enum Tier {
+    Enrolled,
+    Publisher,
+}
 
-use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL};
-
-const MAX_ARTIFACT: usize = 16 * 1024 * 1024;
-
-// Copy one artifact blob out of user memory after bounds-checking the length and
-// validating the user range. Returns a negative errno on a bad length or fault.
-pub(crate) fn read_blob(ptr: u64, len: u32) -> Result<Vec<u8>, i64> {
-    let n = len as usize;
-    if n == 0 || n > MAX_ARTIFACT {
-        return Err(ERRNO_INVAL);
+pub(crate) fn classify(namespace: &str) -> Tier {
+    if namespace == "systems.nonos" || namespace.starts_with("systems.nonos.") {
+        Tier::Enrolled
+    } else {
+        Tier::Publisher
     }
-    if crate::usercopy::validate_user_read(ptr, n).is_err() {
-        return Err(ERRNO_FAULT);
-    }
-    crate::usercopy::read_user_bytes(ptr, n).map_err(|_| ERRNO_FAULT)
 }
