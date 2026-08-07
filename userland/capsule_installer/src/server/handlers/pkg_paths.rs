@@ -31,6 +31,10 @@ pub(super) fn artifact_path(name: &[u8], ext: &[u8]) -> Vec<u8> {
     path
 }
 
+// Any single surviving artifact claims the slot. A partial install left by a
+// failed or interrupted removal must be cleared with OP_PKG_REMOVE before the
+// name is reusable, so a different publisher's package cannot overwrite the
+// remains of another's under the same slug.
 pub(super) fn installed(pid: u32, name: &[u8]) -> bool {
-    EXTS.iter().all(|ext| stat(pid, &artifact_path(name, ext)).is_ok())
+    EXTS.iter().any(|ext| stat(pid, &artifact_path(name, ext)).is_ok())
 }

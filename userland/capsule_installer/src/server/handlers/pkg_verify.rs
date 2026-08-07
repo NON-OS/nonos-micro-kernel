@@ -58,3 +58,17 @@ pub(super) fn verified_name(s: &CapsuleVerifySummary) -> &[u8] {
 pub(super) fn verified_ns(s: &CapsuleVerifySummary) -> &[u8] {
     &s.namespace[..(s.ns_len as usize).min(s.namespace.len())]
 }
+
+// The store file name is the capsule slug, which `Capsule.mk` places as the
+// last dot-separated segment of the namespace (`com.example.gui_demo` ->
+// `gui_demo`). The summary's `name` is the service endpoint instead, which
+// carries a dot for GUI apps (`app.gui_demo`) and does not track the slug at
+// all for others (`vfs_pool` for the `vfs` capsule), so it cannot be used to
+// place artifacts `load_by_name` will later find.
+pub(super) fn install_name(s: &CapsuleVerifySummary) -> &[u8] {
+    let ns = verified_ns(s);
+    match ns.iter().rposition(|&b| b == b'.') {
+        Some(i) => &ns[i + 1..],
+        None => ns,
+    }
+}

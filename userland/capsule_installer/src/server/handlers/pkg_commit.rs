@@ -23,7 +23,7 @@ use super::load_by_name::valid_name;
 use super::pkg_body::parse_commit;
 use super::pkg_paths::{artifact_path, installed, EXTS};
 use super::pkg_query::MAX_PACKAGE;
-use super::pkg_verify::{verified_name, verify_package, EACCES};
+use super::pkg_verify::{install_name, verify_package, EACCES};
 use crate::protocol::{encode_response, Request, EINVAL};
 
 const EEXIST: i32 = -17;
@@ -33,7 +33,8 @@ const EIO: i32 = -5;
 // The package is re-read, re-parsed and re-verified here, and the recomputed
 // digest must match the one the caller consented to, so a swap between the
 // query that produced the consent prompt and this commit is rejected. The
-// install name comes from the verified summary, never from the file name.
+// install name is derived from the verified namespace, never from the file
+// name the caller supplied.
 pub fn pkg_commit(req: Request<'_>) -> Vec<u8> {
     let Some((digest, path)) = parse_commit(req.payload) else {
         return encode_response(req.seq, EINVAL, &[]);
@@ -49,7 +50,7 @@ pub fn pkg_commit(req: Request<'_>) -> Vec<u8> {
     if v.digest != *digest {
         return encode_response(req.seq, EACCES, &[]);
     }
-    let name = verified_name(&v.summary);
+    let name = install_name(&v.summary);
     if !valid_name(name) {
         return encode_response(req.seq, EINVAL, &[]);
     }
