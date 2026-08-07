@@ -956,7 +956,14 @@ max_size  = "16MiB"
 [profile.release]
 opt-level       = 3
 lto             = "thin"
-codegen-units   = 4
+# One codegen unit, to keep the build reproducible. Thin LTO across several
+# units settles its imports and partition boundaries per run, which is a known
+# way for two builds of one commit to diverge. Measured here the kernel ELF came
+# out byte identical either way, so this is precaution rather than a fix, paid
+# for in build time. The divergence that was actually observed is in the STARK
+# attestation trailer, which is randomised because the proof is zero knowledge,
+# and no build setting changes that.
+codegen-units   = 1
 panic           = "abort"
 strip           = "debuginfo"
 debug           = false
