@@ -236,6 +236,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "nonos-pack-core"
+version = "0.1.0"
+
+[[package]]
 name = "nonos-sign"
 version = "0.1.0"
 dependencies = [

@@ -1,0 +1,10 @@
+[package]
+name = "nonos-pack-core"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+
+[lib]
+name = "nonos_pack_core"
+path = "src/lib.rs"
