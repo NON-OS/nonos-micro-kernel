@@ -14,36 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod chmod;
-mod copy;
-mod errmsg;
-mod list_paths;
-mod mkdir;
-mod persist;
-mod read_file;
-mod rename;
-mod resolve;
-mod rmdir;
-mod stat;
-mod stat_full;
-mod truncate;
-mod types;
-mod unlink;
-mod usage;
-mod write_file;
+use alloc::{vec, vec::Vec};
 
-pub use chmod::chmod;
-pub use copy::copy;
-pub use list_paths::list_paths;
-pub use mkdir::mkdir;
-pub use persist::persist;
-pub use read_file::read_file;
-pub use rename::rename;
-pub use rmdir::rmdir;
-pub use stat::stat;
-pub use stat_full::stat_full;
-pub use truncate::truncate;
-pub use unlink::unlink;
-pub use usage::usage;
-pub use write_file::write_file;
+use crate::wire::HDR_LEN;
+
+pub fn persist(owner_pid: u32, path: &[u8]) -> Result<(), &'static str> {
+    if path.is_empty() || path.len() > 255 {
+        return Err("vfs path invalid");
+    }
+    let port = super::resolve::vfs_port();
+    let mut body = Vec::with_capacity(5 + path.len());
+    body.extend_from_slice(&owner_pid.to_le_bytes());
+    body.push(path.len() as u8);
+    body.extend_from_slice(path);
+    let mut rx = vec![0u8; HDR_LEN + 8];
+    let (status, _) = super::call::call(port, super::types::OP_STORE_PERSIST, 17, &body, &mut rx)?;
+    if status != 0 {
+        return Err(super::errmsg::errmsg(status));
+    }
+    Ok(())
+}

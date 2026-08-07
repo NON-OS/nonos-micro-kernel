@@ -30,5 +30,6 @@ pub const OP_COPY: u16 = 12;
 pub const OP_TRUNCATE: u16 = 13;
 pub const OP_USAGE: u16 = 14;
 pub const OP_CHMOD: u16 = 15;
+pub const OP_STORE_PERSIST: u16 = 17;
 pub const O_CREATE: u32 = 1 << 0;
 pub const O_TRUNC: u32 = 1 << 1;

@@ -14,36 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod call;
-mod chmod;
-mod copy;
-mod errmsg;
-mod list_paths;
-mod mkdir;
-mod persist;
-mod read_file;
-mod rename;
-mod resolve;
-mod rmdir;
-mod stat;
-mod stat_full;
-mod truncate;
-mod types;
-mod unlink;
-mod usage;
-mod write_file;
+use alloc::vec::Vec;
 
-pub use chmod::chmod;
-pub use copy::copy;
-pub use list_paths::list_paths;
-pub use mkdir::mkdir;
-pub use persist::persist;
-pub use read_file::read_file;
-pub use rename::rename;
-pub use rmdir::rmdir;
-pub use stat::stat;
-pub use stat_full::stat_full;
-pub use truncate::truncate;
-pub use unlink::unlink;
-pub use usage::usage;
-pub use write_file::write_file;
+use super::types::Store;
+
+impl Store {
+    pub fn bytes_of(&self, path: &str) -> Option<Vec<u8>> {
+        self.find(path).map(|i| self.files[i].data.clone())
+    }
+}

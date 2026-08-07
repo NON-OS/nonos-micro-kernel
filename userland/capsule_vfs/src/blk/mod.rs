@@ -15,12 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod client;
+mod digest;
 mod error;
 mod reply;
 mod request;
 mod store;
 mod store_header;
 mod store_toc;
+pub(crate) mod store_write;
 mod transport;
 mod wire;
 

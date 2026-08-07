@@ -33,6 +33,7 @@ pub const OP_TRUNCATE: u16 = 13;
 pub const OP_USAGE: u16 = 14;
 pub const OP_CHMOD: u16 = 15;
 pub const OP_SEEK: u16 = 16;
+pub const OP_STORE_PERSIST: u16 = 17;
 
 // Seek whence values, matching the POSIX ordering std uses.
 pub const SEEK_SET: u8 = 0;

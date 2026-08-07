@@ -32,6 +32,7 @@ pub struct TocEntry {
     pub name: String,
     pub offset: u64,
     pub len: u64,
+    pub digest: [u8; 16],
 }
 
 pub fn decode(toc: &[u8], count: usize, capacity_bytes: u64) -> Result<Vec<TocEntry>, BlkError> {
@@ -50,7 +51,9 @@ pub fn decode(toc: &[u8], count: usize, capacity_bytes: u64) -> Result<Vec<TocEn
         }
         budget -= len;
         let name = decode_name(&toc[base..base + NAME_LEN])?;
-        entries.push(TocEntry { name, offset, len });
+        let mut digest = [0u8; 16];
+        digest.copy_from_slice(&toc[base + NAME_LEN + 16..base + NAME_LEN + 32]);
+        entries.push(TocEntry { name, offset, len, digest });
     }
     Ok(entries)
 }

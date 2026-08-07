@@ -21,10 +21,13 @@ use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 
+use nonos_libc::mk_debug;
+
 use super::client::{capacity, read_blocks};
+use super::digest::digest16;
 use super::error::BlkError;
 use super::store_header::{entry_count, ENTRY_LEN, HEADER_LEN};
-use super::store_toc::decode;
+use super::store_toc::{decode, TocEntry};
 use super::wire::{MAX_READ_BYTES, SECTOR_SIZE};
 
 pub struct StoreEntry {
@@ -49,9 +52,31 @@ pub fn load() -> Result<Vec<StoreEntry>, BlkError> {
     let mut staged = Vec::with_capacity(count);
     for entry in decode(&toc, count, capacity_bytes)? {
         let data = read_extent(entry.offset, entry.len)?;
+        verify(&entry, &data)?;
         staged.push(StoreEntry { name: entry.name, data });
     }
     Ok(staged)
+}
+
+fn verify(entry: &TocEntry, data: &[u8]) -> Result<(), BlkError> {
+    if entry.digest == [0u8; 16] {
+        return Ok(());
+    }
+    if digest16(data) == entry.digest {
+        mark(b"[PKG] vfy ok ", &entry.name);
+        Ok(())
+    } else {
+        mark(b"[PKG] vfy FAIL ", &entry.name);
+        Err(BlkError::BadContainer)
+    }
+}
+
+fn mark(tag: &[u8], name: &str) {
+    let mut line = Vec::with_capacity(tag.len() + name.len() + 1);
+    line.extend_from_slice(tag);
+    line.extend_from_slice(name.as_bytes());
+    line.push(b'\n');
+    let _ = mk_debug(line.as_ptr(), line.len());
 }
 
 fn read_extent(offset: u64, len: u64) -> Result<Vec<u8>, BlkError> {

@@ -22,6 +22,7 @@ mod mkdir;
 mod new;
 mod open;
 mod packages;
+mod persist;
 mod query;
 mod read;
 mod rename;
