@@ -6,7 +6,7 @@
 # uptime syscall is stubbed since the tested comparison logic never calls it.
 [package]
 name = "deadline_proofs"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

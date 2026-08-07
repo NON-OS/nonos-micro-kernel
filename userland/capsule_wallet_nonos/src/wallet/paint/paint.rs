@@ -17,7 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::wallet::state::{
-    State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED,
+    State, VIEW_HOME, VIEW_NOX, VIEW_PROOF, VIEW_RECEIVE, VIEW_SEND, VIEW_SHIELDED, VIEW_SWAP,
 };
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
@@ -32,6 +32,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         VIEW_SEND => super::paint_send::paint_send(state, fb),
         VIEW_PROOF => super::paint_proof_view::paint_proof_view(state, fb),
         VIEW_NOX => super::paint_nox::paint_nox(state, fb),
+        VIEW_SWAP => super::swap::paint_swap(state, fb),
         VIEW_SHIELDED => super::paint_portfolio::paint_portfolio(state, fb),
         VIEW_HOME => super::paint_home::paint_home(state, fb),
         _ => super::paint_home::paint_home(state, fb),

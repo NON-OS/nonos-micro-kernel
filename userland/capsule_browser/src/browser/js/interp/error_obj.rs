@@ -32,8 +32,5 @@ pub fn error_obj(name: &str, message: String) -> Value {
 
 // Whether a native constructor name is one of the Error family.
 pub fn is_err_name(n: &str) -> bool {
-    matches!(
-        n,
-        "Error" | "TypeError" | "RangeError" | "SyntaxError" | "ReferenceError"
-    )
+    matches!(n, "Error" | "TypeError" | "RangeError" | "SyntaxError" | "ReferenceError")
 }

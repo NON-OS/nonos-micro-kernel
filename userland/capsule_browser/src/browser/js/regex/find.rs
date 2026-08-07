@@ -28,7 +28,13 @@ pub struct Match {
 }
 
 // Search `text` from `start` for the leftmost match of the compiled program.
-pub fn search(prog: &[Inst], ngroups: usize, text: &[char], start: usize, ci: bool) -> Option<Match> {
+pub fn search(
+    prog: &[Inst],
+    ngroups: usize,
+    text: &[char],
+    start: usize,
+    ci: bool,
+) -> Option<Match> {
     let nslots = 2 * (ngroups + 1);
     let mut at = start;
     while at <= text.len() {

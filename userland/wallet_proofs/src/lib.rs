@@ -21,6 +21,8 @@
 
 const WALLET: &str = "../capsule_wallet_nonos/src/wallet";
 
+pub mod wallet;
+
 // The real NOX read helpers. `apr_bps` reads `super::constants`, so `constants`
 // is a sibling module under `nox` exactly as in the wallet.
 #[allow(dead_code)]
@@ -35,6 +37,15 @@ pub mod hex_digit;
 pub fn source_root() -> &'static str {
     WALLET
 }
+
+#[cfg(test)]
+mod mul_div_tests;
+#[cfg(test)]
+mod stakeable_tests;
+#[cfg(test)]
+mod swap_curve_tests;
+#[cfg(test)]
+mod swap_limits_tests;
 
 #[cfg(kani)]
 mod kani_proofs;

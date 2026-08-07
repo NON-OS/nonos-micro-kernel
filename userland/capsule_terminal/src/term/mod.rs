@@ -26,6 +26,7 @@ pub mod manifest;
 pub mod prompt;
 pub mod rtc;
 pub mod scrollback;
+pub mod search;
 pub mod state;
 pub mod terminal;
 pub mod theme;

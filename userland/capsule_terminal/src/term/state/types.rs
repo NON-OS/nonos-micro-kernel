@@ -44,6 +44,8 @@ pub struct State {
     // entries that start with it, and restore it when the search runs off
     // the newest entry.
     pub hist_prefix: Vec<u8>,
+    /// An in-progress reverse search, or nothing when not searching.
+    pub search: Option<crate::term::search::Search>,
     pub blocks: Vec<Block>,
     // Body font zoom, adjusted with Ctrl+= / Ctrl+-. 1 = base bitmap size.
     pub font_scale: u32,

@@ -25,6 +25,10 @@ pub struct NoxStatus {
     pub claimable_wei: [u8; 32],
     pub positions_ready: bool,
     pub positions: u64,
+    // ZeroState Passes held. They multiply a stake, so the screen shows them
+    // beside the lock term rather than leaving the reader to guess.
+    pub passes_ready: bool,
+    pub passes: u64,
     pub stats_ready: bool,
     pub total_staked_wei: [u8; 32],
     pub rewards_distributed_wei: [u8; 32],
@@ -41,6 +45,8 @@ impl NoxStatus {
             claimable_wei: [0; 32],
             positions_ready: false,
             positions: 0,
+            passes_ready: false,
+            passes: 0,
             stats_ready: false,
             total_staked_wei: [0; 32],
             rewards_distributed_wei: [0; 32],

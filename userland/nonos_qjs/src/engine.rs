@@ -35,6 +35,8 @@ extern "C" {
     fn njs_eval_to_string(ctx: *mut c_void, code: *const u8, len: usize) -> *mut u8;
     fn njs_install_dom(ctx: *mut c_void, host: *mut c_void);
     fn njs_dispatch_event(ctx: *mut c_void, node: i32, ty: *const u8) -> i32;
+    fn njs_take_navigation() -> *const u8;
+    fn njs_flush_timers(ctx: *mut c_void, now_ms: f64) -> i32;
 }
 
 pub struct Engine {
@@ -75,6 +77,38 @@ impl Engine {
         let n = ty.len().min(31);
         buf[..n].copy_from_slice(&ty.as_bytes()[..n]);
         unsafe { njs_dispatch_event(self.ctx, node, buf.as_ptr()) }
+    }
+
+    /// Run the page timers due at `now_ms`, and report how many ran.
+    ///
+    /// The caller passes real elapsed milliseconds rather than letting the
+    /// queue decide what is due. A queue that decides for itself has to move
+    /// its own clock to whatever comes next, which makes a repeating timer
+    /// due again the instant it is requeued: one `setInterval` then runs to
+    /// the iteration cap on every tick and the page never stops working long
+    /// enough to draw.
+    pub fn flush_timers(&self, now_ms: u64) -> i32 {
+        unsafe { njs_flush_timers(self.ctx, now_ms as f64) }
+    }
+
+    /// The address a script asked to navigate to since this was last called.
+    ///
+    /// Navigating from inside the run would tear down the tree the script is
+    /// still executing against, so the request is parked and collected once
+    /// the run is over. Reading clears it, so one request is acted on once
+    /// rather than on every poll after it.
+    pub fn take_navigation(&self) -> Option<String> {
+        unsafe {
+            let p = njs_take_navigation();
+            if p.is_null() {
+                return None;
+            }
+            let mut n = 0;
+            while *p.add(n) != 0 {
+                n += 1;
+            }
+            Some(String::from_utf8_lossy(core::slice::from_raw_parts(p, n)).into_owned())
+        }
     }
 
     /// Evaluate a script and return its result coerced to a string, or the

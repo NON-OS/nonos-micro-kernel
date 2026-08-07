@@ -513,7 +513,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_kernel"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "bitflags 2.11.1",
  "bitvec",

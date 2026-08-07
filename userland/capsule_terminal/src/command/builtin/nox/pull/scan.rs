@@ -42,8 +42,7 @@ pub fn split_lines(head: &[u8]) -> Vec<&[u8]> {
 }
 
 pub fn eq_ci(a: &[u8], b: &[u8]) -> bool {
-    a.len() == b.len()
-        && a.iter().zip(b).all(|(x, y)| x.to_ascii_lowercase() == y.to_ascii_lowercase())
+    a.eq_ignore_ascii_case(b)
 }
 
 pub fn parse_usize(s: &[u8]) -> Option<usize> {

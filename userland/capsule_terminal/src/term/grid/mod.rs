@@ -27,5 +27,4 @@ pub mod scroll_region;
 pub mod scroll_view;
 pub mod types;
 pub mod view;
-
-pub use types::Grid;
+pub mod width;

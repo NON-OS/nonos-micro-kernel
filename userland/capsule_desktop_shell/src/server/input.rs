@@ -20,7 +20,7 @@ use crate::render::{desktop_icons, desktop_menu, topbar};
 use crate::server::desktop;
 use crate::server::handlers::{launcher_focus, launcher_request, launchpad};
 use crate::server::refresh_taskbar::refresh_taskbar;
-use crate::state::{collapse_taskbar, reveal_taskbar, Context, LAUNCHER_APPS};
+use crate::state::{reveal_taskbar, Context, LAUNCHER_APPS};
 use nonos_libc::{
     mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_KEY_DOWN,
     INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,
@@ -208,13 +208,12 @@ fn is_image_name(name: &str) -> bool {
 // The path travels the way the file manager's Open With already sends it.
 fn open_item(ctx: &mut Context, idx: usize) {
     let Some(item) = ctx.desktop_items.get(idx) else { return };
-    let service: &[u8] = if item.is_dir {
-        b"app.file_manager"
-    } else if is_image_name(&item.name) {
-        b"app.image_viewer"
-    } else {
-        b"app.text_editor"
-    };
+    // An image has no viewer in this image, and the editor would show a
+    // screenful of bytes rather than a picture, so nothing opens.
+    if !item.is_dir && is_image_name(&item.name) {
+        return;
+    }
+    let service: &[u8] = if item.is_dir { b"app.file_manager" } else { b"app.text_editor" };
     // By service rather than by position: the table is edited often enough
     // that an index would drift into launching the wrong app.
     let Some(app) = LAUNCHER_APPS.iter().find(|a| a.service == service) else { return };

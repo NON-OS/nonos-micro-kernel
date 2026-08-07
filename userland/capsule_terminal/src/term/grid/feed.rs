@@ -21,12 +21,16 @@ use crate::term::vt::state::VtState;
 impl Grid {
     pub fn feed(&mut self, bytes: &[u8]) {
         let mut parser = core::mem::replace(&mut self.parser, Parser::new());
+        // Both are taken out for the borrow and put back after. A character
+        // can be split across two feeds, so the decoder has to survive one.
+        let mut utf8 = core::mem::take(&mut self.utf8);
         {
-            let mut vt = VtState { g: self };
+            let mut vt = VtState { g: self, utf8: &mut utf8 };
             for &b in bytes {
                 parser.advance(&mut vt, b);
             }
         }
         self.parser = parser;
+        self.utf8 = utf8;
     }
 }

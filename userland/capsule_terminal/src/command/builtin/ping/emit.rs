@@ -28,6 +28,12 @@ pub fn emit_target(out: &mut Output<'_>, host: &[u8], ip: &[u8; 4]) {
     k += fmt_ipv4(&mut line[k..], ip);
     k += copy_into(&mut line[k..], b")");
     out.writeln(&line[..k]);
+    // ICMP is not a stream, so a SOCKS5 proxy cannot carry it and this leaves
+    // directly however the rest of the machine is routed. Someone who assumes
+    // everything is anonymised is exactly who needs telling.
+    if crate::mixnet::routed() {
+        out.writeln(b"note: icmp cannot cross the mixnet, this leaves directly");
+    }
 }
 
 pub fn emit_reply(out: &mut Output<'_>, dst: &[u8; 4], rtt: u64) {

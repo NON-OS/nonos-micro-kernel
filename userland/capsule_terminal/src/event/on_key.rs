@@ -53,6 +53,10 @@ pub fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
             EventOutcome::Repaint
         }
         KEY_ENTER => on_enter(state),
+        KEY_BACKSPACE if state.search.is_some() => {
+            super::search_edit::search_backspace(state);
+            EventOutcome::Repaint
+        }
         KEY_BACKSPACE => bool_to_outcome(state.line.backspace()),
         KEY_DELETE => bool_to_outcome(state.line.delete()),
         KEY_LEFT => bool_to_outcome(state.line.move_left()),

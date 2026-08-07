@@ -83,6 +83,11 @@ fn apply(state: &mut State, snap: Snapshot) -> bool {
         state.nox.positions = p;
         state.nox.positions_ready = true;
     }
+    if let Some(n) = snap.passes {
+        changed |= !state.nox.passes_ready || n != state.nox.passes;
+        state.nox.passes = n;
+        state.nox.passes_ready = true;
+    }
     if let Some(s) = snap.stats {
         changed |= !state.nox.stats_ready
             || s.total != state.nox.total_staked_wei

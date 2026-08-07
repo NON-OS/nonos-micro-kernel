@@ -31,7 +31,10 @@ pub(super) fn emit_text(
     color: u32,
     bg: u32,
 ) {
-    for w in text.split_whitespace() {
+    // Only ASCII spaces separate words. A non breaking space is whitespace
+    // to Unicode but the one character an author uses to say "do not break
+    // here", so splitting on it undoes exactly what it was written for.
+    for w in text.split_ascii_whitespace() {
         let (span, wrapped) = wrap::word(cur, w, href.clone(), scale, bold, color, bg);
         if wrapped {
             lines.push(core::mem::replace(

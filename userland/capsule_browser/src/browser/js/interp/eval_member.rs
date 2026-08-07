@@ -28,6 +28,13 @@ pub fn eval_member(ctx: &mut Ctx, env: &Env, obj: &Expr, name: &str) -> Result<V
     Ok(match recv {
         Value::Object(map) => {
             let b = map.borrow();
+            // The document names nodes in the live tree, which did not exist
+            // when this object was built.
+            if b.contains_key("__document__") {
+                if let Some(v) = super::document_member::document_member(ctx, name) {
+                    return Ok(v);
+                }
+            }
             if name == "size" {
                 if let Some(Value::Array(s)) = b.get("__map__").or_else(|| b.get("__set__")) {
                     return Ok(Value::Num(s.borrow().len() as f64));

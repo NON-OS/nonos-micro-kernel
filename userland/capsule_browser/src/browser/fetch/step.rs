@@ -17,7 +17,7 @@
 use nonos_libc::mk_time_millis;
 
 use crate::browser::fetch::types::Phase;
-use crate::browser::fetch::{constants, fail, finish, plain, rtc_packed, socks, tls};
+use crate::browser::fetch::{budget, fail, finish, plain, rtc_packed, socks, tls};
 use crate::browser::http;
 use crate::browser::net;
 use crate::browser::state::State;
@@ -39,7 +39,7 @@ pub fn step(state: &mut State) -> bool {
         let Some(f) = state.fetch.as_mut() else {
             return false;
         };
-        if mk_time_millis().wrapping_sub(f.started_ms) > constants::MAX_FETCH_MS {
+        if mk_time_millis().wrapping_sub(f.started_ms) > budget::max_fetch_ms() {
             if f.tls.is_some() {
                 f.phase = if tls::decrypt(f).is_some_and(|p| http::response::has_headers(&p)) {
                     Phase::Decrypt

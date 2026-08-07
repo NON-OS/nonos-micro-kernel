@@ -1,6 +1,6 @@
 [package]
 name = "nonos_app_skeleton"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 publish = false
 license = "AGPL-3.0"
@@ -16,8 +16,8 @@ path = "src/lib.rs"
 # and the CPL=3 frame loop. no_std capsules keep it (default); std capsules
 # built through the NONOS PAL disable it and drive `run_loop` themselves.
 default = ["runtime"]
-runtime = []
+runtime = ["nonos_libc/heap", "nonos_libc/panic-handler", "nonos_toolkit/runtime"]
 
 [dependencies]
-nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
-nonos_toolkit = { path = "../toolkit" }
+nonos_libc = { package = "nonos_userland_libc", path = "../libc", default-features = false }
+nonos_toolkit = { path = "../toolkit", default-features = false }

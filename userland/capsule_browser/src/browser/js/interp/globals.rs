@@ -28,6 +28,11 @@ pub fn install(env: &Env) {
             ("querySelector", Value::Native("document.querySelector")),
             ("querySelectorAll", Value::Native("document.querySelectorAll")),
             ("createElement", Value::Native("document.createElement")),
+            ("createTextNode", Value::Native("document.createTextNode")),
+            ("createDocumentFragment", Value::Native("document.createDocumentFragment")),
+            // Marks this object as the document, so reading body, head or
+            // documentElement goes to the tree rather than to this map.
+            ("__document__", Value::Bool(true)),
         ]),
     );
     env.define(
@@ -68,15 +73,8 @@ pub fn install(env: &Env) {
         "RegExp",
         obj(&[("__native_ctor__", Value::Str(alloc::rc::Rc::new("RegExp".into())))]),
     );
-    for name in [
-        "Error",
-        "TypeError",
-        "RangeError",
-        "SyntaxError",
-        "ReferenceError",
-        "Map",
-        "Set",
-    ] {
+    for name in ["Error", "TypeError", "RangeError", "SyntaxError", "ReferenceError", "Map", "Set"]
+    {
         env.define(name, obj(&[("__native_ctor__", Value::Str(alloc::rc::Rc::new(name.into())))]));
     }
     env.define("window", obj(&[]));

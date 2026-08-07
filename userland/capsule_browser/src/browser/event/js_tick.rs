@@ -18,16 +18,28 @@ use crate::browser::js;
 use crate::browser::state::State;
 
 use super::relayout::relayout;
+use super::script_nav::take_script_nav;
 
 // One app tick for the page's timers. Returns whether anything ran and the
 // screen needs repainting.
 pub fn js_tick(state: &mut State) -> bool {
+    // The page's own timers, in the engine that ran its scripts. Nothing was
+    // draining this queue, so every callback a page deferred sat in it: the
+    // work a page does after its first paint never happened at all.
+    let ran = match state.engine.as_ref() {
+        Some(engine) => engine.flush_timers(nonos_libc::mk_uptime_ms() as u64) > 0,
+        None => false,
+    };
+    if ran {
+        relayout(state);
+        take_script_nav(state);
+    }
     let (fired, dirty) = match (state.page_dom.as_mut(), state.world.as_mut()) {
         (Some(dom), Some(world)) => js::pump_timers(dom, world),
-        _ => return false,
+        _ => return ran,
     };
     if dirty {
         relayout(state);
     }
-    fired
+    fired || ran
 }

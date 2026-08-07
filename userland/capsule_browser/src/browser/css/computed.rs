@@ -125,6 +125,16 @@ pub enum GridTrack {
 
 pub const MAX_GRID_COLS: usize = 8;
 
+// repeat(auto-fill | auto-fit, ...): how many times the track repeats depends
+// on the container width, which the cascade does not know, so it records the
+// keyword and layout resolves the count. auto-fit additionally drops the
+// tracks no item lands in, so the occupied ones share the whole width.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum AutoRepeat {
+    Fill,
+    Fit,
+}
+
 // Inherited fields: color, bold, font_size_px, text_align, line_height_px.
 // Everything else is per-element; the cascade walk starts each element from
 // root() and copies only the inherited fields across.
@@ -234,6 +244,10 @@ pub struct Computed {
     pub is_contents: bool,
     pub grid_cols: [GridTrack; MAX_GRID_COLS],
     pub grid_col_n: u8,
+    // Set when the template is a single repeat(auto-fill | auto-fit, track);
+    // grid_cols then holds that one track and grid_auto_min its floor.
+    pub grid_auto: Option<AutoRepeat>,
+    pub grid_auto_min: GridTrack,
     // list-style-type: none suppresses the marker on li boxes; inherited.
     pub list_none: bool,
 }
@@ -312,6 +326,8 @@ impl Computed {
             is_contents: false,
             grid_cols: [GridTrack::Fr(1); MAX_GRID_COLS],
             grid_col_n: 0,
+            grid_auto: None,
+            grid_auto_min: GridTrack::Px(0),
             list_none: false,
         }
     }

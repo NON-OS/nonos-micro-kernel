@@ -1,6 +1,6 @@
 [package]
 name = "nonos_hd"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "BIP39/BIP32 hierarchical deterministic key derivation for the NONOS keyring, no_std"
 license = "AGPL-3.0"

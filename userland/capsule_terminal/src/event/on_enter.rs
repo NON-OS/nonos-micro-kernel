@@ -25,6 +25,9 @@ use crate::term::state::State;
 use crate::term::util::{copy_into, format_u64};
 
 pub fn on_enter(state: &mut State) -> EventOutcome {
+    // Running a line ends any search that found it. The match is already on
+    // the line, so accepting it is simply leaving the mode.
+    super::search::search_accept(state);
     state.fresh = false;
     let started = mk_time_millis();
     state.open_block(crate::term::rtc::rtc_hms());

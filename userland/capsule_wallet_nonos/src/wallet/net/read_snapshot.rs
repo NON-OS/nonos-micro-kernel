@@ -36,6 +36,7 @@ const ID_NOX_BALANCE: u64 = 10;
 const ID_CLAIMABLE: u64 = 11;
 const ID_POSITIONS: u64 = 12;
 const ID_STATS: u64 = 13;
+const ID_STAKE_INFO: u64 = 14;
 
 pub struct NoxStats {
     pub total: [u8; 32],
@@ -51,6 +52,10 @@ pub struct Snapshot {
     pub nox_balance: Option<[u8; 32]>,
     pub claimable: Option<[u8; 32]>,
     pub positions: Option<u64>,
+    /// ZeroState Passes the staking contract counts for this account. Taken
+    /// from getStakeInfo rather than the NFT contract, since the boost is
+    /// applied from what staking itself believes.
+    pub passes: Option<u64>,
     pub stats: Option<NoxStats>,
 }
 
@@ -72,6 +77,7 @@ pub fn read_snapshot(addr: &[u8; 20]) -> Option<Snapshot> {
     let nox_bal = calldata_addr(&SEL_BALANCE_OF, addr);
     let claim = calldata_addr(&SEL_PENDING_REWARDS, addr);
     let positions = calldata_addr(&SEL_ACTIVE_POSITIONS, addr);
+    let info = calldata_addr(&crate::wallet::nox::SEL_GET_STAKE_INFO, addr);
 
     let r_eth = rpc::request_balance(addr, ID_ETH_BALANCE);
     let r_nonce = rpc::request_nonce(addr, ID_NONCE);
@@ -80,8 +86,11 @@ pub fn read_snapshot(addr: &[u8; 20]) -> Option<Snapshot> {
     let r_claim = rpc::request_eth_call(&STAKING_PROXY, &claim, ID_CLAIMABLE);
     let r_pos = rpc::request_eth_call(&STAKING_PROXY, &positions, ID_POSITIONS);
     let r_stats = rpc::request_eth_call(&STAKING_PROXY, &SEL_PROTOCOL_STATS, ID_STATS);
+    let r_info = rpc::request_eth_call(&STAKING_PROXY, &info, ID_STAKE_INFO);
 
-    let body = rpc::request_batch(&[&r_eth, &r_nonce, &r_fee, &r_nox, &r_claim, &r_pos, &r_stats]);
+    let body = rpc::request_batch(&[
+        &r_eth, &r_nonce, &r_fee, &r_nox, &r_claim, &r_pos, &r_stats, &r_info,
+    ]);
     let resp = super::fetch_rpc::fetch_rpc(dns, sockets, &body)?;
 
     let obj = |id| rpc::object_for_id(&resp, id);
@@ -93,6 +102,11 @@ pub fn read_snapshot(addr: &[u8; 20]) -> Option<Snapshot> {
         claimable: obj(ID_CLAIMABLE).and_then(rpc::parse_quantity32),
         positions: obj(ID_POSITIONS)
             .and_then(rpc::parse_quantity32)
+            .and_then(|w| q32_to_u128(&w))
+            .map(|n| n as u64),
+        // Word two of getStakeInfo is nftCount.
+        passes: obj(ID_STAKE_INFO)
+            .and_then(|o| rpc::parse_call_word(o, 2))
             .and_then(|w| q32_to_u128(&w))
             .map(|n| n as u64),
         stats: obj(ID_STATS).and_then(parse_stats),

@@ -7,7 +7,7 @@
 
 [package]
 name = "nonos_settings"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 publish = false
 license = "AGPL-3.0"

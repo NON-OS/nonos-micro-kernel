@@ -21,6 +21,7 @@ use crate::browser::event::relayout;
 use crate::browser::js::World;
 use crate::browser::qjs_run::run_scripts;
 use crate::browser::state::State;
+use crate::browser::url::join;
 
 /// Run the page DOM's scripts through QuickJS and lay the result out. The DOM
 /// must already sit in `state.page_dom`, its address for the page's life, so the
@@ -28,8 +29,15 @@ use crate::browser::state::State;
 /// before replacing the DOM. The inert tree-walk world is set so the timer and
 /// script-fetch pumps have something to read while the engine owns page state.
 pub fn commit_html(state: &mut State) {
+    // The document has to know where it came from before a script runs.
+    // `location` is read during setup on most pages, and a relative href
+    // resolved against the wrong address points somewhere else entirely.
+    let base = state.base.as_ref().map(|u| join(u, "")).unwrap_or_default();
     let engine = match state.page_dom.as_mut() {
-        Some(dom) => run_scripts(dom),
+        Some(dom) => {
+            dom.base = base;
+            run_scripts(dom)
+        }
         None => None,
     };
     state.engine = engine;

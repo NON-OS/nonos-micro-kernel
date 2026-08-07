@@ -87,6 +87,21 @@ jobs:
       - name: Arch paging descriptor clippy
         run: cargo clippy --release -- -D warnings
         working-directory: userland/arch_paging_proofs
+      - name: Browser engine proofs
+        run: cargo test --release
+        working-directory: userland/capsule_browser_proofs
+      - name: Browser engine clippy
+        run: cargo clippy --release -- -D warnings
+        working-directory: userland/capsule_browser_proofs
+      - name: Script environment proofs
+        run: node tests/prelude/run.mjs
+        working-directory: userland/nonos_qjs
+      - name: Mixnet proxy proofs
+        run: cargo test --release
+        working-directory: userland/capsule_socks5_proofs
+      - name: Mixnet proxy clippy
+        run: cargo clippy --release -- -D warnings
+        working-directory: userland/capsule_socks5_proofs
 
   crypto-proofs:
     runs-on: ubuntu-latest

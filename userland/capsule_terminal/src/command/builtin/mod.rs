@@ -21,6 +21,7 @@ pub mod display;
 pub mod echo;
 pub mod exit_check;
 pub mod fs;
+pub mod git;
 pub mod help;
 pub mod history_cmd;
 pub mod jobs;

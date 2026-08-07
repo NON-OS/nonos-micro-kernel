@@ -922,11 +922,11 @@ DESKTOP_BASE_SLUGS := proof-io ramfs keyring entropy crypto vfs \
 		driver-virtio-rng driver-virtio-blk driver-virtio-gpu \
 		driver-virtio-net driver-ps2-input driver-xhci driver-usb-hid \
 		net-core net-sockets net-nym policy wallpaper_catalog installer \
-		input-router compositor wm desktop-shell image-codec image-viewer \
+		input-router compositor wm desktop-shell image-codec \
 		clipboard login wallpaper toolkit about boot-splash calculator \
-		clock browser snake wallet-nonos terminal file-manager text-editor \
+		browser wallet-nonos terminal file-manager text-editor \
 		settings process-manager attest power \
-		audio audio_player driver-hda
+		audio driver-hda
 
 DESKTOP_BASE_CAPSULE_ARTIFACTS := \
 		$(foreach s,$(DESKTOP_BASE_SLUGS),$($(s)_ARTIFACTS))

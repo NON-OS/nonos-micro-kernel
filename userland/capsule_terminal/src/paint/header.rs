@@ -22,8 +22,12 @@ use crate::term::state::State;
 use crate::term::theme::{ACCENT, PATH};
 
 pub fn draw_header(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(0, 0, fb.width, HEADER_H, elevate(state.bg, 12));
-    fb.fill_rect(0, HEADER_H, fb.width, 1, elevate(state.bg, 24));
+    fb.fill_rect(0, 0, fb.width, HEADER_H, elevate(state.bg, 10));
+    // A hairline under the header, and a short accent run at the left edge of
+    // it. The mark sits where the eye starts a line, so the window says whose
+    // it is without a bar of colour across the whole width.
+    fb.fill_rect(0, HEADER_H, fb.width, 1, elevate(state.bg, 22));
+    fb.fill_rect(0, HEADER_H, TEXT_LEFT * 4, 1, ACCENT);
     let _ = fb.text_ttf(TEXT_LEFT as i32, 5, "\u{00D8} NONOS", ACCENT, 15.0);
     let cwd = state.cwd.as_bytes();
     let take = cwd.len().min(48);

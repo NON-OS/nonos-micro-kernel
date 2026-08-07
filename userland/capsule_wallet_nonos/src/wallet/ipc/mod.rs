@@ -44,4 +44,4 @@ pub use recover::recover_wallet;
 pub use sign_eth::sign_eth_transfer;
 pub use sign_nox::sign_nox_approve;
 pub use sign_nox_send::sign_nox_transfer;
-pub use sign_stake::{sign_stake, sign_stake_approve};
+pub use sign_stake::{sign_stake, sign_stake_approve, sign_stake_locked, sign_unstake_position};

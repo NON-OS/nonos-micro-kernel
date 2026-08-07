@@ -18,11 +18,15 @@ use alloc::vec::Vec;
 
 use crate::browser::css::{Computed, GridTrack};
 
+use super::auto_repeat_n::auto_repeat_n;
+
 // Resolve the column tracks into (x offset, width) pairs within `w`. Fixed
 // tracks take their size, fractions split what remains after the gaps. A
-// grid with no template gets one full-width column.
-pub(super) fn track_widths(style: &Computed, w: i32) -> Vec<(i32, i32)> {
-    let n = (style.grid_col_n as usize).clamp(1, style.grid_cols.len());
+// grid with no template gets one full-width column. `items` is the number of
+// in-flow grid items, which only an auto-fit template needs.
+pub(super) fn track_widths(style: &Computed, w: i32, items: usize) -> Vec<(i32, i32)> {
+    let n = auto_repeat_n(style, w, items)
+        .unwrap_or_else(|| (style.grid_col_n as usize).clamp(1, style.grid_cols.len()));
     let gap = style.gap as i32;
     let mut widths: Vec<i32> = Vec::with_capacity(n);
     let mut fr_total = 0i64;

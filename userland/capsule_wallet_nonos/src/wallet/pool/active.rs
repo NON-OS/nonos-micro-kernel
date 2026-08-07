@@ -17,6 +17,7 @@
 use super::assoc_set_provider::AssocSetProvider;
 use super::pool_provider::PoolProvider;
 use super::proof_provider::ProofProvider;
+use super::quote_provider::QuoteProvider;
 use super::revenue_provider::RevenueProvider;
 use super::sim_provider::SimProvider;
 use super::stub::Stub;
@@ -28,6 +29,9 @@ pub fn pool() -> impl PoolProvider {
     Stub
 }
 pub fn prover() -> impl ProofProvider {
+    Stub
+}
+pub fn quote() -> impl QuoteProvider {
     Stub
 }
 pub fn assoc() -> impl AssocSetProvider {

@@ -107,7 +107,7 @@ pub(super) fn collect_items(
                         }
                     }
                 } else {
-                    for w in t.split_whitespace() {
+                    for w in t.split_ascii_whitespace() {
                         out.push(word(w));
                     }
                 }

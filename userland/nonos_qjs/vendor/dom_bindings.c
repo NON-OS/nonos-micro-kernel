@@ -189,10 +189,40 @@ static int type_eq(const char *a, const char *b) {
     }
 }
 
-static JSValue ev_noop(JSContext *ctx, JSValueConst t, int argc, JSValueConst *v) {
-    (void)ctx; (void)t; (void)argc; (void)v;
+/* An event's own methods have to record something. These were no-ops, so a
+ * handler that cancelled a link still navigated and one that stopped
+ * propagation still saw the event reach every ancestor above it. Both are
+ * how an interactive page keeps control of what it just handled. */
+static JSValue ev_prevent(JSContext *ctx, JSValueConst t, int argc, JSValueConst *v) {
+    (void)argc; (void)v;
+    JSValue c = JS_GetPropertyStr(ctx, t, "cancelable");
+    if (JS_ToBool(ctx, c) > 0)
+        JS_SetPropertyStr(ctx, t, "defaultPrevented", JS_TRUE);
+    JS_FreeValue(ctx, c);
     return JS_UNDEFINED;
 }
+static JSValue ev_stop(JSContext *ctx, JSValueConst t, int argc, JSValueConst *v) {
+    (void)argc; (void)v;
+    JS_SetPropertyStr(ctx, t, "__stop", JS_TRUE);
+    return JS_UNDEFINED;
+}
+static JSValue ev_stop_now(JSContext *ctx, JSValueConst t, int argc, JSValueConst *v) {
+    (void)argc; (void)v;
+    JS_SetPropertyStr(ctx, t, "__stop", JS_TRUE);
+    JS_SetPropertyStr(ctx, t, "__stopnow", JS_TRUE);
+    return JS_UNDEFINED;
+}
+static int ev_flag(JSContext *ctx, JSValueConst ev, const char *name) {
+    JSValue v = JS_GetPropertyStr(ctx, ev, name);
+    int set = JS_ToBool(ctx, v) > 0;
+    JS_FreeValue(ctx, v);
+    return set;
+}
+
+/* Whether the last dispatch was cancelled, so the host can skip the action
+ * the event would otherwise have triggered. */
+static int g_last_prevented = 0;
+int njs_event_default_prevented(void) { return g_last_prevented; }
 
 /* Dispatch a UI event to a node's listeners, then bubble through its
  * ancestors: frameworks that delegate (React listens on the root container)
@@ -211,29 +241,48 @@ int njs_dispatch_event(JSContext *ctx, int node, const char *type) {
     JS_SetPropertyStr(ctx, ev, "defaultPrevented", JS_FALSE);
     JS_SetPropertyStr(ctx, ev, "isTrusted", JS_TRUE);
     JS_SetPropertyStr(ctx, ev, "timeStamp", JS_NewInt32(ctx, 0));
-    JS_SetPropertyStr(ctx, ev, "preventDefault", JS_NewCFunction(ctx, ev_noop, "preventDefault", 0));
-    JS_SetPropertyStr(ctx, ev, "stopPropagation", JS_NewCFunction(ctx, ev_noop, "stopPropagation", 0));
-    JS_SetPropertyStr(ctx, ev, "stopImmediatePropagation", JS_NewCFunction(ctx, ev_noop, "stopImmediatePropagation", 0));
+    JS_SetPropertyStr(ctx, ev, "preventDefault", JS_NewCFunction(ctx, ev_prevent, "preventDefault", 0));
+    JS_SetPropertyStr(ctx, ev, "stopPropagation", JS_NewCFunction(ctx, ev_stop, "stopPropagation", 0));
+    JS_SetPropertyStr(ctx, ev, "stopImmediatePropagation", JS_NewCFunction(ctx, ev_stop_now, "stopImmediatePropagation", 0));
     int hops = 0;
     for (int cur = node; cur >= 0 && hops < 512; cur = njs_dom_parent(host, cur), hops++) {
-        for (int i = 0; i < g_lcount; i++) {
+        JSValue self = make_element(ctx, cur);
+        JS_SetPropertyStr(ctx, ev, "currentTarget", JS_DupValue(ctx, self));
+        /* The on<type> property is a listener too. It was set to null on
+         * every element and then never read, so `el.onclick = fn` looked
+         * like it had registered and nothing ever called it. */
+        char prop[32];
+        prop[0] = 'o'; prop[1] = 'n';
+        int pi = 0;
+        for (; type[pi] && pi < 28; pi++) prop[pi + 2] = type[pi];
+        prop[pi + 2] = 0;
+        JSValue handler = JS_GetPropertyStr(ctx, self, prop);
+        if (JS_IsFunction(ctx, handler)) {
+            JSValue arg = ev;
+            JSValue r = JS_Call(ctx, handler, self, 1, (JSValueConst *)&arg);
+            JS_FreeValue(ctx, r);
+            fired++;
+        }
+        JS_FreeValue(ctx, handler);
+        for (int i = 0; i < g_lcount && !ev_flag(ctx, ev, "__stopnow"); i++) {
             if (g_listeners[i].live && g_listeners[i].node == cur && type_eq(g_listeners[i].type, type)) {
                 /* Listener `this` is the element it registered on; delegated
                  * handlers (Preact's eventProxy) read their table off it. */
-                JSValue self = make_element(ctx, cur);
-                JS_SetPropertyStr(ctx, ev, "currentTarget", JS_DupValue(ctx, self));
                 JSValue arg = ev;
                 JSValue r = JS_Call(ctx, g_listeners[i].fn, self, 1, (JSValueConst *)&arg);
                 JS_FreeValue(ctx, r);
-                JS_FreeValue(ctx, self);
                 fired++;
             }
         }
+        JS_FreeValue(ctx, self);
+        /* A handler that stopped propagation meant it: the ancestors above
+         * this one do not see the event at all. */
+        if (ev_flag(ctx, ev, "__stop")) break;
         if (cur == 0) break;
     }
     /* Document-level listeners registered through document.addEventListener
      * carry node -1 and fire last, as the outermost bubble stop. */
-    for (int i = 0; i < g_lcount; i++) {
+    for (int i = 0; i < g_lcount && !ev_flag(ctx, ev, "__stop"); i++) {
         if (g_listeners[i].live && g_listeners[i].node == -1 && type_eq(g_listeners[i].type, type)) {
             JSValue arg = ev;
             JSValue r = JS_Call(ctx, g_listeners[i].fn, JS_UNDEFINED, 1, (JSValueConst *)&arg);
@@ -241,6 +290,7 @@ int njs_dispatch_event(JSContext *ctx, int node, const char *type) {
             fired++;
         }
     }
+    g_last_prevented = ev_flag(ctx, ev, "defaultPrevented");
     JS_FreeValue(ctx, ev);
     JSRuntime *rt = JS_GetRuntime(ctx);
     JSContext *p;
@@ -281,7 +331,6 @@ static JSValue get_style(JSContext *ctx, JSValueConst t, int argc, JSValueConst 
     JSValue args[2] = {target, handler};
     JSValue proxy = JS_CallConstructor(ctx, proxy_ctor, 2, args);
     JS_FreeValue(ctx, proxy_ctor);
-    JS_FreeValue(ctx, global);
     JS_FreeValue(ctx, target);
     JS_FreeValue(ctx, handler);
     return proxy;
@@ -327,7 +376,6 @@ static JSValue get_owner_document(JSContext *ctx, JSValueConst t, int a, JSValue
     (void)t; (void)a; (void)v;
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue doc = JS_GetPropertyStr(ctx, global, "document");
-    JS_FreeValue(ctx, global);
     return doc;
 }
 static JSValue get_child_nodes(JSContext *ctx, JSValueConst t, int a, JSValueConst *v) {
@@ -344,6 +392,10 @@ static JSValue get_child_nodes(JSContext *ctx, JSValueConst t, int a, JSValueCon
 /* One JS object per DOM node, cached in a global registry. Frameworks hang
  * expando state off DOM nodes and compare them by identity, so every lookup
  * for the same node must return the same object. */
+#include "dom_ext.inc"
+#include "dom_query.inc"
+#include "dom_events.inc"
+
 static JSValue make_element(JSContext *ctx, int node) {
     if (node < 0) return JS_NULL;
     JSValue global = JS_GetGlobalObject(ctx);
@@ -384,7 +436,6 @@ static JSValue make_element(JSContext *ctx, int node) {
     accessor(ctx, el, "data", get_text_content, set_text_content);
     accessor(ctx, el, "nodeValue", get_text_content, set_text_content);
     accessor(ctx, el, "className", get_class_name, set_class_name);
-    accessor(ctx, el, "id", 0, set_id);
     accessor(ctx, el, "tagName", get_tag_name, 0);
     accessor(ctx, el, "localName", get_local_name, 0);
     accessor(ctx, el, "nodeName", get_node_name, 0);
@@ -395,10 +446,12 @@ static JSValue make_element(JSContext *ctx, int node) {
     accessor(ctx, el, "nextSibling", get_next_sibling, 0);
     accessor(ctx, el, "childNodes", get_child_nodes, 0);
     accessor(ctx, el, "style", get_style, 0);
-    accessor(ctx, el, "innerHTML", 0, set_inner_html);
+    accessor(ctx, el, "innerHTML", get_inner_html, set_inner_html);
+    install_element_ext(ctx, el);
+    install_query_ext(ctx, el);
+    install_event_ext(ctx, el);
     JS_SetPropertyUint32(ctx, reg, (uint32_t)node, JS_DupValue(ctx, el));
     JS_FreeValue(ctx, reg);
-    JS_FreeValue(ctx, global);
     return el;
 }
 
@@ -456,18 +509,70 @@ static const char *PRELUDE =
     "globalThis.window=globalThis;globalThis.self=globalThis;"
     "var sink=function(){};"
     "globalThis.console={log:sink,warn:sink,error:sink,info:sink,debug:sink,trace:sink};"
-    "globalThis.setTimeout=function(f){q.push(f);return q.length;};"
-    "globalThis.setInterval=function(){return 0;};"
-    "globalThis.clearTimeout=sink;globalThis.clearInterval=sink;"
-    "globalThis.requestAnimationFrame=function(f){q.push(f);return q.length;};"
-    "globalThis.cancelAnimationFrame=sink;"
+    /* Timers keep their delay and fire in due order. Dropping the delay ran
+     * a chain of deferred steps out of sequence, which is worse than not
+     * running it. Cancelling has to work too: a component that unmounts and
+     * clears its timer would otherwise still fire into a tree it gave up. */
+    "var tid=1,clock=0;"
+    "globalThis.setTimeout=function(f,ms){q.push({id:tid,at:clock+(+ms||0),f:f,r:0});return tid++;};"
+    "globalThis.setInterval=function(f,ms){var d=Math.max(1,+ms||1);"
+    "q.push({id:tid,at:clock+d,f:f,r:d});return tid++;};"
+    "globalThis.clearTimeout=function(i){for(var k=0;k<q.length;k++)"
+    "if(q[k].id===i){q.splice(k,1);return;}};"
+    "globalThis.clearInterval=globalThis.clearTimeout;"
+    "globalThis.requestAnimationFrame=function(f){q.push({id:tid,at:clock,f:f,r:0});return tid++;};"
+    "globalThis.cancelAnimationFrame=globalThis.clearTimeout;"
     "globalThis.queueMicrotask=globalThis.queueMicrotask||function(f){Promise.resolve().then(f);};"
-    "globalThis.__njs_flush_timers=function(){var n=0;"
-    "while(q.length&&n<10000){var f=q.shift();n++;try{f();}catch(e){"
-    "(globalThis.__njs_errors=globalThis.__njs_errors||[]).push(String(e)+' @ '+String(e&&e.stack||''));}}return n;};"
+    /* Due timers first, then the clock moves to the next one waiting. A
+     * repeating timer is requeued rather than dropped, and the run count is
+     * capped so a timer that reschedules itself cannot hold the pump. */
+    /* Run what the clock says is due, and nothing else. The caller passes
+     * real elapsed milliseconds, so a repeating timer requeued during this
+     * flush lands in the future and waits there. Advancing the clock to meet
+     * the earliest timer instead would make every requeue instantly due, and
+     * a single setInterval would then run its callback until the iteration
+     * cap on every tick, which is a page that never stops working long
+     * enough to draw. */
+    "globalThis.__njs_flush_timers=function(now){var n=0;"
+    "if(now>clock)clock=+now;"
+    "while(q.length&&n<1000){"
+    "var i=0;for(var k=1;k<q.length;k++)if(q[k].at<q[i].at)i=k;"
+    "var t=q[i];if(t.at>clock)break;q.splice(i,1);n++;"
+    "if(t.r){q.push({id:t.id,at:clock+t.r,f:t.f,r:t.r});}"
+    "try{t.f();}catch(e){"
+    "(globalThis.__njs_errors=globalThis.__njs_errors||[]).push(String(e)+' @ '+String(e&&e.stack||''));}}"
+    "return n;};"
     "globalThis.navigator={userAgent:'NONOS Browser',language:'en-US',languages:['en-US']};"
-    "globalThis.location={href:'http://localhost/',protocol:'http:',host:'localhost',"
-    "hostname:'localhost',pathname:'/',search:'',hash:'',origin:'http://localhost'};"
+    /* location is built from the address the page was actually fetched from.
+     * It used to say http://localhost/ whatever had been loaded, so a page
+     * that reads its own path to decide what to show, which is every page
+     * with a router in it, was told something that was never true. */
+    "globalThis.__njs_mkloc=function(u){"
+    "var m=/^([a-z]+:)\\/\\/([^\\/?#]*)([^?#]*)(\\?[^#]*)?(#.*)?$/i.exec(u||'')||[];"
+    "var proto=m[1]||'http:',hostport=m[2]||'',path=m[3]||'/';"
+    "var at=hostport.lastIndexOf(':');"
+    "var hasport=at>0&&/^[0-9]+$/.test(hostport.slice(at+1));"
+    "return{href:u||'',protocol:proto,host:hostport,"
+    "hostname:hasport?hostport.slice(0,at):hostport,"
+    "port:hasport?hostport.slice(at+1):'',"
+    "pathname:path||'/',search:m[4]||'',hash:m[5]||'',"
+    "origin:proto+'//'+hostport,"
+    "toString:function(){return this.href;},"
+    "assign:function(h){globalThis.__njs_navigate(String(h));},"
+    "replace:function(h){globalThis.__njs_navigate(String(h));},"
+    "reload:function(){globalThis.__njs_navigate(this.href);}};};"
+    "globalThis.location=globalThis.__njs_mkloc(globalThis.__njs_base||'');"
+    /* A page that pushes state is telling the reader it moved. The address
+     * has to follow, or the next relative link resolves against the old one
+     * and code reading the path after a route change sees the previous one. */
+    "globalThis.history={length:1,state:null,scrollRestoration:'auto',"
+    "pushState:function(s,t,u){this.state=s;if(u)globalThis.location="
+    "globalThis.__njs_mkloc(globalThis.__njs_resolve(String(u)));this.length++;},"
+    "replaceState:function(s,t,u){this.state=s;if(u)globalThis.location="
+    "globalThis.__njs_mkloc(globalThis.__njs_resolve(String(u)));},"
+    "back:sink,forward:sink,go:sink};"
+    "if(globalThis.document){document.baseURI=globalThis.__njs_base||'';"
+    "document.URL=document.baseURI;document.location=globalThis.location;}"
     "globalThis.matchMedia=function(){return{matches:false,media:'',addListener:sink,"
     "removeListener:sink,addEventListener:sink,removeEventListener:sink};};"
     "globalThis.getComputedStyle=function(){return{getPropertyValue:function(){return'';}};};"
@@ -479,8 +584,69 @@ static const char *PRELUDE =
     "globalThis.Document=globalThis.Document||function(){};"
     "globalThis.Text=globalThis.Text||function(){};"
     "globalThis.Comment=globalThis.Comment||function(){};"
-    "globalThis.Event=globalThis.Event||function(){};"
-    "globalThis.CustomEvent=globalThis.CustomEvent||function(){};"
+    /* An event a script builds has to carry what it was built with. These
+     * were empty functions, so `new CustomEvent('x',{detail:d})` produced an
+     * object with no type and no detail, and the handler that received it
+     * could not tell what had happened. */
+    "globalThis.Event=function(t,o){o=o||{};this.type=t;this.bubbles=!!o.bubbles;"
+    "this.cancelable=!!o.cancelable;this.defaultPrevented=false;this.target=null;"
+    "this.currentTarget=null;this.timeStamp=0;this.isTrusted=false;"
+    "this.preventDefault=function(){if(this.cancelable)this.defaultPrevented=true;};"
+    "this.stopPropagation=function(){this.__stop=true;};"
+    "this.stopImmediatePropagation=function(){this.__stop=true;this.__stopnow=true;};};"
+    "globalThis.CustomEvent=function(t,o){o=o||{};Event.call(this,t,o);this.detail="
+    "o.detail===undefined?null:o.detail;};"
+    "globalThis.MouseEvent=globalThis.KeyboardEvent=globalThis.PointerEvent="
+    "globalThis.InputEvent=globalThis.FocusEvent=Event;"
+    /* classList and dataset, built from the element's own attribute methods
+     * so neither needs the host. classList is on nearly every page that has
+     * a script at all, and dataset is how markup hands a value to one. */
+    "globalThis.__njs_classlist=function(el){"
+    "var g=function(){return String(el.className||'').split(/\\s+/).filter(Boolean);};"
+    "var s=function(a){el.className=a.join(' ');};"
+    "var o={contains:function(c){return g().indexOf(c)>=0;},"
+    "add:function(){var a=g();for(var i=0;i<arguments.length;i++)"
+    "if(a.indexOf(arguments[i])<0)a.push(arguments[i]);s(a);},"
+    "remove:function(){var a=g();for(var i=0;i<arguments.length;i++){"
+    "var k=a.indexOf(arguments[i]);if(k>=0)a.splice(k,1);}s(a);},"
+    "toggle:function(c,f){var a=g(),k=a.indexOf(c);"
+    "var on=f===undefined?k<0:!!f;if(on&&k<0)a.push(c);else if(!on&&k>=0)a.splice(k,1);"
+    "s(a);return on;},"
+    "replace:function(x,y){var a=g(),k=a.indexOf(x);if(k<0)return false;a[k]=y;s(a);return true;},"
+    "item:function(i){return g()[i]||null;},"
+    "toString:function(){return g().join(' ');}};"
+    "Object.defineProperty(o,'length',{get:function(){return g().length;}});"
+    "Object.defineProperty(o,'value',{get:function(){return g().join(' ');}});"
+    "return o;};"
+    /* dataset reads and writes through the attributes, so a value a script
+     * sets is the one markup shows, and the kebab spelling is derived rather
+     * than stored twice. */
+    "globalThis.__njs_dataset=function(el){"
+    "var kebab=function(p){return 'data-'+p.replace(/[A-Z]/g,function(c){"
+    "return '-'+c.toLowerCase();});};"
+    "var camel=function(a){return a.slice(5).replace(/-([a-z])/g,function(m,c){"
+    "return c.toUpperCase();});};"
+    "return new Proxy({},{get:function(t,p){if(typeof p!=='string')return undefined;"
+    "var v=el.getAttribute(kebab(p));return v===null?undefined:v;},"
+    "set:function(t,p,v){el.setAttribute(kebab(p),String(v));return true;},"
+    "has:function(t,p){return el.hasAttribute(kebab(p));},"
+    "deleteProperty:function(t,p){el.removeAttribute(kebab(p));return true;},"
+    "ownKeys:function(){return el.getAttributeNames()"
+    ".filter(function(a){return a.indexOf('data-')===0;}).map(camel);},"
+    "getOwnPropertyDescriptor:function(t,p){return{enumerable:true,configurable:true,"
+    "value:el.getAttribute(kebab(p))};}});};"
+    /* Storage a page can actually use. Backed by a plain object, so it lasts
+     * as long as the page rather than across a boot: a script that stores a
+     * preference and reads it back in the same visit works, and nothing is
+     * written to disk that the reader did not ask to keep. */
+    "var mkstore=function(){var m={};return{getItem:function(k){"
+    "return Object.prototype.hasOwnProperty.call(m,String(k))?m[String(k)]:null;},"
+    "setItem:function(k,v){m[String(k)]=String(v);},"
+    "removeItem:function(k){delete m[String(k)];},"
+    "clear:function(){m={};},"
+    "key:function(i){return Object.keys(m)[i]||null;},"
+    "get length(){return Object.keys(m).length;}};};"
+    "globalThis.localStorage=mkstore();globalThis.sessionStorage=mkstore();"
     "globalThis.MutationObserver=globalThis.MutationObserver||function(){"
     "this.observe=sink;this.disconnect=sink;this.takeRecords=function(){return[];};};"
     "if(globalThis.document){document.defaultView=globalThis;document.nodeType=9;}"
@@ -491,15 +657,26 @@ void njs_install_dom(JSContext *ctx, void *host) {
     JSValue global = JS_GetGlobalObject(ctx);
     JSValue doc = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, doc, "createElement", JS_NewCFunction(ctx, doc_create_element, "createElement", 1));
+    JS_SetPropertyStr(ctx, doc, "createDocumentFragment",
+                      JS_NewCFunction(ctx, doc_create_fragment, "createDocumentFragment", 0));
     JS_SetPropertyStr(ctx, doc, "createTextNode", JS_NewCFunction(ctx, doc_create_text, "createTextNode", 1));
     JS_SetPropertyStr(ctx, doc, "getElementById", JS_NewCFunction(ctx, doc_get_by_id, "getElementById", 1));
     JS_SetPropertyStr(ctx, doc, "querySelector", JS_NewCFunction(ctx, doc_query, "querySelector", 1));
     JS_SetPropertyStr(ctx, doc, "querySelectorAll", JS_NewCFunction(ctx, doc_query_all, "querySelectorAll", 1));
     JS_SetPropertyStr(ctx, doc, "addEventListener", JS_NewCFunction(ctx, el_add_listener, "addEventListener", 2));
+    JS_SetPropertyStr(ctx, doc, "removeEventListener",
+                      JS_NewCFunction(ctx, el_remove_listener, "removeEventListener", 2));
+    JS_SetPropertyStr(ctx, doc, "getElementsByTagName",
+                      JS_NewCFunction(ctx, doc_by_tag, "getElementsByTagName", 1));
+    JS_SetPropertyStr(ctx, doc, "getElementsByClassName",
+                      JS_NewCFunction(ctx, doc_by_class, "getElementsByClassName", 1));
     JS_SetPropertyStr(ctx, doc, "body", make_element(ctx, njs_dom_body(host)));
     JS_SetPropertyStr(ctx, doc, "documentElement", make_element(ctx, njs_dom_query(host, "html")));
     JS_SetPropertyStr(ctx, doc, "head", make_element(ctx, njs_dom_query(host, "head")));
     JS_SetPropertyStr(ctx, global, "document", doc);
+    /* The page's own address goes on before the prelude runs, because the
+     * prelude builds location out of it. */
+    install_page_address(ctx, global, host);
     JS_FreeValue(ctx, global);
     JSValue r = JS_Eval(ctx, PRELUDE, __builtin_strlen(PRELUDE), "<prelude>", JS_EVAL_TYPE_GLOBAL);
     JS_FreeValue(ctx, r);

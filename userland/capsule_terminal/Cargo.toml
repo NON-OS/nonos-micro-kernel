@@ -7,7 +7,7 @@
 
 [package]
 name = "nonos_terminal"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 publish = false
 license = "AGPL-3.0"
@@ -29,6 +29,10 @@ nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_inflate = { path = "../inflate" }
 nonos_base64 = { path = "../base64" }
+nonos_git = { path = "../nonos_git" }
+nonos_http = { path = "../nonos_http" }
+nonos_socket = { path = "../nonos_socket" }
+nonos_tls = { path = "../nonos_tls" }
 
 [profile.release]
 panic = "abort"

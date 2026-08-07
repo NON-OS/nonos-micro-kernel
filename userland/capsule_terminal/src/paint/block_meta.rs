@@ -16,23 +16,43 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::{CELL_WIDTH, TEXT_LEFT};
-use crate::term::block::{Block, Status};
+use super::constants::TEXT_LEFT;
+use crate::term::block::Block;
 use crate::term::theme::DIM;
 
+/// Size the meta is drawn at. Below the body, because it annotates a command
+/// rather than being part of what the command said.
+const META_PX: f32 = 11.0;
+
+/// Space between the run marks and the fields they sit beside.
+const GAP: i32 = 8;
+
+/// What a command did, at the right hand end of the line that started it.
+///
+/// Drawn right to left from the edge, so the columns line up down the
+/// scrollback whatever each command was called. A reader scanning for the one
+/// that failed is looking down a column, not reading each line.
 pub(super) fn draw_meta(fb: &mut PaintBuffer, b: &Block, stripe: u32, y: u32) {
-    let right = fb.width.saturating_sub(TEXT_LEFT);
-    let ts_x = right.saturating_sub(8 * CELL_WIDTH);
-    fb.text(ts_x, y + 1, &b.ts, DIM);
-    let (dbuf, dlen) = crate::term::dur::fmt_dur(b.dur_ms);
-    let dur_x = ts_x.saturating_sub((dlen as u32 + 1) * CELL_WIDTH);
-    fb.text(dur_x, y + 1, &dbuf[..dlen], DIM);
-    let mark: &[u8] = match b.status {
-        Status::Ok => b"\x11",
-        Status::Err => b"\x12",
-        Status::Running => b"",
-    };
-    if !mark.is_empty() {
-        fb.text(dur_x.saturating_sub(2 * CELL_WIDTH), y + 1, mark, stripe);
+    let baseline = (y + 1) as i32;
+    let mut right = fb.width.saturating_sub(TEXT_LEFT) as i32;
+
+    if let Ok(ts) = core::str::from_utf8(&b.ts) {
+        right -= fb.measure_ttf(ts, META_PX);
+        let _ = fb.text_ttf(right, baseline, ts, DIM, META_PX);
+        right -= GAP;
     }
+
+    let (dbuf, dlen) = crate::term::dur::fmt_dur(b.dur_ms);
+    if let Ok(dur) = core::str::from_utf8(&dbuf[..dlen]) {
+        right -= fb.measure_ttf(dur, META_PX);
+        let _ = fb.text_ttf(right, baseline, dur, stripe, META_PX);
+        right -= GAP;
+    }
+
+    // No separate status glyph. The faces here do not carry a tick or a
+    // cross, so one drew as a missing-glyph box, which says less than
+    // nothing. The duration takes the stripe colour instead: the outcome is
+    // already stated by the stripe down the left of the block, and this
+    // repeats it where the eye is reading.
+    let _ = stripe;
 }

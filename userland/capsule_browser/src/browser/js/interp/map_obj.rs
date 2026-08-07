@@ -31,7 +31,11 @@ pub fn map_obj(argv: &[Value]) -> Value {
         for e in init.borrow().iter() {
             if let Value::Array(p) = e {
                 let b = p.borrow();
-                set_entry(&store, b.first().cloned().unwrap_or(Value::Undef), b.get(1).cloned().unwrap_or(Value::Undef));
+                set_entry(
+                    &store,
+                    b.first().cloned().unwrap_or(Value::Undef),
+                    b.get(1).cloned().unwrap_or(Value::Undef),
+                );
             }
         }
     }

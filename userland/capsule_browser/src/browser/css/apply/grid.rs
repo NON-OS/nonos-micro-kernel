@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::browser::css::computed::Computed;
+use crate::browser::css::auto_repeat::parse_auto_repeat;
+use crate::browser::css::computed::{Computed, MAX_GRID_COLS};
 use crate::browser::css::grid_tracks::parse_grid_tracks;
 use crate::browser::css::parse_px::parse_px;
 
@@ -24,7 +25,16 @@ const MAX_GAP_PX: u32 = 128;
 pub(super) fn apply_grid(c: &mut Computed, name: &str, value: &str, fs: u32) -> bool {
     match name {
         "grid-template-columns" => {
-            if let Some((cols, ncols)) = parse_grid_tracks(value, fs) {
+            // auto-fill and auto-fit carry no track count, so the value has to
+            // be recognised before the fixed-list parser rejects it and leaves
+            // the container on its one-column default.
+            if let Some((mode, min, track)) = parse_auto_repeat(value, fs) {
+                c.grid_auto = Some(mode);
+                c.grid_auto_min = min;
+                c.grid_cols = [track; MAX_GRID_COLS];
+                c.grid_col_n = 1;
+            } else if let Some((cols, ncols)) = parse_grid_tracks(value, fs) {
+                c.grid_auto = None;
                 c.grid_cols = cols;
                 c.grid_col_n = ncols;
             }

@@ -20,7 +20,9 @@ mod next_matching;
 mod prev_matching;
 mod push;
 mod reset_cursor;
+mod search_back;
 mod searching;
+mod suggest;
 mod types;
 
 pub use types::History;

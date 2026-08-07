@@ -106,7 +106,7 @@ checksum = "0ca88d725a0a943b096803bd34e73a4437208b6077654cc4ecb2947a5f91618d"
 
 [[package]]
 name = "nonos_capsule_net_core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "nonos_userland_libc",
  "smoltcp",
@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_userland_libc"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "linked_list_allocator",
 ]

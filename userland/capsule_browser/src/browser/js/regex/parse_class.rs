@@ -36,8 +36,8 @@ impl<'a> P<'a> {
             }
             self.bump();
             let start = c;
-            let dash_range = self.peek() == Some('-')
-                && self.cs.get(self.i + 1).map_or(false, |&n| n != ']');
+            let dash_range =
+                self.peek() == Some('-') && self.cs.get(self.i + 1).map_or(false, |&n| n != ']');
             if dash_range {
                 self.bump();
                 let end = self.bump().unwrap_or(start);

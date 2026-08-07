@@ -19,8 +19,21 @@ use alloc::vec::Vec;
 use nonos_libc::mk_ipc_call_timeout;
 
 /// A mixnet round trip crosses several hops before an exit answers, so this
-/// is generous next to a direct socket call.
+/// is generous next to a direct socket call. It is what a call carrying bytes
+/// out of the browser is allowed to wait for.
 const CALL_MS: u64 = 15_000;
+
+/// What a call carrying nothing may wait for.
+///
+/// Asking whether more has arrived yet is not the same as sending, and it
+/// happens on the thread that draws the window and answers the pointer.
+/// Waiting the sending timeout for an answer that has not arrived stops the
+/// whole application: the reader cannot move the window, reach a menu or
+/// stop the page, and the browser looks like it has crashed when it is in
+/// fact waiting patiently. A poll comes back almost at once and the fetch
+/// carries on over the ticks that follow.
+const POLL_MS: u64 = 60;
+
 /// Largest single answer worth taking from the proxy.
 const REPLY_MAX: usize = 36 * 1024;
 
@@ -30,6 +43,9 @@ const REPLY_MAX: usize = 36 * 1024;
 /// nothing is wrapped here: what the browser would have written to a socket is
 /// exactly what is sent.
 pub fn exchange(socks_port: u32, data: &[u8]) -> Result<Vec<u8>, ()> {
+    // A frame with nothing but its marker is a poll. It carries no bytes for
+    // the exit, so there is nothing to wait on the network for.
+    let wait = if data.len() <= 1 { POLL_MS } else { CALL_MS };
     let mut rx = vec![0u8; REPLY_MAX];
     let n = mk_ipc_call_timeout(
         socks_port as u64,
@@ -37,7 +53,7 @@ pub fn exchange(socks_port: u32, data: &[u8]) -> Result<Vec<u8>, ()> {
         data.len(),
         rx.as_mut_ptr(),
         rx.len(),
-        CALL_MS,
+        wait,
     );
     if n < 0 {
         return Err(());

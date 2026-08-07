@@ -22,6 +22,20 @@ use super::node::{Node, NodeKind};
 
 pub struct Dom {
     pub nodes: Vec<Node>,
+    /// The address this document was loaded from.
+    ///
+    /// It belongs to the document rather than to the viewer: it is what
+    /// `location` reports, and what a relative `href` or `src` resolves
+    /// against. A script told the page came from somewhere else builds links
+    /// that go somewhere else.
+    pub base: String,
+    /// Where each node was last laid out, as `[x, y, w, h]`.
+    ///
+    /// A page measures itself to decide what fits, and every one of those
+    /// reads answered zero, which is indistinguishable from an element with
+    /// no size. The numbers exist in the display list already; they are
+    /// copied here because that is what a script can reach.
+    pub rects: Vec<[i32; 4]>,
 }
 
 impl Dom {
@@ -34,6 +48,13 @@ impl Dom {
             parent: 0,
             children: Vec::new(),
         };
-        Dom { nodes: vec![root] }
+        Dom { nodes: vec![root], base: String::new(), rects: Vec::new() }
+    }
+}
+
+impl Default for Dom {
+    /// A document holding nothing but its root, which is what `new` builds.
+    fn default() -> Self {
+        Self::new()
     }
 }

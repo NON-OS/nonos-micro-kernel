@@ -6,7 +6,7 @@
 # via #[path]) that decides when a certificate validity window is enforced.
 [package]
 name = "capsule_load_proofs"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

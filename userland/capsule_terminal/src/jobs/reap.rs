@@ -45,7 +45,7 @@ pub(super) fn reap(state: &mut State) {
 }
 
 fn take_env(job: &mut JobRecord) -> JobEnv {
-    let empty = JobEnv { cwd: Vec::new(), vars: Vec::new(), aliases: Vec::new(), owner_pid: 0 };
+    let empty = JobEnv { cwd: Vec::new(), vars: Vec::new(), aliases: Vec::new() };
     core::mem::replace(&mut job.env, empty)
 }
 

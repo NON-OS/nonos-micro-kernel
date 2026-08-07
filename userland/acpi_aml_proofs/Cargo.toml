@@ -6,7 +6,7 @@
 # #[path]) against spec-shaped and hostile ACPI bytes, with no firmware present.
 [package]
 name = "acpi_aml_proofs"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

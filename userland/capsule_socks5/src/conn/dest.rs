@@ -21,6 +21,12 @@ pub const DOMAIN_MAX: usize = 255;
 
 /// A destination for the tunnel, copied out of the transient request buffer so
 /// it outlives the handshake bytes.
+///
+/// The domain variant carries its name inline rather than behind a pointer.
+/// Boxing it would shrink the enum and put an allocation on the path every
+/// connection takes, which is the wrong trade in a capsule that keeps a fixed
+/// table and no allocator pressure.
+#[allow(clippy::large_enum_variant)]
 pub enum Dest {
     V4([u8; 4], u16),
     V6([u8; 16], u16),

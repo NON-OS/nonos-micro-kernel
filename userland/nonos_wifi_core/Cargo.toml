@@ -6,7 +6,7 @@
 # on. no_std for the drivers; std under `cargo test` for the host proofs.
 [package]
 name = "nonos_wifi_core"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

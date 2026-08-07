@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_capsule_wallpaper"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "nonos_policy_proto",
  "nonos_toolkit",
@@ -66,11 +66,11 @@ dependencies = [
 
 [[package]]
 name = "nonos_policy_proto"
-version = "0.2.0"
+version = "0.3.0"
 
 [[package]]
 name = "nonos_toolkit"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ab_glyph",
  "nonos_userland_libc",
@@ -79,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_userland_libc"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "linked_list_allocator",
 ]

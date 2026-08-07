@@ -17,10 +17,13 @@
 pub const F_BOLD: u8 = 1;
 pub const F_UNDERLINE: u8 = 2;
 pub const F_REVERSE: u8 = 4;
+/// The right half of a character drawn two columns wide. It holds no glyph
+/// of its own; the cell before it drew both halves.
+pub const F_WIDE_TAIL: u8 = 8;
 
 #[derive(Clone, Copy)]
 pub struct Cell {
-    pub ch: u8,
+    pub ch: char,
     // Full ARGB foreground and background, so 24-bit colour is preserved.
     pub fg: u32,
     pub bg: u32,
@@ -30,7 +33,7 @@ pub struct Cell {
 impl Cell {
     pub const fn blank() -> Cell {
         Cell {
-            ch: b' ',
+            ch: ' ',
             fg: crate::term::vt::color::DEFAULT_FG,
             bg: crate::term::vt::color::DEFAULT_BG,
             flags: 0,
