@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod decode;
-mod encode;
-mod errno;
-mod types;
+use alloc::vec::Vec;
 
-pub use decode::decode_request;
-pub use encode::encode_response;
-pub use errno::{
-    EACCES, EBADF, EEXIST, EINVAL, EISDIR, EMSGSIZE, ENOENT, ENOSPC, ENOTEMPTY,
-};
-pub use types::{
-    Request, KERNEL_REPLY_ENDPOINT, MAX_DATA_BYTES, MAX_LIST_BYTES, MAX_PATH_BYTES, OP_CHMOD,
-    OP_CLOSE, OP_COPY, OP_HEALTHCHECK, OP_LIST, OP_MKDIR, OP_OPEN, OP_READ, OP_RENAME, OP_RMDIR,
-    OP_SEEK, OP_STAT, OP_STORE_PERSIST, OP_STORE_REMOVE, OP_STORE_STATUS, OP_TRUNCATE, OP_UNLINK,
-    OP_USAGE, OP_WRITE, O_APPEND,
-    O_CREATE, O_TRUNC,
-    SEEK_CUR, SEEK_END, SEEK_SET,
-};
+use crate::protocol::{encode_response, Request, OP_STORE_STATUS};
+
+pub fn store_status(req: Request<'_>) -> Vec<u8> {
+    let code = crate::blk::status::current();
+    encode_response(
+        OP_STORE_STATUS,
+        req.flags,
+        req.request_id,
+        0,
+        &code.to_le_bytes(),
+    )
+}
