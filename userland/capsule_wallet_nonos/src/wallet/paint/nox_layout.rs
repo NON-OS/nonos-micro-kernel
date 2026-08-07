@@ -38,8 +38,10 @@ pub struct NoxLayout {
     pub height: u32,
 }
 
-/// Side margin the screens share.
+/// Side margin the screens share, matching paint_nox.rs.
 const MARGIN: u32 = 226;
+/// Inset kept on the right, also matching the rest of the screen.
+const RIGHT_INSET: u32 = 26;
 /// Narrower than this and two columns stop being readable.
 const MIN_RIGHT: u32 = 260;
 /// The left card never shrinks past the point its controls stop fitting.
@@ -53,8 +55,11 @@ impl NoxLayout {
     /// Layout for a viewport of this width and height. Height of zero means
     /// unknown, which keeps the roomy arrangement.
     pub fn sized(width: u32, height: u32) -> Self {
-        let cx = MARGIN.min(width / 8);
-        let cw = width.saturating_sub(cx * 2).max(MIN_LEFT);
+        // The same inset the rest of the NOX screen uses, so the staking card
+        // lines up with the summary cards above it instead of hanging into
+        // the sidebar. Only a window too narrow to hold that gives it up.
+        let cx = if width > MARGIN + RIGHT_INSET + MIN_LEFT { MARGIN } else { width / 8 };
+        let cw = width.saturating_sub(cx + RIGHT_INSET).max(MIN_LEFT);
         // Two columns only while both can be themselves. Below that the right
         // column goes under the left at full width rather than being squeezed
         // into a sliver, or worse, given a width that underflowed.
