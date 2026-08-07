@@ -16,6 +16,7 @@ path = "src/main.rs"
 [dependencies]
 blake3 = "1"
 nonos_capsule_sign = { path = "../../nonos-sign", package = "nonos-sign" }
+nonos_pack_core = { path = "core", package = "nonos-pack-core" }
 
 [workspace]
 members = ["core"]
