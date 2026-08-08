@@ -1,0 +1,34 @@
+# NONOS userland: capsule_qrgen
+#
+# QR code generator shipped only through the on-disk package store: encodes a
+# fixed payload with the unmodified crates.io qrcode crate and paints the
+# module matrix. Never embedded in the kernel image.
+
+[package]
+name = "nonos_qrgen"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "NONOS qrgen capsule: QR generator on unmodified qrcode"
+
+[[bin]]
+name = "qrgen"
+path = "src/main.rs"
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc", default-features = false }
+nonos_app_skeleton = { path = "../app_skeleton", default-features = false }
+qrcode = { version = "0.14.1", default-features = false }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true
