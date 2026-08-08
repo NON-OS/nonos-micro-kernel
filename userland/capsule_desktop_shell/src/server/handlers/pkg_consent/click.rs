@@ -14,17 +14,25 @@ use crate::render::sync_toast_layer;
 use crate::server::repaint::repaint;
 use crate::state::{Context, NotifyLevel, PkgInstallPrompt};
 
+/// The commit blocks this single-threaded loop for as long as the installer
+/// takes, so the modal is torn down and the frame handed to the compositor
+/// before it starts: otherwise the stale panel sits on screen for the whole
+/// install with no sign that the click registered.
 pub(crate) fn click(ctx: &mut Context, px: u32, py: u32) -> bool {
-    if ctx.pending_pkg_install.is_none() {
+    let Some(prompt) = ctx.pending_pkg_install.take() else {
         return false;
+    };
+    if !hit(approve_rect(ctx.width, ctx.height), px, py) {
+        repaint(ctx);
+        return true;
     }
-    if hit(approve_rect(ctx.width, ctx.height), px, py) {
-        if let Some(prompt) = ctx.pending_pkg_install.take() {
-            commit(ctx, prompt);
-        }
-    } else {
-        ctx.pending_pkg_install = None;
-    }
+    let mut text = Vec::with_capacity(32);
+    text.extend_from_slice(b"installing ");
+    text.extend_from_slice(&prompt.summary.slug);
+    ctx.toasts.push(&text, NotifyLevel::Info, mk_time_millis());
+    sync_toast_layer(ctx);
+    repaint(ctx);
+    commit(ctx, prompt);
     repaint(ctx);
     true
 }
