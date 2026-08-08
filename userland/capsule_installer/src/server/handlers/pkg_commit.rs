@@ -19,6 +19,7 @@ use alloc::vec::Vec;
 use nonos_app_skeleton::clients::vfs::{read_file, store_install};
 use nonos_libc::mk_getpid;
 
+use super::super::discover::service_taken;
 use super::load_by_name::valid_name;
 use super::pkg_body::parse_commit;
 use super::pkg_paths::{artifact_path, installed, EXTS};
@@ -54,7 +55,7 @@ pub fn pkg_commit(req: Request<'_>) -> Vec<u8> {
     if !valid_name(name) {
         return encode_response(req.seq, EINVAL, &[]);
     }
-    if installed(pid, name) {
+    if installed(pid, name) || service_taken(name) {
         return encode_response(req.seq, EEXIST, &[]);
     }
     let blobs = [v.sections.elf, v.sections.manifest, v.sections.id_cert, v.sections.zk_trailer];
