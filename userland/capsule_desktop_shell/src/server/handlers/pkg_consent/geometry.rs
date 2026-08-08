@@ -8,7 +8,7 @@
 use crate::render::layout::Rect;
 
 const PANEL_W: u32 = 560;
-const PANEL_H: u32 = 230;
+const PANEL_H: u32 = 260;
 const BTN_W: u32 = 110;
 const BTN_H: u32 = 32;
 

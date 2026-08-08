@@ -12,12 +12,12 @@ use crate::render::text::draw_overlay_text;
 use crate::server::handlers::consent::{approve_rect, cancel_rect, panel_rect};
 use crate::state::Context;
 
-const PANEL: u32 = 0xFF12_1A26;
-const BORDER: u32 = 0xFF2E_3A4C;
-const APPROVE_BG: u32 = 0xFF1E_7A3C;
-const CANCEL_BG: u32 = 0xFF3A_2430;
-const FG: u32 = 0xFFDF_EAF7;
-const DIM: u32 = 0xFFAF_BED2;
+pub(super) const PANEL: u32 = 0xFF12_1A26;
+pub(super) const BORDER: u32 = 0xFF2E_3A4C;
+pub(super) const APPROVE_BG: u32 = 0xFF1E_7A3C;
+pub(super) const CANCEL_BG: u32 = 0xFF3A_2430;
+pub(super) const FG: u32 = 0xFFDF_EAF7;
+pub(super) const DIM: u32 = 0xFFAF_BED2;
 const GLYPH_ADV: u32 = 8;
 
 const TITLE: &[u8] = b"Launch third-party app?";
@@ -37,18 +37,18 @@ pub fn paint_consent(ctx: &Context) {
     button(ctx, cancel_rect(ctx.width, ctx.height), CANCEL_BG, b"Cancel");
 }
 
-fn button(ctx: &Context, r: Rect, bg: u32, label: &[u8]) {
+pub(super) fn button(ctx: &Context, r: Rect, bg: u32, label: &[u8]) {
     fill(ctx, r, bg);
     border(ctx, r, BORDER);
     let tx = r.x + r.width.saturating_sub(label.len() as u32 * GLYPH_ADV) / 2;
     draw_overlay_text(ctx, tx, r.y + r.height / 2 - 4, label, FG);
 }
 
-fn fill(ctx: &Context, r: Rect, argb: u32) {
+pub(super) fn fill(ctx: &Context, r: Rect, argb: u32) {
     fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, r.x, r.y, r.width, r.height, argb);
 }
 
-fn border(ctx: &Context, r: Rect, argb: u32) {
+pub(super) fn border(ctx: &Context, r: Rect, argb: u32) {
     let (va, st, w, h) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
     fill_rect(va, st, w, h, r.x, r.y, r.width, 1, argb);
     fill_rect(va, st, w, h, r.x, r.y + r.height - 1, r.width, 1, argb);
