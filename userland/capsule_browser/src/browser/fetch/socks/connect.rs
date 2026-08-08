@@ -31,7 +31,19 @@ pub fn connect(port: u32, f: &mut Fetch) {
         return;
     }
     if f.socks[0] != 0x05 || f.socks[1] != 0x00 || f.socks[2] != 0x00 {
-        f.error = Some("socks connect rejected");
+        // The proxy already said which step refused, so report that rather than
+        // the bare fact of refusal. Each of these is a different thing to go and
+        // look at, and on a machine with no console this line is the only place
+        // the difference shows.
+        f.error = Some(match f.socks[1] {
+            0x01 => "mixnet: the request could not be built",
+            0x02 => "mixnet: refused by ruleset",
+            0x03 => "mixnet: no session, the mixnet is not connected",
+            0x04 => "mixnet: no exit for this destination",
+            0x05 => "mixnet: the gateway refused the request",
+            0x06 => "mixnet: expired in transit",
+            _ => "socks connect rejected",
+        });
         f.phase = Phase::Error;
         return;
     }

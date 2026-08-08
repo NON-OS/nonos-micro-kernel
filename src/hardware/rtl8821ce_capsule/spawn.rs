@@ -49,6 +49,10 @@ pub fn spawn_driver_rtl8821ce_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()
+            // The station address is drawn rather than read out of the efuse, and
+            // CryptoRandom is gated on this capability. Without it the draw comes
+            // back empty, the PHY is never configured, and the radio stays down.
+            | Capability::Crypto.bit()
             | crate::capabilities::serial_debug_cap()
             | Capability::Driver.bit()
             | Capability::DeviceEnum.bit()

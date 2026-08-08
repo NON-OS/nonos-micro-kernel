@@ -50,8 +50,52 @@ fn stage_message(stage: DriverStage) -> Option<&'static [u8]> {
         DriverStage::FirmwareFailed => Some(b"Wi-Fi radio: firmware load failed."),
         DriverStage::NoDma => Some(b"Wi-Fi radio: DMA setup failed."),
         DriverStage::EfuseFailed => Some(b"Wi-Fi radio: efuse read failed."),
+        DriverStage::NoStationAddress => Some(b"Wi-Fi radio: no entropy for a station address."),
         DriverStage::Unknown => Some(b"Wi-Fi radio: unknown driver state."),
     }
+}
+
+// The efuse registers behind an efuse-stage failure, one line under the message.
+// The stage name says the read stalled; these say whether the register window is
+// dead (all-ones), unclocked (all-zero), or live with the ready bit never set,
+// which are three different faults with the same name on a machine that has no
+// serial console to ask.
+fn paint_efuse_registers(fb: &mut PaintBuffer, state: &State, stage: DriverStage, y: u32) {
+    if stage != DriverStage::EfuseFailed {
+        return;
+    }
+    let Some(dp) = state.wifi_datapath else {
+        return;
+    };
+    // Which window the registers were read from, always, even when the read
+    // itself never stalled. rtw88 uses BAR 2 on this chip; another index means
+    // the reads landed somewhere the registers do not live.
+    let mut bar = *b"bar=_ va=________";
+    bar[4] = if dp.bar_index > 9 { b'?' } else { b'0' + dp.bar_index as u8 };
+    for (i, byte) in bar[9..17].iter_mut().rev().enumerate() {
+        *byte = HEX[((dp.window_va >> (i * 4)) & 0xF) as usize];
+    }
+    fb.text(LABEL_LEFT, y + ROW_H, &bar, STATUS_FG_IDLE);
+    // The driver stores one past the stalled address, so zero means no read ever
+    // stalled and the failure is upstream of the polling loop entirely.
+    let Some(addr) = dp.efuse_addr.checked_sub(1) else {
+        fb.text(LABEL_LEFT, y, b"efuse: no stalled read recorded", STATUS_FG_IDLE);
+        return;
+    };
+    let mut line = [0u8; 48];
+    let mut o = 0;
+    for (label, value) in [(&b"ctl="[..], dp.efuse_ctl), (b"addr=", addr), (b"ldo=", dp.efuse_ldo)]
+    {
+        line[o..o + label.len()].copy_from_slice(label);
+        o += label.len();
+        for i in (0..8).rev() {
+            line[o] = HEX[((value >> (i * 4)) & 0xF) as usize];
+            o += 1;
+        }
+        line[o] = b' ';
+        o += 1;
+    }
+    fb.text(LABEL_LEFT, y, &line[..o], STATUS_FG_IDLE);
 }
 
 // Write `v` as four lowercase hex digits into `out`.
@@ -246,6 +290,7 @@ fn paint_status(fb: &mut PaintBuffer, state: &State, y: u32) {
     if let Some(stage) = state.wifi_stage {
         if let Some(msg) = stage_message(stage) {
             fb.text(LABEL_LEFT, y, msg, STATUS_FG_IDLE);
+            paint_efuse_registers(fb, state, stage, y + ROW_H);
             return;
         }
     }

@@ -221,6 +221,16 @@ $(NONOS_RT_OBJ): $(NONOS_RT_SRCS) | $(TARGET_DIR)/.nonos-toolchain.stamp
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) rustc --release --target ../../userland/$(NONOS_USER_TARGET).json \
 		-Zbuild-std=core -- --emit obj=$(NONOS_RT_OBJ)
+	@# `--emit obj=` only writes when cargo actually runs rustc. This crate keeps
+	@# its own target directory, which `distclean` does not remove, so cargo can
+	@# call it fresh, skip rustc and leave nothing behind while still exiting 0.
+	@# Every std capsule then fails to link against an object that is not there.
+	@test -f $(NONOS_RT_OBJ) || { \
+		cd toolchain/nonos-rt && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) clean && cd ../.. && \
+		cd toolchain/nonos-rt && RUSTUP_TOOLCHAIN=$(TOOLCHAIN) $(CARGO) rustc --release \
+			--target ../../userland/$(NONOS_USER_TARGET).json \
+			-Zbuild-std=core -- --emit obj=$(NONOS_RT_OBJ); }
+	@test -f $(NONOS_RT_OBJ) || { echo "nonos_rt.o was not produced"; exit 1; }
 
 # std platform layer: patch the pinned rust-src so -Zbuild-std=std turns
 # unmodified `use std::...` crates into NONOS binaries. Stamped and keyed on
@@ -654,7 +664,14 @@ endef
 # Kernel ELF artefact rule, no-features default (resolves to
 # microkernel-core via Cargo.toml). Phony deps stay off this rule so a
 # chain walk does not invalidate kernels built with a feature variant.
-$(TARGET_DIR)/x86_64-nonos/release/nonos-kernel: $(SIGNING_KEY)
+#
+# The signing key is an order-only prerequisite for the same reason. A rotated
+# key is newer than the kernel ELF, and as a normal prerequisite that rebuilt
+# this featureless kernel over the same output path a feature variant writes.
+# The signer then dual-signed and attested a microkernel-core image while the
+# log still said microkernel-full-gui. The key has to exist; its age says
+# nothing about whether this ELF is current.
+$(TARGET_DIR)/x86_64-nonos/release/nonos-kernel: | $(SIGNING_KEY)
 	@echo "Building kernel (default = microkernel-core)..."
 	@$(SDK_FLAGS) NONOS_SIGNING_KEY=$(KERNEL_SIGNING_KEY) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \

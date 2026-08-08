@@ -67,14 +67,15 @@ pub fn feed(pid: u32, data: &[u8]) -> Reply {
             // A full table has no id to give. Zero is reserved for "no
             // connection", so using it would open a tunnel that every later
             // frame fails to match, rather than telling the client no.
-            let opened = match server.manager.open(pid) {
-                Some(id) => open_tunnel(id, &dest) == OpenOutcome::Opened,
-                None => false,
+            let outcome = match server.manager.open(pid) {
+                Some(id) => open_tunnel(id, &dest),
+                None => OpenOutcome::BadRequest,
             };
+            let opened = outcome == OpenOutcome::Opened;
             let Some(conn) = server.clients.get(pid) else {
                 return Reply::closed(Vec::new());
             };
-            let (reply, len) = conn.opened(opened);
+            let (reply, len) = conn.opened(outcome.reply_code());
             let bytes = reply[..len].to_vec();
             if opened {
                 Reply::open(bytes)

@@ -17,10 +17,34 @@
 use crate::conn::Dest;
 use crate::nym::{connect_request, open_session, SendError};
 
+/// Why a tunnel did or did not open. These are kept apart all the way to the
+/// SOCKS reply byte: they fail for unrelated reasons, and collapsing them into
+/// one code leaves a client with nothing to report but "rejected" on a machine
+/// whose only other channel is a serial port it does not have.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum OpenOutcome {
     Opened,
-    NoRoute,
+    /// The mixnet has no session, so nothing can be sent through it at all.
+    NoSession,
+    /// A session exists but no exit has been chosen to carry the destination.
+    NoExit,
+    /// The request was formed and refused on its way out.
+    SendFailed,
+    /// The request could not be built for this destination.
+    BadRequest,
+}
+
+impl OpenOutcome {
+    /// The SOCKS reply code that says this to the client.
+    pub fn reply_code(self) -> u8 {
+        match self {
+            OpenOutcome::Opened => crate::wire::REP_OK,
+            OpenOutcome::NoSession => crate::wire::REP_NET_UNREACH,
+            OpenOutcome::NoExit => crate::wire::REP_HOST_UNREACH,
+            OpenOutcome::SendFailed => crate::wire::REP_CONN_REFUSED,
+            OpenOutcome::BadRequest => crate::wire::REP_GENERAL_FAIL,
+        }
+    }
 }
 
 /// Ask the mixnet to open a tunnel to `dest`.
@@ -32,27 +56,27 @@ pub fn open_tunnel(conn_id: u64, dest: &Dest) -> OpenOutcome {
     super::trace::destination(dest);
     if open_session().is_none() {
         super::trace::open_failed(b"no session", 0);
-        return OpenOutcome::NoRoute;
+        return OpenOutcome::NoSession;
     }
     match connect_request(conn_id, dest) {
         Ok(frame) => match crate::nym::send_through_mixnet(&frame) {
             Ok(()) => OpenOutcome::Opened,
             Err(SendError::Remote(code)) => {
                 super::trace::open_failed(b"send", code);
-                OpenOutcome::NoRoute
+                OpenOutcome::SendFailed
             }
             Err(_) => {
                 super::trace::open_failed(b"send", 0);
-                OpenOutcome::NoRoute
+                OpenOutcome::SendFailed
             }
         },
         Err(SendError::NoExit) => {
             super::trace::open_failed(b"no exit", 0);
-            OpenOutcome::NoRoute
+            OpenOutcome::NoExit
         }
         Err(_) => {
             super::trace::open_failed(b"request", 0);
-            OpenOutcome::NoRoute
+            OpenOutcome::BadRequest
         }
     }
 }

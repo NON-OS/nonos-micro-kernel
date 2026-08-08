@@ -55,6 +55,10 @@ pub fn spawn_driver_e1000_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()
+            // The station address is drawn rather than read out of the EEPROM,
+            // and CryptoRandom is gated on this capability. The draw fails closed,
+            // so without it the card never gets an address to transmit under.
+            | Capability::Crypto.bit()
             | Capability::Driver.bit()
             | Capability::DeviceEnum.bit()
             | Capability::Mmio.bit()

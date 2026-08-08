@@ -143,3 +143,11 @@ fn clr<M: Mmio>(mmio: &M, off: usize, bits: u32) {
 pub fn rfe_is_btg(rfe_option: u8) -> bool {
     matches!(rfe_option & 0x1F, 2 | 4 | 7 | 0x0A | 0x0C | 0x0F)
 }
+
+/// Whether this is a front-end the 8821c actually ships with. rtw88 keeps a table
+/// per option and refuses one it has no entry for. 0x1F in particular is what an
+/// erased or unreadable efuse yields, and driving the RF from it programs the
+/// chip for hardware that is not on this board.
+pub fn rfe_is_supported(rfe_option: u8) -> bool {
+    matches!(rfe_option & 0x1F, 0..=7 | 0x0A | 0x0C | 0x0F)
+}

@@ -80,6 +80,9 @@ pub enum DriverStage {
     FirmwareFailed,
     NoDma,
     EfuseFailed,
+    /// The radio came up but no station address could be drawn, so it was left
+    /// dark rather than transmitting under a predictable one.
+    NoStationAddress,
     Unknown,
 }
 
@@ -93,6 +96,7 @@ impl DriverStage {
             4 => DriverStage::FirmwareFailed,
             5 => DriverStage::NoDma,
             6 => DriverStage::EfuseFailed,
+            7 => DriverStage::NoStationAddress,
             _ => DriverStage::Unknown,
         }
     }

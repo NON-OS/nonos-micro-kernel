@@ -1,0 +1,105 @@
+# Boot the image under VirtualBox on a Windows host and bring back what it did.
+#
+# Every other runtime job here uses QEMU on Linux with a virtio network card.
+# VirtualBox presents an Intel card instead, so the e1000 driver has had no
+# coverage at all, and the reports we cannot reproduce all come from Windows
+# hosts. This runs the real thing: Windows, VirtualBox, the shipped ISO, with a
+# serial port to a file so the guest can say what happened.
+#
+# The runner is itself a virtual machine, so VirtualBox may not be able to take
+# the processor's virtualisation extensions. That is not a wasted run: VBox.log
+# records which execution engine it got, and knowing whether a Windows host in
+# this configuration can run the image at all is the question being asked.
+
+name: windows-virtualbox
+
+on:
+  # A dispatch can only be started from the default branch, so until this is
+  # merged the push trigger below is how it runs. It is scoped to this file, so
+  # ordinary work on the branch does not spend a Windows runner.
+  push:
+    branches: [browser-engine]
+    paths: [".github/workflows/ci-windows-virtualbox.yml"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Tag of the release carrying the ISO. A draft works, so an image can be tested before it is published."
+        required: true
+      asset:
+        description: "Name of the ISO asset on that release"
+        required: false
+        default: "nonos.iso"
+      boot_seconds:
+        description: "How long to let it run before capturing"
+        required: false
+        default: "180"
+
+jobs:
+  boot:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Install VirtualBox
+        run: choco install virtualbox --no-progress --yes
+        shell: pwsh
+
+      - name: Fetch the image
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          gh release download "${{ inputs.release_tag || 'windows-boot-test' }}" --repo "$env:GITHUB_REPOSITORY" `
+              --pattern "${{ inputs.asset || 'nonos.iso' }}" --dir artifacts --clobber
+          Move-Item artifacts\* artifacts\nonos.iso -Force -EA SilentlyContinue
+          Get-FileHash artifacts\nonos.iso -Algorithm SHA256
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Create the machine
+        run: |
+          $vb = "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"
+          & $vb createvm --name nonos --ostype Linux_64 --register
+          & $vb modifyvm nonos --memory 4096 --cpus 2 --firmware efi `
+              --graphicscontroller vmsvga --vram 128 `
+              --nic1 nat --nictype1 82540EM --accelerate3d off
+          & $vb modifyvm nonos --uart1 0x3F8 4 --uartmode1 file "$PWD\artifacts\serial.log"
+          & $vb storagectl nonos --name SATA --add sata --controller IntelAhci
+          & $vb storageattach nonos --storagectl SATA --port 0 --device 0 `
+              --type dvddrive --medium "$PWD\artifacts\nonos.iso"
+        shell: pwsh
+
+      - name: Boot it
+        run: |
+          $vb = "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"
+          & $vb startvm nonos --type headless
+          Start-Sleep -Seconds ${{ inputs.boot_seconds || '180' }}
+          & $vb controlvm nonos screenshotpng "$PWD\artifacts\screen.png"
+          & $vb controlvm nonos poweroff
+        shell: pwsh
+        continue-on-error: true
+
+      - name: Say what happened
+        if: always()
+        run: |
+          Copy-Item "$env:USERPROFILE\VirtualBox VMs\nonos\Logs\VBox.log" artifacts\ -EA SilentlyContinue
+          Write-Host "=== execution engine ==="
+          Select-String -Path artifacts\VBox.log -Pattern "NEM|VT-x|AMD-V|Driverless" -EA SilentlyContinue |
+            Select-Object -First 6
+          Write-Host "=== serial, last 40 lines ==="
+          if (Test-Path artifacts\serial.log) {
+            Get-Content artifacts\serial.log -Tail 40
+          } else {
+            Write-Host "no serial output: the guest never reached a console"
+          }
+        shell: pwsh
+
+      - name: Keep the evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-virtualbox-boot
+          path: |
+            artifacts/serial.log
+            artifacts/screen.png
+            artifacts/VBox.log
+          if-no-files-found: warn

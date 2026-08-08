@@ -35,6 +35,7 @@ mod fw;
 mod fwload;
 mod link;
 mod mac;
+mod pcie;
 mod phy;
 mod pwr;
 mod regs;
@@ -75,7 +76,7 @@ pub unsafe extern "C" fn _start() -> ! {
 /// serial-less machine the returned stage is the only way to see this, surfaced
 /// through the panel's status request.
 fn bring_up() -> (Option<Mapped>, Stage) {
-    let mapped = match setup::run() {
+    let mut mapped = match setup::run() {
         Ok(m) => m,
         Err(e) => {
             status::line(b"[rtl8821ce] ");
@@ -94,6 +95,24 @@ fn bring_up() -> (Option<Mapped>, Stage) {
             status::line(b"[rtl8821ce] no response after power-on\n");
             return (Some(mapped), Stage::DeadMmio);
         }
+    }
+    // Hold the link out of L1 before reading anything that matters. An L1 link
+    // gates the chip's internal clocks, and a gated block answers reads with
+    // zeros while the always-on registers keep answering, which reads as a
+    // register window that is half alive. The host had ASPM L1 enabled on this
+    // link, and the chip carries its own enable that only the driver can clear.
+    if !pcie::hold_link_awake(&mapped.regs) {
+        status::line(b"[rtl8821ce] pcie link config did not answer\n");
+    }
+    // Read the board facts here, on a freshly powered MAC, which is where rtw88
+    // takes them. Taken at the end of bring-up instead, after the firmware
+    // download and the MAC tables, the efuse control and LDO registers answered
+    // zero on real silicon while the chip id register a few offsets away answered
+    // normally. A failure here is not fatal to the rest of bring-up: the PHY needs
+    // the RF front-end option, so it reports the efuse stage itself.
+    mapped.efuse = efuse::read(&mapped.regs);
+    if mapped.efuse.is_none() {
+        status::line(b"[rtl8821ce] efuse unreadable on a freshly powered mac\n");
     }
     // With the MAC powered, load the 8051 firmware. On real silicon this runs the
     // reserved-page staging and DDMA; off-silicon the whole path bar the DMA

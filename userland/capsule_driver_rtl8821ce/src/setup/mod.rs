@@ -23,13 +23,35 @@ use nonos_libc::{
     MK_PCI_CMD_BUS_MASTER, MK_PCI_CMD_MEMORY_SPACE,
 };
 
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use crate::discover::{find, Found};
 use crate::regs::Regs;
+
+/// Which BAR the register window came from, and the low half of the address it
+/// was mapped at. rtw88 hardcodes bar_id 2 for this chip; this driver takes the
+/// first MMIO BAR the broker reports, so a change in what the broker reports
+/// would silently move the window somewhere that still answers reads. On a
+/// machine with no serial console the panel is the only place to check.
+static BAR_INDEX: AtomicU32 = AtomicU32::new(0xFFFF_FFFF);
+static WINDOW_VA: AtomicU32 = AtomicU32::new(0);
+
+/// The BAR index the window was taken from and the low 32 bits of its address.
+/// An index of `0xFFFFFFFF` means no window has been mapped.
+pub fn window() -> (u32, u32) {
+    (BAR_INDEX.load(Ordering::Relaxed), WINDOW_VA.load(Ordering::Relaxed))
+}
 
 pub struct Mapped {
     pub regs: Regs,
     pub device_id: u64,
     pub claim_epoch: u64,
+    /// The board facts, read straight after power-on and before the firmware
+    /// download and the MAC tables run. rtw88 reads the efuse at that point and
+    /// only brings the MAC up afterwards; taking the read at the end instead found
+    /// the efuse registers answering zero on real silicon, so it is taken here,
+    /// while the chip is still in the state the reference driver reads it in.
+    pub efuse: Option<crate::efuse::EfuseInfo>,
 }
 
 /// Find, claim and map the chip. Returns the register window ready for
@@ -55,5 +77,12 @@ pub fn run() -> Result<Mapped, &'static str> {
     if r < 0 {
         return Err("rtl8821ce: mmio map failed");
     }
-    Ok(Mapped { regs: Regs::new(out.user_va), device_id: dev.device_id, claim_epoch: epoch as u64 })
+    BAR_INDEX.store(dev.bar_index, Ordering::Relaxed);
+    WINDOW_VA.store(out.user_va as u32, Ordering::Relaxed);
+    Ok(Mapped {
+        regs: Regs::new(out.user_va),
+        device_id: dev.device_id,
+        claim_epoch: epoch as u64,
+        efuse: None,
+    })
 }

@@ -7,7 +7,9 @@
 //! behind the greeting is picked up; and a non-SOCKS5 client is closed.
 
 use crate::conn::{Conn, Dest, Event};
-use crate::wire::{ATYP_DOMAIN, REP_HOST_UNREACH, REP_OK, VER};
+use crate::wire::{
+    ATYP_DOMAIN, REP_CONN_REFUSED, REP_GENERAL_FAIL, REP_HOST_UNREACH, REP_NET_UNREACH, REP_OK, VER,
+};
 
 fn is_reply(ev: &Event, expect: &[u8]) -> bool {
     matches!(ev, Event::ToClient { buf, len } if &buf[..*len] == expect)
@@ -40,7 +42,7 @@ fn connect_opens_a_tunnel_then_replies_and_relays() {
         _ => panic!("expected an open to the IPv4 destination"),
     }
     assert!(c.is_relaying());
-    let (buf, len) = c.opened(true);
+    let (buf, len) = c.opened(REP_OK);
     assert_eq!(&buf[..len], &[VER, REP_OK, 0x00, 0x01, 0, 0, 0, 0, 0, 0]);
     assert!(c.is_relaying(), "a successful open keeps relaying");
 }
@@ -63,14 +65,30 @@ fn connect_to_a_domain_carries_the_name_unresolved() {
 }
 
 #[test]
-fn a_failed_open_replies_host_unreachable_and_closes() {
+fn a_failed_open_replies_the_code_it_was_given_and_closes() {
     let mut c = Conn::new();
     let _ = c.on_client(&[0x05, 0x01, 0x00]);
     let _ = c.on_client(&[0x05, 0x01, 0x00, 0x01, 10, 0, 0, 1, 0x00, 0x50]);
-    let (buf, len) = c.opened(false);
+    let (buf, len) = c.opened(REP_HOST_UNREACH);
     assert_eq!(buf[1], REP_HOST_UNREACH);
     assert_eq!(len, 10);
     assert!(c.is_closed());
+}
+
+/// Each way a tunnel can fail reaches the client as its own code. They were once
+/// one boolean, and a reader who could only be told "rejected" had no way to tell
+/// a mixnet that is not connected from an exit that will not carry the address.
+#[test]
+fn every_refusal_carries_its_own_reason() {
+    for code in [REP_GENERAL_FAIL, REP_NET_UNREACH, REP_HOST_UNREACH, REP_CONN_REFUSED] {
+        let mut c = Conn::new();
+        let _ = c.on_client(&[0x05, 0x01, 0x00]);
+        let _ = c.on_client(&[0x05, 0x01, 0x00, 0x01, 10, 0, 0, 1, 0x00, 0x50]);
+        let (buf, len) = c.opened(code);
+        assert_eq!(buf[1], code, "the reply must carry the code the open earned");
+        assert_eq!(len, 10);
+        assert!(c.is_closed(), "a refused open closes whatever the reason");
+    }
 }
 
 #[test]
