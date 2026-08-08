@@ -32,12 +32,12 @@ on:
       boot_seconds:
         description: "How long to let it run before capturing"
         required: false
-        default: "180"
+        default: "600"
 
 jobs:
   boot:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Install VirtualBox
@@ -72,7 +72,7 @@ jobs:
         run: |
           $vb = "C:\Program Files\Oracle\VirtualBox\VBoxManage.exe"
           & $vb startvm nonos --type headless
-          Start-Sleep -Seconds ${{ inputs.boot_seconds || '180' }}
+          Start-Sleep -Seconds ${{ inputs.boot_seconds || '600' }}
           & $vb controlvm nonos screenshotpng "$PWD\artifacts\screen.png"
           & $vb controlvm nonos poweroff
         shell: pwsh
