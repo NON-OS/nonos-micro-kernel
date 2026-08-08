@@ -25,7 +25,8 @@
 use alloc::vec::Vec;
 
 use super::artifact_path::split_artifact;
-use super::util::{map_store_err, split_caller};
+use super::installer_gate::require_installer;
+use super::util::{map_blk_err, map_store_err, split_caller};
 use crate::protocol::{
     encode_response, Request, EINVAL, EMSGSIZE, ENOENT, MAX_DATA_BYTES, OP_STORE_INSTALL,
     STORE_INSTALL_FINAL,
@@ -43,6 +44,7 @@ pub fn store_install(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Ve
 }
 
 fn place(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Result<(), i32> {
+    require_installer(sender_pid)?;
     let (_pid, rest) = split_caller(req.payload, sender_pid)?;
     let (path, tail) = split_artifact(rest)?;
     if tail.len() < HEAD_LEN {
@@ -59,5 +61,5 @@ fn place(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Result<(), i32
         return Ok(());
     }
     let whole = store.bytes_of(&path).ok_or(ENOENT)?;
-    crate::blk::store_write::append(&path, &whole).map_err(|_| EINVAL)
+    crate::blk::store_write::append(&path, &whole).map_err(map_blk_err)
 }

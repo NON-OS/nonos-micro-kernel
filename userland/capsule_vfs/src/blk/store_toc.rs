@@ -26,7 +26,7 @@ use super::store_header::{le_u64, ENTRY_LEN, HEADER_LEN};
 use super::wire::SECTOR_SIZE;
 
 const NAME_LEN: usize = 96;
-const MAX_TOTAL_BYTES: u64 = 16 * 1024 * 1024;
+pub(super) const MAX_TOTAL_BYTES: u64 = 16 * 1024 * 1024;
 
 pub struct TocEntry {
     pub name: String,

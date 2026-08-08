@@ -23,7 +23,7 @@ use super::client::{capacity, read_blocks};
 use super::digest::digest16;
 use super::error::BlkError;
 use super::store_header::{entry_count, ENTRY_LEN, HEADER_LEN, MAX_ENTRIES};
-use super::store_toc::decode;
+use super::store_toc::{decode, TocEntry, MAX_TOTAL_BYTES};
 use super::wire::SECTOR_SIZE;
 
 const STORE_BASE_LBA: u64 = 256;
@@ -42,11 +42,16 @@ pub fn append(name: &str, data: &[u8]) -> Result<(), BlkError> {
     let region_len = sector_span(HEADER_LEN + ENTRY_LEN * (count + 1));
     let reserved = sector_span(HEADER_LEN + ENTRY_LEN * MAX_ENTRIES);
     let mut next_off = STORE_BASE_LBA * SECTOR_SIZE as u64 + reserved as u64;
+    let mut committed = 0u64;
     for entry in decode(&toc, count, capacity_bytes)? {
         if entry.name == name {
-            return Ok(());
+            return same_bytes(&entry, data);
         }
+        committed += entry.len;
         next_off = next_off.max(align_up(entry.offset + entry.len, SECTOR_SIZE));
+    }
+    if committed.saturating_add(data.len() as u64) > MAX_TOTAL_BYTES {
+        return Err(BlkError::BadLength);
     }
     if count >= MAX_ENTRIES || name.len() > NAME_LEN {
         return Err(BlkError::BadContainer);
@@ -62,6 +67,18 @@ pub fn append(name: &str, data: &[u8]) -> Result<(), BlkError> {
     region[base + NAME_LEN + 16..base + NAME_LEN + 32].copy_from_slice(&digest16(data));
     region[12..16].copy_from_slice(&(count as u32 + 1).to_le_bytes());
     commit(&region)
+}
+
+// A TOC name is written once. Re-persisting the exact bytes already committed
+// is the idempotent retry the store_persist path relies on, so it succeeds;
+// anything else would have to rewrite an extent in place, which this appender
+// cannot do, and reporting success there would leave the caller believing the
+// old bytes on disk had been replaced.
+fn same_bytes(entry: &TocEntry, data: &[u8]) -> Result<(), BlkError> {
+    if entry.len == data.len() as u64 && entry.digest == digest16(data) {
+        return Ok(());
+    }
+    Err(BlkError::Exists)
 }
 
 fn write_payload(next_off: u64, data: &[u8]) -> Result<(), BlkError> {

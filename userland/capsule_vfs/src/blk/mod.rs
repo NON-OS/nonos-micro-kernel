@@ -16,7 +16,7 @@
 
 mod client;
 mod digest;
-mod error;
+pub(crate) mod error;
 mod reply;
 mod request;
 pub(crate) mod status;

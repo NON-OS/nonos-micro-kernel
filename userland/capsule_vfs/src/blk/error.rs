@@ -29,4 +29,5 @@ pub enum BlkError {
     Status(i32),
     Inval,
     BadContainer,
+    Exists,
 }

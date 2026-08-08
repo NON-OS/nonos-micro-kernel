@@ -18,7 +18,7 @@ use alloc::vec::Vec;
 use core::str;
 
 use super::path::normalize;
-use super::util::split_caller;
+use super::util::{map_blk_err, split_caller};
 use crate::protocol::{encode_response, Request, EINVAL, ENOENT, MAX_PATH_BYTES, OP_STORE_PERSIST};
 use crate::store::Store;
 
@@ -45,6 +45,8 @@ pub fn store_persist(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Ve
     };
     match crate::blk::store_write::append(&path, &data) {
         Ok(()) => encode_response(OP_STORE_PERSIST, req.flags, req.request_id, 0, &[]),
-        Err(_) => encode_response(OP_STORE_PERSIST, req.flags, req.request_id, EINVAL, &[]),
+        Err(e) => {
+            encode_response(OP_STORE_PERSIST, req.flags, req.request_id, map_blk_err(e), &[])
+        }
     }
 }
