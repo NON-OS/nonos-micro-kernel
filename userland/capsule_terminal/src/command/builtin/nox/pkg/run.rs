@@ -17,7 +17,7 @@
 use alloc::vec::Vec;
 
 use super::summary::slug;
-use super::{call, emit, manage};
+use super::{args, call, emit, manage};
 use crate::term::cwd::resolve;
 use crate::term::state::State;
 
@@ -40,11 +40,10 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
 // command with --yes. The commit carries the digest from the query, so a
 // package swapped in between the two steps is rejected rather than installed.
 fn install(state: &mut State, rest: &[&[u8]]) -> bool {
-    let Some(&raw) = rest.first() else {
+    let Some((raw, yes)) = args::install(rest) else {
         state.scrollback.push_error(USAGE);
         return false;
     };
-    let yes = rest[1..].iter().any(|a| *a == b"--yes");
     let path = resolve(state.cwd.as_bytes(), raw);
     let s = match call::pkg_query(&path) {
         Ok(s) => s,

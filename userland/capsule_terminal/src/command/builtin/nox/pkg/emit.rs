@@ -43,6 +43,7 @@ pub(super) fn error(state: &mut State, status: i32) {
         -13 => b"pkg: signature or digest failed verification",
         -17 => b"pkg: already installed, remove it first",
         -22 => b"pkg: malformed package or path",
+        -71 => b"pkg: malformed reply from installer",
         _ => b"",
     };
     if !reason.is_empty() {

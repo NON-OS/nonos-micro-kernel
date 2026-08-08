@@ -17,6 +17,7 @@
 use alloc::vec::Vec;
 
 use super::names::CAP_NAMES;
+use crate::term::util::format_u64;
 
 // Trust tier as the kernel's manifest summary encodes it: 1 for a capsule
 // enrolled in the local trust store, 2 for one carrying a publisher
@@ -30,22 +31,33 @@ pub(super) fn tier_word(tier: u8) -> &'static [u8] {
 }
 
 // Spell out every capability the package asks for. A bit above the known
-// table is a capability this build does not name yet, so it is left out
-// rather than shown as a misleading neighbour.
+// table is a capability this build does not name yet, so it is shown as
+// `bit<N>`: a consent prompt must never omit something that was granted.
 pub(super) fn caps_line(caps: u64) -> Vec<u8> {
     let mut out = Vec::new();
-    for (i, name) in CAP_NAMES.iter().enumerate() {
-        if caps & (1u64 << i) != 0 {
-            if !out.is_empty() {
-                out.push(b' ');
-            }
-            out.extend_from_slice(name);
+    for i in 0..64 {
+        if caps & (1u64 << i) == 0 {
+            continue;
+        }
+        if !out.is_empty() {
+            out.push(b' ');
+        }
+        match CAP_NAMES.get(i) {
+            Some(name) => out.extend_from_slice(name),
+            None => push_unnamed(&mut out, i),
         }
     }
     if out.is_empty() {
         out.extend_from_slice(b"(none)");
     }
     out
+}
+
+fn push_unnamed(out: &mut Vec<u8>, bit: usize) {
+    let mut num = [0u8; 24];
+    let k = format_u64(bit as u64, &mut num);
+    out.extend_from_slice(b"bit");
+    out.extend_from_slice(&num[..k]);
 }
 
 // The first eight bytes of the package digest, enough for a human to match

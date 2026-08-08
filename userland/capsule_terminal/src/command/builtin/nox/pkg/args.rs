@@ -14,14 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod args;
-mod call;
-mod emit;
-mod fmt;
-mod manage;
-mod names;
-mod run;
-mod summary;
-mod wire;
-
-pub use run::run;
+// Yields the path and whether consent was given, accepting --yes on either
+// side of the path. An unrecognised flag is rejected instead of being taken
+// for a path, which would otherwise fail far away as a bad package.
+pub(super) fn install<'a>(rest: &[&'a [u8]]) -> Option<(&'a [u8], bool)> {
+    let mut path: Option<&'a [u8]> = None;
+    let mut yes = false;
+    for arg in rest {
+        if *arg == b"--yes" {
+            yes = true;
+        } else if arg.starts_with(b"-") {
+            return None;
+        } else if path.is_none() {
+            path = Some(arg);
+        }
+    }
+    Some((path?, yes))
+}

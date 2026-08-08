@@ -17,7 +17,7 @@
 use alloc::vec::Vec;
 
 use super::summary::{decode, PkgSummary};
-use super::wire::{call, EAGAIN};
+use super::wire::{call, EPROTO};
 
 // Hand-synced with `capsule_installer/src/protocol/types.rs` and
 // `capsule_desktop_shell/src/installer_client/constants.rs`.
@@ -35,7 +35,7 @@ const QUERY_RX: usize = 256;
 pub(super) fn pkg_query(path: &[u8]) -> Result<PkgSummary, i32> {
     let mut rx = [0u8; QUERY_RX];
     let n = call(OP_PKG_QUERY, &len_prefixed(path), &mut rx)?;
-    decode(&rx[8..n]).ok_or(EAGAIN)
+    decode(&rx[8..n]).ok_or(EPROTO)
 }
 
 // Install the package at `path`, but only if it still hashes to the digest

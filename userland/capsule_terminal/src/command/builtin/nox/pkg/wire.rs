@@ -21,6 +21,10 @@ use nonos_libc::mk_ipc_call_timeout;
 
 pub(super) const EAGAIN: i32 = -11;
 
+// A reply the installer never sends in any status it defines, so it can
+// stand for "the frame itself was wrong" without shadowing a real status.
+pub(super) const EPROTO: i32 = -71;
+
 // Installer wire: seq(4) | op(2) | pad(2) | body, replying seq(4) |
 // status(4) | payload. Query and commit both re-read and re-verify a
 // multi-megabyte package before answering, so they need the same wide
@@ -29,8 +33,8 @@ const SEQ: u32 = 1;
 const PKG_TIMEOUT_MS: u64 = 30_000;
 
 // Returns the total reply length, header included, so a caller that wants
-// the payload slices from byte 8. A short frame carries no status field at
-// all and is reported as a not-ready installer.
+// the payload slices from byte 8. No reply at all is a not-ready installer,
+// while a frame too short to hold a status field is a protocol fault.
 pub(super) fn call(op: u16, body: &[u8], rx: &mut [u8]) -> Result<usize, i32> {
     let port = lookup_service(b"installer").map(|p| p.port).ok_or(EAGAIN)?;
     let mut tx = Vec::with_capacity(8 + body.len());
@@ -46,8 +50,11 @@ pub(super) fn call(op: u16, body: &[u8], rx: &mut [u8]) -> Result<usize, i32> {
         rx.len(),
         PKG_TIMEOUT_MS,
     );
-    if rc < 8 {
+    if rc < 0 {
         return Err(EAGAIN);
+    }
+    if rc < 8 {
+        return Err(EPROTO);
     }
     let status = i32::from_le_bytes([rx[4], rx[5], rx[6], rx[7]]);
     if status != 0 {
