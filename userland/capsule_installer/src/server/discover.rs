@@ -20,12 +20,15 @@ use nonos_libc::mk_service_lookup;
 
 use super::consts::PAYMENT_SERVICE;
 
-// An installed capsule is spawned under the service name `app.<slug>`, so a
-// package whose verified namespace ends in a builtin's slug would answer in
+// A package whose verified namespace ends in a builtin's slug would answer in
 // that builtin's place. The live registry is the only name list that cannot
 // drift from what is actually running, so it is what the slug is tested
-// against; the bare slug is tested too because the infrastructure services
-// (vfs, compositor, installer) register without the `app.` prefix.
+// against. The probe covers the two conventional spellings: `app.<slug>`, which
+// packaged GUI apps use, and the bare `<slug>` the infrastructure services (vfs,
+// compositor, installer) register under. The registered name comes from the
+// manifest's Service endpoint rather than the slug, so this is a convention and
+// not an invariant; a package that declares some other endpoint is caught
+// instead by `register_endpoint` refusing a duplicate name.
 pub fn service_taken(slug: &[u8]) -> bool {
     let mut prefixed = Vec::with_capacity(4 + slug.len());
     prefixed.extend_from_slice(b"app.");
