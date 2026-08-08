@@ -17,11 +17,15 @@
 use alloc::vec::Vec;
 use core::str;
 
+use super::installer_gate::require_installer;
 use super::path::normalize;
 use super::util::split_caller;
 use crate::protocol::{encode_response, Request, EINVAL, MAX_PATH_BYTES, OP_STORE_REMOVE};
 
 pub fn store_remove(req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    if let Err(s) = require_installer(sender_pid) {
+        return encode_response(OP_STORE_REMOVE, req.flags, req.request_id, s, &[]);
+    }
     let (_pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_STORE_REMOVE, req.flags, req.request_id, s, &[]),
