@@ -14,6 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! HAND-SYNCED MIRROR of the verification chain in
+//! `src/kernel_core/process_spawn/capsule_spawn/runner/preflight.rs`. This is a
+//! second copy of that chain, not a call into it: `preflight::run` sits on the
+//! spawn path, whose `.text` layout and allocation order are load-bearing for
+//! several intermittent faults, and MkCapsuleVerify must be answerable without
+//! perturbing it. The two were verified equivalent when this was written and
+//! must be changed together — a rule tightened in `preflight.rs` alone leaves
+//! this syscall admitting artifacts the spawner would later reject, and a rule
+//! tightened here alone rejects artifacts that spawn fine.
+
 use crate::kernel_core::process_spawn::capsule_spawn::{classify_tier, validity_now_ms, Tier};
 use crate::security::capsule_manifest::{
     decode as decode_manifest, verify_with_publisher, CapsuleManifest, DeclaredEndpoint,
