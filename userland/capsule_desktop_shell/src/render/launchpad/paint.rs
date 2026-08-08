@@ -20,7 +20,7 @@ pub fn paint_launchpad(ctx: &Context) {
     let title_w = TITLE.len() as u32 * GLYPH_ADV;
     let title_x = ctx.width.saturating_sub(title_w) / 2;
     draw_overlay_text(ctx, title_x, 56, TITLE, TITLE_FG);
-    for i in 0..count(ctx.installed_apps.len()) {
+    for i in 0..count(ctx.installed_apps.len(), ctx.pkg_files.len()) {
         tile::paint(ctx, i);
     }
 }

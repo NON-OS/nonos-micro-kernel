@@ -18,8 +18,8 @@ pub fn open(ctx: &mut Context) {
 }
 
 pub fn click(ctx: &mut Context, px: u32, py: u32) {
-    if let Some(index) = hit(ctx.width, px, py, ctx.installed_apps.len()) {
-        match target(index, ctx.installed_apps.len()) {
+    if let Some(index) = hit(ctx.width, px, py, ctx.installed_apps.len(), ctx.pkg_files.len()) {
+        match target(index, ctx.installed_apps.len(), ctx.pkg_files.len()) {
             Target::App(a) => {
                 let _ = launcher_request::request(&LAUNCHER_APPS[a]);
             }
@@ -35,6 +35,7 @@ pub fn click(ctx: &mut Context, px: u32, py: u32) {
                     ctx.pending_consent = Some(name);
                 }
             }
+            Target::Package(i) => super::pkg_install::begin(ctx, i),
         }
     }
     // A click anywhere closes the Launchpad, whether it landed on a tile or on

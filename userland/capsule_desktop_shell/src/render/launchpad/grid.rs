@@ -13,9 +13,10 @@ pub(super) const CELL_H: u32 = 108;
 pub(super) const TOP_PAD: u32 = 110;
 
 /// Total tiles: the built-in apps, then the command-line tools, then the
-/// `installed` capsule-store apps the installer reported this boot.
-pub(super) fn count(installed: usize) -> usize {
-    LAUNCHER_APPS.len() + TOOL_APPS.len() + installed
+/// `installed` capsule-store apps the installer reported this boot, then the
+/// `packages` installable files waiting in /pkgs.
+pub(super) fn count(installed: usize, packages: usize) -> usize {
+    LAUNCHER_APPS.len() + TOOL_APPS.len() + installed + packages
 }
 
 /// Columns that fit the display, kept within a sensible range so the grid stays
