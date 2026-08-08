@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! OP_STORE_INSTALL and OP_STORE_UNINSTALL are the only ops that create or
-//! destroy artifacts under the otherwise read-only /capsules tree, and holding
+//! OP_STORE_INSTALL, OP_STORE_UNINSTALL and OP_STORE_REMOVE are the ops that
+//! create or destroy artifacts under the read-only /capsules tree, and holding
 //! the vfs endpoint is not consent: any capsule that can talk to this server
 //! could otherwise plant or downgrade an installed app behind the modal. The
 //! service registry already binds the name "installer" to the pid the kernel
