@@ -19,6 +19,7 @@ pub mod chrome;
 pub mod context;
 pub mod indicators;
 pub mod notify;
+pub mod pkg_prompt;
 pub mod spotlight;
 pub mod taskbar;
 pub mod toasts;
@@ -30,6 +31,7 @@ pub use tool_apps::TOOL_APPS;
 pub use chrome::TASKBAR_WINDOW_ID;
 pub use context::Context;
 pub use notify::NotifyLevel;
+pub use pkg_prompt::PkgInstallPrompt;
 pub use spotlight::SpotlightState;
 pub use taskbar::{
     collapse_taskbar, expire_taskbar_pulses, expire_taskbar_visibility, mark_taskbar_launch,

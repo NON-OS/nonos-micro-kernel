@@ -14,23 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod consent;
-pub mod health;
-pub mod installed_launch;
-pub mod launcher_focus;
-pub mod launcher_request;
-pub mod launchpad;
-pub mod notify;
-pub mod open_with;
-pub mod pkg_consent;
-pub mod pkg_install;
-pub mod spotlight_open;
-pub mod take_open_arg;
-pub mod tray_register;
-pub mod tray_remove;
-pub mod tray_update;
+//! The package-install prompt the consent modal is raised for.
 
-pub(super) fn u32_at(buf: &[u8], off: usize) -> Option<u32> {
-    let bytes = buf.get(off..off + 4)?;
-    Some(u32::from_le_bytes(bytes.try_into().ok()?))
+use alloc::vec::Vec;
+
+/// A /pkgs package whose install is waiting on the user, together with the
+/// summary the installer already verified. The digest travels with it so the
+/// commit re-verifies the exact bytes the prompt described, and never a file
+/// swapped underneath in the meantime.
+pub struct PkgInstallPrompt {
+    pub path: Vec<u8>,
+    pub summary: crate::installer_client::PkgSummary,
 }
