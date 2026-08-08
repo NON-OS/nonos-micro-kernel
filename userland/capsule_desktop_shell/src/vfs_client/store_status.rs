@@ -14,30 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Small client for the vfs_pool service. The desktop uses it to list the root
-//! and to create files and folders in the same filesystem the file manager and
-//! text editor see, speaking the wire protocol directly over IPC.
+//! Ask vfs_pool whether the on-disk capsule store decoded at boot. None means
+//! no answer yet; Some(0) healthy; any other code is the boot failure class.
 
-mod call;
-mod classify;
-mod constants;
-mod create_file;
-mod entry;
-mod frame;
-mod list;
-mod mkdir;
-mod owner_body;
-mod parse;
-mod path;
-mod remove;
-mod rename;
-mod store_status;
-mod walk;
+use alloc::vec;
 
-pub use create_file::create_file;
-pub use entry::Entry;
-pub use list::list;
-pub use mkdir::mkdir;
-pub use remove::remove;
-pub use rename::rename;
-pub use store_status::store_status;
+use super::call::call;
+use super::constants::{HDR_LEN, OP_STORE_STATUS};
+
+pub fn store_status() -> Option<u32> {
+    let mut rx = vec![0u8; HDR_LEN + 12];
+    let total = call(OP_STORE_STATUS, &[], &mut rx)?;
+    if total < HDR_LEN + 8 {
+        return None;
+    }
+    let off = HDR_LEN + 4;
+    Some(u32::from_le_bytes([rx[off], rx[off + 1], rx[off + 2], rx[off + 3]]))
+}

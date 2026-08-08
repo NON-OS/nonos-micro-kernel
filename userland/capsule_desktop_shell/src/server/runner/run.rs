@@ -53,6 +53,7 @@ pub fn run(mut ctx: Context) -> ! {
             }
             crate::server::installed_apps::load_once(&mut ctx);
             crate::server::packages::refresh(&mut ctx);
+            crate::server::store_health::check(&mut ctx);
             ctx.toasts.expire(now);
             if !ctx.toasts.is_empty() || ctx.toast_layer_live {
                 sync_toast_layer(&mut ctx);
