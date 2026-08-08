@@ -26,8 +26,13 @@ mod decode;
 mod frame;
 mod list_installed;
 mod load;
+mod pkg;
+mod pkg_decode;
+mod pkg_wire;
 mod port;
 
 pub use available::available;
 pub use list_installed::list_installed;
 pub use load::load_by_name;
+pub use pkg::{pkg_commit, pkg_query};
+pub use pkg_decode::PkgSummary;

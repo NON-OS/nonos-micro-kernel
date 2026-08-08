@@ -22,6 +22,8 @@ pub(super) const SEQ: u32 = 1;
 
 pub(super) const OP_LIST_INSTALLED: u16 = 5;
 pub(super) const OP_LOAD_BY_NAME: u16 = 4;
+pub(super) const OP_PKG_QUERY: u16 = 6;
+pub(super) const OP_PKG_COMMIT: u16 = 7;
 
 pub(super) const TIMEOUT_MS: u64 = 300;
 
