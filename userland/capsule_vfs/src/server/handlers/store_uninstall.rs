@@ -23,6 +23,7 @@
 use alloc::vec::Vec;
 
 use super::artifact_path::split_artifact;
+use super::installer_gate::require_installer;
 use super::util::{map_store_err, split_caller};
 use crate::protocol::{encode_response, Request, EINVAL, OP_STORE_UNINSTALL};
 use crate::store::{Store, StoreError};
@@ -36,6 +37,7 @@ pub fn store_uninstall(store: &mut Store, req: Request<'_>, sender_pid: u32) -> 
 }
 
 fn drop_artifact(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Result<(), i32> {
+    require_installer(sender_pid)?;
     let (_pid, rest) = split_caller(req.payload, sender_pid)?;
     let (path, tail) = split_artifact(rest)?;
     if !tail.is_empty() {

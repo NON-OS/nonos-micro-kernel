@@ -19,6 +19,7 @@ mod chmod;
 mod close;
 mod copy;
 mod healthcheck;
+mod installer_gate;
 mod list;
 mod mkdir;
 mod open;
