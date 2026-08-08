@@ -6,13 +6,24 @@
 # known-answer inputs, checking rendering-correctness pieces with no GUI.
 [package]
 name = "capsule_browser_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]
 path = "src/lib.rs"
 
+[features]
+# The engine gates its direct-cascade entry behind `harness`; this crate is
+# that harness, so `compute` is reachable here and `compute_cached` stays the
+# capsule path.
+default = ["harness"]
+harness = []
+
 [dependencies]
+nonos_toolkit = { path = "../toolkit", default-features = false }
+nonos_app_skeleton = { path = "../app_skeleton", default-features = false }
+nonos_inflate = { path = "../inflate" }
+spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

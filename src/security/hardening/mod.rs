@@ -16,8 +16,14 @@
 
 pub mod memory_encryption;
 pub mod memory_sanitization;
+pub mod speculation;
+// Every symbol below is an x86_64 mitigation with no counterpart elsewhere:
+// model-specific registers and retpoline thunks named after x86 registers.
+// Shared code goes through `speculation` instead.
+#[cfg(target_arch = "x86_64")]
 pub mod spectre_mitigations;
 
+#[cfg(target_arch = "x86_64")]
 pub use spectre_mitigations::{
     __x86_indirect_thunk_rax, __x86_indirect_thunk_rbx, __x86_indirect_thunk_rcx,
     __x86_indirect_thunk_rdx, __x86_indirect_thunk_rsi, are_mitigations_enabled,

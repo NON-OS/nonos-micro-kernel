@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the page-table descriptor boundary. Builds for the
+# host so `cargo test` checks the real encoders and decoders (included via
+# #[path]) for both architectures at once, without a boot. The aarch64 rules
+# are the point: three of them are inverted or absent relative to x86_64, and
+# getting one wrong is silent.
+[package]
+name = "arch_paging_proofs"
+version = "0.3.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

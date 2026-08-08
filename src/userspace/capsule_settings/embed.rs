@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-settings")]
 pub(crate) const SETTINGS_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_settings/target/x86_64-nonos-user/release/settings");
+    include_bytes!(concat!(
+    "../../../userland/capsule_settings/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/settings"
+));
 
 #[cfg(feature = "nonos-capsule-settings")]
 pub(crate) const SETTINGS_NONOS_ID_CERT_BYTES: &[u8] =

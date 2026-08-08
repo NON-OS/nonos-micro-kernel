@@ -40,7 +40,8 @@ pub fn link(
         return Err(BlockFsError::InvalidName);
     }
     let rec_lba = ensure_record(key, mount, dir)?;
-    let mut block = crate::fs::cryptoblock::read(key, rec_lba).map_err(BlockFsError::CryptoBlock)?;
+    let mut block =
+        crate::fs::cryptoblock::read(key, rec_lba).map_err(BlockFsError::CryptoBlock)?;
     if block[0..8] != REC_MAGIC[..] {
         return Err(BlockFsError::InvalidRecord);
     }

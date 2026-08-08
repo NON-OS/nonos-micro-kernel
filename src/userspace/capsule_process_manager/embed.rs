@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-process-manager")]
-pub(crate) const PROCESS_MANAGER_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_process_manager/target/x86_64-nonos-user/release/process_manager"
-);
+pub(crate) const PROCESS_MANAGER_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_process_manager/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/process_manager"
+));
 
 #[cfg(feature = "nonos-capsule-process-manager")]
 pub(crate) const PROCESS_MANAGER_NONOS_ID_CERT_BYTES: &[u8] =

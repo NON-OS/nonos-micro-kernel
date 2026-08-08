@@ -22,7 +22,6 @@ use crate::arch::aarch64::gic::init_gic_cpu;
 use crate::arch::aarch64::security;
 use crate::arch::aarch64::timer::{init_timer_cpu, install_on_cpu as install_preemption_tick};
 use crate::arch::cpu::idle_cpu;
-use crate::process::scheduler::smp::api::init_ap_scheduler;
 
 use super::state::CPUS_ONLINE;
 
@@ -42,8 +41,6 @@ pub extern "C" fn aarch64_ap_entry() -> ! {
     CPUS_ONLINE.fetch_add(1, Ordering::AcqRel);
 
     let cpu_id = cpu::id::cpu_id();
-
-    init_ap_scheduler(cpu_id);
 
     loop {
         idle_cpu();

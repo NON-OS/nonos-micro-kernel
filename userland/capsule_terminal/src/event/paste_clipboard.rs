@@ -25,17 +25,35 @@ pub fn paste_clipboard(state: &mut State) -> EventOutcome {
         Ok(n) => n.min(buf.len()),
         Err(_) => return EventOutcome::Idle,
     };
+    // Stop at the first newline rather than skipping over it. Dropping
+    // newlines glued separate commands into one line, which the next Enter
+    // then ran as a single mangled command.
+    let first_line = match buf[..n].iter().position(|&b| b == b'\n' || b == b'\r') {
+        Some(cut) => &buf[..cut],
+        None => &buf[..n],
+    };
+    let multiline = first_line.len() < n;
+
     let mut changed = false;
-    for &b in &buf[..n] {
+    let mut full = false;
+    for &b in first_line {
         if (0x20..=0x7E).contains(&b) {
             if !state.line.insert(b) {
+                full = true;
                 break;
             }
             changed = true;
         }
     }
+    // The input line holds COLS bytes, so anything longer cannot fit. Say so
+    // instead of leaving a silently shortened command on the prompt.
+    if multiline {
+        state.scrollback.push_line(b"paste: first line only");
+    } else if full {
+        state.scrollback.push_line(b"paste: line full, clipboard truncated");
+    }
     if !changed {
-        return EventOutcome::Idle;
+        return EventOutcome::Repaint;
     }
     state.history.reset_cursor();
     state.scrollback.jump_bottom();

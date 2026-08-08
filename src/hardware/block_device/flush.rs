@@ -23,7 +23,9 @@ use super::BlockDeviceError;
 
 pub fn flush() -> Result<(), BlockDeviceError> {
     match selected() {
-        Backend::VirtioBlk => crate::hardware::virtio_blk_capsule::flush().map_err(map_virtio_error),
+        Backend::VirtioBlk => {
+            crate::hardware::virtio_blk_capsule::flush().map_err(map_virtio_error)
+        }
         Backend::Ahci => crate::hardware::ahci_capsule::flush().map_err(map_ahci_error),
         Backend::Nvme => crate::hardware::nvme_capsule::flush().map_err(map_nvme_error),
     }

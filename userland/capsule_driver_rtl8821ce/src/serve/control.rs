@@ -84,7 +84,21 @@ fn status_reply(stage: Stage, radio: &Radio, out: &mut [u8]) -> Option<usize> {
     out[WIFI_HDR + 13..WIFI_HDR + 17].copy_from_slice(&stats.rx_eth.to_le_bytes());
     out[WIFI_HDR + 17..WIFI_HDR + 21].copy_from_slice(&stats.netif_reqs.to_le_bytes());
     out[WIFI_HDR + 21..WIFI_HDR + 25].copy_from_slice(&stats.rx_err.to_le_bytes());
-    Some(WIFI_HDR + 25)
+    // Then the efuse registers as the last stalled read left them. A bring-up that
+    // stops at the efuse says nothing about why on a machine with no serial
+    // console; these three separate a dead register window from a live one whose
+    // efuse controller is never clocked.
+    let (ctl, addr, ldo) = crate::efuse::diag();
+    out[WIFI_HDR + 25..WIFI_HDR + 29].copy_from_slice(&ctl.to_le_bytes());
+    out[WIFI_HDR + 29..WIFI_HDR + 33].copy_from_slice(&addr.to_le_bytes());
+    out[WIFI_HDR + 33..WIFI_HDR + 37].copy_from_slice(&ldo.to_le_bytes());
+    // And which BAR the window came from. rtw88 hardcodes bar_id 2 for this chip
+    // while this driver takes the first MMIO BAR the broker reports, so an index
+    // other than 2 means the registers are being read somewhere they do not live.
+    let (bar, va) = crate::setup::window();
+    out[WIFI_HDR + 37..WIFI_HDR + 41].copy_from_slice(&bar.to_le_bytes());
+    out[WIFI_HDR + 41..WIFI_HDR + 45].copy_from_slice(&va.to_le_bytes());
+    Some(WIFI_HDR + 45)
 }
 
 // The scan is answered instantly from the background scanner's running picture.

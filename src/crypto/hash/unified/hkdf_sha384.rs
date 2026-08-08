@@ -67,4 +67,3 @@ pub fn hkdf_expand_sha384(prk: &[u8], info: &[u8], okm: &mut [u8]) -> Result<(),
 
     Ok(())
 }
-

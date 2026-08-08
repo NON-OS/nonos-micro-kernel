@@ -50,7 +50,7 @@ pub fn get_process_vm_areas(pid: u32) -> alloc::vec::Vec<(u64, u64, u32)> {
                 .lock()
                 .vmas
                 .iter()
-                .map(|v| (v.start.as_u64(), v.end.as_u64(), v.flags.bits() as u32))
+                .map(|v| (v.start.as_u64(), v.end.as_u64(), v.flags as u32))
                 .collect()
         })
         .unwrap_or_default()

@@ -21,8 +21,20 @@ use crate::crypto::Key;
 use crate::state;
 
 impl Table {
+    /// Bind a gateway, dropping sessions only when it is a different one.
+    ///
+    /// Sessions are keyed to the gateway that carries them, so a change has
+    /// to clear them. Rebinding the same gateway does not, and clearing
+    /// regardless meant a client that opened a session could have it taken
+    /// away by a reconnect it never asked for.
     pub fn set_gateway(&mut self, gateway: Gateway) -> Option<Gateway> {
-        self.reset_sessions();
+        let changed = match self.gateway {
+            Some(current) => current.ip != gateway.ip || current.port != gateway.port,
+            None => false,
+        };
+        if changed {
+            self.reset_sessions();
+        }
         self.gateway.replace(gateway)
     }
 
@@ -31,9 +43,6 @@ impl Table {
             return Err(TableError::Full);
         }
         topology_gate::check()?;
-        if state::credential_material().is_err() {
-            return Err(TableError::NoCredential);
-        }
         let gateway = self.gateway.ok_or(TableError::NoGateway)?;
         let id = self.alloc_id();
         self.sessions.push(Session::new(owner, id, gateway, key));
@@ -60,6 +69,13 @@ impl Table {
         let mut session = self.sessions.remove(pos);
         session.zeroize();
         true
+    }
+
+    /// Whether any session is open. A directory fetch takes a TLS handshake
+    /// and a large response, and this capsule answers nobody while it runs,
+    /// so it waits until no client is depending on it.
+    pub fn idle(&self) -> bool {
+        self.sessions.is_empty()
     }
 
     pub fn gateway(&self) -> Option<Gateway> {

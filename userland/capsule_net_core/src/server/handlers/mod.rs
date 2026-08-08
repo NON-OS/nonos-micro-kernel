@@ -17,5 +17,6 @@
 pub mod dhcp_status;
 pub mod dns;
 pub mod health;
+pub mod ip;
 pub mod tcp;
 pub mod udp;

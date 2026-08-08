@@ -6,7 +6,7 @@
 # hand-built request and greeting bytes, checking the exact parse and reply.
 [package]
 name = "socks5_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

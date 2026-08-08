@@ -55,6 +55,11 @@ pub struct State {
     pub path: [u8; 256],
     pub path_len: usize,
     pub prompt: Option<PromptOp>,
+    // The Open and Save As prompts edit this, not `path`. They used to type
+    // straight into `path`, so cancelling left the document pointing at
+    // whatever had been half typed, and the next save wrote that instead.
+    pub prompt_path: [u8; 256],
+    pub prompt_len: usize,
     pub shell_port: u32,
     // Undo and redo stacks of reversible edits. Every mutation goes through
     // `apply_edit`, so both stay in sync with the buffer.

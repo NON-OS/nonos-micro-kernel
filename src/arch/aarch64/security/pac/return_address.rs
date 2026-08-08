@@ -14,20 +14,61 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Signing and authenticating a saved return address with the IA key.
+//!
+//! `PACIASP` cannot express this: it signs whatever is in LR against whatever
+//! is in SP, and inline asm cannot hand the assembler a stack pointer operand.
+//! The general forms `PACIA`/`AUTIA` take both the value and the modifier in
+//! ordinary registers, which is what a kernel saving a frame elsewhere needs.
+//!
+//! Both instructions are only defined when the core implements FEAT_PAuth, and
+//! the assembler only encodes them when the `pauth` extension is enabled, so
+//! each block turns the extension on for its own scope. When the feature is
+//! absent the address passes through unchanged: an unsigned pointer is exactly
+//! what authenticates on a core with no signing, which is the same behaviour
+//! `PACIASP` has there as a `NOP`.
+
 use core::arch::asm;
 
+use crate::arch::aarch64::cpu::features::{has_feature, CpuFeature};
+
 pub fn sign_return_address(lr: u64, sp: u64) -> u64 {
-    let signed: u64;
+    if !has_feature(CpuFeature::Pauth) {
+        return lr;
+    }
+    let mut signed = lr;
+    // SAFETY: FEAT_PAuth is implemented, so PACIA is defined at EL1. It writes
+    // only its destination register, reads no memory and needs no stack.
     unsafe {
-        asm!("paciasp", in("lr") lr, in("sp") sp, lateout("lr") signed);
+        asm!(
+            ".arch_extension pauth",
+            "pacia {value}, {modifier}",
+            ".arch_extension nopauth",
+            value = inout(reg) signed,
+            modifier = in(reg) sp,
+            options(nomem, nostack, preserves_flags),
+        );
     }
     signed
 }
 
 pub fn authenticate_return_address(lr: u64, sp: u64) -> u64 {
-    let authenticated: u64;
+    if !has_feature(CpuFeature::Pauth) {
+        return lr;
+    }
+    let mut authenticated = lr;
+    // SAFETY: as for `sign_return_address`. A failed authentication does not
+    // fault here; it poisons the pointer, and the branch that uses it is what
+    // traps.
     unsafe {
-        asm!("autiasp", in("lr") lr, in("sp") sp, lateout("lr") authenticated);
+        asm!(
+            ".arch_extension pauth",
+            "autia {value}, {modifier}",
+            ".arch_extension nopauth",
+            value = inout(reg) authenticated,
+            modifier = in(reg) sp,
+            options(nomem, nostack, preserves_flags),
+        );
     }
     authenticated
 }

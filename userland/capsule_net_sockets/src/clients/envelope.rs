@@ -36,8 +36,14 @@ pub fn call_t(
     write(&mut req, magic, op, body.len() as u32);
     req[HDR..].copy_from_slice(body);
     let mut resp = vec![0u8; HDR + out.len()];
-    let n =
-        mk_ipc_call_timeout(port as u64, req.as_ptr(), req.len(), resp.as_mut_ptr(), resp.len(), timeout_ms);
+    let n = mk_ipc_call_timeout(
+        port as u64,
+        req.as_ptr(),
+        req.len(),
+        resp.as_mut_ptr(),
+        resp.len(),
+        timeout_ms,
+    );
     if n < 0 {
         return Err(15);
     }

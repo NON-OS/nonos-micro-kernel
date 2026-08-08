@@ -6,7 +6,7 @@
 # that decides which TSC-frequency and epoch source the clock uses at boot.
 [package]
 name = "clock_resolve_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

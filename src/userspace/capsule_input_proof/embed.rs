@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-input-proof")]
-pub(crate) const INPUT_PROOF_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_input_proof/target/x86_64-nonos-user/release/input_proof"
-);
+pub(crate) const INPUT_PROOF_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_input_proof/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/input_proof"
+));
 
 #[cfg(feature = "nonos-capsule-input-proof")]
 pub(crate) const INPUT_PROOF_NONOS_ID_CERT_BYTES: &[u8] =

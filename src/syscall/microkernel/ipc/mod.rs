@@ -30,10 +30,10 @@ mod sender_pid;
 
 pub use call::sys_ipc_call;
 pub use lookup::sys_service_lookup;
+pub(crate) use pending_reply::clear_pid as release_pending_replies_for_pid;
 pub use recv::sys_ipc_recv;
 pub use recv_from::sys_ipc_recv_from;
 pub use register::sys_service_register;
 pub use reply::sys_ipc_reply;
 pub use send::sys_ipc_send;
 pub use send_to_pid::sys_ipc_send_to_pid;
-pub(crate) use pending_reply::clear_pid as release_pending_replies_for_pid;

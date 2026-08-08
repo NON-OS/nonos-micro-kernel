@@ -17,7 +17,12 @@
 #[cfg(feature = "nonos-capsule-wallpaper")]
 pub(super) fn spawn_wallpaper() {
     use crate::userspace::capsule_wallpaper as c;
-    super::super::boot::capsule("WALLPAPER", "wallpaper", c::spawn_wallpaper_capsule, c::shared_state);
+    super::super::boot::capsule(
+        "WALLPAPER",
+        "wallpaper",
+        c::spawn_wallpaper_capsule,
+        c::shared_state,
+    );
 }
 #[cfg(not(feature = "nonos-capsule-wallpaper"))]
 pub(super) fn spawn_wallpaper() {}

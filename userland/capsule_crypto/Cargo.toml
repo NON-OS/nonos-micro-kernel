@@ -8,7 +8,7 @@
 
 [package]
 name = "nonos_capsule_crypto"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 publish = false
 license = "AGPL-3.0"
@@ -40,6 +40,12 @@ opt-level = 2
 lto      = false
 debug    = false
 strip    = true
+
+# blake3 reaches for hand written SIMD outside x86_64 and builds it with cc,
+# which wants a C compiler targeting the capsule triple. There is none, so take
+# the portable implementation there.
+[target.'cfg(not(target_arch = "x86_64"))'.dependencies]
+blake3 = { version = "1.0", default-features = false, features = ["pure"] }
 
 [profile.dev]
 panic    = "abort"

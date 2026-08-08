@@ -84,14 +84,18 @@ fn a_truncated_request_is_incomplete_not_an_error() {
 #[test]
 fn bind_and_udp_commands_are_rejected() {
     // CMD 2 is BIND, CMD 3 is UDP ASSOCIATE: a privacy proxy supports neither.
-    assert!(matches!(parse_connect(&[0x05, 0x02, 0x00, 0x01, 1, 2, 3, 4, 0, 80]),
-        Parsed::Rejected(REP_CMD_UNSUPP)));
+    assert!(matches!(
+        parse_connect(&[0x05, 0x02, 0x00, 0x01, 1, 2, 3, 4, 0, 80]),
+        Parsed::Rejected(REP_CMD_UNSUPP)
+    ));
 }
 
 #[test]
 fn an_unknown_address_type_is_rejected() {
-    assert!(matches!(parse_connect(&[0x05, 0x01, 0x00, 0x09, 0, 0]),
-        Parsed::Rejected(REP_ADDR_UNSUPP)));
+    assert!(matches!(
+        parse_connect(&[0x05, 0x01, 0x00, 0x09, 0, 0]),
+        Parsed::Rejected(REP_ADDR_UNSUPP)
+    ));
 }
 
 #[test]

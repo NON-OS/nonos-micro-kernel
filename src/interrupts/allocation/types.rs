@@ -14,10 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use x86_64::structures::idt::InterruptStackFrame;
+use crate::arch::trap::contract::TrapFrame;
 
-pub type NoErrorHandler = fn(InterruptStackFrame);
-pub type ErrorCodeHandler = fn(InterruptStackFrame, u64);
+/// A handler for a vector that arrives without an error code.
+///
+/// Taken as a trait object over the portable frame rather than over one
+/// architecture's concrete one. This named the `x86_64` crate's
+/// `InterruptStackFrame`, which put a PC's stack layout into the signature of
+/// every handler the kernel can register.
+pub type NoErrorHandler = fn(&dyn TrapFrame);
+
+/// A handler for a vector that arrives with an error code pushed behind it.
+pub type ErrorCodeHandler = fn(&dyn TrapFrame, u64);
 
 pub const VECTOR_COUNT: usize = 256;
 pub const RESERVED_VECTORS_END: u8 = 32;

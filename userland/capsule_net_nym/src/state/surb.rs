@@ -41,9 +41,8 @@ pub fn consume(owner: u32, id: u32, tag: &[u8; 32]) -> Option<u32> {
     let now = now_ms()?;
     let mut g = SURBS.lock();
     prune(&mut g, now);
-    let pos = g.iter().position(|s| {
-        s.owner == owner && s.id == id && surb_tag::matches(&s.tag, tag)
-    })?;
+    let pos =
+        g.iter().position(|s| s.owner == owner && s.id == id && surb_tag::matches(&s.tag, tag))?;
     Some(g.remove(pos).session)
 }
 

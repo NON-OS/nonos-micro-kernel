@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::platform::{
-    get_stack_pointer, rdrand64_or_tsc, read_pit_counter, read_rtc_timestamp, read_tsc,
-    KEYGEN_COUNTER,
+    get_stack_pointer, random64_or_counter, read_cycle_counter, read_pit_counter,
+    read_rtc_timestamp, KEYGEN_COUNTER,
 };
 use crate::crypto::blake3_hash;
 use crate::crypto::util::rng;
@@ -38,13 +38,13 @@ pub fn generate_secure_key() -> [u8; 32] {
             }
         }
     }
-    let tsc_start = read_tsc();
+    let tsc_start = read_cycle_counter();
     for _ in 0..8 {
-        let val = rdrand64_or_tsc();
+        let val = random64_or_counter();
         entropy_pool[offset..offset + 8].copy_from_slice(&val.to_le_bytes());
         offset += 8;
     }
-    let tsc1 = read_tsc();
+    let tsc1 = read_cycle_counter();
     entropy_pool[offset..offset + 8].copy_from_slice(&tsc1.to_le_bytes());
     offset += 8;
     let stack_addr = get_stack_pointer();
@@ -59,7 +59,7 @@ pub fn generate_secure_key() -> [u8; 32] {
         for _ in 0..delay_loops {
             core::hint::spin_loop();
         }
-        let val = rdrand64_or_tsc();
+        let val = random64_or_counter();
         entropy_pool[offset..offset + 8].copy_from_slice(&val.to_le_bytes());
         offset += 8;
     }
@@ -71,7 +71,7 @@ pub fn generate_secure_key() -> [u8; 32] {
             core::hint::spin_loop();
         }
     }
-    let tsc2 = read_tsc();
+    let tsc2 = read_cycle_counter();
     entropy_pool[offset..offset + 8].copy_from_slice(&tsc2.to_le_bytes());
     offset += 8;
     let jitter = tsc2.wrapping_sub(tsc1);
@@ -94,7 +94,7 @@ pub fn generate_secure_key() -> [u8; 32] {
     for _ in 0..(pit_for_delay & 0x7F) as u32 {
         core::hint::spin_loop();
     }
-    let tsc3 = read_tsc();
+    let tsc3 = read_cycle_counter();
     entropy_pool[offset..offset + 8].copy_from_slice(&tsc3.to_le_bytes());
     offset += 8;
     let jitter2 = tsc3.wrapping_sub(tsc2);
@@ -112,12 +112,12 @@ pub fn generate_secure_key() -> [u8; 32] {
         for _ in 0..(pit_d & 0x1F) as u32 + i * 8 {
             core::hint::spin_loop();
         }
-        let val = rdrand64_or_tsc();
+        let val = random64_or_counter();
         entropy_pool[offset..offset + 8].copy_from_slice(&val.to_le_bytes());
         offset += 8;
     }
     let counter = KEYGEN_COUNTER.fetch_add(0xA3B7_C1D5_E9F2_4680, Ordering::SeqCst);
-    let tsc_final = read_tsc();
+    let tsc_final = read_cycle_counter();
     let counter_mixed = counter ^ tsc_final ^ tsc_final.wrapping_sub(tsc_start);
     entropy_pool[offset..offset + 8].copy_from_slice(&counter_mixed.to_le_bytes());
     let key = blake3_hash(&entropy_pool);

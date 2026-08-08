@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::arch::paging::descriptor::flags;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use core::sync::atomic::Ordering;
-use x86_64::structures::paging::PageTableFlags;
 
 use super::pcb::ProcessControlBlock;
 use super::types::{align_up, overlaps, Vma};
@@ -26,15 +26,14 @@ impl ProcessControlBlock {
         &self,
         hint: Option<VirtAddr>,
         length: usize,
-        flags: PageTableFlags,
+        flags: u64,
     ) -> Result<VirtAddr, &'static str> {
         if length == 0 {
             return Err("EINVAL");
         }
         let pages = (length + 4095) / 4096;
-        let map_flags = PageTableFlags::PRESENT
-            | PageTableFlags::USER_ACCESSIBLE
-            | (flags & (PageTableFlags::WRITABLE | PageTableFlags::NO_EXECUTE));
+        let map_flags =
+            flags::PRESENT | flags::USER | (flags & (flags::WRITABLE | flags::NO_EXECUTE));
 
         let mut mem = self.memory.lock();
 
@@ -141,7 +140,7 @@ fn allocate_physical_page() -> Option<PhysAddr> {
         .map(|f| crate::memory::addr::PhysAddr::new(f.0))
 }
 
-fn map_page_to_phys(page_va: VirtAddr, phys: PhysAddr, _flags: PageTableFlags) -> Result<(), ()> {
+fn map_page_to_phys(page_va: VirtAddr, phys: PhysAddr, _flags: u64) -> Result<(), ()> {
     use crate::memory::paging::types::PagePermissions;
     let perms = PagePermissions::READ | PagePermissions::WRITE;
     crate::memory::paging::manager::map_page(page_va, phys, perms).map_err(|_| ())
@@ -150,6 +149,3 @@ fn map_page_to_phys(page_va: VirtAddr, phys: PhysAddr, _flags: PageTableFlags) -
 fn unmap_range(addr: VirtAddr, len: usize) -> Result<(), ()> {
     crate::memory::paging::manager::unmap_range(addr, len).map_err(|_| ())
 }
-
-
-

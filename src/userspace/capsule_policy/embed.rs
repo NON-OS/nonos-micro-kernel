@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-policy")]
 pub(crate) const POLICY_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_policy/target/x86_64-nonos-user/release/policy",);
+    include_bytes!(concat!(
+    "../../../userland/capsule_policy/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/policy"
+));
 
 #[cfg(feature = "nonos-capsule-policy")]
 pub(crate) const POLICY_NONOS_ID_CERT_BYTES: &[u8] =

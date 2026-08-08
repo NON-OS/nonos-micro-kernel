@@ -27,6 +27,8 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     r(b"CEAD", SyscallNumber::CryptoEncryptAad, "CryptoEncryptAad"),
     r(b"CDAD", SyscallNumber::CryptoDecryptAad, "CryptoDecryptAad"),
     r(b"CEDV", SyscallNumber::CryptoEd25519Verify, "CryptoEd25519Verify"),
+    r(b"CEDS", SyscallNumber::CryptoEd25519Sign, "CryptoEd25519Sign"),
+    r(b"CEDP", SyscallNumber::CryptoEd25519Pubkey, "CryptoEd25519Pubkey"),
     r(b"CXPK", SyscallNumber::CryptoX25519Public, "CryptoX25519Public"),
     r(b"CXSH", SyscallNumber::CryptoX25519Shared, "CryptoX25519Shared"),
     r(b"CHMC", SyscallNumber::CryptoHmacSha256, "CryptoHmacSha256"),

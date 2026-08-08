@@ -16,8 +16,8 @@
 
 use core::sync::atomic::Ordering;
 
-use super::ring::{DRAINED, RING};
 use super::super::types::{InputEvent, INPUT_RING_CAP};
+use super::ring::{DRAINED, RING};
 
 pub fn drain_input(out: &mut [InputEvent]) -> usize {
     if out.is_empty() {

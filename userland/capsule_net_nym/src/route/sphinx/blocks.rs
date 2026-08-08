@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{hop, key};
 use super::types::{HOP_BYTES, PREFIX_LEN, ROUTE_HEADER_LEN};
+use super::{hop, key};
 use crate::crypto::x25519_shared;
 use crate::packet::PacketError;
 use crate::topology::{Node, ROUTE_HOPS};
@@ -32,7 +32,8 @@ pub fn write(
     let mut keys = [[0u8; 32]; ROUTE_HOPS];
     for idx in 0..ROUTE_HOPS {
         let mut shared = [0u8; 32];
-        x25519_shared(private, &hops[idx].packet_key, &mut shared).map_err(|_| PacketError::Crypto)?;
+        x25519_shared(private, &hops[idx].packet_key, &mut shared)
+            .map_err(|_| PacketError::Crypto)?;
         keys[idx] = key::hop_key(seed, idx as u8, cred, &shared)?;
         let start = PREFIX_LEN + idx * HOP_BYTES;
         hop::write(

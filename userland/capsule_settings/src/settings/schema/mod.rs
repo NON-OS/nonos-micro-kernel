@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod all_fields;
+pub mod read_only;
 pub mod visible_for;
 
 pub use all_fields::ALL_FIELDS;
+pub use read_only::read_only;
 pub use visible_for::visible_for;

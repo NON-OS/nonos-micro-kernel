@@ -29,7 +29,7 @@ use crate::security::{boot, crypto, hardening, module_db, monitoring, network, p
    8. Quantum crypto engine - post-quantum readiness
 */
 pub fn init_all_security() -> Result<(), &'static str> {
-    hardening::spectre_mitigations::init()?;
+    hardening::speculation::init()?;
     hardening::memory_sanitization::init()?;
     crypto::constant_time::init()?;
     crypto::random::init()?;

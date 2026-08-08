@@ -24,7 +24,10 @@ pub(crate) const N_MK_GETPID: i64 = tag4(b"MGPD");
 pub(crate) const N_MK_ARGS: i64 = tag4(b"MKAR");
 pub(crate) const N_MK_YIELD: i64 = tag4(b"MYLD");
 pub(crate) const N_MK_TIME_MILLIS: i64 = tag4(b"MTMS");
-pub(crate) const N_MK_UPTIME_MS: i64 = tag4(b"MUPT");
+/// The monotonic clock. There is no "MUPT" syscall in the kernel and never
+/// was: a call to it returned ENOSYS, so every bound built on this wrapper
+/// compared a constant negative against a deadline and never fired.
+pub(crate) const N_MK_TIME_MONOTONIC: i64 = tag4(b"MMON");
 pub(crate) const N_MK_TIME_ADJUST: i64 = tag4(b"MTAD");
 pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
 pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");

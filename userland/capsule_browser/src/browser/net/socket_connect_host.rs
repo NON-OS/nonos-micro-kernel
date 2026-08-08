@@ -26,6 +26,9 @@ pub fn socket_connect_host(
     host: &str,
     port: u16,
 ) -> Result<(), ()> {
+    if super::mixnet::is_on() {
+        return super::mixnet::connect();
+    }
     let h = host.as_bytes();
     if h.is_empty() || h.len() > 253 {
         return Err(());

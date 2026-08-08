@@ -22,8 +22,8 @@ mod mount_volume;
 mod read;
 mod read_all;
 mod remove;
-mod state;
 mod stat;
+mod state;
 mod write;
 mod write_or_create;
 

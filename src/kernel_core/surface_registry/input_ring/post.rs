@@ -16,8 +16,8 @@
 
 use core::sync::atomic::Ordering;
 
-use super::ring::{DIAG, DROPPED, FIRST_INPUT_POST, KIND_DIAG_BASE, RING, SEQ, WAITER};
 use super::super::types::{InputEvent, RegistryError, INPUT_RING_CAP};
+use super::ring::{DIAG, DROPPED, FIRST_INPUT_POST, KIND_DIAG_BASE, RING, SEQ, WAITER};
 
 pub fn post_input(ev: InputEvent) -> Result<(), RegistryError> {
     if ev.kind >= KIND_DIAG_BASE {

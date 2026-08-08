@@ -6,7 +6,7 @@
 # #[path]) against adversarial packets, without a boot.
 [package]
 name = "net_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

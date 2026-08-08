@@ -81,6 +81,27 @@ jobs:
       - name: Host proof clippy
         run: cargo clippy --release -- -D warnings
         working-directory: userland/fs_proofs
+      - name: Arch paging descriptor proofs
+        run: cargo test --release
+        working-directory: userland/arch_paging_proofs
+      - name: Arch paging descriptor clippy
+        run: cargo clippy --release -- -D warnings
+        working-directory: userland/arch_paging_proofs
+      - name: Browser engine proofs
+        run: cargo test --release
+        working-directory: userland/capsule_browser_proofs
+      - name: Browser engine clippy
+        run: cargo clippy --release -- -D warnings
+        working-directory: userland/capsule_browser_proofs
+      - name: Script environment proofs
+        run: node tests/prelude/run.mjs
+        working-directory: userland/nonos_qjs
+      - name: Mixnet proxy proofs
+        run: cargo test --release
+        working-directory: userland/capsule_socks5_proofs
+      - name: Mixnet proxy clippy
+        run: cargo clippy --release -- -D warnings
+        working-directory: userland/capsule_socks5_proofs
 
   crypto-proofs:
     runs-on: ubuntu-latest
@@ -219,7 +240,8 @@ jobs:
           set -euo pipefail
           for crate in kernel_proofs net_proofs driver_proofs usb_proofs nvme_proofs \
               usb_msc_proofs virtio_blk_proofs virtio_net_proofs e1000_proofs \
-              rtl8139_proofs xhci_proofs sync_proofs mechanism_proofs wallet_proofs; do
+              rtl8139_proofs xhci_proofs sync_proofs mechanism_proofs wallet_proofs \
+              arch_paging_proofs; do
             if [ -d "userland/$crate" ]; then
               ( cd "userland/$crate" && cargo kani --output-format terse )
             else

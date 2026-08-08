@@ -27,6 +27,7 @@ use super::types::{File, Store, MAX_FILES};
 // payload at the absolute path its own descriptor carries. A device that is
 // missing, wedged, or carrying a foreign container leaves /capsules empty
 // instead of failing the capsule, since the rest of the filesystem still works.
+
 impl Store {
     pub(super) fn seed_packages(&mut self) {
         let staged = match crate::blk::load() {

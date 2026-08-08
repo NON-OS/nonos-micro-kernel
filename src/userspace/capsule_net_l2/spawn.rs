@@ -36,7 +36,7 @@ const SERVICE_NAME: &str = "net.l2";
 const SERVICE_PORT: u32 = 4400;
 const REPLY_INBOX: &str = "endpoint.net.l2.reply";
 const REPLY_PORT: u32 = 4401;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_net_l2_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

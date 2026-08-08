@@ -17,8 +17,9 @@
 //! Delete the desktop item at `index` from the filesystem, then re-sync.
 
 use alloc::string::String;
+use nonos_libc::mk_time_millis;
 
-use crate::state::Context;
+use crate::state::{Context, NotifyLevel};
 
 pub fn delete_entry(ctx: &mut Context, index: usize) {
     let (name, is_dir) = match ctx.desktop_items.get(index) {
@@ -29,5 +30,9 @@ pub fn delete_entry(ctx: &mut Context, index: usize) {
     path.push_str(&name);
     if crate::vfs_client::remove(path.as_bytes(), is_dir) {
         let _ = super::refresh::refresh(ctx);
+    } else {
+        // A refused delete left the icon in place with no explanation.
+        let now = mk_time_millis();
+        ctx.toasts.push(b"could not delete", NotifyLevel::Error, now);
     }
 }

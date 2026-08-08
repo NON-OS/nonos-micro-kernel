@@ -52,15 +52,15 @@ static CPU_CONTEXTS: [PerCpuContext; MAX_CPUS] = {
 fn cpu_id() -> usize {
     #[cfg(target_arch = "x86_64")]
     {
-        // gs base points at PerCpuData: offset 0 is `self_ptr` (a pointer),
-        // offset 8 is the `cpu_id` u32. The old read took gs:0 and used the
-        // self-pointer as the CPU index, so every CPU indexed CPU_CONTEXTS by
-        // (pointer % 256) — a wrong, cross-CPU-aliasing slot. Read cpu_id.
+        // An earlier version read the self-pointer at offset 0 and used it as
+        // the CPU index, so every CPU indexed CPU_CONTEXTS by (pointer % 256),
+        // a wrong and cross-CPU-aliasing slot. Read the `cpu_id` field.
         let id: u32;
         unsafe {
             core::arch::asm!(
-                "mov {:e}, gs:8",
+                "mov {0:e}, gs:[{off}]",
                 out(reg) id,
+                off = const crate::smp::percpu::layout::CPU_ID,
                 options(nostack, preserves_flags)
             );
         }

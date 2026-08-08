@@ -31,7 +31,7 @@ const SERVICE_NAME: &str = "app.image_viewer";
 const SERVICE_PORT: u32 = 4746;
 const REPLY_INBOX: &str = "endpoint.app.image_viewer.reply";
 const REPLY_PORT: u32 = 4747;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 const REQUIRED_CAPS: u64 = 0x3959;
 
 pub fn spawn_image_viewer_capsule() -> Result<(), SpawnError> {

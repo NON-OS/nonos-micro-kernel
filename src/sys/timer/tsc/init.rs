@@ -27,35 +27,33 @@ pub fn init(tsc_hz: u64, boot_epoch_ms: u64) {
 
     BOOT_TSC.store(rdtsc(), Ordering::SeqCst);
 
-    if tsc_hz > 0 {
-        TSC_FREQ_HZ.store(tsc_hz, Ordering::SeqCst);
-    } else {
-        TSC_FREQ_HZ.store(2_500_000_000, Ordering::SeqCst);
-    }
+    // A caller that has no frequency to hand over gets one from the counter
+    // itself before falling back to a guess: aarch64 always publishes the real
+    // rate in CNTFRQ_EL0, and a PC-shaped 2.5 GHz there is off by more than an
+    // order of magnitude, which turns every timeout into the wrong duration.
+    let hz = match (tsc_hz, calibrate_tsc_hz()) {
+        (0, 0) => 2_500_000_000,
+        (0, probed) => probed,
+        (given, _) => given,
+    };
+    TSC_FREQ_HZ.store(hz, Ordering::SeqCst);
 
     BOOT_EPOCH_MS.store(boot_epoch_ms, Ordering::SeqCst);
 
     TIMER_INIT.store(true, Ordering::SeqCst);
 
     serial::print(b"[TIMER] Initialized, TSC freq=");
-    serial::print_dec(tsc_hz / 1_000_000);
+    serial::print_dec(hz / 1_000_000);
     serial::println(b" MHz");
 }
 
 pub fn init_default() {
-    let real_unix_timestamp = crate::arch::x86_64::time::rtc::read_unix_timestamp();
+    let real_unix_timestamp = crate::arch::wall_clock::unix_timestamp().unwrap_or(0);
     let real_unix_ms = real_unix_timestamp * 1000;
     let calibrated = calibrate_tsc_hz();
     init(calibrated, real_unix_ms);
 }
 
 pub fn calibrate_tsc_hz() -> u64 {
-    use crate::arch::x86_64::time::tsc as arch_tsc;
-    if let Some(freq) = arch_tsc::get_cpuid_frequency() {
-        return freq;
-    }
-    match arch_tsc::calibrate_with_pit() {
-        Ok((freq, _confidence)) => freq,
-        Err(_) => 0,
-    }
+    crate::arch::time_counter_hz()
 }

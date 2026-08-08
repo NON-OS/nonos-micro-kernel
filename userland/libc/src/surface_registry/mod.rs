@@ -34,7 +34,7 @@ pub use attach::mk_surface_attach;
 pub use input_drain::mk_input_event_drain;
 pub use input_post::mk_input_event_post;
 pub use input_wait::mk_input_event_wait;
-pub use present::mk_surface_present;
+pub use present::{mk_surface_present, mk_surface_present_rect};
 pub use register::mk_surface_register;
 pub use release::mk_surface_release;
 pub use share::mk_surface_share;

@@ -7,13 +7,18 @@
 # with cargo test and exhaustively with Kani.
 [package]
 name = "mechanism_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]
 path = "src/lib.rs"
 
 [dependencies]
+# The capsule allocators wrap this one, and `heap` includes their real source
+# to check that a freed block is left unreadable. Same version the capsules pin.
+linked_list_allocator = { version = "0.10", default-features = false, features = [
+    "use_spin",
+] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

@@ -35,6 +35,9 @@ pub enum CpuFeature {
     Ssbs,
     Sb,
     Pauth,
+    /// FEAT_MTE2: tag checking at EL1, which is what GCR_EL1 and the SCTLR
+    /// tag-access bits belong to. Plain MTE reports 1 and has neither.
+    Mte2,
     Dcpop,
     Dcpodp,
     Sve,
@@ -43,4 +46,7 @@ pub enum CpuFeature {
     Bti,
     Mte,
     Rng,
+    /// FEAT_PAN: EL1 accesses to EL0-accessible pages fault unless PSTATE.PAN
+    /// is cleared. The aarch64 counterpart of SMAP.
+    Pan,
 }

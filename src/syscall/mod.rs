@@ -21,7 +21,6 @@ pub mod caps;
 pub mod contract;
 pub mod dispatch;
 pub mod entry;
-pub mod handler;
 pub mod microkernel;
 pub mod numbers;
 pub mod types;

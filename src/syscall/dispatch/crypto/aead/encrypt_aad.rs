@@ -34,10 +34,22 @@ pub fn handle_crypto_encrypt_aad(
     if let Err(e) = algorithm::require_known(algo) {
         return e;
     }
-    let key = match copy::read_array::<32>(key_ptr) { Ok(v) => v, Err(e) => return e };
-    let nonce = match copy::read_array::<12>(nonce_ptr) { Ok(v) => v, Err(e) => return e };
-    let raw = match copy::read_vec(frame_ptr, frame_len, MAX_AEAD_PLAINTEXT + 260) { Ok(v) => v, Err(e) => return e };
-    let (aad, plaintext) = match frame::split(&raw) { Ok(v) => v, Err(e) => return e };
+    let key = match copy::read_array::<32>(key_ptr) {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let nonce = match copy::read_array::<12>(nonce_ptr) {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let raw = match copy::read_vec(frame_ptr, frame_len, MAX_AEAD_PLAINTEXT + 260) {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
+    let (aad, plaintext) = match frame::split(&raw) {
+        Ok(v) => v,
+        Err(e) => return e,
+    };
     match algorithm::seal(algo, &key, &nonce, aad, plaintext) {
         Ok(ct) => copy::write_result(ciphertext_ptr, &ct),
         Err(e) => map_capsule_error(e, CryptoErrorContext::Authenticated),

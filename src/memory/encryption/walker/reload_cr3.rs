@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+/// Reload the page-table root register with the value it already holds, which
+/// drops every non-global TLB entry. Used after the walker edits a table in
+/// place, so the next translation reads the new entry rather than a cached one.
 pub(super) fn reload_cr3() {
-    unsafe {
-        let cr3: u64;
-        core::arch::asm!("mov {}, cr3", out(reg) cr3, options(nostack, preserves_flags));
-        core::arch::asm!("mov cr3, {}", in(reg) cr3, options(nostack, preserves_flags));
-    }
+    crate::arch::paging::invalidate_all();
 }

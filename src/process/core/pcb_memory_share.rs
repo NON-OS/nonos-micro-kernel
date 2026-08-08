@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::arch::paging::descriptor::flags;
 use crate::memory::addr::VirtAddr;
 use core::sync::atomic::Ordering;
-use x86_64::structures::paging::PageTableFlags;
 
 use super::pcb::ProcessControlBlock;
 use super::types::{align_up, overlaps, Vma};
@@ -30,8 +30,7 @@ impl ProcessControlBlock {
             return Err("EINVAL");
         }
         let pages = (length + 4095) / 4096;
-        let map_flags =
-            PageTableFlags::PRESENT | PageTableFlags::USER_ACCESSIBLE | PageTableFlags::WRITABLE;
+        let map_flags = flags::PRESENT | flags::USER | flags::WRITABLE;
         let mut mem = self.memory.lock();
         let upper_bound: u64 = 0x0000_FFFF_FFFF_F000;
         let mut candidate = align_up(mem.next_va, 0x1000);

@@ -24,7 +24,7 @@ pub fn secure_random_u64() -> u64 {
         bytes.copy_from_slice(&entropy[..8]);
         u64::from_le_bytes(bytes)
     } else {
-        unsafe { core::arch::x86_64::_rdtsc() }
+        crate::arch::read_time_counter()
     }
 }
 

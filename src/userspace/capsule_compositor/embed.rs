@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-compositor")]
 pub(crate) const COMPOSITOR_ELF: &[u8] =
-    include_bytes!("../../../userland/compositor/target/x86_64-nonos-user/release/compositor");
+    include_bytes!(concat!(
+    "../../../userland/compositor/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/compositor"
+));
 
 #[cfg(feature = "nonos-capsule-compositor")]
 pub(crate) const COMPOSITOR_NONOS_ID_CERT_BYTES: &[u8] =

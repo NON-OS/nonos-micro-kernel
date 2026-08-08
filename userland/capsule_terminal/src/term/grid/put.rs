@@ -15,17 +15,33 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::term::dimensions::{COLS, VISIBLE_ROWS};
-use crate::term::grid::cell::Cell;
+use crate::term::grid::cell::{Cell, F_WIDE_TAIL};
 use crate::term::grid::types::Grid;
+use crate::term::grid::width::char_width;
 
 impl Grid {
     pub fn blank_cell(&self) -> Cell {
-        Cell { ch: b' ', fg: self.fg, bg: self.bg, flags: 0 }
+        Cell { ch: ' ', fg: self.fg, bg: self.bg, flags: 0 }
     }
-    pub fn put_char(&mut self, c: u8) {
+    pub fn put_char(&mut self, c: char) {
+        let w = char_width(c);
+        // A character drawn two columns wide cannot straddle the edge, so it
+        // wraps whole rather than being split across two lines.
+        if self.x + w > COLS {
+            self.x = 0;
+            self.line_feed();
+        }
         let i = Grid::idx(self.x, self.y);
         self.cells[i] = Cell { ch: c, fg: self.fg, bg: self.bg, flags: self.flags };
-        self.x += 1;
+        if w == 2 {
+            // The right half holds no glyph. It is still a cell, so that
+            // erasing, scrolling and background fills treat the pair as the
+            // two columns it occupies.
+            let tail = Grid::idx(self.x + 1, self.y);
+            self.cells[tail] =
+                Cell { ch: ' ', fg: self.fg, bg: self.bg, flags: self.flags | F_WIDE_TAIL };
+        }
+        self.x += w;
         if self.x >= COLS {
             self.x = 0;
             self.line_feed();

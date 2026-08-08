@@ -18,8 +18,6 @@ use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 use super::operations::cpu_id;
 
-pub const IPI_CALL_FUNCTION: u8 = 0x44;
-pub const IPI_BARRIER: u8 = 0x45;
 pub const MAX_IPI_WORK: usize = 16;
 
 pub type IpiFn = fn(arg: usize);

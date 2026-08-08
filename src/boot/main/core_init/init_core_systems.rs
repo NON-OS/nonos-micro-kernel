@@ -19,9 +19,6 @@ use crate::{bus, interrupts};
 use core::arch::asm;
 
 use super::acpi_tables::init_acpi_tables;
-use super::boot_session_nonce::init_boot_session_nonce;
-use super::entropy::init_entropy;
-use super::hardware_broker::seed_hardware_broker;
 #[cfg(feature = "nonos-user-entry-proof")]
 use super::syscall_msrs::print_syscall_msrs;
 
@@ -29,6 +26,10 @@ pub fn init_core_systems() {
     serial::init();
     serial::println(b"[NONOS] Kernel entry - SSE enabled");
     crate::arch::x86_64::time::timer::init_boot_time();
+    // Anchor elapsed time here, before anything can ask for it. The call above
+    // still sets up the PC's own clocks; this latches the counter reading and
+    // rate that crate::time measures every duration from.
+    crate::time::anchor();
     crate::sys::timer::tsc::init_default();
     crate::sys::bench::mark(b"kernel_entry");
     if crate::arch::x86_64::gdt::init().is_err() {
@@ -76,9 +77,10 @@ pub fn init_core_systems() {
     bus::pci::init();
     serial::println(b"[NONOS] PCI enumerated");
     crate::sys::bench::mark(b"kernel_pci_ready");
-    seed_hardware_broker();
-    init_entropy();
-    init_boot_session_nonce();
-    super::super::init_token_signing_key();
+    // Wants the DMAR bases from the ACPI parse and an MMIO mapper that can
+    // hand out a register window, so it runs here, not beside the parse.
+    #[cfg(feature = "nonos-arch-iommu")]
+    crate::arch::x86_64::iommu::unit::report::init();
+    crate::kernel_core::init::init_platform_baseline();
     crate::sys::bench::mark(b"kernel_core_ready");
 }

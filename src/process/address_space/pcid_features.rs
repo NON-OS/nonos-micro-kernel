@@ -14,16 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+/// Whether a context switch can retire one address space's translations
+/// instead of flushing the whole non-global set.
+///
+/// The question is the same on both architectures and the answer comes from
+/// the paging boundary, which asks CPUID for PCID and `invpcid` on x86_64 and
+/// answers for ASID on aarch64. What the caller does with a `false` is
+/// unchanged: flush everything and carry on, slower.
 pub(super) fn supports_pcid_invalidation() -> bool {
-    let cpuid = core::arch::x86_64::__cpuid(1);
-    if cpuid.ecx & (1 << 17) == 0 {
-        crate::log::log_warning!("[ADDR_SPACE] PCID not supported by CPU");
-        return false;
-    }
-    let ext = core::arch::x86_64::__cpuid_count(7, 0);
-    if ext.ebx & (1 << 10) == 0 {
-        crate::log::log_warning!("[ADDR_SPACE] INVPCID not supported by CPU");
-        return false;
-    }
-    true
+    crate::arch::paging::supports_tagged_invalidation()
 }

@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-proof-io")]
 pub(crate) const PROOF_IO_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_proof_io/target/x86_64-nonos-user/release/proof_io");
+    include_bytes!(concat!(
+    "../../../userland/capsule_proof_io/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/proof_io"
+));
 
 #[cfg(feature = "nonos-capsule-proof-io")]
 pub(crate) const PROOF_IO_NONOS_ID_CERT_BYTES: &[u8] =

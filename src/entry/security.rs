@@ -31,13 +31,10 @@ pub fn log_security_status(handoff: &BootHandoffV1) {
 }
 
 fn log_entropy(handoff: &BootHandoffV1) {
+    // The seed itself is never printed. It is the bootloader's contribution to
+    // the kernel CSPRNG, and a console log of any part of it narrows the search
+    // for everything later derived from it. Report only whether it arrived.
     let has_entropy = handoff.rng.seed32.iter().any(|&b| b != 0);
-    serial::print(b"[NONOS] Bootloader entropy[0..8]: ");
-    for i in 0..8 {
-        serial::print_hex(handoff.rng.seed32[i] as u64);
-        serial::print(b" ");
-    }
-    serial::println(b"");
     if has_entropy {
         serial::println(b"[NONOS] RNG seed: AVAILABLE - applying...");
         if let Err(_) = crate::crypto::rng::seed_from_bootloader(&handoff.rng.seed32) {

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::constants::{IPI_FLAG_PANIC, IPI_FLAG_RESCHEDULE, IPI_FLAG_STOP};
-use super::ipi_handler::{handle_panic_ipi, handle_stop_ipi};
 use super::state::{AP_STARTUP_BARRIER, CPU_DESCRIPTORS};
 use super::types::CpuState;
+use crate::process::scheduler::dispatch::runnable_process_count;
+use crate::process::scheduler::preemption::{clear_reschedule, need_reschedule};
 use core::sync::atomic::Ordering;
 
 #[no_mangle]
@@ -26,7 +26,7 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     // software-disabled. The global mode and MMIO mapping were adopted from
     // the BSP before the SIPI, so only the register programming runs here.
     unsafe { crate::arch::x86_64::interrupt::apic::init_ap_lapic() };
-    let apic_id = crate::arch::x86_64::interrupt::apic::id();
+    let apic_id = crate::arch::interrupt_controller::local_id();
 
     // GDT/TSS before anything that can take an exception.
     unsafe {
@@ -39,8 +39,6 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     }
 
     super::percpu::init_ap(cpu_id as usize);
-
-    crate::sched::init_ap_scheduler(cpu_id as usize);
 
     // BSP already registered the IRQ-0 handler; each AP just arms its
     // own LAPIC timer.
@@ -57,29 +55,43 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     ap_idle_loop(cpu_id);
 }
 
+/// Where an AP lives when it has nothing to run.
+///
+/// The halt decision is made against the run queue itself, not against the
+/// reschedule flag alone. A CPU that enqueues work may not know this one is
+/// idle and may skip the IPI; if the flag were the only signal, the task would
+/// sit unclaimed until some unrelated interrupt happened to land here. The IPI
+/// is a latency optimisation on top, not the correctness condition.
 fn ap_idle_loop(cpu_id: u32) -> ! {
+    let cpu = &CPU_DESCRIPTORS[cpu_id as usize];
     loop {
-        let cpu = &CPU_DESCRIPTORS[cpu_id as usize];
-        let pending = cpu.ipi_pending.load(Ordering::Relaxed);
+        // Interrupts off across the test so work that appears between the test
+        // and the halt cannot be missed. `sti` does not take effect until after
+        // the instruction following it, so `sti; hlt` halts with the window
+        // already closed, and a pending interrupt wakes the CPU immediately.
+        unsafe {
+            core::arch::asm!("cli", options(nostack, nomem));
+        }
 
-        if pending & IPI_FLAG_RESCHEDULE != 0 {
-            cpu.ipi_pending.fetch_and(!IPI_FLAG_RESCHEDULE, Ordering::Relaxed);
+        if need_reschedule() || runnable_process_count() > 0 {
+            clear_reschedule();
+            cpu.idle.store(false, Ordering::Relaxed);
+            unsafe {
+                core::arch::asm!("sti", options(nostack, nomem));
+            }
             crate::sched::schedule();
+            continue;
         }
 
-        if pending & IPI_FLAG_PANIC != 0 {
-            handle_panic_ipi();
-        }
+        cpu.idle.store(true, Ordering::Release);
 
-        if pending & IPI_FLAG_STOP != 0 {
-            handle_stop_ipi();
-        }
-
-        // SAFETY: Enter low-power wait state
+        // SAFETY: no state of ours is live across the halt; the CPU resumes at
+        // the next instruction once any interrupt is delivered.
         unsafe {
             core::arch::asm!("sti; hlt", options(nostack, nomem));
         }
 
+        cpu.idle.store(false, Ordering::Relaxed);
         cpu.idle_cycles.fetch_add(1, Ordering::Relaxed);
     }
 }

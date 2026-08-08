@@ -22,7 +22,8 @@ use nonos_libc::{crypto_hkdf_sha256, crypto_hmac_sha256};
 use super::types::CryptoError;
 
 pub fn hmac_sha256(key: &[u8], data: &[u8], out: &mut [u8; 32]) -> Result<(), CryptoError> {
-    let n = crypto_hmac_sha256(key.as_ptr(), key.len(), data.as_ptr(), data.len(), out.as_mut_ptr());
+    let n =
+        crypto_hmac_sha256(key.as_ptr(), key.len(), data.as_ptr(), data.len(), out.as_mut_ptr());
     if n == out.len() as i64 {
         Ok(())
     } else {
@@ -30,7 +31,12 @@ pub fn hmac_sha256(key: &[u8], data: &[u8], out: &mut [u8; 32]) -> Result<(), Cr
     }
 }
 
-pub fn hkdf_sha256(salt: &[u8], ikm: &[u8], info: &[u8], out: &mut [u8]) -> Result<(), CryptoError> {
+pub fn hkdf_sha256(
+    salt: &[u8],
+    ikm: &[u8],
+    info: &[u8],
+    out: &mut [u8],
+) -> Result<(), CryptoError> {
     let frame = frame(out.len(), salt, ikm, info)?;
     let n = crypto_hkdf_sha256(frame.as_ptr(), frame.len(), out.as_mut_ptr(), out.len());
     if n == out.len() as i64 {

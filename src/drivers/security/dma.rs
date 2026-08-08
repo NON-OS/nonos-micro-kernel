@@ -108,4 +108,3 @@ pub fn validate_sg_list(
 
     Ok(total_size)
 }
-

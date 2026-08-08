@@ -82,8 +82,9 @@ impl RngQueue {
     fn kick(&self) {
         core::sync::atomic::fence(Ordering::SeqCst);
         if self.notify_port != 0 {
+            // SAFETY: the probe claimed this port for this device.
             unsafe {
-                core::arch::asm!("out dx, ax", in("dx") self.notify_port, in("ax") 0u16, options(nostack, preserves_flags));
+                crate::sys::io::outw(self.notify_port, 0);
             }
         } else if self.notify_mmio != 0 {
             unsafe {

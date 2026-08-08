@@ -15,16 +15,22 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::types::PagingManager;
+use crate::arch::paging::{descriptor, read_root};
+use crate::memory::addr::PhysAddr;
 use crate::memory::paging::error::PagingResult;
-use x86_64::registers::control::Cr3;
 
 impl PagingManager {
     pub fn init(&mut self) -> PagingResult<()> {
         if self.initialized {
             return Ok(());
         }
-        let (cr3_frame, _) = Cr3::read();
-        self.active_page_table = Some(cr3_frame.start_address().into());
+        // Adopt whatever table the boot path left installed. The low bits of
+        // the root register carry an ASID or PCID rather than address, so they
+        // are masked off the same way a descriptor's are.
+        self.active_page_table = Some(PhysAddr::new(descriptor::address(read_root())));
+        crate::sys::serial::print(b"[VM] adopted root ");
+        crate::sys::serial::print_hex(descriptor::address(read_root()));
+        crate::sys::serial::println(b"");
         self.initialized = true;
         self.create_kernel_address_space()?;
         Ok(())

@@ -159,4 +159,3 @@ pub(super) fn read_counters(slot_idx: usize) -> (u64, u64) {
     let slot = &SLOTS[slot_idx];
     (slot.seq.load(Ordering::Acquire), slot.overflow.load(Ordering::Acquire))
 }
-

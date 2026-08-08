@@ -62,17 +62,13 @@ impl StackCanary {
         }
     }
     fn gen_canary() -> u64 {
-        unsafe {
-            let mut v = 0u64;
-            #[cfg(target_arch = "x86_64")]
-            {
-                if core::arch::x86_64::_rdrand64_step(&mut v) == 1 {
-                    return v;
-                }
-            }
-            let tsc = core::arch::x86_64::_rdtsc();
-            tsc ^ 0xDEAD_BEEF_CAFE_BABE
+        if let Some(v) = crate::arch::cpu_random::random_u64() {
+            return v;
         }
+        // No hardware generator on this CPU. A canary derived from the cycle
+        // counter is weaker than a drawn one, but it still differs per boot and
+        // per rotation, which is what a canary needs.
+        crate::arch::read_time_counter() ^ 0xDEAD_BEEF_CAFE_BABE
     }
     pub fn get(&self, cpu: u32) -> u64 {
         let lock = self.per_cpu.read();

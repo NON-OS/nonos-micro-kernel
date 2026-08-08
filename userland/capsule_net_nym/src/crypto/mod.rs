@@ -14,12 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod aes;
+pub mod blake2b;
+pub mod chacha20;
+pub mod gcm_siv;
+pub mod hkdf_blake3;
+pub mod lioness;
+pub mod polyval;
+
 mod aead;
-mod ecdh;
-mod hash;
-mod kdf;
-mod random;
-mod types;
+pub mod ecdh;
+pub mod hash;
+pub mod kdf;
+pub mod random;
+pub mod types;
 
 pub use aead::{open, seal};
 pub use ecdh::{x25519_public, x25519_shared};

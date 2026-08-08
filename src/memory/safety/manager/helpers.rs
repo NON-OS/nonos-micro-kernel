@@ -17,7 +17,7 @@
 use crate::memory::layout;
 
 pub(super) fn get_timestamp() -> u64 {
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }
 
 pub(super) fn is_guard_compromised(addr: u64, size: u64) -> bool {

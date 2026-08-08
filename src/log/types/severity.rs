@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#[cfg(target_arch = "x86_64")]
 use crate::arch::x86_64::vga::Color;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -26,6 +27,9 @@ pub enum Severity {
 }
 
 impl Severity {
+    /// VGA text-mode attribute for this severity. Text mode is x86 hardware,
+    /// so the mapping only exists where a VGA console can consume it.
+    #[cfg(target_arch = "x86_64")]
     pub fn color(self) -> Color {
         match self {
             Severity::Debug => Color::Cyan,

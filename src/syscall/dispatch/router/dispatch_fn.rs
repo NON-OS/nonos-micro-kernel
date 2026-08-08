@@ -36,6 +36,8 @@ pub(super) fn dispatch_syscall(
         | SyscallNumber::CryptoEncryptAad
         | SyscallNumber::CryptoDecryptAad
         | SyscallNumber::CryptoEd25519Verify
+        | SyscallNumber::CryptoEd25519Sign
+        | SyscallNumber::CryptoEd25519Pubkey
         | SyscallNumber::CryptoX25519Public
         | SyscallNumber::CryptoX25519Shared
         | SyscallNumber::CryptoHmacSha256

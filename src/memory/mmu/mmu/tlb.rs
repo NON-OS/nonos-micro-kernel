@@ -13,20 +13,16 @@
 
 use super::core::MMU;
 use crate::memory::addr::VirtAddr;
-use core::arch::asm;
 
 impl MMU {
+    /// Drop every non-global TLB entry, by reloading the page-table root on
+    /// x86_64 and by the broadcast invalidate on aarch64.
     pub fn invalidate_tlb_all(&self) {
-        unsafe {
-            let cr3: u64;
-            asm!("mov {}, cr3", out(reg) cr3, options(nostack, preserves_flags));
-            asm!("mov cr3, {}", in(reg) cr3, options(nostack, preserves_flags));
-        }
+        crate::arch::paging::invalidate_all();
     }
 
+    /// Drop the entry covering one page.
     pub fn invalidate_tlb_page(&self, virt_addr: VirtAddr) {
-        unsafe {
-            asm!("invlpg [{}]", in(reg) virt_addr.as_u64(), options(nostack, preserves_flags));
-        }
+        crate::arch::paging::invalidate_page(virt_addr.as_u64());
     }
 }

@@ -52,7 +52,9 @@ mod settings;
 #[cfg(not(feature = "harness"))]
 pub mod state;
 #[cfg(not(feature = "harness"))]
-pub mod tls13;
+// TLS lives in the nonos_tls crate now, shared rather than copied. The
+// alias keeps every call site here reading the same as before.
+pub use nonos_tls as tls13;
 
 #[cfg(not(feature = "harness"))]
 pub use app::Browser;

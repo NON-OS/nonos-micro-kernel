@@ -226,4 +226,3 @@ pub fn get_global_stats() -> (u64, u64) {
         GLOBAL_STATS.total_inboxes_removed.load(Ordering::Relaxed),
     )
 }
-

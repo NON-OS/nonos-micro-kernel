@@ -15,9 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::memory::addr::VirtAddr;
+use crate::sched::Context;
 use alloc::vec::Vec;
 use core::sync::atomic::AtomicU64;
-use x86_64::structures::paging::PageTableFlags;
 
 pub type Pid = u32;
 pub type Tid = u32;
@@ -46,7 +46,7 @@ pub enum Priority {
 pub struct Vma {
     pub start: VirtAddr,
     pub end: VirtAddr,
-    pub flags: PageTableFlags,
+    pub flags: u64,
 }
 
 #[derive(Debug)]
@@ -81,26 +81,13 @@ impl Default for IsolationFlags {
     }
 }
 
+/// A suspended thread: the kernel execution point it stopped at, plus when and
+/// what it was doing. The registers live in `Context` rather than being copied
+/// out field by field, so there is one definition of a saved thread per arch and
+/// this struct does not have to know which arch it is on.
 #[derive(Debug, Clone)]
 pub struct SuspendedContext {
-    pub rax: u64,
-    pub rbx: u64,
-    pub rcx: u64,
-    pub rdx: u64,
-    pub rsi: u64,
-    pub rdi: u64,
-    pub rbp: u64,
-    pub rsp: u64,
-    pub r8: u64,
-    pub r9: u64,
-    pub r10: u64,
-    pub r11: u64,
-    pub r12: u64,
-    pub r13: u64,
-    pub r14: u64,
-    pub r15: u64,
-    pub rip: u64,
-    pub rflags: u64,
+    pub context: Context,
     pub suspended_at: u64,
     pub previous_state: ProcessState,
 }

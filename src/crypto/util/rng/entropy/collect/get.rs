@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::error::EntropyError;
-use super::super::hardware::{read_tsc, try_rdrand64, try_rdseed64};
+use super::super::hardware::{cpu_entropy64, cpu_random64, read_cycle_counter};
 use super::super::state::ENTROPY_COUNTER;
 use crate::drivers::virtio_rng;
 use core::sync::atomic::Ordering;
@@ -27,10 +27,10 @@ pub fn get_entropy64_secure() -> Result<u64, EntropyError> {
             return Ok(u64::from_le_bytes(buf));
         }
     }
-    if let Some(v) = try_rdseed64() {
+    if let Some(v) = cpu_entropy64() {
         return Ok(v);
     }
-    if let Some(v) = try_rdrand64() {
+    if let Some(v) = cpu_random64() {
         return Ok(v);
     }
     Err(EntropyError::HardwareFailure)
@@ -49,15 +49,12 @@ pub fn get_entropy64() -> u64 {
 #[cold]
 pub(super) fn emergency_entropy_mix() -> u64 {
     let counter = ENTROPY_COUNTER.fetch_add(1, Ordering::SeqCst);
-    let tsc1 = read_tsc();
-    let stack_addr: u64;
-    unsafe {
-        core::arch::asm!("mov {}, rsp", out(reg) stack_addr, options(nomem, nostack));
-    }
+    let tsc1 = read_cycle_counter();
+    let stack_addr = crate::arch::stack_pointer();
     for _ in 0..counter.wrapping_rem(16).wrapping_add(1) {
         core::hint::spin_loop();
     }
-    let tsc2 = read_tsc();
+    let tsc2 = read_cycle_counter();
     let jitter = tsc2.wrapping_sub(tsc1);
     let mut state = counter;
     state = state.wrapping_add(0x9e3779b97f4a7c15);
@@ -72,5 +69,5 @@ pub(super) fn emergency_entropy_mix() -> u64 {
 
 pub fn get_tsc_entropy() -> u64 {
     let counter = ENTROPY_COUNTER.fetch_add(1, Ordering::SeqCst);
-    counter ^ read_tsc()
+    counter ^ read_cycle_counter()
 }

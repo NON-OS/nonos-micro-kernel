@@ -30,12 +30,15 @@ use super::parse;
 /// simply not shown rather than risking a large per-tick allocation.
 const REPLY_CAP: usize = 16384;
 
-pub fn list(prefix: &[u8]) -> Vec<Entry> {
+/// The listing, or `None` when the VFS did not answer.
+///
+/// An empty `Vec` used to mean both "no reply" and "the directory is empty",
+/// so callers could not adopt an empty listing without risking a blank desktop
+/// on a transient failure. They are separate answers now.
+pub fn list(prefix: &[u8]) -> Option<Vec<Entry>> {
     let body = owner_body(prefix);
     let mut rx = vec![0u8; REPLY_CAP];
-    let Some(total) = call(OP_LIST, &body, &mut rx) else {
-        return Vec::new();
-    };
+    let total = call(OP_LIST, &body, &mut rx)?;
     let prefix_str = core::str::from_utf8(prefix).unwrap_or("/");
-    parse::children(prefix_str, &rx, total)
+    Some(parse::children(prefix_str, &rx, total))
 }

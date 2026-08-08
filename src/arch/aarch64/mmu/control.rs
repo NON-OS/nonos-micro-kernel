@@ -14,43 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::arch::asm;
+//! The three registers that have to be right before the MMU is switched on.
+//!
+//! MAIR_EL1 says what each memory-type slot means, TCR_EL1 describes the shape
+//! of the translation tables the walker will read, and SCTLR_EL1 turns the
+//! walker on. Each gets its own file because each has its own field layout to
+//! justify.
 
-pub(super) fn configure_mair() {
-    let mair =
-        (0x00 << 0) | (0x04 << 8) | (0x0C << 16) | (0x44 << 24) | (0xFF << 32) | (0xBB << 40);
-    unsafe {
-        asm!("msr mair_el1, {0}", "isb", in(reg) mair, options(nostack));
-    }
-}
+mod id;
+mod mair;
+mod sctlr;
+mod tcr;
 
-pub(super) fn configure_tcr() {
-    let tcr = (16 << 0)
-        | (0b11 << 10)
-        | (0b01 << 12)
-        | (0b1 << 14)
-        | (16 << 16)
-        | (0b11 << 26)
-        | (0b01 << 28)
-        | (0b1 << 30)
-        | (0b10 << 32)
-        | (0b1 << 36)
-        | (0b1 << 37)
-        | (0b1 << 38)
-        | (0b1 << 39);
-    unsafe {
-        asm!("msr tcr_el1, {0}", "isb", in(reg) tcr, options(nostack));
-    }
-}
-
-pub(super) fn enable_mmu() {
-    unsafe {
-        asm!("dsb sy", "isb", options(nostack));
-        let mut sctlr: u64;
-        asm!("mrs {}, sctlr_el1", out(reg) sctlr, options(nostack));
-        sctlr |= 1 << 0;
-        sctlr |= 1 << 2;
-        sctlr |= 1 << 12;
-        asm!("msr sctlr_el1, {}", "isb", in(reg) sctlr, options(nostack));
-    }
-}
+pub(super) use mair::configure_mair;
+pub(super) use sctlr::enable_mmu;
+pub(super) use tcr::configure_tcr;

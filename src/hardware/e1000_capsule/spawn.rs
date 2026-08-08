@@ -37,7 +37,7 @@ pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 const SERVICE_NAME: &str = "driver.e1000_0";
 const SERVICE_PORT: u32 = 4210;
 const REPLY_PORT: u32 = 4211;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_driver_e1000_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
@@ -55,6 +55,10 @@ pub fn spawn_driver_e1000_capsule() -> Result<(), SpawnError> {
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::IPC.bit()
             | Capability::Memory.bit()
+            // The station address is drawn rather than read out of the EEPROM,
+            // and CryptoRandom is gated on this capability. The draw fails closed,
+            // so without it the card never gets an address to transmit under.
+            | Capability::Crypto.bit()
             | Capability::Driver.bit()
             | Capability::DeviceEnum.bit()
             | Capability::Mmio.bit()

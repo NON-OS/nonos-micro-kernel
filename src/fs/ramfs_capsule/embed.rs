@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-ramfs")]
 pub(super) const RAMFS_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_ramfs/target/x86_64-nonos-user/release/ramfs");
+    include_bytes!(concat!(
+    "../../../userland/capsule_ramfs/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/ramfs"
+));
 
 #[cfg(feature = "nonos-capsule-ramfs")]
 pub(super) const RAMFS_NONOS_ID_CERT_BYTES: &[u8] =

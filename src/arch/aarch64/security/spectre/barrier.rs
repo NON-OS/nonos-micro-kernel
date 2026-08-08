@@ -18,18 +18,34 @@ use core::arch::asm;
 
 use crate::arch::aarch64::cpu::features::{has_feature, CpuFeature};
 
+/// Stop speculation running past this point.
+///
+/// `sb` says exactly that, but it only exists from ARMv8.5, so it goes behind a
+/// feature check and is never executed blind. A part without it gets `dsb sy`
+/// then `isb`, the sequence the architecture defines for the same purpose: drain
+/// what is outstanding, then flush the pipeline so nothing fetched under an
+/// earlier prediction survives.
+///
+/// The check matters more than it looks. `sb` on a part that lacks it is an
+/// undefined instruction, and this runs during early bring-up, so the fault
+/// arrives as a synchronous exception and the machine stops before the console
+/// can explain itself.
 pub fn speculative_barrier() {
-    unsafe {
-        asm!("sb", options(nomem, nostack));
-    }
-}
-
-pub fn clear_prediction_state() {
     if has_feature(CpuFeature::Sb) {
-        speculative_barrier();
+        // SAFETY: the probe read ID_AA64ISAR1_EL1 and found SB implemented here.
+        // The instruction touches no memory.
+        unsafe {
+            asm!("sb", options(nomem, nostack));
+        }
     } else {
+        // SAFETY: both are ARMv8.0 baseline, so always implemented.
         unsafe {
             asm!("dsb sy", "isb", options(nomem, nostack));
         }
     }
+}
+
+/// Discard branch prediction state carried across a privilege change.
+pub fn clear_prediction_state() {
+    speculative_barrier();
 }

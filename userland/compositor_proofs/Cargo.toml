@@ -7,7 +7,7 @@
 # merge, and the blitter never writes a pixel outside the destination surface.
 [package]
 name = "compositor_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

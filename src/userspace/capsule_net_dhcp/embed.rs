@@ -21,7 +21,11 @@
 
 #[cfg(feature = "nonos-capsule-net-dhcp")]
 pub(super) const NET_DHCP_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_net_dhcp/target/x86_64-nonos-user/release/net_dhcp");
+    include_bytes!(concat!(
+    "../../../userland/capsule_net_dhcp/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_dhcp"
+));
 
 #[cfg(feature = "nonos-capsule-net-dhcp")]
 pub(super) const NET_DHCP_NONOS_ID_CERT_BYTES: &[u8] =

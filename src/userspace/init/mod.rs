@@ -21,6 +21,6 @@ mod spawn_plan;
 mod supervisor;
 
 pub use entry::run_init;
-pub use instance_spawn::{request as request_instance, PendingApp};
 pub(crate) use instance_spawn::has_pending as instance_spawns_pending;
 pub(crate) use instance_spawn::service as service_instance_spawns;
+pub use instance_spawn::{request as request_instance, PendingApp};

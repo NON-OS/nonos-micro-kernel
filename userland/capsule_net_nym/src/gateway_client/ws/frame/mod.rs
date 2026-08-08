@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod carry;
 mod parse;
 mod read;
 mod recv;
 mod send;
 mod types;
 
-pub use recv::recv_binary;
-pub use send::{send_binary, send_close};
+pub use recv::{recv_binary, Frame, E_CLOSED, E_TIMEOUT};
+pub use send::{send_binary, send_close, send_ping, send_text};

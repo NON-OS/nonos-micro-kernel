@@ -15,18 +15,47 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::core::TpmState;
-use crate::hardware::tpm::constants::{TPM_DID_VID, TPM_INTERFACE_ID};
+use crate::hardware::tpm::constants::{
+    TPM_CRB_VID_DID, TPM_DID_VID, TPM_INTERFACE_ID, TPM_INTF_TYPE_CRB, TPM_INTF_TYPE_MASK,
+};
 use crate::hardware::tpm::types::TpmError;
 
+/// A word carrying no device: an unimplemented register reads back zero, an
+/// absent decode all ones.
+fn absent(word: u32) -> bool {
+    word == 0 || word == 0xFFFF_FFFF
+}
+
 impl TpmState {
+    /// Look for a TPM at the fixed MMIO window and record which register file
+    /// it presents.
+    ///
+    /// The interface has to be identified before identity can be read, because
+    /// the two register files keep identity in different places. This read
+    /// `TPM_DID_VID` at 0x0F00 unconditionally, which is the FIFO location: a
+    /// CRB part answers zero there and was reported as no TPM at all. That is
+    /// not a corner case but most current hardware, since Intel PTT and AMD
+    /// fTPM are both CRB, so the bootloader skipped the TPM on any machine
+    /// with a firmware TPM and fell back to a software machine id.
     pub fn detect(&mut self) -> Result<bool, TpmError> {
-        let did_vid = self.read_reg32(TPM_DID_VID);
-        if did_vid == 0 || did_vid == 0xFFFF_FFFF {
+        let interface_id = self.read_reg32(TPM_INTERFACE_ID);
+        let is_crb =
+            !absent(interface_id) && (interface_id & TPM_INTF_TYPE_MASK) == TPM_INTF_TYPE_CRB;
+
+        // Identity comes out of the file the interface claims. Where the
+        // interface register itself is unreadable, probing the FIFO file
+        // directly is what an older part without one looks like.
+        let did_vid =
+            if is_crb { self.read_reg32(TPM_CRB_VID_DID) } else { self.read_reg32(TPM_DID_VID) };
+
+        if absent(did_vid) {
             return Ok(false);
         }
 
-        let interface_id = self.read_reg32(TPM_INTERFACE_ID);
-        self.version = if (interface_id & 0x0F) == 0x00 { 12 } else { 20 };
+        // A CRB file only ever carries a 2.0 part. For FIFO the distinction is
+        // real, and an unreadable interface register is how 1.2 presents.
+        self.version = if is_crb || !absent(interface_id) { 20 } else { 12 };
+        self.is_crb = is_crb;
 
         self.initialized = true;
         Ok(true)

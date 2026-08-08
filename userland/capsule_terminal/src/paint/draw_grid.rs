@@ -22,17 +22,22 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::metrics::Metrics;
 use crate::term::dimensions::{COLS, VISIBLE_ROWS};
-use crate::term::grid::cell::F_REVERSE;
+use crate::term::grid::cell::{F_REVERSE, F_WIDE_TAIL};
 use crate::term::grid::types::Grid;
 use crate::term::theme::{BACKGROUND, CURSOR};
 use crate::term::vt::color::DEFAULT_BG;
 
-fn glyph(fb: &mut PaintBuffer, x: u32, y: u32, ch: u8, argb: u32, px: f32) {
-    if ch > b' ' && ch < 0x7f {
-        let mut buf = [0u8; 4];
-        let s = (ch as char).encode_utf8(&mut buf);
-        let _ = fb.text_ttf_mono(x as i32, y as i32, s, argb, px);
+fn glyph(fb: &mut PaintBuffer, x: u32, y: u32, ch: char, argb: u32, px: f32) {
+    // Blanks and control characters have no glyph. Everything else is handed
+    // to the face, which covers far more than ASCII and draws .notdef for
+    // what it does not have, so an unmapped character is visibly missing
+    // rather than silently absent.
+    if ch == ' ' || (ch as u32) < 0x20 || ch as u32 == 0x7f {
+        return;
     }
+    let mut buf = [0u8; 4];
+    let s = ch.encode_utf8(&mut buf);
+    let _ = fb.text_ttf_mono(x as i32, y as i32, s, argb, px);
 }
 
 pub fn draw_grid_cursor(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, m: Metrics) {
@@ -70,7 +75,12 @@ pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32, m
             if has_bg || reverse {
                 fb.fill_rect(x, y, m.adv, m.lh, bg);
             }
-            glyph(fb, x, y, cell.ch, fg, m.px);
+            // The right half of a wide character carries the background and
+            // nothing else. Its glyph was drawn by the cell before it, which
+            // had both columns to draw into.
+            if cell.flags & F_WIDE_TAIL == 0 {
+                glyph(fb, x, y, cell.ch, fg, m.px);
+            }
         }
     }
 }

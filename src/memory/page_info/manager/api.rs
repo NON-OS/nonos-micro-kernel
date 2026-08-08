@@ -21,7 +21,7 @@ use crate::memory::addr::{PhysAddr, VirtAddr};
 use core::sync::atomic::Ordering;
 
 pub fn get_timestamp() -> u64 {
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }
 
 pub fn init() -> PageInfoResult<()> {

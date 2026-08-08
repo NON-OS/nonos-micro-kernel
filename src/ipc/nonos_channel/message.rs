@@ -19,8 +19,7 @@ extern crate alloc;
 use alloc::{string::String, vec::Vec};
 
 use super::hash::{compute_checksum, verify_checksum};
-
-pub const MAX_MESSAGE_SIZE: usize = 1024 * 1024;
+use super::limits::MAX_MESSAGE_SIZE;
 
 #[derive(Debug, Clone)]
 pub struct IpcMessage {
@@ -101,4 +100,3 @@ impl core::fmt::Display for IpcMessage {
         )
     }
 }
-

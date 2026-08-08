@@ -39,7 +39,7 @@ fn mix_virtio_rng(buffer: &mut [u8]) {
 }
 
 fn mix_cpu_rng(buffer: &mut [u8]) {
-    if !(rng::has_rdrand() || rng::has_rdseed()) {
+    if !(rng::has_cpu_random() || rng::has_cpu_entropy()) {
         return;
     }
 
@@ -55,7 +55,7 @@ fn mix_cpu_rng(buffer: &mut [u8]) {
 }
 
 fn next_cpu_random() -> Option<u64> {
-    rng::try_rdseed64().or_else(rng::try_rdrand64)
+    rng::cpu_entropy64().or_else(rng::cpu_random64)
 }
 
 fn xor_repeating(out: &mut [u8], input: &[u8]) {

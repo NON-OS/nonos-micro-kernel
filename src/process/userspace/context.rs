@@ -202,13 +202,12 @@ pub fn clac() {
     }
 }
 
+// Kept as the name the usercopy paths already call. The window itself, and
+// the guard that closes it, belong to the arch boundary.
 #[inline(always)]
 pub fn with_user_access<F, R>(f: F) -> R
 where
     F: FnOnce() -> R,
 {
-    stac();
-    let result = f();
-    clac();
-    result
+    crate::arch::user_access::with_user_access(f)
 }

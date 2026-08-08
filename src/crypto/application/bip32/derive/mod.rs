@@ -23,4 +23,3 @@ pub mod validate;
 
 pub use child::derive_child;
 pub use master::derive_master_key;
-

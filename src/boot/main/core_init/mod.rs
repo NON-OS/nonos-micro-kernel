@@ -15,9 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod acpi_tables;
-mod boot_session_nonce;
-mod entropy;
-mod hardware_broker;
 mod init_core_systems;
 #[cfg(feature = "nonos-user-entry-proof")]
 mod syscall_msrs;

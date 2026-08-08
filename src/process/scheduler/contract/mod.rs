@@ -21,8 +21,6 @@
 //! shims land.
 
 mod backend;
-#[cfg(target_arch = "x86_64")]
-mod backend_x86_64;
 mod intent;
 mod lease;
 mod outcome;

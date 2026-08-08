@@ -3,7 +3,7 @@
 //! three regimes (room to spare, shrink between the totals, overflow below the
 //! minima) plus the invariant that the widths fill the row exactly.
 
-use crate::browser::table_columns::column_widths;
+use crate::browser::layout::boxmodel::table_columns::column_widths;
 
 #[test]
 fn columns_take_their_max_and_share_the_surplus_by_weight() {

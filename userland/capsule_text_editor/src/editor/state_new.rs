@@ -39,6 +39,8 @@ impl State {
             path,
             path_len: PATH.len(),
             prompt: None,
+            prompt_path: [0u8; 256],
+            prompt_len: 0,
             shell_port: 0,
             undo: alloc::vec::Vec::new(),
             redo: alloc::vec::Vec::new(),

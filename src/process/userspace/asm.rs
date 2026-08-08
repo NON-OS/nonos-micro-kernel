@@ -73,18 +73,16 @@ pub unsafe fn return_to_usermode(frame: *const InterruptFrame) -> ! {
         static FIRST_ENTRY_SHOWN: AtomicU32 = AtomicU32::new(0);
         if FIRST_ENTRY_SHOWN.fetch_add(1, Ordering::Relaxed) < 64 {
             crate::sys::serial::print(b"[USER-FIRST] pid=");
-            crate::arch::x86_64::diag::print_hex_u64(
-                crate::process::current_pid().unwrap_or(0) as u64
-            );
+            crate::sys::serial::print_hex(crate::process::current_pid().unwrap_or(0) as u64);
             crate::sys::serial::print(b" rip=");
-            crate::arch::x86_64::diag::print_hex_u64(f.rip);
+            crate::sys::serial::print_hex(f.rip);
             crate::sys::serial::println(b"");
         }
     }
 
     #[cfg(feature = "nonos-user-entry-proof")]
     {
-        let cr3 = crate::arch::x86_64::paging::read_cr3();
+        let cr3 = crate::arch::paging::read_root();
         let cpu_id = crate::smp::percpu::current().cpu_id;
         if !crate::arch::x86_64::diag::assert_user_entry(cr3, f.rip, f.rsp, cpu_id) {
             crate::sys::serial::println(b"[USER-PROOF] halting before iretq");

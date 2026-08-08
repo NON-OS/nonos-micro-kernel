@@ -23,7 +23,7 @@ use crate::settings::theme::BACKGROUND;
 use super::layout::{BODY_TOP, ROW_H};
 use super::paint_field_row::paint_field_row;
 use super::paint_header::paint_header;
-use super::paint_status::paint_status;
+use super::paint_status::{paint_status, HintMode};
 use super::paint_tabs::paint_tabs;
 use super::paint_wifi::paint_wifi;
 use super::scroll_indicator::paint_scroll_indicator;
@@ -32,17 +32,18 @@ use super::visible_rows::visible_rows;
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
     paint_header(fb);
-    paint_tabs(fb, state.category, state.wifi_active);
+    paint_tabs(fb, state.category, state.wifi_active, state.win_w);
     if state.wifi_active {
         paint_wifi(fb, state);
-        paint_status(fb, &state.status, state.policy_ready);
+        let mode = if state.wifi_pass_active { HintMode::WifiPassphrase } else { HintMode::Wifi };
+        paint_status(fb, &state.status, state.policy_ready, mode);
         return;
     }
     let fields = visible_for(state.category);
     let cat = state.category as usize;
     let cursor = state.cursor[cat];
     let top = state.scroll_top[cat];
-    let rows = visible_rows();
+    let rows = visible_rows(state.win_h);
     let end = core::cmp::min(top + rows, fields.len());
     let mut y = BODY_TOP;
     for (i, field) in fields[top..end].iter().enumerate() {
@@ -51,5 +52,6 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         y += ROW_H;
     }
     paint_scroll_indicator(fb, top, rows, fields.len());
-    paint_status(fb, &state.status, state.policy_ready);
+    let mode = if state.editing { HintMode::Editing } else { HintMode::Browsing };
+    paint_status(fb, &state.status, state.policy_ready, mode);
 }

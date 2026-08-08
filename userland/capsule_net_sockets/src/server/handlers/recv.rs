@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::clients::{nym, tcp, udp};
-use crate::protocol::{E_BAD_LEN, E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_RECV};
+use crate::clients::{tcp, udp};
+use crate::protocol::{E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_RECV};
 use crate::server::handlers::io::u32_at;
-use crate::server::handlers::mixnet_frame;
+use crate::server::handlers::mixnet_recv::recv_mixnet;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::sockets::{Kind, Socket, SocketKey, SOCKETS};
@@ -52,21 +52,6 @@ fn recv_socket(sock: Socket, out: &mut [u8]) -> Result<usize, u16> {
         Kind::Mixnet if sock.transport_handle != 0 => recv_mixnet(sock, out),
         _ => Err(E_NOT_CONNECTED),
     }
-}
-
-fn recv_mixnet(sock: Socket, out: &mut [u8]) -> Result<usize, u16> {
-    let Some(remote) = sock.remote else { return Err(E_NOT_CONNECTED) };
-    let mut frame = [0u8; mixnet_frame::MAX_BODY + 16];
-    let n = nym::recv(state::nym(), sock.transport_handle, &mut frame).map_err(|_| E_NO_TRANSPORT)?;
-    let decoded = mixnet_frame::decode(&frame[..n]).ok_or(E_NO_TRANSPORT)?;
-    if decoded.ip != remote.ip || decoded.port != remote.port {
-        return Err(E_NOT_CONNECTED);
-    }
-    if decoded.body.len() > out.len() {
-        return Err(E_BAD_LEN);
-    }
-    out[..decoded.body.len()].copy_from_slice(decoded.body);
-    Ok(decoded.body.len())
 }
 
 fn status(pid: u32, req: &Request, errno: u16, tx: &mut [u8]) {

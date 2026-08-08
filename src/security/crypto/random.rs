@@ -56,48 +56,18 @@ pub fn secure_random_u64() -> u64 {
 }
 
 pub fn try_secure_random_u64() -> Result<u64, &'static str> {
-    #[cfg(target_arch = "x86_64")]
-    {
-        for _ in 0..10 {
-            let mut value: u64 = 0;
-            unsafe {
-                if core::arch::x86_64::_rdrand64_step(&mut value) == 1 {
-                    return Ok(value);
-                }
-            }
-            core::hint::spin_loop();
-        }
-        if let Some(v) = try_rdseed() {
-            return Ok(v);
-        }
-        if let Ok(v) = try_virtio_rng() {
-            return Ok(v);
-        }
+    if let Some(v) = crate::arch::cpu_random::random_u64() {
+        return Ok(v);
+    }
+    if let Some(v) = crate::arch::cpu_random::entropy_u64() {
+        return Ok(v);
+    }
+    if let Ok(v) = try_virtio_rng() {
+        return Ok(v);
     }
     Err("No hardware entropy source available")
 }
 
-#[cfg(target_arch = "x86_64")]
-fn try_rdseed() -> Option<u64> {
-    let (_, ebx, _, _) = crate::arch::x86_64::cpu::cpuid::cpuid_count(7, 0);
-    if (ebx & (1 << 18)) == 0 {
-        return None;
-    }
-    for _ in 0..10 {
-        let v: u64;
-        let ok: u8;
-        unsafe {
-            core::arch::asm!("rdseed {v}", "setc {ok}", v = out(reg) v, ok = out(reg_byte) ok, options(nomem, nostack));
-        }
-        if ok != 0 {
-            return Some(v);
-        }
-        core::hint::spin_loop();
-    }
-    None
-}
-
-#[cfg(target_arch = "x86_64")]
 fn try_virtio_rng() -> Result<u64, ()> {
     if crate::drivers::virtio_rng::is_available() {
         let mut buf = [0u8; 8];

@@ -16,25 +16,47 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::settings::manifest::{HEIGHT, WIDTH};
 use crate::settings::state::status::{Status, StatusKind};
 use crate::settings::theme::{STATUS_BG, STATUS_FG_ERR, STATUS_FG_IDLE, STATUS_FG_OK};
 
 use super::layout::{PAD_X, STATUS_H};
 
+// At 9px a glyph this has to stay under about 80 characters or it runs past
+// the right edge of a default-width window.
 const HINT: &[u8] =
-    b"[Tab] tabs  [Up/Down] move  [Left/Right] adjust  [Enter] edit/toggle  [Esc] close";
+    b"[Tab] tabs  [arrows] move/adjust  [PgUp/PgDn] page  [Enter] toggle  [Esc] close";
 
-pub fn paint_status(fb: &mut PaintBuffer, status: &Status, ready: bool) {
-    let y = HEIGHT - STATUS_H;
-    fb.fill_rect(0, y, WIDTH, STATUS_H, STATUS_BG);
+/// Which set of keys is live, so the hint describes the panel the user is
+/// actually looking at rather than always the field list.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum HintMode {
+    Browsing,
+    Editing,
+    Wifi,
+    WifiPassphrase,
+}
+
+fn hint_for(mode: HintMode) -> &'static [u8] {
+    match mode {
+        HintMode::Browsing => HINT,
+        HintMode::Editing => b"[type] edit  [Enter] save  [Esc] cancel",
+        HintMode::Wifi => b"[Up/Down] pick  [Enter] join  [Space] rescan  [Tab] tabs  [Esc] close",
+        HintMode::WifiPassphrase => b"[type] passphrase  [Enter] join  [Esc] cancel",
+    }
+}
+
+pub fn paint_status(fb: &mut PaintBuffer, status: &Status, ready: bool, mode: HintMode) {
+    // Against the manifest height this painted off the bottom of a shorter
+    // window, taking policy errors with it.
+    let y = fb.height.saturating_sub(STATUS_H);
+    fb.fill_rect(0, y, fb.width, STATUS_H, STATUS_BG);
     if !ready {
         fb.text(PAD_X, y + 6, b"policy unavailable; showing static defaults", STATUS_FG_ERR);
         return;
     }
     let text = status.as_slice();
     if text.is_empty() {
-        fb.text(PAD_X, y + 6, HINT, STATUS_FG_IDLE);
+        fb.text(PAD_X, y + 6, hint_for(mode), STATUS_FG_IDLE);
         return;
     }
     let color = match status.kind {

@@ -39,7 +39,9 @@ pub(super) fn exec(state: &mut State, args: &[&[u8]]) -> Outcome {
         b"history" => {
             builtin::history_cmd::run(&mut Output::new(&mut state.scrollback), &state.history, args)
         }
-        b"jobs" => builtin::jobs::run_jobs(&mut Output::new(&mut state.scrollback), &state.jobs, args),
+        b"jobs" => {
+            builtin::jobs::run_jobs(&mut Output::new(&mut state.scrollback), &state.jobs, args)
+        }
         b"fg" => builtin::jobs::run_fg(state, args),
         b"bg" => builtin::jobs::run_bg(&mut Output::new(&mut state.scrollback), &state.jobs, args),
         b"market" => builtin::market::run(&mut Output::new(&mut state.scrollback), args),

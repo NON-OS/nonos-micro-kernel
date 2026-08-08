@@ -14,22 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::arch::x86_64::_rdrand64_step;
-
 use super::{
     constants::{FALLBACK_SEED, LCG_INCREMENT, LCG_MULTIPLIER},
     state::AslrManager,
 };
+use crate::arch::cpu_random;
 
 pub(super) fn gather_entropy() -> u64 {
-    unsafe {
-        let mut value = 0u64;
-        if _rdrand64_step(&mut value) == 1 {
-            value
-        } else {
-            FALLBACK_SEED
-        }
-    }
+    cpu_random::random_u64().unwrap_or(FALLBACK_SEED)
 }
 
 impl AslrManager {
@@ -37,8 +29,7 @@ impl AslrManager {
         if max_offset == 0 {
             return 0;
         }
-        let mut rand = 0u64;
-        if unsafe { _rdrand64_step(&mut rand) } == 1 {
+        if let Some(rand) = cpu_random::random_u64() {
             self.entropy_pool ^= rand;
         } else {
             self.entropy_pool =

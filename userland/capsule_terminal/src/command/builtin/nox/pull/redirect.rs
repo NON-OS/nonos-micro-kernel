@@ -40,11 +40,7 @@ fn absolute(host: &[u8], rest: &[u8]) -> Result<Vec<u8>, &'static str> {
     if name != host {
         return Err("redirect: cross-host unsupported");
     }
-    Ok(if slash == rest.len() {
-        b"/".to_vec()
-    } else {
-        rest[slash..].to_vec()
-    })
+    Ok(if slash == rest.len() { b"/".to_vec() } else { rest[slash..].to_vec() })
 }
 
 fn join(cur: &[u8], rel: &[u8]) -> Vec<u8> {

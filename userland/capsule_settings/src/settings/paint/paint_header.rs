@@ -16,12 +16,11 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::settings::manifest::WIDTH;
 use crate::settings::theme::{HEADER_BG, HEADER_FG};
 
 use super::layout::{HEADER_H, PAD_X};
 
 pub fn paint_header(fb: &mut PaintBuffer) {
-    fb.fill_rect(0, 0, WIDTH, HEADER_H, HEADER_BG);
+    fb.fill_rect(0, 0, fb.width, HEADER_H, HEADER_BG);
     fb.text(PAD_X, 10, b"NONOS Settings", HEADER_FG);
 }

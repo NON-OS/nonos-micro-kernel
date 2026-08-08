@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::crypto::fill_random;
 use core::sync::atomic::{AtomicU16, AtomicU64, Ordering};
 use nonos_libc::mk_time_millis;
-use crate::crypto::fill_random;
 
 static COVER_BURST: AtomicU16 = AtomicU16::new(1);
 static DELAY_JITTER_MS: AtomicU16 = AtomicU16::new(250);
@@ -41,7 +41,10 @@ pub fn install(body: &[u8]) -> bool {
 }
 
 pub fn policy() -> TimingPolicy {
-    TimingPolicy { cover_burst: COVER_BURST.load(Ordering::Acquire), delay_jitter_ms: DELAY_JITTER_MS.load(Ordering::Acquire) }
+    TimingPolicy {
+        cover_burst: COVER_BURST.load(Ordering::Acquire),
+        delay_jitter_ms: DELAY_JITTER_MS.load(Ordering::Acquire),
+    }
 }
 
 pub fn next_cover_ms() -> u64 {

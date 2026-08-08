@@ -18,6 +18,7 @@ use crate::capabilities::token::{is_token_valid, CapabilityToken};
 use crate::capabilities::types::Capability;
 
 use super::error::DelegationError;
+use super::lifetime::delegation_expiry;
 use super::sign::sign_delegation;
 use super::types::Delegation;
 
@@ -42,10 +43,8 @@ pub fn create_delegation(
         }
     }
     let now = crate::time::timestamp_millis();
-    let mut expiry = ttl_ms.map(|t| now.saturating_add(t));
-    if let Some(parent_exp) = parent.expires_at_ms {
-        expiry = Some(expiry.map_or(parent_exp, |e| e.min(parent_exp)));
-    }
+    let requested = ttl_ms.map(|t| now.saturating_add(t));
+    let expiry = delegation_expiry(requested, parent.expires_at_ms);
     let mut delegation = Delegation {
         delegator: parent.owner_module,
         delegatee,

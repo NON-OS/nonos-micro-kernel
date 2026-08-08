@@ -47,12 +47,6 @@ impl World {
     pub fn empty() -> World {
         let env = Env::root();
         super::interp::install(&env);
-        World {
-            env,
-            listeners: Vec::new(),
-            timers: Vec::new(),
-            net: Vec::new(),
-            net_active: None,
-        }
+        World { env, listeners: Vec::new(), timers: Vec::new(), net: Vec::new(), net_active: None }
     }
 }

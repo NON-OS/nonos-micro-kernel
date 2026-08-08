@@ -15,9 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-browser")]
-pub(crate) const BROWSER_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_browser/target/x86_64-nonos-user/release/browser"
-);
+pub(crate) const BROWSER_ELF: &[u8] =
+    include_bytes!(concat!(
+    "../../../userland/capsule_browser/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/browser"
+));
 
 #[cfg(feature = "nonos-capsule-browser")]
 pub(crate) const BROWSER_NONOS_ID_CERT_BYTES: &[u8] =

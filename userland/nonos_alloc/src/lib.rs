@@ -19,6 +19,7 @@
 mod allocator;
 mod error;
 mod init;
+mod zero_on_free;
 
 pub use error::AllocError;
 pub use init::init;

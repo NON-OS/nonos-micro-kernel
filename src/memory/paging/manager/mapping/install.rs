@@ -17,7 +17,8 @@
 use super::super::core::PagingManager;
 use super::super::shootdown::flush_tlb_one_smp;
 use super::super::tlb_scope::mutation_asid;
-use crate::arch::x86_64::paging::read_cr3;
+use crate::arch::paging::descriptor;
+use crate::arch::paging::read_root as read_cr3;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::paging::constants::*;
 use crate::memory::paging::error::{PagingError, PagingResult};
@@ -29,7 +30,8 @@ const CR3_FRAME_MASK: u64 = !0xFFF;
 
 fn alloc_table(entry: &mut u64) -> PagingResult<()> {
     let new = frame_alloc::allocate_frame().ok_or(PagingError::FrameAllocationFailed)?;
-    *entry = new.as_u64() | PTE_TABLE_FLAGS;
+    // The intermediate levels impose no restriction; the leaf decides.
+    *entry = descriptor::table(new.as_u64(), true);
     unsafe {
         core::ptr::write_bytes((layout::DIRECTMAP_BASE + new.as_u64()) as *mut u8, 0, PAGE_SIZE_4K);
     }
@@ -70,7 +72,7 @@ impl PagingManager {
                 alloc_table(&mut l2[l2_idx])?;
             }
             let l1 = &mut *table_at(PhysAddr::new(pte_address(l2[l2_idx])));
-            l1[l1_idx] = pa.as_u64() | flags;
+            l1[l1_idx] = descriptor::leaf(pa.as_u64(), flags);
         }
         let asid = mutation_asid(va, Some(crate::smp::percpu::active_asid()));
         flush_tlb_one_smp(va, asid);

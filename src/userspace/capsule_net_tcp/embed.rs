@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-net-tcp")]
 pub(super) const NET_TCP_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_net_tcp/target/x86_64-nonos-user/release/net_tcp");
+    include_bytes!(concat!(
+    "../../../userland/capsule_net_tcp/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_tcp"
+));
 
 #[cfg(feature = "nonos-capsule-net-tcp")]
 pub(super) const NET_TCP_NONOS_ID_CERT_BYTES: &[u8] =

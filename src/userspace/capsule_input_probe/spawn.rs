@@ -32,7 +32,7 @@ const SERVICE_NAME: &str = "app.input_probe";
 const SERVICE_PORT: u32 = 4792;
 const REPLY_INBOX: &str = "endpoint.app.input_probe.reply";
 const REPLY_PORT: u32 = 4793;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_input_probe_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

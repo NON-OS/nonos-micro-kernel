@@ -31,7 +31,7 @@ pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 const SERVICE_NAME: &str = "keyring";
 const SERVICE_PORT: u32 = 4098;
 const REPLY_PORT: u32 = 4099;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 // The capsule itself never needs CAP_KEYRING — it is the keyring.
 // Bits below are what the userland binary needs to run: IPC for

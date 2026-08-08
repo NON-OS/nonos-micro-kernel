@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-image-codec")]
-pub(crate) const IMAGE_CODEC_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_image_codec/target/x86_64-nonos-user/release/image_codec",
-);
+pub(crate) const IMAGE_CODEC_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_image_codec/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/image_codec"
+));
 
 #[cfg(feature = "nonos-capsule-image-codec")]
 pub(crate) const IMAGE_CODEC_NONOS_ID_CERT_BYTES: &[u8] =

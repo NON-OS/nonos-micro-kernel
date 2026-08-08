@@ -25,6 +25,7 @@ use super::ctx::Ctx;
 use super::display_list::DisplayList;
 use super::layout_box::layout_box;
 use super::min_content_width::min_content_width;
+use super::shift_down::shift_down;
 use super::tree::BoxNode;
 
 // Every item keeps at least this much main size when the row is crowded.
@@ -169,11 +170,7 @@ pub(super) fn flex_row(
             Align::Center => mt.max((row_h - h) / 2) - mt,
             Align::End => (row_h - h - mb).max(0) - mt,
         };
-        if dy != 0 {
-            for f in frags[start..end].iter_mut() {
-                f.y += dy;
-            }
-        }
+        shift_down(frags, start, end, dy, ctx.clip);
         if matches!(s.align, Align::Stretch) {
             if let Some(f) = frags.get_mut(start) {
                 f.h = f.h.max(row_h - mt - mb);

@@ -30,6 +30,8 @@ pub enum SyscallNumber {
     CryptoEncryptAad = tag4(b"CEAD"),
     CryptoDecryptAad = tag4(b"CDAD"),
     CryptoEd25519Verify = tag4(b"CEDV"),
+    CryptoEd25519Sign = tag4(b"CEDS"),
+    CryptoEd25519Pubkey = tag4(b"CEDP"),
     CryptoX25519Public = tag4(b"CXPK"),
     CryptoX25519Shared = tag4(b"CXSH"),
     CryptoHmacSha256 = tag4(b"CHMC"),

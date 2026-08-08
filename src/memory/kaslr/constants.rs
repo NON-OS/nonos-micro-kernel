@@ -48,18 +48,6 @@ pub const NONCE_ROTATE_BITS: u32 = 23;
 /// Entropy collection spin loop iterations
 pub const ENTROPY_SPIN_ITERATIONS: usize = 1000;
 
-/// CPUID leaf for feature detection
-pub const CPUID_FEATURES_LEAF: u32 = 1;
-
-/// CPUID extended features leaf
-pub const CPUID_EXTENDED_LEAF: u32 = 7;
-
-/// RDRAND feature bit in CPUID.01H:ECX
-pub const RDRAND_FEATURE_BIT: u32 = 30;
-
-/// RDSEED feature bit in CPUID.07H:EBX
-pub const RDSEED_FEATURE_BIT: u32 = 18;
-
 /// KDF label prefix for subkey derivation
 pub const KDF_LABEL_PREFIX: &[u8] = b"NONOS-KASLR-KDF:";
 

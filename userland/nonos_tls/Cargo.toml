@@ -1,0 +1,12 @@
+[package]
+name = "nonos_tls"
+version = "0.2.0"
+edition = "2021"
+description = "TLS 1.3 client for NONOS, no_std, crypto through the pool service"
+license = "AGPL-3.0"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }

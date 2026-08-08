@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-net-sockets")]
-pub(super) const NET_SOCKETS_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_net_sockets/target/x86_64-nonos-user/release/net_sockets"
-);
+pub(super) const NET_SOCKETS_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_net_sockets/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_sockets"
+));
 
 #[cfg(feature = "nonos-capsule-net-sockets")]
 pub(super) const NET_SOCKETS_NONOS_ID_CERT_BYTES: &[u8] =

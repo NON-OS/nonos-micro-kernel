@@ -18,7 +18,14 @@ use super::constants::GICR_TYPER;
 use super::device::GicRedistributor;
 
 impl GicRedistributor {
-    pub fn affinity(&self) -> u64 {
-        self.read_reg64(GICR_TYPER) >> 32
+    /// The whole of `GICR_TYPER`: who owns this frame, whether it is the last
+    /// one in the region, and whether it carries the virtual-LPI pages.
+    pub(super) fn typer(&self) -> u64 {
+        self.read_reg64(GICR_TYPER)
+    }
+
+    /// The affinity of the CPU this frame belongs to, packed `Aff3:Aff2:Aff1:Aff0`.
+    pub fn affinity(&self) -> u32 {
+        (self.typer() >> 32) as u32
     }
 }

@@ -19,24 +19,25 @@ use core::sync::atomic::AtomicU64;
 pub(super) static KEYGEN_COUNTER: AtomicU64 = AtomicU64::new(0xB5A1_9E37_C4D2_8F6B);
 
 /* DEV NOTES eK@nonos.systems
-   Provides random value with fallback to TSC-based PRNG when hardware entropy unavailable.
-   The TSC mixing provides reasonable entropy for keygen counters but callers requiring
-   cryptographic randomness should validate hardware entropy availability first.
+   Provides random value with fallback to a counter-mixed PRNG when hardware
+   entropy is unavailable. The cycle-counter mixing provides reasonable entropy
+   for keygen counters but callers requiring cryptographic randomness should
+   validate hardware entropy availability first.
 */
 #[inline]
-pub(super) fn rdrand64_or_tsc() -> u64 {
+pub(super) fn random64_or_counter() -> u64 {
     secure_random64().unwrap_or_else(|| {
-        let tsc = read_tsc();
+        let ticks = read_cycle_counter();
         let counter = KEYGEN_COUNTER.fetch_add(1, core::sync::atomic::Ordering::Relaxed);
-        tsc.wrapping_mul(0x5851f42d4c957f2d) ^ counter
+        ticks.wrapping_mul(0x5851f42d4c957f2d) ^ counter
     })
 }
 
 pub(super) fn secure_random64() -> Option<u64> {
-    if let Some(val) = try_rdrand64() {
+    if let Some(val) = try_cpu_random64() {
         return Some(val);
     }
-    if let Some(val) = try_rdseed64() {
+    if let Some(val) = try_cpu_entropy64() {
         return Some(val);
     }
     if let Some(val) = try_virtio_rng64() {
@@ -45,32 +46,15 @@ pub(super) fn secure_random64() -> Option<u64> {
     None
 }
 
-fn try_rdrand64() -> Option<u64> {
-    for _ in 0..10 {
-        let mut val: u64 = 0;
-        let success: u8;
-        unsafe {
-            core::arch::asm!("rdrand {0}", "setc {1}", out(reg) val, out(reg_byte) success, options(nostack));
-        }
-        if success != 0 && val != 0 {
-            return Some(val);
-        }
-    }
-    None
+fn try_cpu_random64() -> Option<u64> {
+    // A zero draw is rejected here, unlike elsewhere in the tree: this path
+    // feeds key material, and a stuck-at-zero generator is the one failure a
+    // success flag alone would not catch.
+    crate::arch::cpu_random::random_u64().filter(|val| *val != 0)
 }
 
-fn try_rdseed64() -> Option<u64> {
-    for _ in 0..10 {
-        let mut val: u64;
-        let success: u8;
-        unsafe {
-            core::arch::asm!("rdseed {0}", "setc {1}", out(reg) val, out(reg_byte) success, options(nostack));
-        }
-        if success != 0 {
-            return Some(val);
-        }
-    }
-    None
+fn try_cpu_entropy64() -> Option<u64> {
+    crate::arch::cpu_random::entropy_u64()
 }
 
 fn try_virtio_rng64() -> Option<u64> {
@@ -79,20 +63,9 @@ fn try_virtio_rng64() -> Option<u64> {
     Some(u64::from_le_bytes(buf))
 }
 
-#[cfg(target_arch = "x86_64")]
 #[inline]
-pub(super) fn read_tsc() -> u64 {
-    unsafe {
-        let lo: u32;
-        let hi: u32;
-        core::arch::asm!("rdtsc", out("eax") lo, out("edx") hi, options(nomem, nostack));
-        (lo as u64) | ((hi as u64) << 32)
-    }
-}
-#[cfg(not(target_arch = "x86_64"))]
-#[inline]
-pub(super) fn read_tsc() -> u64 {
-    0
+pub(super) fn read_cycle_counter() -> u64 {
+    crate::arch::read_time_counter()
 }
 
 #[cfg(target_arch = "x86_64")]
@@ -130,5 +103,5 @@ pub(super) fn read_pit_counter() -> u16 {
 }
 
 pub(super) fn read_rtc_timestamp() -> u64 {
-    crate::arch::x86_64::time::rtc::read_unix_timestamp()
+    crate::arch::wall_clock::unix_timestamp().unwrap_or(0)
 }

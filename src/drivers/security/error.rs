@@ -80,4 +80,3 @@ impl core::fmt::Display for DriverError {
         write!(f, "{}", self.as_str())
     }
 }
-

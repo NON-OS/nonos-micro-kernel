@@ -7,7 +7,7 @@
 # bracket auto-closing, with no compositor or vfs present.
 [package]
 name = "editor_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

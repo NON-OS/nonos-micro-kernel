@@ -1,0 +1,12 @@
+[package]
+name = "nonos_socket"
+version = "0.2.0"
+edition = "2021"
+description = "Client for the net.sockets capsule: TCP streams over IPC, no_std"
+license = "AGPL-3.0"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }

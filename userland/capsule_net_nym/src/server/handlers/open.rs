@@ -16,8 +16,8 @@
 
 use crate::crypto::{fill_random, Key};
 use crate::protocol::{
-    E_CRYPTO, E_NO_CREDENTIAL, E_NO_GATEWAY, E_NO_TOPOLOGY, E_OK, E_TABLE_FULL,
-    E_TOPOLOGY_EXPIRED, OP_OPEN_SESSION,
+    E_CRYPTO, E_NO_CREDENTIAL, E_NO_GATEWAY, E_NO_TOPOLOGY, E_OK, E_TABLE_FULL, E_TOPOLOGY_EXPIRED,
+    OP_OPEN_SESSION,
 };
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;

@@ -15,8 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-tokio-smoke")]
-pub(crate) const TOKIO_SMOKE_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_tokio_smoke/target/x86_64-nonos-user/release/tokio-smoke");
+pub(crate) const TOKIO_SMOKE_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_tokio_smoke/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/tokio-smoke"
+));
 
 #[cfg(feature = "nonos-capsule-tokio-smoke")]
 pub(crate) const TOKIO_SMOKE_NONOS_ID_CERT_BYTES: &[u8] =

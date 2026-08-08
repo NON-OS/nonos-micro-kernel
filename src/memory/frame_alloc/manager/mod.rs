@@ -19,7 +19,7 @@ mod global;
 mod stats;
 mod zero;
 
-pub use alloc::{add_memory_region, alloc_frame, allocate_frame, deallocate_frame};
+pub use alloc::{add_memory_region, allocate_frame, deallocate_frame};
 pub use global::{get_allocator, init, is_initialized};
 pub use stats::{get_stats, total_free_frames};
 pub use zero::zero_frame;

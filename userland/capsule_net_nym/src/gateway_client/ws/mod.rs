@@ -21,5 +21,7 @@ mod handshake;
 mod request;
 mod sha1;
 
-pub use frame::{recv_binary, send_binary, send_close};
+pub use frame::{
+    recv_binary, send_binary, send_close, send_ping, send_text, Frame, E_CLOSED, E_TIMEOUT,
+};
 pub use handshake::handshake;

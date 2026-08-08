@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-sd")]
 pub(crate) const SD_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_sd/target/x86_64-nonos-user/release/sd");
+    include_bytes!(concat!(
+    "../../../userland/capsule_sd/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/sd"
+));
 
 #[cfg(feature = "nonos-capsule-sd")]
 pub(crate) const SD_NONOS_ID_CERT_BYTES: &[u8] =

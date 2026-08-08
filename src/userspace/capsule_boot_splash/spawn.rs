@@ -32,7 +32,7 @@ const SERVICE_NAME: &str = "app.boot_splash";
 const SERVICE_PORT: u32 = 4796;
 const REPLY_INBOX: &str = "endpoint.app.boot_splash.reply";
 const REPLY_PORT: u32 = 4797;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_boot_splash_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

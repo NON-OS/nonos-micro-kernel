@@ -34,7 +34,17 @@ fn draw_launchpad_button(ctx: &Context, box_top: u32, box_h: u32) {
         for col in 0..3 {
             let x = x0 + col * cell + 2;
             let y = y0 + row * cell + 2;
-            fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, x, y, dot, dot, LAUNCHPAD_DOT);
+            fill_rect(
+                ctx.backing_va,
+                ctx.stride,
+                ctx.width,
+                ctx.height,
+                x,
+                y,
+                dot,
+                dot,
+                LAUNCHPAD_DOT,
+            );
         }
     }
 }

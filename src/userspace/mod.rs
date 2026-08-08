@@ -58,6 +58,7 @@ pub mod capsule_net_l2;
 #[cfg(feature = "nonos-capsule-net-ntp")]
 pub mod capsule_net_ntp;
 pub mod capsule_net_nym;
+pub mod capsule_socks5;
 pub mod capsule_net_sockets;
 pub mod capsule_net_tcp;
 pub mod capsule_net_udp;
@@ -72,8 +73,8 @@ pub mod capsule_setup_wizard;
 pub mod capsule_snake;
 pub mod capsule_std_proof;
 pub mod capsule_terminal;
-pub mod capsule_tokio_smoke;
 pub mod capsule_text_editor;
+pub mod capsule_tokio_smoke;
 pub mod capsule_toolkit;
 pub mod capsule_wallet_nonos;
 pub mod capsule_wallpaper;

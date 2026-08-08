@@ -1,138 +1,106 @@
+![Traffic leaving a NØNOS machine, and what each hop is allowed to know](doc/nym-mixnet.png)
+
 # capsule_net_nym
 
-## Role
+The Nym mixnet client. It registers with a gateway, seals application data
+into Sphinx packets addressed through three mix layers, and hands them to
+`net.tcp` over a WebSocket. Sphinx is reimplemented here in `no_std` against
+the published format, because the reference stack cannot be linked into a
+kernel userland.
 
-`capsule_net_nym` is the privacy mixer capsule for outbound traffic. It sits
-above `capsule_net_udp` and below user network capsules that opt into
-mix-routed delivery. Its responsibility is narrow: bind to the chosen mix
-chain, wrap an application datagram in successive layered envelopes, and
-hand the outermost envelope to the UDP capsule for first-hop transport.
+This capsule is the network path, not an option on it. `capsule_socks5` sits
+in front of it and resolves `net.nym` deliberately rather than `net.tcp`
+(`../capsule_socks5/src/setup.rs:30`), so nothing above it has a direct route
+to fall back to.
 
-```text
-  user capsule
-       |
-       | clear payload + chain id
-       v
-  net.nym  ---- layered envelopes / per-hop AEAD ----+
-       |                                              |
-       | OP_BIND_CHAIN / OP_ROTATE_EPOCH              |
-       v                                              v
-  chain directory (post-beta)                       net.udp -> net.ip -> net.l2
-```
+## Service
 
-## Microkernel contract
+| | |
+|---|---|
+| handle | `net.nym` |
+| endpoint | `service:4470:net.nym` |
+| capabilities | `0x0013d` (CoreExec, Network, IPC, Memory, Crypto, Debug) |
+| transport | `net.tcp`, registered by `net.core` |
 
-The capsule has no hardware grants. It is an IPC service:
+Operations are listed in `src/protocol/ops.rs:17`. The ones a caller normally
+needs are open session, set destination, send, receive and close; the rest
+configure topology, timing, credentials and the trust anchor.
 
-- `MkIpcRecv` receives requests on `service:4500:net.nym`.
-- `MkIpcSend` replies through `reply:4501:endpoint.4294967330`.
-- Its wire magic is `NNYM`.
-- Its endpoint name is `net.nym`.
+## Packet format
 
-## Interface contract
+Sphinx, matching Nym's wire format so a live gateway reads our traffic.
 
-| Op | Direction | Body | Reply |
-|---|---|---|---|
-| `OP_HEALTHCHECK` | request | empty | status only |
-| `OP_SEND_MIX` | request | u32 payload_len + payload | status; `E_NOTSUP` in beta |
-| `OP_BIND_CHAIN` | request | u32 hops + per-hop pubkeys | status; `E_NOTSUP` in beta |
-| `OP_ROTATE_EPOCH` | request | empty | status; `E_NOTSUP` in beta |
+| | bytes |
+|---|---|
+| header | 348 |
+| payload | 2065 |
+| total | 2413 |
 
-## Authority
+The header is `32` ephemeral key, `16` integrity MAC and `300` encrypted
+routing info, asserted at compile time in `src/sphinx/constants/sizes.rs`.
+Routing information is layered so each hop strips one block and learns only
+its predecessor and successor. Payloads use LIONESS wide block encryption,
+ChaCha20 for the stream halves and Blake2b for the hash halves, matching
+`NymLionessDigest`.
 
-The manifest capability mask is `CAPSULE_REQUIRED_CAPS := 0x10` (`IPC`
-only). No `Driver`, `Mmio`, `Dma`, `Irq`, or `Pio` is requested. The
-capsule cannot touch hardware directly. Calls cross `MkIpcRecv` and
-`MkIpcSend` only.
+## Reaching a gateway
 
-## Privacy and persistence
+The client walks a bootstrap list one candidate at a time from inside the
+serve loop (`src/server/connect_tick.rs:42`), not all of them at startup.
+Everything downstream waits on this capsule, so a blocking connect stalls the
+desktop on a handshake nobody asked for. Failed attempts back off, since
+retrying at tick rate leans on gateways other people run.
 
-RAM-only. The capsule keeps per-epoch chain state, hop pubkeys, and a small
-ring of in-flight envelopes in heap memory. Nothing is written to disk;
-nothing survives a reboot.
+Every stage waits on elapsed time rather than a count of attempts. `net.tcp`
+answers "nothing has arrived yet" with an empty read costing microseconds,
+while a real round trip is tens of milliseconds, so counting a handful of
+those and calling the peer finished gives up three orders of magnitude early.
 
-## Runtime lifecycle
+Stages: TCP connect and wait for ESTABLISHED, WebSocket upgrade, registration
+handshake, session. The serial log names whichever fails.
 
-1. `_start` runs `heap_init` and enters `server::run`.
-2. The server registers `net.nym` and waits for `OP_BIND_CHAIN`.
-3. Until a chain is bound, every `OP_SEND_MIX` returns `E_NOTREADY`.
-4. On `OP_BIND_CHAIN`, per-hop pubkeys are validated and stored.
-5. On `OP_SEND_MIX`, the payload is wrapped per hop and handed to `net.udp`.
+    [NET-NYM] gateway bound <ip>        session established
+    [NET-NYM] gateway <stage> <code>    stage failed, with the reason
 
-## Failure model
+## Trust
 
-Every op returns an explicit POSIX errno on failure. There is no silent
-success and no fallback that would deliver an unmixed datagram. A bind
-failure leaves the chain unbound; a send before bind returns `E_NOTREADY`.
+A session is refused over a topology that has not been verified
+(`src/state/table/topology_gate.rs:20`). A directory records where it came
+from (`src/topology/directory.rs:25`):
 
-## Current implemented surface
+| Provenance | How it earns trust |
+|---|---|
+| `Signed` | fetched over the network, checked against an authority the operator installed |
+| `Image` | compiled into the kernel, already measured, dual signed with Ed25519 and ML-DSA-65, and matched to its STARK enrollment before the jump |
 
-- `OP_HEALTHCHECK` returns `0`.
-- `OP_SEND_MIX`, `OP_BIND_CHAIN`, `OP_ROTATE_EPOCH` return `E_NOTSUP` until
-  the live wrap pipeline lands.
+There is no route-signing key. Minting one would create a single seed whose
+theft redirects every route the system takes, and the image already carries a
+stronger guarantee than that key could add. Each mix hop is authenticated
+again by its packet key when a header is sealed for it, so a stale entry
+costs a dropped packet rather than a redirected one.
 
-## Wire format
+## Tests
 
-NCMP envelope:
+Crypto is pinned by known answer tests that run against this capsule's own
+modules, pulled in by `#[path]` so they cannot drift from the shipping code.
 
-```
-magic = b"NNYM"
-version = 1
-op = u16
-flags = u16
-seq = u32
-payload_len = u32
-payload bytes...
-```
+    cd tests/live_gateway && cargo test
 
-Reply payload is `i32 errno` followed by per-op body bytes.
+POLYVAL carries RFC 8452 vectors specifically because a wrong implementation
+is not visibly wrong: it produces a stable, self consistent tag that verifies
+against itself and against nothing else.
 
-## State ownership
+`tests/live_gateway` also holds an interop runner that speaks to a real
+gateway. It is not part of the unit run, since it needs the network.
 
-- per-epoch chain table: hop pubkeys + per-hop epoch counter
-- in-flight ring: bounded queue of envelopes pending UDP submission
-- handshake state: BIND outcomes per caller pid
+## Further reading
 
-No state is shared across capsules; nothing leaks into the kernel.
+The mixnet path across capsules, including what the browser and terminal do,
+is documented in the docs submodule:
 
-## Operating rules
+- [`docs/userland/mixnet.md`](../../docs/userland/mixnet.md), the path end to
+  end and what each hop is allowed to know
+- [`docs/userland/network-capsules.md`](../../docs/userland/network-capsules.md),
+  the service contracts for every network capsule
 
-- Never accept a payload larger than `MAX_MIX_PAYLOAD`.
-- Never bind a chain shorter than 3 hops or longer than 8.
-- Never reuse an envelope key across epochs.
-- Never log payload bytes; only sizes and per-hop counters.
-
-## Release target
-
-Beta: scaffolding only. Live wrap + chain discovery target post-beta in
-`v0.9.1`. The manifest is signed under the production trust chain so the
-capsule can be spawned with the rest of the network fleet.
-
-## Release evidence
-
-- `cargo check --target ../x86_64-nonos-user.json` is green.
-- The capsule manifest matches the embedded ELF payload hash in
-  `nonos-data/trust/MANIFEST.sha256`.
-
-## Release checklist
-
-- [x] Capsule.mk pins the namespace, slug, endpoints, and capability mask.
-- [x] `README.md` documents the contract.
-- [x] The capsule replies with `E_NOTSUP` on operational ops until the
-      live pipeline lands.
-- [ ] Live mix wrap pipeline (post-beta).
-- [ ] Chain directory service (post-beta).
-
-## Explicit non-goals today
-
-- No mix directory service in this capsule; chains come pre-bound.
-- No traffic shaping or cover traffic in beta.
-- No replay protection beyond per-hop epoch counters.
-
-## Verification
-
-```
-cd userland/capsule_net_nym
-cargo check --target ../x86_64-nonos-user.json \
-  -Zbuild-std=core,alloc -Zbuild-std-features=compiler-builtins-mem
-```
+Both live in [NON-OS/nonos-docs](https://github.com/NON-OS/nonos-docs).

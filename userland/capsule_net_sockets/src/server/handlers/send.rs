@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::clients::{nym, tcp, udp};
-use crate::protocol::{E_BAD_LEN, E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_SEND};
+use crate::clients::{tcp, udp};
+use crate::protocol::{E_NOT_CONNECTED, E_NO_HANDLE, E_NO_TRANSPORT, E_OK, OP_SEND};
 use crate::server::handlers::io::u32_at;
-use crate::server::handlers::mixnet_frame;
+use crate::server::handlers::mixnet_send::send_mixnet;
 use crate::server::parse_req::Request;
 use crate::server::respond::respond;
 use crate::sockets::{Kind, Socket, SocketKey, SOCKETS};
@@ -53,11 +53,7 @@ fn send_socket(sock: Socket, payload: &[u8]) -> u16 {
             _ => E_NOT_CONNECTED,
         },
         Kind::Mixnet if sock.transport_handle != 0 => match sock.remote {
-            Some(r) => mixnet_frame::encode(r.ip, r.port, payload).map_or(E_BAD_LEN, |frame| {
-                nym::send(state::nym(), sock.transport_handle, &frame)
-                .map(|_| E_OK)
-                .map_or(E_NO_TRANSPORT, |errno| errno)
-            }),
+            Some(r) => send_mixnet(sock.transport_handle, r.ip, r.port, payload),
             None => E_NOT_CONNECTED,
         },
         _ => E_NOT_CONNECTED,

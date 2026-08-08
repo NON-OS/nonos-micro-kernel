@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-keyring")]
 pub(super) const KEYRING_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_keyring/target/x86_64-nonos-user/release/keyring");
+    include_bytes!(concat!(
+    "../../../userland/capsule_keyring/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/keyring"
+));
 
 #[cfg(feature = "nonos-capsule-keyring")]
 pub(super) const KEYRING_NONOS_ID_CERT_BYTES: &[u8] =

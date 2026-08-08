@@ -14,57 +14,65 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Port I/O for drivers, delegated to the arch boundary that owns it.
+
+use crate::arch::port_io;
+
+/// # Safety
+///
+/// See [`crate::arch::port_io::outb`].
 #[inline(always)]
 pub unsafe fn outb(port: u16, val: u8) {
-    unsafe {
-        core::arch::asm!("out dx, al", in("dx") port, in("al") val, options(nomem, nostack));
-    }
+    // SAFETY: the caller carries the port-ownership obligation through.
+    unsafe { port_io::outb(port, val) }
 }
 
+/// # Safety
+///
+/// See [`crate::arch::port_io::inb`].
 #[inline(always)]
 pub unsafe fn inb(port: u16) -> u8 {
-    let val: u8;
-    unsafe {
-        core::arch::asm!("in al, dx", out("al") val, in("dx") port, options(nomem, nostack));
-    }
-    val
+    // SAFETY: the caller carries the port-ownership obligation through.
+    unsafe { port_io::inb(port) }
 }
 
+/// # Safety
+///
+/// See [`crate::arch::port_io::outw`].
 #[inline(always)]
 pub unsafe fn outw(port: u16, val: u16) {
-    unsafe {
-        core::arch::asm!("out dx, ax", in("dx") port, in("ax") val, options(nomem, nostack));
-    }
+    // SAFETY: the caller carries the port-ownership obligation through.
+    unsafe { port_io::outw(port, val) }
 }
 
+/// # Safety
+///
+/// See [`crate::arch::port_io::inw`].
 #[inline(always)]
 pub unsafe fn inw(port: u16) -> u16 {
-    let val: u16;
-    unsafe {
-        core::arch::asm!("in ax, dx", out("ax") val, in("dx") port, options(nomem, nostack));
-    }
-    val
+    // SAFETY: the caller carries the port-ownership obligation through.
+    unsafe { port_io::inw(port) }
 }
 
+/// # Safety
+///
+/// See [`crate::arch::port_io::outl`].
 #[inline(always)]
 pub unsafe fn outl(port: u16, val: u32) {
-    unsafe {
-        core::arch::asm!("out dx, eax", in("dx") port, in("eax") val, options(nomem, nostack));
-    }
+    // SAFETY: the caller carries the port-ownership obligation through.
+    unsafe { port_io::outl(port, val) }
 }
 
+/// # Safety
+///
+/// See [`crate::arch::port_io::inl`].
 #[inline(always)]
 pub unsafe fn inl(port: u16) -> u32 {
-    let val: u32;
-    unsafe {
-        core::arch::asm!("in eax, dx", out("eax") val, in("dx") port, options(nomem, nostack));
-    }
-    val
+    // SAFETY: the caller carries the port-ownership obligation through.
+    unsafe { port_io::inl(port) }
 }
 
 #[inline(always)]
 pub fn io_wait() {
-    unsafe {
-        outb(0x80, 0);
-    }
+    port_io::io_wait();
 }

@@ -6,7 +6,7 @@
 # #[path]) against hostile and edge-case hardware bytes, with no device present.
 [package]
 name = "input_proofs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [lib]

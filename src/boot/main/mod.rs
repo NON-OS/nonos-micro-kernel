@@ -14,12 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+// The pre-kernel bring-up sequence for a PC: ACPI tables, the local APIC, the
+// legacy interrupt controllers, SME/SEV detection and PCI enumeration. It is
+// the counterpart of `arch::aarch64::boot::init`, which does the same job with
+// the device tree and the GIC, so neither is shared and each stays with its
+// own architecture.
+#[cfg(target_arch = "x86_64")]
 pub mod core_init;
+#[cfg(target_arch = "x86_64")]
 mod init_memory_encryption;
-mod init_token_signing_key;
 pub mod mode;
 
+#[cfg(target_arch = "x86_64")]
 pub use core_init::init_core_systems;
+#[cfg(target_arch = "x86_64")]
 pub(super) use init_memory_encryption::init_memory_encryption;
-pub(super) use init_token_signing_key::init_token_signing_key;
 pub use mode::{get_boot_mode, is_microkernel, BootMode};

@@ -16,9 +16,7 @@
 
 use super::super::records;
 use super::super::slots;
-use super::super::types::{
-    IrqBindError, IrqBindRequest, IrqBindResult, IrqGrant, IrqGrantKind,
-};
+use super::super::types::{IrqBindError, IrqBindRequest, IrqBindResult, IrqGrant, IrqGrantKind};
 use super::super::validate::validate_intx_request;
 use crate::arch::interrupt::broker::vector_of;
 use crate::arch::interrupt::ioapic;
@@ -45,7 +43,7 @@ pub(super) fn bind_intx(
 
     let slot = slots::try_alloc_slot().ok_or(IrqBindError::NoVector)?;
     let vector = vector_of(slot).ok_or(IrqBindError::NoVector)?;
-    let dest_apic_id = crate::arch::interrupt::apic::id();
+    let dest_apic_id = crate::arch::interrupt_controller::local_id();
 
     if ioapic::program_route_external(gsi, vector, dest_apic_id).is_err() {
         slots::free_slot(slot);

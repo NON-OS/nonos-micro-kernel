@@ -34,7 +34,7 @@ const SERVICE_NAME: &str = "app.file_manager";
 const SERVICE_PORT: u32 = 4724;
 const REPLY_INBOX: &str = "endpoint.app.file_manager.reply";
 const REPLY_PORT: u32 = 4725;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 // Extra window endpoints, each declared in the signed manifest. Ordered, so the
 // lowest-numbered free one is taken.

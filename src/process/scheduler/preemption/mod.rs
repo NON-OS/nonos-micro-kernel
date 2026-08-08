@@ -24,7 +24,7 @@ mod yield_impl;
 
 pub(crate) use state::SCHEDULER_STATS;
 pub use state::{clear_reschedule, need_reschedule};
-pub use state::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLICE, NEED_RESCHEDULE};
+pub use state::{set_reschedule, set_time_slice, spend_time_slice, time_slice, DEFAULT_TIME_SLICE};
 pub(crate) use switch::preempt_current_process;
 pub(crate) use syscall_rsp::save_syscall_user_rsp;
 pub use tick::tick;

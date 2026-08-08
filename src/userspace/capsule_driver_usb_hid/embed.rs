@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-driver-usb-hid")]
-pub(super) const DRIVER_USB_HID_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_usb_hid/target/x86_64-nonos-user/release/driver_usb_hid"
-);
+pub(super) const DRIVER_USB_HID_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_usb_hid/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_usb_hid"
+));
 
 #[cfg(feature = "nonos-capsule-driver-usb-hid")]
 pub(super) const DRIVER_USB_HID_NONOS_ID_CERT_BYTES: &[u8] =

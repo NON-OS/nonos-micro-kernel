@@ -16,6 +16,7 @@
 
 mod abs_out_of_flow;
 mod attr_px;
+mod auto_repeat_n;
 mod body_id;
 mod border_box_w;
 mod build;
@@ -58,9 +59,10 @@ mod min_content_width;
 mod offset_px;
 mod rel_offset;
 mod resolve_min_max_h;
+mod shift_down;
 mod srcset;
 mod svg_serialize;
-mod table_columns;
+pub mod table_columns;
 mod text_transform;
 mod track_widths;
 mod tree;

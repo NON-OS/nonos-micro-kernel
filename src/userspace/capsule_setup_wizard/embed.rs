@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-setup-wizard")]
-pub(crate) const SETUP_WIZARD_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_setup_wizard/target/x86_64-nonos-user/release/setup_wizard"
-);
+pub(crate) const SETUP_WIZARD_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_setup_wizard/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/setup_wizard"
+));
 
 #[cfg(feature = "nonos-capsule-setup-wizard")]
 pub(crate) const SETUP_WIZARD_NONOS_ID_CERT_BYTES: &[u8] =

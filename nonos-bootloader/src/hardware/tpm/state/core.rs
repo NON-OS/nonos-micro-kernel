@@ -22,11 +22,16 @@ pub struct TpmState {
     pub(crate) base: u64,
     pub initialized: bool,
     pub(crate) version: u8,
+    /// Which register file the part presents. The two are not interchangeable:
+    /// the same offsets carry different meanings and locality is requested
+    /// through different registers, so an access has to know which it is
+    /// talking to.
+    pub(crate) is_crb: bool,
 }
 
 impl TpmState {
     pub const fn new() -> Self {
-        Self { base: TPM_MMIO_BASE, initialized: false, version: 0 }
+        Self { base: TPM_MMIO_BASE, initialized: false, version: 0, is_crb: false }
     }
     pub fn send_command(&self, cmd: &[u8]) -> Result<(), TpmError> {
         send_command_impl(self, cmd)

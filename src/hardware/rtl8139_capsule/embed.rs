@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-driver-rtl8139")]
-pub(super) const DRIVER_RTL8139_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_rtl8139/target/x86_64-nonos-user/release/driver_rtl8139"
-);
+pub(super) const DRIVER_RTL8139_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_rtl8139/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_rtl8139"
+));
 
 #[cfg(feature = "nonos-capsule-driver-rtl8139")]
 pub(super) const DRIVER_RTL8139_NONOS_ID_CERT_BYTES: &[u8] =

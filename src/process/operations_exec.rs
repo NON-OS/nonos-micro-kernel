@@ -224,9 +224,7 @@ pub fn exit_thread(status: i32) -> ! {
         }
     }
 
-    loop {
-        x86_64::instructions::hlt();
-    }
+    crate::arch::halt_loop()
 }
 
 pub fn get_thread_count() -> u32 {

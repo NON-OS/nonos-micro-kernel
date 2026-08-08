@@ -24,7 +24,17 @@ use super::parse_header::parse_program_header_at;
 
 const DT_RELA: u64 = 7;
 const DT_RELASZ: u64 = 8;
-const R_X86_64_RELATIVE: u64 = 8;
+/// The "adjust by load base" relocation, the only kind a capsule carries and
+/// the only kind applied here. The number is architecture specific, and
+/// treating another architecture's as unknown skips every entry silently,
+/// which leaves the GOT full of zeros and faults the capsule on its first
+/// indirect call rather than reporting anything.
+#[cfg(target_arch = "x86_64")]
+const R_NATIVE_RELATIVE: u64 = 8;
+#[cfg(target_arch = "aarch64")]
+const R_NATIVE_RELATIVE: u64 = 1027;
+#[cfg(target_arch = "riscv64")]
+const R_NATIVE_RELATIVE: u64 = 3;
 const DYN_ENTRY: usize = 16;
 const RELA_ENTRY: usize = 24;
 const RELA_WRITE_SIZE: u64 = 8;
@@ -80,7 +90,7 @@ pub(in crate::elf::loader::core) fn apply_relative_relocations(
         let r_info = rd_u64(elf_data, entry + 8);
         let r_addend = rd_u64(elf_data, entry + 16);
         at += RELA_ENTRY;
-        if r_info & 0xffff_ffff != R_X86_64_RELATIVE {
+        if r_info & 0xffff_ffff != R_NATIVE_RELATIVE {
             continue;
         }
         if !reloc_in_writable_load(elf_data, header, ph_count, r_offset)? {

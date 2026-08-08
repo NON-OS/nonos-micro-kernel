@@ -79,6 +79,11 @@ QEMU_AUDIO := -audiodev $(QEMU_AUDIODEV),id=snd0 -device intel-hda -device hda-d
 SWTPM ?= swtpm
 SWTPM_STATE ?= /tmp/nonos-swtpm
 SWTPM_SOCK ?= $(SWTPM_STATE)/swtpm-sock
+# Provisioning tool. A TPM with no endorsement key answers TPM_RC_HANDLE to
+# every EK read, so without this the boot chain exercises measurement but never
+# the hardware identity it is supposed to bind to. Real parts ship with an EK
+# already in them; an emulated one has to be given one.
+SWTPM_SETUP ?= swtpm_setup
 QEMU_TPM := -chardev socket,id=chrtpm,path=$(SWTPM_SOCK) -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-crb,tpmdev=tpm0
 
 ifeq ($(QEMU_NET_MODE),off)

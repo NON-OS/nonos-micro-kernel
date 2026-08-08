@@ -181,4 +181,3 @@ impl Default for DerivationPath {
         Self::new()
     }
 }
-

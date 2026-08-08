@@ -27,7 +27,7 @@ pub fn init_bsp() -> Result<(), &'static str> {
         return Ok(());
     }
 
-    let bsp_apic = crate::arch::x86_64::interrupt::apic::id();
+    let bsp_apic = crate::arch::interrupt_controller::local_id();
     BSP_APIC_ID.store(bsp_apic, Ordering::Release);
     configure_bsp_descriptor(bsp_apic);
 
@@ -37,7 +37,7 @@ pub fn init_bsp() -> Result<(), &'static str> {
     // Bind the IPI vectors now so cross-CPU TLB shootdown, panic, stop, and
     // call-function delivery work the moment APs come online. Harmless on a
     // single-CPU boot: nothing sends IPIs until APs start.
-    super::super::ipi_idt::register_ipi_handlers();
+    super::super::ipi_dispatch::register_ipi_handlers();
 
     crate::log_info!("[SMP] BSP initialized: APIC ID={}, {} CPUs detected", bsp_apic, cpu_count);
 

@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-wallpaper-catalog")]
-pub(crate) const WALLPAPER_CATALOG_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_wallpaper_catalog/target/x86_64-nonos-user/release/wallpaper_catalog",
-);
+pub(crate) const WALLPAPER_CATALOG_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_wallpaper_catalog/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/wallpaper_catalog"
+));
 
 #[cfg(feature = "nonos-capsule-wallpaper-catalog")]
 pub(crate) const WALLPAPER_CATALOG_NONOS_ID_CERT_BYTES: &[u8] =

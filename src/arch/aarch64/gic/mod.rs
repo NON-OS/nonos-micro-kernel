@@ -23,7 +23,7 @@ pub mod irq_handlers;
 pub mod redistributor;
 mod state;
 
-pub use api::{disable_irq, enable_irq, init_gic, send_sgi};
+pub use api::{disable_irq, enable_irq, init_gic, send_sgi, send_sgi_all_others};
 pub use cpu::init_gic_cpu;
 pub use device::Gic;
 pub use distributor::GicDistributor;

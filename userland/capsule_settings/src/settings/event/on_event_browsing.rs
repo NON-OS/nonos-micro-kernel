@@ -15,10 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::{
-    EventOutcome, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_LEFT, KEY_RIGHT, KEY_TAB, KEY_UP,
+    EventOutcome, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC, KEY_HOME, KEY_LEFT, KEY_PAGE_DOWN,
+    KEY_PAGE_UP, KEY_RIGHT, KEY_TAB, KEY_UP,
 };
 
-use crate::settings::state::{cursor_down, cursor_up, State};
+use crate::settings::state::{cursor_down, cursor_end, cursor_home, cursor_page, cursor_up, State};
 
 use super::adjust::adjust;
 use super::next_category::next_category;
@@ -33,6 +34,10 @@ pub(super) fn on_event_browsing(state: &mut State, code: u32) -> EventOutcome {
         KEY_TAB => repaint_after(state, next_category),
         KEY_UP => repaint_after(state, cursor_up),
         KEY_DOWN => repaint_after(state, cursor_down),
+        KEY_HOME => repaint_after(state, cursor_home),
+        KEY_END => repaint_after(state, cursor_end),
+        KEY_PAGE_UP => repaint_page(state, false),
+        KEY_PAGE_DOWN => repaint_page(state, true),
         KEY_LEFT => repaint_delta(state, -1),
         KEY_RIGHT => repaint_delta(state, 1),
         KEY_SPACE | KEY_ENTER => repaint_after(state, toggle_or_inc),
@@ -44,6 +49,11 @@ pub(super) fn on_event_browsing(state: &mut State, code: u32) -> EventOutcome {
 
 fn repaint_after(state: &mut State, f: fn(&mut State)) -> EventOutcome {
     f(state);
+    EventOutcome::Repaint
+}
+
+fn repaint_page(state: &mut State, down: bool) -> EventOutcome {
+    cursor_page(state, down);
     EventOutcome::Repaint
 }
 

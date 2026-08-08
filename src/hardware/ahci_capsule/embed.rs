@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-driver-ahci")]
-pub(super) const DRIVER_AHCI_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_ahci/target/x86_64-nonos-user/release/driver_ahci"
-);
+pub(super) const DRIVER_AHCI_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_ahci/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_ahci"
+));
 
 #[cfg(feature = "nonos-capsule-driver-ahci")]
 pub(super) const DRIVER_AHCI_NONOS_ID_CERT_BYTES: &[u8] =

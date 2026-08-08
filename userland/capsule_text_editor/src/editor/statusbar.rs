@@ -65,6 +65,18 @@ pub(super) fn paint_status(fb: &mut PaintBuffer, doc: &State, width: u32, height
     let status = core::str::from_utf8(doc.status).unwrap_or("");
     let _ = fb.text_ttf(PAD_X as i32, ty, status, th.muted, STATUS_PX);
 
+    // While a path prompt is open, show what is being typed. It edits its own
+    // buffer now, so the document's path on the right would not reflect it.
+    if doc.prompt.is_some() {
+        let typed = core::str::from_utf8(&doc.prompt_path[..doc.prompt_len]).unwrap_or("");
+        let sw = fb.measure_ttf(status, STATUS_PX).max(0) as u32;
+        let x = PAD_X + sw + 12;
+        let _ = fb.text_ttf(x as i32, ty, typed, th.foreground, STATUS_PX);
+        let tw = fb.measure_ttf(typed, STATUS_PX).max(0) as u32;
+        let _ = fb.text_ttf((x + tw) as i32, ty, "|", th.accent, STATUS_PX);
+        return;
+    }
+
     let (line, col) = caret_position(doc);
     let path = core::str::from_utf8(&doc.path[..doc.path_len]).unwrap_or("");
     let info = format!("Ln {}, Col {}    {}    UTF-8", line + 1, col + 1, language_name(path));

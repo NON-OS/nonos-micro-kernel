@@ -15,12 +15,12 @@
 
 use core::sync::atomic::Ordering;
 
-use super::accurate_tsc_hz::accurate_tsc_hz;
-use super::consts::{LAPIC_TICKS_PER_MS, LAPIC_TICKS_PER_MS_MAX, LAPIC_TICKS_PER_MS_MIN};
 use super::super::local::constants::{
     LAPIC_LVT_TIMER, LAPIC_TIMER_CURRENT, LAPIC_TIMER_DIV, LAPIC_TIMER_INIT, LAPIC_TIMER_MASKED,
 };
 use super::super::local::regs::{lapic_read_raw, lapic_write_raw};
+use super::accurate_tsc_hz::accurate_tsc_hz;
+use super::consts::{LAPIC_TICKS_PER_MS, LAPIC_TICKS_PER_MS_MAX, LAPIC_TICKS_PER_MS_MIN};
 use crate::sys::timer::tsc::rdtsc;
 
 pub fn calibrate_lapic_ticks_per_ms() -> u64 {

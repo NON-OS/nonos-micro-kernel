@@ -49,4 +49,3 @@ impl Default for SerialWriter {
         Self::new()
     }
 }
-

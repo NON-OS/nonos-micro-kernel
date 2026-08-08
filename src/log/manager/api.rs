@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::state::{LogManager, LOGGER, PANIC_MODE};
+#[cfg(target_arch = "x86_64")]
 use crate::log::backend::VgaBackend;
 use crate::log::types::{LogEntry, Severity};
 use alloc::boxed::Box;
@@ -25,6 +26,7 @@ use spin::Mutex;
 pub fn init() {
     let mut l = LOGGER.lock();
     let mut mgr = LogManager::new();
+    #[cfg(target_arch = "x86_64")]
     mgr.add_backend(Box::new(VgaBackend));
     *l = Some(mgr);
 }

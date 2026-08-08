@@ -27,7 +27,6 @@ pub mod tool_apps;
 pub mod tray;
 
 pub use apps::LAUNCHER_APPS;
-pub use tool_apps::TOOL_APPS;
 pub use chrome::TASKBAR_WINDOW_ID;
 pub use context::Context;
 pub use notify::NotifyLevel;
@@ -38,4 +37,5 @@ pub use taskbar::{
     new_taskbar_state, reveal_taskbar, set_taskbar_open, TaskbarState, TASKBAR_NO_ACTIVE,
 };
 pub use toasts::ToastQueue;
+pub use tool_apps::TOOL_APPS;
 pub use tray::{TrayEntry, TrayTable};

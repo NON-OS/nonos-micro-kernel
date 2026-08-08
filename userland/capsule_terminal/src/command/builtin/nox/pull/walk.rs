@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use super::args::PullArgs;
+use super::ctx::Ctx;
 use super::run::one_file;
 use super::{fetch, progress, recurse, store};
 use crate::term::state::State;
@@ -26,15 +26,14 @@ const MAX_FILES: u32 = 512;
 
 pub(super) fn walk(
     state: &mut State,
-    pid: u32,
-    ip: [u8; 4],
-    a: &PullArgs,
+    ctx: &Ctx<'_>,
     path: &[u8],
     dest: &[u8],
     depth: u32,
     count: &mut u32,
     tally: &mut progress::Tally,
 ) {
+    let (pid, ip, a) = (ctx.pid, ctx.ip, ctx.args);
     if depth >= MAX_DEPTH {
         return;
     }
@@ -56,10 +55,10 @@ pub(super) fn walk(
         let child_dest = join(dest, &entry.name);
         if entry.is_dir {
             store::mkdir(pid, &child_dest);
-            walk(state, pid, ip, a, &child_url, &child_dest, depth + 1, count, tally);
+            walk(state, ctx, &child_url, &child_dest, depth + 1, count, tally);
         } else {
             *count += 1;
-            one_file(state, pid, &mut conn, ip, a, &child_url, &child_dest, tally);
+            one_file(state, ctx, &mut conn, &child_url, &child_dest, tally);
         }
     }
     if let Some(c) = conn {

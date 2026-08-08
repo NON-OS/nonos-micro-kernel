@@ -18,7 +18,7 @@ mod cr3;
 mod invalidate;
 mod write_protect;
 
-pub use cr3::{flush_address_space, get_cr3, set_cr3};
+pub use cr3::{get_cr3, set_cr3};
 pub use invalidate::{invalidate_all, invalidate_page, invalidate_range};
 pub use write_protect::{
     disable_write_protection, enable_write_protection, with_write_protection_disabled,

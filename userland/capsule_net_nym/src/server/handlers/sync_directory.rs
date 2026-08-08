@@ -32,6 +32,18 @@ pub fn handle(pid: u32, req: &Request, body: &[u8], tx: &mut [u8]) {
     if tcp == 0 {
         return respond(pid, OP_SYNC_DIRECTORY, E_NO_TCP, req.request_id, 0, tx);
     }
+    // No source named means the public API. A caller asking for it takes one
+    // step of the fetch, the same step the idle tick takes, because the whole
+    // directory is more than one round trip and holding the capsule for all
+    // of them costs every other client its reply.
+    if body.is_empty() && crate::state::directory_source().is_none() {
+        let errno = match directory_sync::sync_step(tcp) {
+            directory_sync::Step::Done(_) | directory_sync::Step::Progressed => E_OK,
+            directory_sync::Step::Failed(E_NO_TCP) => E_NO_TCP,
+            directory_sync::Step::Failed(_) => E_DIRECTORY_PROTO,
+        };
+        return respond(pid, OP_SYNC_DIRECTORY, errno, req.request_id, 0, tx);
+    }
     let source = match source(body) {
         Ok(source) => source,
         Err(e) => return respond(pid, OP_SYNC_DIRECTORY, e, req.request_id, 0, tx),

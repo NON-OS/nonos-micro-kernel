@@ -32,12 +32,7 @@ pub struct Regex {
 impl Regex {
     pub fn compile(pattern: &str, flags: &str) -> Regex {
         let (re, ngroups) = parse(pattern);
-        Regex {
-            prog: compile(&re),
-            ngroups,
-            global: flags.contains('g'),
-            ci: flags.contains('i'),
-        }
+        Regex { prog: compile(&re), ngroups, global: flags.contains('g'), ci: flags.contains('i') }
     }
     pub fn find(&self, text: &[char], start: usize) -> Option<Match> {
         search(&self.prog, self.ngroups, text, start, self.ci)

@@ -17,9 +17,9 @@
 use nonos_app_skeleton::PaintBuffer;
 use nonos_policy_proto::{label_of, Field};
 
-use crate::settings::manifest::WIDTH;
+use crate::settings::schema::read_only;
 use crate::settings::state::State;
-use crate::settings::theme::{LABEL_FG, ROW_BG, ROW_BG_ALT, ROW_SELECTED_BG};
+use crate::settings::theme::{LABEL_FG, ROW_BG, ROW_BG_ALT, ROW_SELECTED_BG, STATUS_FG_IDLE};
 
 use super::layout::{LABEL_LEFT, ROW_H};
 use super::paint_field_value::paint_field_value;
@@ -39,7 +39,14 @@ pub fn paint_field_row(
     } else {
         ROW_BG_ALT
     };
-    fb.fill_rect(0, y, WIDTH, ROW_H, bg);
-    fb.text(LABEL_LEFT, y + 5, label_of(field), LABEL_FG);
+    fb.fill_rect(0, y, fb.width, ROW_H, bg);
+    // A read-only row is dimmed and marked, so it does not read as a control
+    // that is simply refusing to work.
+    let label_fg = if read_only(field) { STATUS_FG_IDLE } else { LABEL_FG };
+    fb.text(LABEL_LEFT, y + 5, label_of(field), label_fg);
+    if read_only(field) {
+        let w = fb.width;
+        fb.text(w.saturating_sub(80), y + 5, b"(status)", STATUS_FG_IDLE);
+    }
     paint_field_value(fb, state, field, y + 5, selected);
 }

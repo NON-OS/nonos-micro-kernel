@@ -26,4 +26,3 @@ pub use keccak256::{keccak256, Keccak256};
 pub use sha3_256::{sha3_256, Sha3_256};
 pub use sha3_512::{sha3_512, Sha3_512};
 pub use shake::{shake128, shake256, Shake128, Shake256};
-

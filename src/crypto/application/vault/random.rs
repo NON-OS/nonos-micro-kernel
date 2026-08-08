@@ -27,12 +27,10 @@ pub fn generate_random_bytes(buffer: &mut [u8]) -> CryptoResult<()> {
 }
 
 fn generate_secure_u64() -> CryptoResult<u64> {
-    for _ in 0..10 {
-        if let Some(value) = rdrand_u64() {
-            return Ok(value);
-        }
+    if let Some(value) = crate::arch::cpu_random::random_u64() {
+        return Ok(value);
     }
-    if let Some(value) = try_rdseed_u64() {
+    if let Some(value) = crate::arch::cpu_random::entropy_u64() {
         return Ok(value);
     }
     if let Ok(buf) = try_virtio_rng() {
@@ -41,49 +39,8 @@ fn generate_secure_u64() -> CryptoResult<u64> {
     Err(crate::crypto::CryptoError::InsufficientEntropy)
 }
 
-fn try_rdseed_u64() -> Option<u64> {
-    for _ in 0..10 {
-        let mut result: u64;
-        let success: u8;
-        unsafe {
-            core::arch::asm!(
-                "rdseed {result}",
-                "setc {success}",
-                result = out(reg) result,
-                success = out(reg_byte) success,
-                options(nomem, nostack)
-            );
-        }
-        if success != 0 {
-            return Some(result);
-        }
-    }
-    None
-}
-
 fn try_virtio_rng() -> Result<[u8; 8], ()> {
     let mut buf = [0u8; 8];
     crate::drivers::virtio_rng::fill_random(&mut buf).map_err(|_| ())?;
     Ok(buf)
-}
-
-fn rdrand_u64() -> Option<u64> {
-    let mut result: u64;
-    let success: u8;
-
-    unsafe {
-        core::arch::asm!(
-            "rdrand {result}",
-            "setc {success}",
-            result = out(reg) result,
-            success = out(reg_byte) success,
-            options(nomem, nostack)
-        );
-    }
-
-    if success != 0 {
-        Some(result)
-    } else {
-        None
-    }
 }

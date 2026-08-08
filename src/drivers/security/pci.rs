@@ -83,4 +83,3 @@ pub fn build_config_address(bus: u8, device: u8, function: u8, offset: u8) -> u3
 
     enable_bit | bus_bits | device_bits | function_bits | offset_bits
 }
-

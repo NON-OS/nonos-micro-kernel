@@ -49,4 +49,3 @@ pub fn tick() {
         let _ = c.state.is_alive();
     }
 }
-

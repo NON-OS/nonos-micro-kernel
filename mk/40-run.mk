@@ -85,6 +85,33 @@ nonos-mk-swtpm-start: nonos-mk-swtpm-stop
 	@command -v "$(SWTPM)" >/dev/null || { echo "swtpm not found (brew install swtpm)"; exit 1; }
 	@rm -rf "$(SWTPM_STATE)"
 	@mkdir -p "$(SWTPM_STATE)"
+	@# Give the emulated part an endorsement key before the daemon takes the
+	@# state directory. Without one every EK read answers TPM_RC_HANDLE, so the
+	@# boot chain measures but never binds to a hardware identity, and the one
+	@# path that matters most goes untested. Skipped rather than fatal when the
+	@# tool is absent: measured boot still works, EK binding does not.
+	@# --create-ek-cert is what makes swtpm_setup generate the key; the
+	@# certificate it then tries to issue needs a local CA that a dev box has no
+	@# reason to own, so that step is expected to fail and the key it already
+	@# wrote is what matters. ReadPublic needs the key, not a certificate.
+	@if command -v "$(SWTPM_SETUP)" >/dev/null; then \
+		"$(SWTPM_SETUP)" --tpm2 --tpmstate "$(SWTPM_STATE)" \
+			--create-ek-cert --overwrite --config /dev/null 2>&1 \
+			| grep -q 'created RSA .* EK' \
+			&& echo "  swtpm: endorsement key provisioned at 0x81010001" \
+			|| echo "  swtpm: no endorsement key; EK binding will be skipped"; \
+	else \
+		echo "  swtpm_setup not found; EK binding will be skipped"; \
+	fi
+	@# swtpm_setup runs its own swtpm to author the state and normally tears it
+	@# down, but the failing certificate step aborts it first and leaves that
+	@# daemon holding the state lock. The real daemon below then cannot lock and
+	@# the boot dies, so reap it by the pidfile only setup uses.
+	@pkill -f 'swtpm_setup.pidfile' >/dev/null 2>&1 || true
+	@while pgrep -f 'swtpm_setup.pidfile' >/dev/null 2>&1; do \
+		perl -e 'select(undef,undef,undef,0.1)'; \
+	done
+	@rm -f "$(SWTPM_STATE)/.lock"
 	@$(SWTPM) socket --tpm2 --tpmstate dir="$(SWTPM_STATE)" --ctrl type=unixio,path="$(SWTPM_SOCK)" --flags startup-clear --daemon
 	@while [ ! -S "$(SWTPM_SOCK)" ]; do perl -e 'select(undef,undef,undef,0.1)'; done
 

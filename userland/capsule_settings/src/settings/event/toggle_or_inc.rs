@@ -16,6 +16,8 @@
 
 use nonos_policy_proto::{kind_of, KIND_BOOL, KIND_STR};
 
+use crate::settings::schema::read_only;
+use crate::settings::state::status::StatusKind;
 use crate::settings::state::{cached_value, current_field, edit_start, FieldValue, State};
 
 use super::adjust::adjust;
@@ -26,6 +28,12 @@ pub fn toggle_or_inc(state: &mut State) {
         Some(f) => f,
         None => return,
     };
+    // Status fields report what the system did; asserting one from a settings
+    // row would state something untrue about the machine.
+    if read_only(field) {
+        state.status.set(StatusKind::Idle, b"reported by the system, not editable");
+        return;
+    }
     match kind_of(field) {
         KIND_BOOL => {
             let current = matches!(cached_value(state, field), FieldValue::Bool(true));

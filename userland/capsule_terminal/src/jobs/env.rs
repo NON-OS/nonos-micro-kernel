@@ -26,7 +26,6 @@ pub struct JobEnv {
     pub cwd: Vec<u8>,
     pub vars: Vec<(Vec<u8>, Vec<u8>)>,
     pub aliases: Vec<(Vec<u8>, Vec<u8>)>,
-    pub owner_pid: u64,
 }
 
 impl JobEnv {
@@ -35,12 +34,14 @@ impl JobEnv {
             cwd: state.cwd.as_bytes().to_vec(),
             vars: state.vars.clone(),
             aliases: state.aliases.clone(),
-            owner_pid: state.owner_pid as u64,
         }
     }
 
     pub fn merge_back(self, state: &mut State) {
         state.cwd.set(self.cwd);
         state.vars = self.vars;
+        // Aliases were snapshotted with the rest and have to come back with
+        // it, or one defined inside a foreground job is lost on return.
+        state.aliases = self.aliases;
     }
 }

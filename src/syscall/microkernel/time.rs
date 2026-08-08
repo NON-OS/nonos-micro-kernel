@@ -31,9 +31,8 @@ pub struct RtcTimeAbi {
 }
 
 pub fn sys_time_rtc(out_ptr: u64) -> i64 {
-    let t = match crate::arch::x86_64::time::rtc::read_rtc_checked() {
-        Ok(t) => t,
-        Err(_) => return -61,
+    let Some(t) = crate::arch::wall_clock::civil_time() else {
+        return -61;
     };
     let abi = RtcTimeAbi {
         year: t.year,

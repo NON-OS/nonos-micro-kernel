@@ -20,7 +20,7 @@ use crate::render::{desktop_icons, desktop_menu, topbar};
 use crate::server::desktop;
 use crate::server::handlers::{launcher_focus, launcher_request, launchpad};
 use crate::server::refresh_taskbar::refresh_taskbar;
-use crate::state::{collapse_taskbar, reveal_taskbar, Context, LAUNCHER_APPS};
+use crate::state::{reveal_taskbar, Context, LAUNCHER_APPS};
 use nonos_libc::{
     mk_time_millis, INPUT_KIND_BUTTON_DOWN, INPUT_KIND_BUTTON_UP, INPUT_KIND_KEY_DOWN,
     INPUT_KIND_POINTER_ABS, INPUT_KIND_TOUCH,
@@ -200,12 +200,36 @@ fn drop_drag(ctx: &mut Context) {
     super::repaint::repaint(ctx);
 }
 
-// Open a desktop item: folders in the file manager, files in the text editor.
-fn open_item(ctx: &Context, idx: usize) {
-    if let Some(item) = ctx.desktop_items.get(idx) {
-        let app = if item.is_dir { &LAUNCHER_APPS[1] } else { &LAUNCHER_APPS[2] };
-        launcher_request::request(app);
+fn is_image_name(name: &str) -> bool {
+    let Some((_, ext)) = name.rsplit_once('.') else { return false };
+    ext.eq_ignore_ascii_case("png")
+        || ext.eq_ignore_ascii_case("jpg")
+        || ext.eq_ignore_ascii_case("jpeg")
+        || ext.eq_ignore_ascii_case("bmp")
+}
+
+// Open a desktop item in the app that suits it, and tell that app which item.
+// This used to launch the file manager or the text editor and hand over
+// nothing, so every icon opened the same blank app at its default location.
+// The path travels the way the file manager's Open With already sends it.
+fn open_item(ctx: &mut Context, idx: usize) {
+    let Some(item) = ctx.desktop_items.get(idx) else { return };
+    // An image has no viewer in this image, and the editor would show a
+    // screenful of bytes rather than a picture, so nothing opens.
+    if !item.is_dir && is_image_name(&item.name) {
+        return;
     }
+    let service: &[u8] = if item.is_dir { b"app.file_manager" } else { b"app.text_editor" };
+    // By service rather than by position: the table is edited often enough
+    // that an index would drift into launching the wrong app.
+    let Some(app) = LAUNCHER_APPS.iter().find(|a| a.service == service) else { return };
+    // Desktop items are the root listing, so the path is the name under "/".
+    let mut path = alloc::string::String::from("/");
+    path.push_str(&item.name);
+    if let Ok(service) = core::str::from_utf8(app.service) {
+        ctx.pending_open.insert(alloc::string::String::from(service), path);
+    }
+    launcher_request::request(app);
 }
 
 fn hover_reveal(ctx: &mut Context, y: u32) {

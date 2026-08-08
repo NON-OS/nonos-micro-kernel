@@ -44,8 +44,8 @@ pub fn stack_canary_failed() -> ! {
         crate::security::audit::AuditSeverity::Emergency,
     );
 
-    x86_64::instructions::interrupts::disable();
-    loop {
-        x86_64::instructions::hlt();
-    }
+    // The stack this frame stands on is already corrupt, so there is no safe
+    // way back. Mask interrupts and stop the CPU here.
+    crate::arch::disable_interrupts();
+    crate::arch::halt_loop()
 }

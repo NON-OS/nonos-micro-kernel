@@ -23,7 +23,14 @@ use crate::crypto::hmac_sha256;
 use crate::packet::PacketError;
 use crate::topology::{Node, Role};
 
-pub fn write(block: &mut [u8], id: u32, flags: u8, idx: u8, hop: &Node, key: &[u8; 32]) -> Result<(), PacketError> {
+pub fn write(
+    block: &mut [u8],
+    id: u32,
+    flags: u8,
+    idx: u8,
+    hop: &Node,
+    key: &[u8; 32],
+) -> Result<(), PacketError> {
     if block.len() != HOP_BYTES {
         return Err(PacketError::BadLength);
     }

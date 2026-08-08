@@ -17,6 +17,7 @@
 use alloc::vec::Vec;
 use spin::Mutex;
 
+use super::admissible::admissible;
 use super::clock;
 use super::directory::{DirectoryMeta, ParsedDirectory};
 use super::types::{Node, RouteError, TopologyError, NODE_CAP};
@@ -52,7 +53,7 @@ pub fn snapshot() -> Result<Vec<Node>, RouteError> {
     if !fresh(meta, now) {
         return Err(RouteError::Expired);
     }
-    if crate::state::trusted_authority(&meta.issuer) != Some(true) {
+    if !admissible(meta, crate::state::trusted_authority) {
         return Err(RouteError::Expired);
     }
     Ok(guard.nodes.clone())

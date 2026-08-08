@@ -66,4 +66,3 @@ pub const FCR_TRIGGER_14: u8 = 3 << 6;
 
 pub const IIR_NO_INT: u8 = 1 << 0;
 pub const IIR_ID_MASK: u8 = 0x0E;
-

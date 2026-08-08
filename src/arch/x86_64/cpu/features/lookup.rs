@@ -53,4 +53,3 @@ pub fn has_feature(features: &CpuFeatures, name: &str) -> bool {
         _ => false,
     }
 }
-

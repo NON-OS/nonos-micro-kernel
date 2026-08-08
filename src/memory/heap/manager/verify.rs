@@ -46,7 +46,7 @@ fn verify_tracked_allocations() -> bool {
 #[cfg(feature = "heap-track")]
 fn verify_tracked_allocations() -> bool {
     let _sampled = KERNEL_HEAP.tracking_overflowed.load(core::sync::atomic::Ordering::Relaxed);
-    crate::arch::x86_64::idt::without_interrupts(|| {
+    crate::arch::run_without_interrupts(|| {
         let allocated_ptrs = KERNEL_HEAP.allocated_ptrs.lock();
         for &ptr_addr in allocated_ptrs.iter() {
             if ptr_addr < layout::KHEAP_BASE as usize

@@ -25,7 +25,7 @@
 
 [package]
 name        = "nonos_kernel"
-version     = "0.8.9"
+version     = "0.9.1"
 edition     = "2021"
 publish     = false
 license     = "AGPL-3.0"
@@ -50,6 +50,15 @@ harness = false
 [features]
 nonos-stark-attest = []
 default = ["microkernel-core"]
+
+# Bring up a non-x86_64 arch tree (aarch64/riscv64) in QEMU. Compiles + boots
+# the arch but is not a release-signed target. See the arch guard in lib.rs.
+nonos-arch-preview = []
+
+# Run the in-kernel microbenchmarks at boot and print them on the serial
+# channel. Off by default: they cost real time on a path a shipped image has
+# no reason to spend it on, and the benchmark lane turns them on.
+nonos-bench-micro = []
 
 # Bootstrap. `kernel` switches malloc/free to Rust `alloc`; `standalone`
 # brings in the panic handler and global allocator.
@@ -148,6 +157,7 @@ nonos-capsule-net-ntp           = []
 nonos-capsule-net-core          = []
 nonos-capsule-net-sockets       = []
 nonos-capsule-net-nym           = []
+nonos-capsule-socks5            = []
 nonos-capsule-market            = []
 
 # Layout-stable debug ring. Allocation-free, formatter-free fixed-VA
@@ -480,6 +490,7 @@ microkernel-net-nym = [
   "nonos-capsule-driver-virtio-net",
   "nonos-capsule-net-core",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
 ]
 
 microkernel-net-sockets = [
@@ -490,20 +501,22 @@ microkernel-net-sockets = [
   "nonos-capsule-net-core",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
 ]
 
 # Desktop boot profile. This is the signed QEMU GUI lane:
 # base services, storage and network drivers, input ingest, the
 # input router, compositor, WM, desktop shell, toolkit, and signed
 # first-party app capsules in one kernel image.
-microkernel-desktop-gui = [
+# Split out from microkernel-desktop-gui: everything here is a first-party
+# no_std capsule built on nonos_libc. The tool capsules and the tokio smoke
+# test are the two pieces that need the std platform layer, which is x86_64
+# only, so they live in the profile below. aarch64 builds this set.
+microkernel-desktop-base = [
   "microkernel-core",
   "nonos-production",
   "capsule-serial-debug",
-  "nonos-tool-capsules",
   "nonos-capsule-proof-io",
-  "nonos-capsule-tokio-smoke",
-  "nonos-capsule-std-proof",
   "nonos-capsule-ramfs",
   "nonos-capsule-keyring",
   "nonos-capsule-entropy",
@@ -520,12 +533,12 @@ microkernel-desktop-gui = [
   "nonos-capsule-net-core",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
   "nonos-capsule-input-router",
   "nonos-capsule-compositor",
   "nonos-capsule-wm",
   "nonos-capsule-desktop-shell",
   "nonos-capsule-image-codec",
-  "nonos-capsule-image-viewer",
   "nonos-capsule-clipboard",
   "nonos-capsule-attest",
   "nonos-capsule-login",
@@ -533,14 +546,11 @@ microkernel-desktop-gui = [
   "nonos-capsule-wallpaper-catalog",
   "nonos-capsule-toolkit",
   "nonos-capsule-about",
-  "nonos-capsule-audio-player",
   "nonos-capsule-audio",
   "nonos-capsule-driver-hda",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
-  "nonos-capsule-clock",
   "nonos-capsule-browser",
-  "nonos-capsule-snake",
   "nonos-capsule-wallet-nonos",
   "nonos-capsule-terminal",
   "nonos-capsule-file-manager",
@@ -549,6 +559,16 @@ microkernel-desktop-gui = [
   "nonos-capsule-policy",
   "nonos-capsule-process-manager",
   "nonos-capsule-power",
+]
+
+# Desktop boot profile. This is the signed QEMU GUI lane:
+# base services, storage and network drivers, input ingest, the
+# input router, compositor, WM, desktop shell, toolkit, and signed
+# first-party app capsules in one kernel image.
+microkernel-desktop-gui = [
+  "microkernel-desktop-base",
+  "nonos-tool-capsules",
+  "nonos-capsule-tokio-smoke",
 ]
 
 # Full desktop image. The desktop-gui set plus every production hardware
@@ -687,6 +707,7 @@ microkernel-input-e2e-ps2 = [
   "nonos-capsule-net-dns",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
   "nonos-capsule-input-router",
   "nonos-capsule-compositor",
   "nonos-capsule-wm",
@@ -722,6 +743,7 @@ microkernel-input-e2e-xhci = [
   "nonos-capsule-net-dns",
   "nonos-capsule-net-sockets",
   "nonos-capsule-net-nym",
+  "nonos-capsule-socks5",
   "nonos-capsule-input-router",
   "nonos-capsule-compositor",
   "nonos-capsule-wm",
@@ -787,7 +809,7 @@ std = []
 
 [dependencies]
 # Transparent STARK stack, shared with the bootloader for kernel self-attestation.
-nonos-stark = { path = "nonos-stark", version = "0.1.0" }
+nonos-stark = { path = "nonos-stark", version = "0.2.0" }
 # Synchronization. spin is the kernel-wide lock primitive (no_std,
 # interrupt-safe).
 spin        = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex", "lazy", "rwlock"] }
@@ -861,7 +883,7 @@ perf        = "warn"
 # src/capabilities/types.rs.
 [package.metadata.nonos]
 zerostate = true
-version   = "0.8.4"
+version   = "0.9.1"
 abi       = "Mk-v0"
 
 [package.metadata.nonos.vm]
@@ -934,7 +956,14 @@ max_size  = "16MiB"
 [profile.release]
 opt-level       = 3
 lto             = "thin"
-codegen-units   = 4
+# One codegen unit, to keep the build reproducible. Thin LTO across several
+# units settles its imports and partition boundaries per run, which is a known
+# way for two builds of one commit to diverge. Measured here the kernel ELF came
+# out byte identical either way, so this is precaution rather than a fix, paid
+# for in build time. The divergence that was actually observed is in the STARK
+# attestation trailer, which is randomised because the proof is zero knowledge,
+# and no build setting changes that.
+codegen-units   = 1
 panic           = "abort"
 strip           = "debuginfo"
 debug           = false

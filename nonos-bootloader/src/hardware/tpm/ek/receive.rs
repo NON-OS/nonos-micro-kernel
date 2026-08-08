@@ -15,27 +15,36 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 extern crate alloc;
-use crate::hardware::tpm::constants::{TPM_DATA_FIFO, TPM_STS, TPM_STS_DATA_AVAIL};
 use crate::hardware::tpm::state::TpmState;
+use alloc::vec;
 use alloc::vec::Vec;
 
+/// Room for an RSA-2048 EK public area and then some.
+const RESPONSE_CAPACITY: usize = 512;
+
+/// A TPM 2.0 response header: tag, size, return code.
+const HEADER_LEN: usize = 10;
+
+/// Collect the ReadPublic response.
+///
+/// Reads through the shared transport, which picks FIFO or CRB from the
+/// detected interface. This drained `TPM_DATA_FIFO` by hand, so on a CRB part
+/// it collected nothing and reported a malformed reply for what was really a
+/// driver reading the wrong registers.
+///
+/// A non-zero return code is its own failure. The likeliest one here is not a
+/// broken TPM but an unprovisioned one: with no persistent object at the EK
+/// handle the part answers `TPM_RC_HANDLE`, which is a true answer about the
+/// machine rather than a transport fault.
 pub fn receive_read_public(state: &TpmState) -> Result<Vec<u8>, &'static str> {
-    for _ in 0..10000 {
-        if (state.read_reg8(TPM_STS) & TPM_STS_DATA_AVAIL) != 0 {
-            break;
-        }
-        core::hint::spin_loop();
-    }
-    let mut response = Vec::with_capacity(512);
-    for _ in 0..512 {
-        if (state.read_reg8(TPM_STS) & TPM_STS_DATA_AVAIL) == 0 {
-            break;
-        }
-        response.push(state.read_reg8(TPM_DATA_FIFO));
-    }
-    if response.len() < 10 {
+    let mut response = vec![0u8; RESPONSE_CAPACITY];
+    let received = state.receive_response(&mut response).map_err(|_| "TPM response read failed")?;
+
+    if received < HEADER_LEN {
         return Err("invalid TPM response");
     }
+    response.truncate(received);
+
     let rc = u32::from_be_bytes([response[6], response[7], response[8], response[9]]);
     if rc != 0 {
         return Err("TPM command failed");

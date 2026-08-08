@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::idle::idle_until_interrupt;
 use super::super::super::dispatch::add_to_run_queue;
 use super::super::super::selection::{select_next_process, switch_to_process};
 use super::super::save_syscall_user_rsp;
-use super::super::state::CURRENT_TIME_SLICE;
-use core::sync::atomic::Ordering;
+use super::super::state::set_time_slice;
+use super::idle::idle_until_interrupt;
 
 /// Voluntary-yield body. Runs with interrupts already disabled by the
 /// caller. The contract backend dispatches `SwitchIntent::Yield` here.
@@ -53,7 +52,7 @@ pub(crate) fn perform_yield_inline() {
     if runnable {
         add_to_run_queue(pid);
     }
-    CURRENT_TIME_SLICE.store(0, Ordering::Relaxed);
+    set_time_slice(0);
 
     loop {
         if let Some(next) = select_next_process() {

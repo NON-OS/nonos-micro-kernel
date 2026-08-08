@@ -15,23 +15,35 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub fn get_tsc() -> u64 {
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }
 
+/// The cycle counter, read the way the part exposes it. The name is the x86
+/// instruction because that is what every caller already says; elsewhere this is
+/// the same counter `get_tsc` reads, so the two never disagree.
 pub fn rdtsc() -> u64 {
+    #[cfg(target_arch = "x86_64")]
     unsafe {
         let mut high: u32;
         let mut low: u32;
         core::arch::asm!("rdtsc", out("eax") low, out("edx") high, options(nomem, nostack, preserves_flags));
         ((high as u64) << 32) | (low as u64)
     }
+    #[cfg(not(target_arch = "x86_64"))]
+    crate::arch::read_time_counter()
 }
 
+/// Whether the core can park with MONITOR/MWAIT. Only x86_64 has it, so
+/// everywhere else the answer is no rather than unimplemented: callers use it to
+/// pick an idle strategy and false selects the portable one.
 pub fn has_mwait_support() -> bool {
+    #[cfg(target_arch = "x86_64")]
     unsafe {
         let cpuid = core::arch::x86_64::__cpuid(1);
         (cpuid.ecx & (1 << 3)) != 0
     }
+    #[cfg(not(target_arch = "x86_64"))]
+    false
 }
 
 pub struct HighPrecisionTimer {

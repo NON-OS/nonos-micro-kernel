@@ -42,14 +42,7 @@ pub fn pt_index(virt: VirtAddr) -> usize {
 }
 
 pub fn current_pml4() -> *mut PageTable {
-    let cr3: u64;
-    // SAFETY: Reading CR3 is always safe in kernel mode - it returns the
-    // current page table base address. The nomem option is correct as this
-    // does not access memory through a pointer.
-    unsafe {
-        core::arch::asm!("mov {}, cr3", out(reg) cr3, options(nomem, nostack));
-    }
-    let phys = cr3 & pte_flags::ADDR_MASK;
+    let phys = crate::arch::paging::read_root() & pte_flags::ADDR_MASK;
     (phys + KERNEL_SPACE_START) as *mut PageTable
 }
 

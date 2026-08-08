@@ -19,7 +19,7 @@ use crate::smp::state::{BSP_APIC_ID, CPUS_ONLINE, CPU_COUNT, SMP_INITIALIZED};
 use crate::smp::topology;
 use core::sync::atomic::Ordering;
 
-pub fn start_aps() -> Result<usize, &'static str> {
+pub(super) fn start_aps() -> Result<usize, &'static str> {
     ensure_smp_ready()?;
 
     let cpu_count = CPU_COUNT.load(Ordering::Acquire);

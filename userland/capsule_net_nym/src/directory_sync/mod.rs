@@ -14,8 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod api;
+mod budget;
+mod budget_roles;
+mod exit;
 mod http;
+mod https;
+mod live;
+mod plain;
+mod resolve;
 mod source;
+mod stages;
+mod step;
+mod tls_io;
 
+pub use api::{objects, parse_node};
+pub use exit::{fetch_exit, ExitAddress};
 pub use http::fetch;
+pub use https::fetch_tls;
+pub use resolve::resolve;
 pub use source::{parse, DirectorySource};
+pub use step::{sync_step, Step};
+pub use tls_io::TcpIo;

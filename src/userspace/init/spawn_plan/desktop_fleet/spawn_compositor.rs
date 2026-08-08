@@ -20,7 +20,12 @@ pub(super) fn spawn_compositor() {
     if c::shared_state().is_alive() {
         return;
     }
-    super::super::boot::capsule("COMPOSITOR", "compositor", c::spawn_compositor_capsule, c::shared_state);
+    super::super::boot::capsule(
+        "COMPOSITOR",
+        "compositor",
+        c::spawn_compositor_capsule,
+        c::shared_state,
+    );
 }
 #[cfg(not(feature = "nonos-capsule-compositor"))]
 pub(super) fn spawn_compositor() {}

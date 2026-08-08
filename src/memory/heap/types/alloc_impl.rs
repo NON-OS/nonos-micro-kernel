@@ -47,7 +47,7 @@ pub(super) unsafe fn alloc_impl(allocator: &SecureHeapAllocator, layout: Layout)
         };
 
         let raw_ptr =
-            crate::arch::x86_64::idt::without_interrupts(|| allocator.inner.alloc(adjusted_layout));
+            crate::arch::run_without_interrupts(|| allocator.inner.alloc(adjusted_layout));
         if raw_ptr.is_null() {
             return null_mut();
         }
@@ -63,7 +63,7 @@ pub(super) unsafe fn alloc_impl(allocator: &SecureHeapAllocator, layout: Layout)
         super::super::manager::HEAP_STATS.record_allocation(layout.size());
 
         #[cfg(feature = "heap-track")]
-        crate::arch::x86_64::idt::without_interrupts(|| {
+        crate::arch::run_without_interrupts(|| {
             if allocator.allocated_ptrs.lock().insert(data_ptr as usize).is_err() {
                 allocator.tracking_overflowed.store(true, Ordering::Relaxed);
             }

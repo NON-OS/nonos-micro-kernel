@@ -74,12 +74,7 @@ fn spawn_calculator() {}
 #[cfg(feature = "nonos-capsule-clock")]
 fn spawn_clock() {
     use crate::userspace::capsule_clock as c;
-    super::boot::capsule(
-        "APP-CLOCK",
-        "app_clock",
-        c::spawn_clock_capsule,
-        c::shared_state,
-    );
+    super::boot::capsule("APP-CLOCK", "app_clock", c::spawn_clock_capsule, c::shared_state);
 }
 #[cfg(not(feature = "nonos-capsule-clock"))]
 fn spawn_clock() {}
@@ -87,12 +82,7 @@ fn spawn_clock() {}
 #[cfg(feature = "nonos-capsule-browser")]
 fn spawn_browser() {
     use crate::userspace::capsule_browser as b;
-    super::boot::capsule(
-        "APP-BROWSER",
-        "app_browser",
-        b::spawn_browser_capsule,
-        b::shared_state,
-    );
+    super::boot::capsule("APP-BROWSER", "app_browser", b::spawn_browser_capsule, b::shared_state);
 }
 #[cfg(not(feature = "nonos-capsule-browser"))]
 fn spawn_browser() {}

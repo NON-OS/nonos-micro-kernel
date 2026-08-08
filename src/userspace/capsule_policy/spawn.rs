@@ -28,7 +28,7 @@ const SERVICE_NAME: &str = "policy";
 const SERVICE_PORT: u32 = 4108;
 const REPLY_INBOX: &str = "endpoint.policy.reply";
 const REPLY_PORT: u32 = 4109;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 const REQUIRED_CAPS: u64 = 0x219;
 
 pub fn spawn_policy_capsule() -> Result<(), SpawnError> {

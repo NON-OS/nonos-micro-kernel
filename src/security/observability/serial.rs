@@ -14,41 +14,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Policy-gated console output.
+//!
+//! This used to drive COM1 directly, one byte per port write with no check
+//! that the transmitter had room, which both hard-coded a PC and dropped
+//! characters under load. The console already exists behind `sys::serial`,
+//! knows how to wait for the UART, and works on any board. What belongs here
+//! is only the decision of whether to emit and what to redact.
+
 use super::policy::{is_production_mode, should_emit_serial};
 use super::redact::redact_panic_message;
+use crate::sys::serial;
 
 pub fn serial_log(msg: &str) {
     if !should_emit_serial() {
         return;
     }
-
-    for byte in msg.bytes() {
-        unsafe {
-            x86_64::instructions::port::Port::new(0x3F8).write(byte);
-        }
-    }
-
-    unsafe {
-        x86_64::instructions::port::Port::new(0x3F8).write(b'\r');
-        x86_64::instructions::port::Port::new(0x3F8).write(b'\n');
-    }
+    serial::print_str(msg);
+    serial::println(b"");
 }
 
 pub fn serial_log_redacted(msg: &str) {
     if !should_emit_serial() {
         return;
     }
-
-    let output = if is_production_mode() { redact_panic_message(msg) } else { msg.into() };
-
-    for byte in output.bytes() {
-        unsafe {
-            x86_64::instructions::port::Port::new(0x3F8).write(byte);
-        }
+    if is_production_mode() {
+        serial::print_str(&redact_panic_message(msg));
+    } else {
+        serial::print_str(msg);
     }
-
-    unsafe {
-        x86_64::instructions::port::Port::new(0x3F8).write(b'\r');
-        x86_64::instructions::port::Port::new(0x3F8).write(b'\n');
-    }
+    serial::println(b"");
 }

@@ -26,10 +26,10 @@ static VGA_LOCK: Mutex<()> = Mutex::new(());
 pub fn visual_delay(iterations: u32) {
     for _ in 0..iterations {
         for _ in 0..100_000 {
-            // SAFETY: pause instruction is safe to execute
-            unsafe {
-                core::arch::asm!("pause", options(nomem, nostack));
-            }
+            // Emits the part's own spin hint: `pause` on x86_64, `yield` on
+            // aarch64. Asking for the intent rather than the instruction keeps
+            // the busy wait polite everywhere, and needs no unsafe block.
+            core::hint::spin_loop();
         }
     }
 }

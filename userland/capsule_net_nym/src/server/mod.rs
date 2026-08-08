@@ -15,9 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod authz;
+mod connect_tick;
+mod directory_outcome;
+mod directory_tick;
+mod rebind;
+
 mod handlers;
+mod keepalive;
 mod parse_req;
+mod pump_tick;
 mod respond;
 mod runner;
 
+pub use connect_tick::gateway_lost;
 pub use runner::run;

@@ -17,6 +17,7 @@
 mod about_page;
 mod append_capped;
 mod apply_css;
+mod budget;
 mod commit_html;
 mod constants;
 mod css_pump;
@@ -39,6 +40,7 @@ mod render_lines;
 mod render_response;
 mod retryable_error;
 mod reuse;
+mod route_mixnet;
 mod rtc_packed;
 mod script_pump;
 mod security_error;

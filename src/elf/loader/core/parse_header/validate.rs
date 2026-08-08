@@ -39,7 +39,7 @@ pub(crate) fn validate_elf(header: &ElfHeader) -> Result<(), ElfError> {
     if !header.has_valid_section_name_table_index() {
         return Err(ElfError::InvalidIndex);
     }
-    if header.e_machine != elf_machine::EM_X86_64 {
+    if header.e_machine != elf_machine::EM_NATIVE {
         return Err(ElfError::InvalidMachine);
     }
     if header.e_type != elf_type::ET_EXEC && header.e_type != elf_type::ET_DYN {

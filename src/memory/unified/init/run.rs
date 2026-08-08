@@ -90,11 +90,19 @@ pub fn init_unified_vm() -> Result<(), &'static str> {
     // Install a permanent UC mapping of the LAPIC page in the kernel
     // half and atomically republish the base to it before the
     // teardown so the LAPIC stays reachable.
-    let lapic_pa = crate::memory::addr::PhysAddr::new(crate::sys::apic::LAPIC_PHYS_BASE);
-    let lapic_va = crate::memory::mmio::map_device_memory(lapic_pa, 0x1000)
-        .map_err(|_| "init_unified_vm: LAPIC MMIO map failed")?;
-    crate::sys::apic::rebind_to_virt(lapic_va.as_u64());
-    crate::sys::serial::println(b"[VM-INIT] LAPIC rebased to UC kernel mapping");
+    //
+    // aarch64 needs no counterpart: its interrupt controller is reached
+    // through system registers, and the one part that is memory mapped, the
+    // redistributor, is placed by the boot map rather than by an identity
+    // mapping that later gets torn down.
+    #[cfg(target_arch = "x86_64")]
+    {
+        let lapic_pa = crate::memory::addr::PhysAddr::new(crate::sys::apic::LAPIC_PHYS_BASE);
+        let lapic_va = crate::memory::mmio::map_device_memory(lapic_pa, 0x1000)
+            .map_err(|_| "init_unified_vm: LAPIC MMIO map failed")?;
+        crate::sys::apic::rebind_to_virt(lapic_va.as_u64());
+        crate::sys::serial::println(b"[VM-INIT] LAPIC rebased to UC kernel mapping");
+    }
 
     // Step 6: drop the bootloader's low-half identity. Two
     // kernel-half entries means directmap (PML4[256]) plus kernel

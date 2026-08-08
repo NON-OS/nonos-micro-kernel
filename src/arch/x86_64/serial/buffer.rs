@@ -106,4 +106,3 @@ impl Default for RxBuffer {
         Self::new()
     }
 }
-

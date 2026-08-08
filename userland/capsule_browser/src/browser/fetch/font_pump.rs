@@ -42,7 +42,7 @@ pub fn font_pump(state: &mut State) -> bool {
         let _ = net::socket_close(state.sockets_port, h);
         return true;
     }
-    let phase = if proxy.is_some() {
+    let phase = if proxy.is_some() || crate::browser::net::mixnet::is_on() {
         Phase::SocksHello
     } else if u.scheme == url::Scheme::Https {
         Phase::TlsHello

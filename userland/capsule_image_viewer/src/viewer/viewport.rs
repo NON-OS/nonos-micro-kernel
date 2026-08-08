@@ -12,11 +12,19 @@ pub struct Placement {
 }
 
 fn round_pos(v: f32) -> u32 {
-    if v <= 0.0 { 0 } else { (v + 0.5) as u32 }
+    if v <= 0.0 {
+        0
+    } else {
+        (v + 0.5) as u32
+    }
 }
 
 fn round_i(v: f32) -> i32 {
-    if v < 0.0 { (v - 0.5) as i32 } else { (v + 0.5) as i32 }
+    if v < 0.0 {
+        (v - 0.5) as i32
+    } else {
+        (v + 0.5) as i32
+    }
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -32,7 +40,11 @@ pub fn fit_scale(sw: u32, sh: u32, vw: u32, vh: u32) -> f32 {
     }
     let rx = vw as f32 / sw as f32;
     let ry = vh as f32 / sh as f32;
-    if rx < ry { rx } else { ry }
+    if rx < ry {
+        rx
+    } else {
+        ry
+    }
 }
 
 pub fn base_scale(mode: FitMode, sw: u32, sh: u32, vw: u32, vh: u32) -> f32 {
@@ -45,7 +57,11 @@ pub fn base_scale(mode: FitMode, sw: u32, sh: u32, vw: u32, vh: u32) -> f32 {
         FitMode::Fill => {
             let rx = vw as f32 / sw as f32;
             let ry = vh as f32 / sh as f32;
-            if rx > ry { rx } else { ry }
+            if rx > ry {
+                rx
+            } else {
+                ry
+            }
         }
     }
 }
@@ -65,13 +81,31 @@ pub fn clamp_pan_mode(view: &mut View, mode: FitMode, sw: u32, sh: u32, vw: u32,
     let dh = sh as f32 * s;
     let lim_x = ((dw - vw as f32).abs()) / 2.0;
     let lim_y = ((dh - vh as f32).abs()) / 2.0;
-    if view.pan_x > lim_x { view.pan_x = lim_x; }
-    if view.pan_x < -lim_x { view.pan_x = -lim_x; }
-    if view.pan_y > lim_y { view.pan_y = lim_y; }
-    if view.pan_y < -lim_y { view.pan_y = -lim_y; }
+    if view.pan_x > lim_x {
+        view.pan_x = lim_x;
+    }
+    if view.pan_x < -lim_x {
+        view.pan_x = -lim_x;
+    }
+    if view.pan_y > lim_y {
+        view.pan_y = lim_y;
+    }
+    if view.pan_y < -lim_y {
+        view.pan_y = -lim_y;
+    }
 }
 
-pub fn zoom_at(view: &mut View, mode: FitMode, sw: u32, sh: u32, vw: u32, vh: u32, px: i32, py: i32, factor: f32) {
+pub fn zoom_at(
+    view: &mut View,
+    mode: FitMode,
+    sw: u32,
+    sh: u32,
+    vw: u32,
+    vh: u32,
+    px: i32,
+    py: i32,
+    factor: f32,
+) {
     let before = place_mode(mode, sw, sh, vw, vh, view);
     let ix = (px as f32 - before.dx as f32) / before.dw.max(1) as f32;
     let iy = (py as f32 - before.dy as f32) / before.dh.max(1) as f32;

@@ -21,4 +21,18 @@ pub const BODY_TOP: u32 = HEADER_H + TAB_H;
 pub const ROW_H: u32 = 24;
 pub const PAD_X: u32 = 14;
 pub const LABEL_LEFT: u32 = PAD_X;
-pub const VALUE_LEFT: u32 = 320;
+
+/// Where the value column starts.
+///
+/// The longest label, "SMAP (supervisor access prevention)", is 35 glyphs at
+/// 9px, so it runs to x=329 from `LABEL_LEFT`. At the old 320 it overlapped
+/// the value. This leaves the longest label clear with a gap after it, and the
+/// assert keeps that true if a longer label is added.
+pub const VALUE_LEFT: u32 = 344;
+
+const LONGEST_LABEL_GLYPHS: u32 = 35;
+const GLYPH_ADVANCE: u32 = 9;
+const _: () = assert!(
+    LABEL_LEFT + LONGEST_LABEL_GLYPHS * GLYPH_ADVANCE < VALUE_LEFT,
+    "the value column must start clear of the longest field label"
+);

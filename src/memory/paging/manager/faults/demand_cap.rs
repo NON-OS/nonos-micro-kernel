@@ -32,8 +32,17 @@ struct Counter {
     pages: u64,
 }
 
-static COUNTERS: Mutex<[Counter; MAX_TRACKED]> =
-    Mutex::new([Counter { pid: 0, pages: 0 }; MAX_TRACKED]);
+struct Budget {
+    counters: [Counter; MAX_TRACKED],
+    // Pages admitted for processes that found no free slot. Bounded by the
+    // same per-process budget, so the saturated case is metered rather than
+    // open, and reset when a slot frees because the pressure that caused it
+    // is gone.
+    overflow: u64,
+}
+
+static BUDGET: Mutex<Budget> =
+    Mutex::new(Budget { counters: [Counter { pid: 0, pages: 0 }; MAX_TRACKED], overflow: 0 });
 
 // Charge one demand-faulted page to `pid`. Returns false once the process is
 // over budget so the fault handler can refuse and let the process be killed.
@@ -41,7 +50,8 @@ pub(super) fn charge(pid: u32) -> bool {
     if pid == 0 {
         return true;
     }
-    let mut table = COUNTERS.lock();
+    let budget = &mut *BUDGET.lock();
+    let table = &mut budget.counters;
     if let Some(c) = table.iter_mut().find(|c| c.pid == pid) {
         if c.pages >= MAX_DEMAND_PAGES {
             // Budget exhausted: the fault is refused (the caller kills the
@@ -49,8 +59,10 @@ pub(super) fn charge(pid: u32) -> bool {
             // serial log instead of silently exhausting memory.
             if c.pages == MAX_DEMAND_PAGES {
                 c.pages = c.pages.saturating_add(1);
-                crate::sys::serial::print(b"[DEMAND-CAP] per-process page budget hit, killing pid=");
-                crate::arch::x86_64::diag::print_hex_u64(pid as u64);
+                crate::sys::serial::print(
+                    b"[DEMAND-CAP] per-process page budget hit, killing pid=",
+                );
+                crate::sys::serial::print_hex(pid as u64);
                 crate::sys::serial::println(b"");
             }
             return false;
@@ -60,11 +72,27 @@ pub(super) fn charge(pid: u32) -> bool {
     }
     if let Some(c) = table.iter_mut().find(|c| c.pid == 0 || !alive(c.pid)) {
         *c = Counter { pid, pages: 1 };
+        budget.overflow = 0;
         return true;
     }
-    // Table saturated with live faulting processes: allow rather than wrongly
-    // deny a legitimate process; each tracked process is still individually
-    // bounded.
+    // Table saturated with live faulting processes. Admitting freely here left
+    // the cap with an unmetered path around it: 128 processes that fault once
+    // each pin every slot, and the next process demand-backs memory with no
+    // budget at all. Charge a shared overflow budget instead, so an untracked
+    // process is bounded by one process's worth of pages and then refused.
+    if budget.overflow > MAX_DEMAND_PAGES {
+        return false;
+    }
+    if budget.overflow == MAX_DEMAND_PAGES {
+        budget.overflow = budget.overflow.saturating_add(1);
+        crate::sys::serial::print(
+            b"[DEMAND-CAP] tracking table saturated, overflow budget spent, killing pid=",
+        );
+        crate::sys::serial::print_hex(pid as u64);
+        crate::sys::serial::println(b"");
+        return false;
+    }
+    budget.overflow = budget.overflow.saturating_add(1);
     true
 }
 

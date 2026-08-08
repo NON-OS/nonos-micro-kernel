@@ -25,7 +25,14 @@ use crate::arch::x86_64::acpi::tables::{Dmar, Drhd, SdtHeader, SIG_DMAR};
 const DRHD_TYPE: u16 = 0;
 const MAX_REMAP_UNITS: usize = 8;
 
-static REMAP_UNIT_BASES: Mutex<heapless::Vec<u64, MAX_REMAP_UNITS>> = Mutex::new(heapless::Vec::new());
+static REMAP_UNIT_BASES: Mutex<heapless::Vec<u64, MAX_REMAP_UNITS>> =
+    Mutex::new(heapless::Vec::new());
+
+/// Register bases of the remapping units DMAR reported. These were collected
+/// and then dropped on the floor; the VT-d driver reads them from here.
+pub fn remap_unit_bases() -> heapless::Vec<u64, MAX_REMAP_UNITS> {
+    REMAP_UNIT_BASES.lock().clone()
+}
 
 pub fn parse_dmar(registry: &mut TableRegistry) {
     let addr = match registry.tables.get(&SIG_DMAR) {

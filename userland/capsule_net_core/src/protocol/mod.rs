@@ -17,6 +17,7 @@
 pub mod dns;
 pub mod errno;
 pub mod header;
+pub mod ip;
 pub mod ops;
 pub mod tcp;
 pub mod udp;

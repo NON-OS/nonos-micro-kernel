@@ -33,7 +33,6 @@ pub fn init_bootstrap() {
     }
 }
 
-
 #[inline]
 pub fn is_using_bootstrap() -> bool {
     USING_BOOTSTRAP.load(Ordering::Acquire)

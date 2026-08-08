@@ -1,0 +1,15 @@
+[package]
+name = "nonos_mac"
+version = "0.3.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+description = "Locally administered MAC addresses for NONOS network drivers"
+
+[dependencies]
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true

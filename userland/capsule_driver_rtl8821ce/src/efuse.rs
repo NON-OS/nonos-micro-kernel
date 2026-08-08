@@ -24,6 +24,8 @@
 //! so only the bank select and the 2.5V LDO disable bracket the read. Values are
 //! rtw88 facts (`reg.h`, `efuse.c`, `rtw8821c.c`), reimplemented not copied.
 
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use crate::regs::Mmio;
 
 /// The efuse control register: address in bits 8..18, data in the low byte, and
@@ -52,6 +54,25 @@ const RFE_OPTION_OFFSET: usize = 0xCA;
 /// rtw88 `struct rtw8821ce_efuse.mac_addr`).
 const MAC_ADDR_OFFSET: usize = 0xD0;
 
+/// What the chip said when an efuse read stalled: the control register as it last
+/// read back, the byte address it stalled on, and the LDO/bank register. A stage
+/// name alone cannot distinguish a dead register window from a live one whose
+/// efuse controller is not clocked, and this machine has no serial console, so
+/// these travel to the panel in the status reply.
+static LAST_CTL: AtomicU32 = AtomicU32::new(0);
+static LAST_ADDR: AtomicU32 = AtomicU32::new(0);
+static LAST_LDO: AtomicU32 = AtomicU32::new(0);
+
+/// The control, address and LDO registers recorded by the last stalled read.
+/// All zero means no read has stalled since boot.
+pub fn diag() -> (u32, u32, u32) {
+    (
+        LAST_CTL.load(Ordering::Relaxed),
+        LAST_ADDR.load(Ordering::Relaxed),
+        LAST_LDO.load(Ordering::Relaxed),
+    )
+}
+
 /// The board facts the PHY bring-up needs.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct EfuseInfo {
@@ -73,9 +94,23 @@ pub struct EfuseInfo {
 /// if the efuse never completed a byte read.
 pub fn read<M: Mmio>(mmio: &M) -> Option<EfuseInfo> {
     let phys = dump_physical(mmio)?;
+    // A window that reads back all-ones sets the ready flag on every read, so
+    // every byte "completes" instantly and the poll never stalls: an unreadable
+    // efuse is otherwise indistinguishable from a blank one. Programming the RF
+    // from that map picks a front-end the chip does not have.
+    if phys.iter().all(|&b| b == 0xFF) {
+        LAST_CTL.store(0xFFFF_FFFF, Ordering::Relaxed);
+        LAST_ADDR.store(1, Ordering::Relaxed);
+        return None;
+    }
     let mut log = [0xffu8; EFUSE_SIZE];
     deshuffle(&phys, &mut log);
     let opt = log[RFE_OPTION_OFFSET];
+    // 0xFF is the erased value, so an option byte that reads erased was never
+    // burned and there is no front-end to select. The tables index off this.
+    if opt == 0xFF {
+        return None;
+    }
     let cut = ((mmio.read32(REG_CHIP_VER) >> 12) & 0xf) as u8;
     let mut mac = [0u8; 6];
     mac.copy_from_slice(&log[MAC_ADDR_OFFSET..MAC_ADDR_OFFSET + 6]);
@@ -106,6 +141,13 @@ pub(crate) fn dump_physical<M: Mmio>(mmio: &M) -> Option<[u8; EFUSE_SIZE]> {
             }
             spins -= 1;
             if spins == 0 {
+                LAST_CTL.store(ctl, Ordering::Relaxed);
+                // Stored one past the address so zero keeps meaning "no read has
+                // stalled". A window that reads back all-zero would otherwise be
+                // indistinguishable from a loop that was never entered, and those
+                // are opposite faults.
+                LAST_ADDR.store(addr as u32 + 1, Ordering::Relaxed);
+                LAST_LDO.store(mmio.read32(REG_LDO_EFUSE_CTRL), Ordering::Relaxed);
                 return None;
             }
         }

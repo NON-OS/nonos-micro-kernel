@@ -26,13 +26,9 @@ on these systems, so we timeout the transmit wait to avoid hanging
 the boot process. Output is simply dropped if no UART is present.
 */
 
-use crate::sys::io::{inb, outb};
-use core::sync::atomic::{AtomicBool, Ordering};
 use spin::Mutex;
 
 pub const SERIAL_PORT: u16 = 0x3F8;
-
-static SERIAL_AVAILABLE: AtomicBool = AtomicBool::new(false);
 
 static SERIAL_LOCK: Mutex<()> = Mutex::new(());
 
@@ -44,7 +40,7 @@ nesting another locked print inside would self-deadlock the
 non-reentrant spinlock, so callers keep the byte loop inline.
 */
 pub fn with_serial_lock<R>(f: impl FnOnce() -> R) -> R {
-    crate::arch::x86_64::idt::without_interrupts(|| {
+    crate::arch::run_without_interrupts(|| {
         let _guard = SERIAL_LOCK.lock();
         f()
     })
@@ -56,22 +52,7 @@ by checking for 0xFF on the scratch register - real UARTs won't
 return all-ones. Sets SERIAL_AVAILABLE flag for fast-path skip.
 */
 pub fn init() {
-    unsafe {
-        outb(SERIAL_PORT + 7, 0x42);
-        if inb(SERIAL_PORT + 7) != 0x42 {
-            return;
-        }
-
-        outb(SERIAL_PORT + 1, 0x00);
-        outb(SERIAL_PORT + 3, 0x80);
-        outb(SERIAL_PORT + 0, 0x01);
-        outb(SERIAL_PORT + 1, 0x00);
-        outb(SERIAL_PORT + 3, 0x03);
-        outb(SERIAL_PORT + 2, 0xC7);
-        outb(SERIAL_PORT + 4, 0x0B);
-
-        SERIAL_AVAILABLE.store(true, Ordering::Relaxed);
-    }
+    crate::arch::console::init();
 }
 
 /*
@@ -80,22 +61,9 @@ if the transmit buffer never becomes ready - prevents infinite hang
 on machines without serial hardware.
 */
 pub fn write_byte(ch: u8) {
-    if !SERIAL_AVAILABLE.load(Ordering::Relaxed) {
-        return;
-    }
-
-    unsafe {
-        let mut tries = 10000u32;
-        while (inb(SERIAL_PORT + 5) & 0x20) == 0 {
-            tries = tries.saturating_sub(1);
-            if tries == 0 {
-                return;
-            }
-        }
-        outb(SERIAL_PORT, ch);
-    }
+    crate::arch::console::write_byte(ch);
 }
 
 pub fn is_available() -> bool {
-    SERIAL_AVAILABLE.load(Ordering::Relaxed)
+    crate::arch::console::is_available()
 }

@@ -20,6 +20,19 @@ use super::{
 };
 pub fn new_state() -> State {
     State {
+        // NOX out, USDC in: the asset this wallet is for is the one a reader
+        // most often pays with.
+        swap_from: 0,
+        swap_to: 2,
+        swap_in: 0,
+        swap_quote: crate::wallet::swap::Quote::default(),
+        // Half a percent, which is where a pool with real depth sits. A
+        // tolerance set high enough to always succeed protects nobody.
+        swap_slippage_bps: 50,
+        swap_step: 0,
+        swap_digits: 0,
+        swap_places: 0,
+        swap_point: false,
         keyring_port: 0,
         owner_pid: 0,
         wallet_id: 0,
@@ -67,7 +80,12 @@ pub fn new_state() -> State {
         panel: 0,
         locked: false,
         account: 0,
-        stake_amount: 4000,
+        stake_amount: 0,
+        stake_digits: 0,
+        stake_places: 0,
+        stake_point: false,
+        stake_position: 0,
+        stake_lock: 0,
         stake_step: 0,
         send_token: 0,
         import_active: false,
@@ -84,6 +102,7 @@ pub fn new_state() -> State {
         nox: crate::wallet::nox::NoxStatus::empty(),
         probe_step: 0,
         view_w: 1280,
+        view_h: 0,
         notes: crate::wallet::shield::notes::NoteStore::new(),
     }
 }

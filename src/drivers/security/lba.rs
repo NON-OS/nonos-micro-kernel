@@ -81,4 +81,3 @@ pub fn validate_lba_in_partition(
 
     Ok(())
 }
-

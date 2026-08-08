@@ -257,26 +257,26 @@ fn progress_summary_counts() {
 
 #[path = "../../inflate/src"]
 mod inflate {
-    #[path = "tables.rs"]
-    pub mod tables;
     #[path = "bits.rs"]
     pub mod bits;
-    #[path = "huff.rs"]
-    pub mod huff;
     #[path = "codes.rs"]
     pub mod codes;
-    #[path = "fixed.rs"]
-    pub mod fixed;
     #[path = "dynamic.rs"]
     pub mod dynamic;
-    #[path = "stored.rs"]
-    pub mod stored;
-    #[path = "inflate_raw.rs"]
-    pub mod inflate_raw;
-    #[path = "zlib.rs"]
-    pub mod zlib;
+    #[path = "fixed.rs"]
+    pub mod fixed;
     #[path = "gzip.rs"]
     pub mod gzip;
+    #[path = "huff.rs"]
+    pub mod huff;
+    #[path = "inflate_raw.rs"]
+    pub mod inflate_raw;
+    #[path = "stored.rs"]
+    pub mod stored;
+    #[path = "tables.rs"]
+    pub mod tables;
+    #[path = "zlib.rs"]
+    pub mod zlib;
 }
 
 #[test]
@@ -355,8 +355,12 @@ fn verify_parses_sha256sum_output_with_filename() {
 
 #[test]
 fn verify_accepts_uppercase_hex() {
-    let lo = verify::parse_sha256_hex(b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
-    let hi = verify::parse_sha256_hex(b"E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855");
+    let lo = verify::parse_sha256_hex(
+        b"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    );
+    let hi = verify::parse_sha256_hex(
+        b"E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    );
     assert_eq!(lo, hi);
 }
 

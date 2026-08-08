@@ -19,6 +19,8 @@
 //! directly, so the invariants are proven about the code that actually gates
 //! memory access.
 
+pub mod arch;
+pub mod bus;
 pub mod capabilities;
 pub mod elf;
 pub mod memory;

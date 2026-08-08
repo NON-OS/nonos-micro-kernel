@@ -506,14 +506,14 @@ dependencies = [
 
 [[package]]
 name = "nonos-stark"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "blake3",
 ]
 
 [[package]]
 name = "nonos_kernel"
-version = "0.8.9"
+version = "0.9.1"
 dependencies = [
  "bitflags 2.11.1",
  "bitvec",

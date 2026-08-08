@@ -13,18 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-use nonos_libc::{mk_time_rtc, RtcTime};
+//! The wall clock, in the shape certificate validity is checked against.
 
 pub(super) fn rtc_packed() -> u64 {
-    let mut t = RtcTime::default();
-    if mk_time_rtc(&mut t as *mut RtcTime) != 0 {
-        return 0;
-    }
-    (t.year as u64) * 10_000_000_000
-        + (t.month as u64) * 100_000_000
-        + (t.day as u64) * 1_000_000
-        + (t.hour as u64) * 10_000
-        + (t.minute as u64) * 100
-        + t.second as u64
+    // One definition of this, in the TLS crate, next to the check that reads it.
+    nonos_tls::rtc_now()
 }

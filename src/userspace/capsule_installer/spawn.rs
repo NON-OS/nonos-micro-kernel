@@ -29,7 +29,7 @@ const SERVICE_NAME: &str = "installer";
 const SERVICE_PORT: u32 = 4112;
 const REPLY_INBOX: &str = "endpoint.4294967322";
 const REPLY_PORT: u32 = 4113;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 // CoreExec | IPC | Memory | FileSystem | SpawnBroker; kept hand-synced with
 // userland/capsule_installer/Capsule.mk's CAPSULE_REQUIRED_CAPS.
 const REQUIRED_CAPS: u64 = 0x800059;

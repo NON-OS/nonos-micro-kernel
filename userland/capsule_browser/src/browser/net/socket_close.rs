@@ -17,6 +17,9 @@
 use super::constants::{OP_CLOSE, SOCKETS_MAGIC};
 
 pub fn socket_close(sockets_port: u32, handle: u32) -> bool {
+    if super::mixnet::is_on() {
+        return super::mixnet::close();
+    }
     let mut body = [0u8; 4];
     let mut rx = [0u8; 20];
     body.copy_from_slice(&handle.to_le_bytes());

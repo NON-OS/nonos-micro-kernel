@@ -32,7 +32,14 @@ impl Conn {
             body.extend_from_slice(&data[off..end]);
             let tx = frame(OP_SEND, &body);
             let mut rx = [0u8; HDR];
-            let n = mk_ipc_call_timeout(self.port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), IO_MS);
+            let n = mk_ipc_call_timeout(
+                self.port as u64,
+                tx.as_ptr(),
+                tx.len(),
+                rx.as_mut_ptr(),
+                rx.len(),
+                IO_MS,
+            );
             if n < HDR as i64 || status(&rx) != 0 {
                 return false;
             }
@@ -44,6 +51,13 @@ impl Conn {
     pub fn close(&self) {
         let tx = frame(OP_CLOSE, &self.handle.to_le_bytes());
         let mut rx = [0u8; HDR];
-        let _ = mk_ipc_call_timeout(self.port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), IO_MS);
+        let _ = mk_ipc_call_timeout(
+            self.port as u64,
+            tx.as_ptr(),
+            tx.len(),
+            rx.as_mut_ptr(),
+            rx.len(),
+            IO_MS,
+        );
     }
 }

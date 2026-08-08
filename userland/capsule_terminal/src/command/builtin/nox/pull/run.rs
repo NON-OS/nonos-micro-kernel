@@ -16,6 +16,7 @@
 
 use super::super::ensure_pid::ensure_pid;
 use super::conn::Conn;
+use super::ctx::Ctx;
 use super::walk::walk;
 use super::{args, fetch, progress, store};
 use crate::term::cwd::resolve;
@@ -42,10 +43,10 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
     if a.target.is_dir {
         store::mkdir(pid, &dest);
         let mut count = 0u32;
-        walk(state, pid, ip, &a, &a.target.path, &dest, 0, &mut count, &mut tally);
+        walk(state, &Ctx { pid, ip, args: &a }, &a.target.path, &dest, 0, &mut count, &mut tally);
     } else {
         let mut conn = None;
-        one_file(state, pid, &mut conn, ip, &a, &a.target.path, &dest, &mut tally);
+        one_file(state, &Ctx { pid, ip, args: &a }, &mut conn, &a.target.path, &dest, &mut tally);
         if let Some(c) = conn {
             c.close();
         }
@@ -56,14 +57,13 @@ pub fn run(state: &mut State, argv: &[&[u8]]) -> bool {
 
 pub(super) fn one_file(
     state: &mut State,
-    pid: u32,
+    ctx: &Ctx<'_>,
     conn: &mut Option<Conn>,
-    ip: [u8; 4],
-    a: &args::PullArgs,
     path: &[u8],
     dest: &[u8],
     tally: &mut progress::Tally,
 ) -> bool {
+    let (pid, ip, a) = (ctx.pid, ctx.ip, ctx.args);
     if a.no_clobber && store::exists(pid, dest) {
         tally.skipped += 1;
         return true;
@@ -71,7 +71,9 @@ pub(super) fn one_file(
     let extra = super::auth::extra_headers(&a.auth, &a.headers);
     if a.skip_unchanged {
         if let Some(local) = store::size(pid, dest) {
-            if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) == Some(local as usize) {
+            if fetch::head_reuse(conn, ip, a.target.port, &a.target.host, path, &extra)
+                == Some(local as usize)
+            {
                 tally.skipped += 1;
                 return true;
             }
@@ -85,9 +87,15 @@ pub(super) fn one_file(
     match fetch::get_reuse(conn, ip, a.target.port, &a.target.host, path, &extra) {
         Ok(body) => {
             if a.verify {
-                if let Err(e) =
-                    super::verify::check(conn, ip, a.target.port, &a.target.host, path, &extra, &body)
-                {
+                if let Err(e) = super::verify::check(
+                    conn,
+                    ip,
+                    a.target.port,
+                    &a.target.host,
+                    path,
+                    &extra,
+                    &body,
+                ) {
                     state.scrollback.push_error(e.as_bytes());
                     tally.failed += 1;
                     return false;

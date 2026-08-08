@@ -19,6 +19,7 @@
 
 use crate::bounds::range::in_range;
 use crate::buddy::constants::helpers::{buddy_address, order_to_size};
+use crate::context::rflags::{sanitize, sanitize_user};
 use crate::mmio::mmio_range::range_ok;
 use crate::nonce::compose::compose;
 use crate::phys::bitmap::index::{bit_mask, byte_of};
@@ -27,7 +28,9 @@ use crate::refcount::dec::dec_checked;
 use crate::region::overlap::{contains, overlaps};
 use crate::ring::ring_math::wrap;
 use crate::scheduler::policy_types::{SchedAttr, SCHED_DEADLINE, SCHED_IDLE};
-use crate::timer::interval::elapsed_reached;
+use crate::spawn::caps_bits::{grant_within_manifest, install_caps, within_ceiling};
+use crate::spawn::lifetime::delegation_expiry;
+use crate::spec;
 
 // The buddy of the buddy of a block is the block itself: the address XOR is an
 // involution, for every address and every order.
@@ -92,21 +95,6 @@ fn contains_implies_within_bounds() {
     let addr: u64 = kani::any();
     if contains(start, end, addr) {
         assert!(addr >= start && addr < end);
-    }
-}
-
-// The elapsed test saturates on a tick wraparound: when current is at or after
-// last it is the true elapsed span, and when current is before last it reads as
-// no time elapsed, for every input.
-#[kani::proof]
-fn elapsed_saturates_on_wraparound() {
-    let current: u64 = kani::any();
-    let last: u64 = kani::any();
-    let interval: u64 = kani::any();
-    if current >= last {
-        assert_eq!(elapsed_reached(current, last, interval), current - last >= interval);
-    } else {
-        assert_eq!(elapsed_reached(current, last, interval), interval == 0);
     }
 }
 
@@ -191,11 +179,97 @@ fn deadline_tops_and_idle_bottoms_the_priority_order() {
     let nice: i32 = kani::any();
     kani::assume((0..=99).contains(&rt));
     kani::assume((-20..=19).contains(&nice));
-    let other = SchedAttr { policy, rt_priority: rt, nice, ..Default::default() }.effective_priority();
+    let other =
+        SchedAttr { policy, rt_priority: rt, nice, ..Default::default() }.effective_priority();
     let deadline =
-        SchedAttr { policy: SCHED_DEADLINE, rt_priority: rt, nice, ..Default::default() }.effective_priority();
-    let idle =
-        SchedAttr { policy: SCHED_IDLE, rt_priority: rt, nice, ..Default::default() }.effective_priority();
+        SchedAttr { policy: SCHED_DEADLINE, rt_priority: rt, nice, ..Default::default() }
+            .effective_priority();
+    let idle = SchedAttr { policy: SCHED_IDLE, rt_priority: rt, nice, ..Default::default() }
+        .effective_priority();
     assert!(deadline >= other);
     assert!(idle <= other);
+}
+
+// A restored context never resumes with IOPL set, so a capsule cannot come
+// back holding the I/O ports, for every saved RFLAGS value.
+#[kani::proof]
+fn a_restored_context_never_carries_iopl() {
+    let saved: u64 = kani::any();
+    let out = sanitize(saved);
+    assert_eq!(out & (1 << 12), 0);
+    assert_eq!(out & (1 << 13), 0);
+}
+
+// Every privileged bit is cleared and the reserved bit is set, for every saved
+// RFLAGS value: the kernel's mask agrees with the bit positions it stands for.
+#[kani::proof]
+fn sanitized_rflags_agrees_with_spec() {
+    let saved: u64 = kani::any();
+    assert_eq!(sanitize(saved), spec::sanitize_rflags(saved));
+}
+
+// Sanitizing is idempotent and never sets a bit the caller did not save,
+// except the reserved one.
+#[kani::proof]
+fn sanitizing_rflags_only_clears() {
+    let saved: u64 = kani::any();
+    let out = sanitize(saved);
+    assert_eq!(sanitize(out), out);
+    assert_eq!(out & !(saved | 2), 0);
+}
+
+// The user resume path is the same sanitizer with interrupts on: it clears
+// exactly what the kernel path clears, and differs only in IF.
+#[kani::proof]
+fn the_user_resume_sets_only_interrupt_enable() {
+    let saved: u64 = kani::any();
+    assert_eq!(sanitize_user(saved), sanitize(saved) | (1 << 9));
+    assert_eq!(sanitize_user(saved) & (1 << 12), 0);
+    assert_eq!(sanitize_user(saved) & (1 << 13), 0);
+}
+
+// A capsule never installs authority its publisher's certificate does not
+// permit, for every manifest, ceiling and grant.
+#[kani::proof]
+fn a_capsule_never_installs_above_its_publisher_ceiling() {
+    let required: u64 = kani::any();
+    let optional: u64 = kani::any();
+    let ceiling: u64 = kani::any();
+    let granted: u64 = kani::any();
+    kani::assume(within_ceiling(required, optional, ceiling));
+    kani::assume(grant_within_manifest(required, optional, granted));
+    assert_eq!(install_caps(required, optional, granted) & !ceiling, 0);
+}
+
+// The installed word never exceeds what the manifest declares, for every
+// input: the grant can only narrow the optional set.
+#[kani::proof]
+fn installed_caps_stay_within_the_manifest() {
+    let required: u64 = kani::any();
+    let optional: u64 = kani::any();
+    let granted: u64 = kani::any();
+    let installed = install_caps(required, optional, granted);
+    assert_eq!(installed & !(required | optional), 0);
+    assert_eq!(installed & required, required);
+}
+
+// A delegation never outlives its parent and never outlasts the request, for
+// every pair.
+#[kani::proof]
+fn a_delegation_never_outlives_its_parent() {
+    let requested: Option<u64> = kani::any();
+    let parent: Option<u64> = kani::any();
+    let out = delegation_expiry(requested, parent);
+    if let Some(p) = parent {
+        match out {
+            Some(e) => assert!(e <= p),
+            None => panic!("a bounded parent must bound the child"),
+        }
+    }
+    if let Some(r) = requested {
+        match out {
+            Some(e) => assert!(e <= r),
+            None => panic!("a requested expiry must not be dropped"),
+        }
+    }
 }

@@ -11,7 +11,9 @@ extern crate alloc;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 /// A tool capsule baked into the kernel image: its endpoint identity and the
 /// signed cert, manifest, and STARK attestation trailer the spawner verifies.
@@ -45,7 +47,7 @@ impl ToolCapsule {
             nonos_id_cert_bytes: self.cert,
             manifest_bytes: self.manifest,
             attestation_trailer: self.attestation,
-            target_triple: "x86_64-nonos-user",
+            target_triple: env!("NONOS_USER_TARGET"),
             requested_caps: Capability::CoreExec.bit()
                 | Capability::IPC.bit()
                 | Capability::Memory.bit(),

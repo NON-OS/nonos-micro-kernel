@@ -56,14 +56,33 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.fill_rect(x as u32, PANEL_TOP as u32, PANEL_W as u32, 2, constants::ACCENT);
     fb.text_ttf(x + 14, PANEL_TOP + 12, "Settings", constants::FG, 16.0);
 
-    let status = match state.proxy.as_ref() {
-        Some(p) => format!("SOCKS5 proxy: {}:{}", p.host, p.port),
-        None => String::from("SOCKS5 proxy: off"),
+    // The mixnet route is reported ahead of a manual proxy because it is what
+    // actually carries the traffic. Reading "off" while pages leave through
+    // the mixnet would misdescribe the one property anyone opens this panel
+    // to check.
+    let status = if crate::browser::net::mixnet::is_on() {
+        String::from("Network: Nym mixnet")
+    } else {
+        match state.proxy.as_ref() {
+            Some(p) => format!("SOCKS5 proxy: {}:{}", p.host, p.port),
+            None => String::from("Network: direct, not anonymised"),
+        }
     };
     fb.text_ttf(x + 14, PANEL_TOP + 42, &status, constants::DIM, 14.0);
 
-    button(fb, x, SET_Y, "Set proxy (type host:port)");
-    button(fb, x, OFF_Y, "Turn proxy off");
+    // Both rows describe the mixnet while it carries the traffic. A manual
+    // proxy is still reachable through the address bar for anyone who needs
+    // one, and does not need a button that rewrites what is typed there.
+    if crate::browser::net::mixnet::is_on() {
+        button(fb, x, SET_Y, "Every request leaves through the mixnet");
+        button(fb, x, OFF_Y, "Stop routing through Nym");
+    } else if crate::browser::net::mixnet::wanted() {
+        button(fb, x, SET_Y, "Set proxy (type host:port)");
+        button(fb, x, OFF_Y, "Turn proxy off");
+    } else {
+        button(fb, x, SET_Y, "Set proxy (type host:port)");
+        button(fb, x, OFF_Y, "Route through Nym");
+    }
 }
 
 fn button(fb: &mut PaintBuffer, x: i32, y: i32, label: &str) {
@@ -100,11 +119,30 @@ fn action_at(x: i32, y: i32, width: i32) -> Action {
 }
 
 /// Handle a click while the panel is open. A click on empty space, or anywhere
-/// outside the panel, closes it. "Set proxy" focuses the address bar with the
-/// `proxy socks5://` prefix so the user types the host:port and presses Enter,
-/// which the existing address command applies. "Turn proxy off" clears it.
+/// outside the panel, closes it.
+///
+/// While the mixnet carries the traffic both rows are statements rather than
+/// controls: there is nothing to configure, and the row that used to prefill
+/// the address bar left whatever was typed next attached to a command word,
+/// which then failed to load as a URL.
 pub fn on_click(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    let routed = crate::browser::net::mixnet::is_on();
     match action_at(x, y, width_of(state)) {
+        Action::Set if routed => state.settings_open = false,
+        // The one control worth having here: whether this session leaves
+        // through the mixnet at all. It is deliberate and takes effect on the
+        // next request, so nothing already in flight changes route under it.
+        Action::Off if routed => {
+            crate::browser::net::mixnet::set_wanted(false);
+            crate::browser::net::mixnet::disable();
+            state.settings_open = false;
+            state.status = String::from("direct, not anonymised");
+        }
+        Action::Off if !crate::browser::net::mixnet::wanted() => {
+            crate::browser::net::mixnet::set_wanted(true);
+            state.settings_open = false;
+            state.status = String::from("routing through Nym");
+        }
         Action::Set => {
             state.settings_open = false;
             state.address = String::from("proxy socks5://");

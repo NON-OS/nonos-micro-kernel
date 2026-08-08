@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod crb_buffer;
+mod crb_receive;
+mod crb_send;
 mod pcr;
 mod receive;
 mod send;
@@ -21,3 +24,6 @@ mod send;
 pub use pcr::pcr_extend_impl;
 pub use receive::receive_response_impl;
 pub use send::send_command_impl;
+
+pub(crate) use crb_receive::crb_receive;
+pub(crate) use crb_send::crb_send;

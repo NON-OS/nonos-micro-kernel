@@ -116,7 +116,7 @@ impl RateLimiter {
         #[cfg(target_arch = "x86_64")]
         {
             // SAFETY: rdtsc is safe to call on x86_64.
-            let tsc = unsafe { core::arch::x86_64::_rdtsc() };
+            let tsc = crate::arch::read_time_counter();
             tsc / (ASSUMED_CPU_FREQ_MHZ * 1000)
         }
 
@@ -160,4 +160,3 @@ impl MultiRateLimiter {
         self.dma_limiter.reset();
     }
 }
-

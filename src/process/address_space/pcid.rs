@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{pcid_features::supports_pcid_invalidation, tlb::flush_tlb_pcid, types::MAX_PCID};
+use super::{tlb::flush_tlb_pcid, types::MAX_PCID};
 use core::sync::atomic::{AtomicBool, Ordering};
 use spin::Mutex;
-
-const CR4_PCIDE: u64 = 1 << 17;
 
 pub const KERNEL_PCID: u16 = 0;
 
@@ -30,16 +28,9 @@ pub fn pcid_enabled() -> bool {
 }
 
 pub fn enable_pcid() {
-    if !supports_pcid_invalidation() {
+    if !crate::arch::paging::enable_tagged_invalidation() {
         return;
     }
-
-    unsafe {
-        let cr4: u64;
-        core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nomem, nostack));
-        core::arch::asm!("mov cr4, {}", in(reg) cr4 | CR4_PCIDE, options(nostack));
-    }
-
     PCID_ENABLED.store(true, Ordering::SeqCst);
     crate::log::info!("[ADDR_SPACE] PCID enabled");
 }

@@ -14,18 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::constants::regs::REG_MAC0;
+use nonos_mac::apply;
+
+use crate::constants::regs::{CFG9346_LOCK, CFG9346_UNLOCK, REG_CFG9346, REG_MAC0};
 use crate::constants::MAC_LEN;
 use crate::regs::Regs;
 
-pub fn read(regs: &Regs) -> Result<[u8; MAC_LEN], &'static str> {
+/// Draw a station address and program it into the IDR registers.
+///
+/// Replaces reading the factory address out of them. Fails closed: the factory
+/// address is the identifier this avoids, so it is not a fallback.
+pub fn program(regs: &Regs) -> Result<[u8; MAC_LEN], &'static str> {
     let mut mac = [0u8; MAC_LEN];
-    for (i, byte) in mac.iter_mut().enumerate() {
+    let rc = nonos_libc::crypto_random(mac.as_mut_ptr(), MAC_LEN);
+    if rc < 0 || (rc as usize) != MAC_LEN {
+        return Err("rtl8169 no entropy for station address");
+    }
+    apply(&mut mac);
+
+    // IDR writes are dropped while the config lock is set.
+    unsafe {
+        regs.w8(REG_CFG9346, CFG9346_UNLOCK);
+        for (i, byte) in mac.iter().enumerate() {
+            regs.w8(REG_MAC0 + i, *byte);
+        }
+        regs.w8(REG_CFG9346, CFG9346_LOCK);
+    }
+
+    let mut readback = [0u8; MAC_LEN];
+    for (i, byte) in readback.iter_mut().enumerate() {
         *byte = unsafe { regs.r8(REG_MAC0 + i) };
     }
-    if mac == [0; MAC_LEN] || mac == [0xFF; MAC_LEN] {
-        Err("rtl8169 invalid mac")
-    } else {
-        Ok(mac)
+    if readback != mac {
+        return Err("rtl8169 station address did not take");
     }
+    Ok(mac)
 }

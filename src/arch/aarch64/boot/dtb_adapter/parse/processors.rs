@@ -18,11 +18,23 @@ use crate::arch::aarch64::boot::info::BootInfo;
 use crate::arch::fdt::find::cpus;
 use crate::arch::fdt::Fdt;
 
+/// Ceiling on how many CPUs one device tree can describe to us. The stack bank
+/// is sized for the same number.
+const MAX_CPUS: usize = crate::arch::aarch64::boot::stack::MAX_CPUS;
+
 pub fn populate(fdt: &Fdt, info: &mut BootInfo) {
-    let mut cpu_ids = [0u64; 64];
-    if let Ok(n) = cpus::find(fdt, &mut cpu_ids) {
-        if n > 0 {
-            info.cpu_count = n as u32;
-        }
+    let mut affinities = [0u64; MAX_CPUS];
+    let Ok(n) = cpus::find(fdt, &mut affinities) else {
+        return;
+    };
+    if n == 0 {
+        return;
     }
+    info.cpu_count = n as u32;
+    // Keep the affinities, not just the count. They are what PSCI and the GIC
+    // are addressed by, and the position of each one is the kernel's dense CPU
+    // index from here on.
+    let take = n.min(info.cpu_affinities.len());
+    info.cpu_affinities[..take].copy_from_slice(&affinities[..take]);
+    info.cpu_affinity_count = take;
 }

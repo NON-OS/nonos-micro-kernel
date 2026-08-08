@@ -17,40 +17,25 @@
 extern crate alloc;
 
 use alloc::{collections::BTreeMap, string::String, vec::Vec};
-use core::ptr::{addr_of, addr_of_mut};
+use spin::Once;
 
 pub struct ModuleDB {
     trusted_modules: BTreeMap<String, [u8; 32]>,
 }
 
-static mut MODULE_DB: Option<ModuleDB> = None;
+// Written once at init, read afterwards. A static mut gave a second CPU no
+// ordering against that write.
+static MODULE_DB: Once<ModuleDB> = Once::new();
 
 pub fn init() -> Result<(), &'static str> {
-    // SAFETY: Called once during kernel initialization before any concurrent access
-    unsafe {
-        *addr_of_mut!(MODULE_DB) = Some(ModuleDB { trusted_modules: BTreeMap::new() });
-    }
+    MODULE_DB.call_once(|| ModuleDB { trusted_modules: BTreeMap::new() });
     Ok(())
 }
 
 pub fn is_trusted_module(name: &str) -> bool {
-    // SAFETY: Read-only access after initialization
-    unsafe {
-        if let Some(db) = (*addr_of!(MODULE_DB)).as_ref() {
-            db.trusted_modules.contains_key(name)
-        } else {
-            false
-        }
-    }
+    MODULE_DB.get().is_some_and(|db| db.trusted_modules.contains_key(name))
 }
 
 pub fn get_loaded_modules() -> Vec<String> {
-    // SAFETY: Read-only access after initialization
-    unsafe {
-        if let Some(db) = (*addr_of!(MODULE_DB)).as_ref() {
-            db.trusted_modules.keys().cloned().collect()
-        } else {
-            Vec::new()
-        }
-    }
+    MODULE_DB.get().map(|db| db.trusted_modules.keys().cloned().collect()).unwrap_or_default()
 }

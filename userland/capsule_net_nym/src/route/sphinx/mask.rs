@@ -21,7 +21,12 @@ use alloc::vec::Vec;
 use crate::crypto::hkdf_sha256;
 use crate::packet::PacketError;
 
-pub fn apply(region: &mut [u8], seed: &[u8; 32], idx: u8, key: &[u8; 32]) -> Result<(), PacketError> {
+pub fn apply(
+    region: &mut [u8],
+    seed: &[u8; 32],
+    idx: u8,
+    key: &[u8; 32],
+) -> Result<(), PacketError> {
     let mut info = Vec::with_capacity(57);
     info.extend_from_slice(b"NONOS-NYM-SPHINX-MASK-v1");
     info.extend_from_slice(seed);

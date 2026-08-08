@@ -17,10 +17,15 @@
 use super::super::state;
 use super::device::Pl011;
 
+/// Drain the receive FIFO and acknowledge the interrupt.
+///
+/// The bytes go nowhere. Nothing in the kernel consumes serial input on any
+/// architecture yet, and this handed each one to `drivers::input`, a module
+/// that has never existed in the tree, so the handler could not build.
+/// Draining is not optional even with no consumer: a receive FIFO left full
+/// keeps the interrupt asserted and the CPU never gets out of the handler.
 pub fn handle_uart_interrupt() {
     let uart = Pl011::new(state::uart_base());
-    while let Some(c) = uart.getc() {
-        crate::drivers::input::handle_char(c);
-    }
+    while uart.getc().is_some() {}
     uart.clear_interrupts();
 }

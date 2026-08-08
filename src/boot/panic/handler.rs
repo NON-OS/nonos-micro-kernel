@@ -34,9 +34,9 @@ fn serial_print(args: core::fmt::Arguments<'_>) {
 
 // Panic path: serial trace, VGA banner, broadcast a panic IPI to
 // every other online CPU so they halt before they can corrupt
-// shared state, then halt the calling CPU. AP-side handling is
-// already wired (`smp::ap::ap_idle_loop` checks `IPI_FLAG_PANIC`
-// and calls `handle_panic_ipi`); on single-CPU runtime the
+// shared state, then halt the calling CPU. The receiving side is
+// the IPI vector itself (`smp::ipi_dispatch::handlers::panic`),
+// which halts without returning; on a single-CPU runtime the
 // broadcast targets nobody and the local halt is the whole story.
 #[cfg(not(feature = "std"))]
 #[panic_handler]

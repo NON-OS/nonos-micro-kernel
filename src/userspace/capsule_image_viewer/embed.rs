@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-image-viewer")]
-pub(crate) const IMAGE_VIEWER_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_image_viewer/target/x86_64-nonos-user/release/image_viewer",
-);
+pub(crate) const IMAGE_VIEWER_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_image_viewer/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/image_viewer"
+));
 
 #[cfg(feature = "nonos-capsule-image-viewer")]
 pub(crate) const IMAGE_VIEWER_NONOS_ID_CERT_BYTES: &[u8] =

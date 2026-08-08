@@ -29,6 +29,7 @@ pub use crate::process::scheduler::runqueue;
 pub use crate::process::scheduler::task;
 pub mod scheduler;
 
+#[cfg(any(target_arch = "x86_64", target_arch = "aarch64"))]
 pub use crate::process::context::Context;
 pub use api::{current_cpu_id, current_scheduler, schedule, yield_cpu};
 pub use cpu_stats::{get_cpu_stats, CpuStats};
@@ -44,11 +45,9 @@ pub use realtime::{
 pub use runqueue::RunQueue;
 pub use scheduler::runnable_process_count as get_runnable_count;
 pub use scheduler::{
-    add_to_run_queue, clear_reschedule, enter, force_balance, get, get_remaining_sleep,
-    get_runnable_pids, get_scheduler_stats, get_smp_stats, init, init_ap_scheduler,
-    init_smp_scheduler, is_in_run_queue, is_sleeping, local_queue_len, need_reschedule,
-    remove_from_run_queue, run, runnable_process_count, sleep_until, smp_cpu_count, smp_enabled,
-    spawn, tick, total_runnable, wake_process, wakeup, yield_now, SchedulerStatsSnapshot,
-    SmpSchedStats,
+    add_to_run_queue, clear_reschedule, enter, get, get_remaining_sleep, get_runnable_pids,
+    get_scheduler_stats, init, is_in_run_queue, is_sleeping, need_reschedule,
+    remove_from_run_queue, run, runnable_process_count, sleep_until, spawn, tick, wake_process,
+    wakeup, yield_now, SchedulerStatsSnapshot,
 };
 pub use task::{CpuAffinity, Priority, Task};

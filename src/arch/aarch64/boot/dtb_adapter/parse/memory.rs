@@ -29,7 +29,7 @@ pub fn populate(fdt: &Fdt, info: &mut BootInfo) -> bool {
     }
     info.ram_base = ranges[0].base;
     info.ram_size = ranges[0].size;
-    info.memory_regions.clear();
+    info.memory_region_count = 0;
     for range in ranges.iter().take(mem_count) {
         info.add_memory_region(range.base, range.size, MemoryType::Available);
     }

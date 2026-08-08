@@ -1,6 +1,6 @@
 [package]
 name = "nonos_qr"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 description = "QR code encoder (byte mode, ISO/IEC 18004) for the NONOS wallet, no_std"
 license = "AGPL-3.0"

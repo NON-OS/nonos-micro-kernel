@@ -21,7 +21,9 @@ use super::state;
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 
@@ -29,7 +31,7 @@ const SERVICE_NAME: &str = "audio.server";
 const SERVICE_PORT: u32 = 4872;
 const REPLY_PORT: u32 = 4873;
 const REPLY_INBOX: &str = "endpoint.4294967321";
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_audio_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
@@ -45,9 +47,7 @@ pub fn spawn_audio_capsule() -> Result<(), SpawnError> {
         manifest_bytes: AUDIO_MANIFEST_BYTES,
         attestation_trailer: AUDIO_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
-        requested_caps: Capability::IPC.bit()
-            | Capability::Memory.bit()
-            | Capability::Debug.bit(),
+        requested_caps: Capability::IPC.bit() | Capability::Memory.bit() | Capability::Debug.bit(),
         debug_tag: b"[AUDIO] load_elf_executable error:",
     };
     let pid = capsule_spawn::spawn_verified(&spec, &trust_anchor, None)?;

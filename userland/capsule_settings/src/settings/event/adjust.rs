@@ -16,6 +16,7 @@
 
 use nonos_policy_proto::{kind_of, KIND_I8, KIND_U8};
 
+use crate::settings::schema::read_only;
 use crate::settings::state::{current_field, State};
 
 use super::adjust_i8::adjust_i8;
@@ -26,6 +27,11 @@ pub fn adjust(state: &mut State, delta: i32) {
         Some(f) => f,
         None => return,
     };
+    // Left and right reach here directly, so the read-only gate lives on both
+    // routes rather than only on the toggle.
+    if read_only(field) {
+        return;
+    }
     match kind_of(field) {
         KIND_U8 => adjust_u8(state, field, delta),
         KIND_I8 => adjust_i8(state, field, delta),

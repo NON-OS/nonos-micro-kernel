@@ -1,0 +1,18 @@
+[package]
+name = "nonos_nox_license"
+version = "0.2.0"
+edition = "2021"
+description = "NOX pay-per-use entitlements for NONOS tool capsules, no_std"
+license = "AGPL-3.0"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+
+[dev-dependencies]
+ed25519-dalek = "2"
+rand_core = { version = "0.6", features = ["getrandom"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

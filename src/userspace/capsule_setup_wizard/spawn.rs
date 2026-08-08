@@ -32,7 +32,7 @@ const SERVICE_NAME: &str = "app.setup_wizard";
 const SERVICE_PORT: u32 = 4794;
 const REPLY_INBOX: &str = "endpoint.app.setup_wizard.reply";
 const REPLY_PORT: u32 = 4795;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_setup_wizard_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

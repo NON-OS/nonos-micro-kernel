@@ -16,5 +16,5 @@
 
 #[inline]
 pub fn get_timestamp() -> u64 {
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }

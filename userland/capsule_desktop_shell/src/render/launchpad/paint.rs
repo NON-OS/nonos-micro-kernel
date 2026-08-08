@@ -16,7 +16,17 @@ const GLYPH_ADV: u32 = 8;
 const TITLE: &[u8] = b"Applications";
 
 pub fn paint_launchpad(ctx: &Context) {
-    fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, 0, 0, ctx.width, ctx.height, OVERLAY_BG);
+    fill_rect(
+        ctx.backing_va,
+        ctx.stride,
+        ctx.width,
+        ctx.height,
+        0,
+        0,
+        ctx.width,
+        ctx.height,
+        OVERLAY_BG,
+    );
     let title_w = TITLE.len() as u32 * GLYPH_ADV;
     let title_x = ctx.width.saturating_sub(title_w) / 2;
     draw_overlay_text(ctx, title_x, 56, TITLE, TITLE_FG);

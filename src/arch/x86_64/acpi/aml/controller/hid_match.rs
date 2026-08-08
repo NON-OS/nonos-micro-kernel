@@ -20,15 +20,29 @@
 /// carry a trailing zero byte; eight-character string IDs fill all eight.
 pub(super) fn hid_is_i2c_controller(hid: &[u8; 8]) -> bool {
     const IDS: [&[u8]; 15] = [
-        b"INT33C2", b"INT33C3", b"INT3432", b"INT3433", b"INT3442", b"INT3443",
-        b"INT3444", b"INT3445", b"INT3446", b"INT3447", b"80860F41", b"808622C1",
-        b"AMDI0010", b"AMDI0510", b"AMD0010",
+        b"INT33C2",
+        b"INT33C3",
+        b"INT3432",
+        b"INT3433",
+        b"INT3442",
+        b"INT3443",
+        b"INT3444",
+        b"INT3445",
+        b"INT3446",
+        b"INT3447",
+        b"80860F41",
+        b"808622C1",
+        b"AMDI0010",
+        b"AMDI0510",
+        b"AMD0010",
     ];
-    IDS.iter().any(|&id| {
-        if id.len() == 7 {
-            &hid[..7] == id && hid[7] == 0
-        } else {
-            &hid[..8] == id
-        }
-    })
+    IDS.iter().any(
+        |&id| {
+            if id.len() == 7 {
+                &hid[..7] == id && hid[7] == 0
+            } else {
+                &hid[..8] == id
+            }
+        },
+    )
 }

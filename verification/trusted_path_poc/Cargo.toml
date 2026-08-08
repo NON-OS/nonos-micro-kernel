@@ -8,7 +8,7 @@
 # ServiceRegisterAuth, FramebufferSwap).
 [package]
 name = "nonos_trusted_path_poc"
-version = "0.9.0"
+version = "0.10.0"
 edition = "2021"
 
 [lib]

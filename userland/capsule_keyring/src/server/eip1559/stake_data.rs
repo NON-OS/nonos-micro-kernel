@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::consts::{APPROVE_SELECTOR, STAKE_SELECTOR, STAKING_PROXY, TRANSFER_SELECTOR};
+use super::consts::{
+    APPROVE_SELECTOR, STAKE_LOCKED_SELECTOR, STAKE_SELECTOR, STAKING_PROXY, TRANSFER_SELECTOR,
+    UNSTAKE_POSITION_SELECTOR,
+};
 
 // transfer(to, amount) on the NOX token: selector, recipient right-aligned in a
 // word, then the amount.
@@ -42,5 +45,25 @@ pub fn stake_calldata(amount: &[u8; 32]) -> [u8; 36] {
     let mut out = [0u8; 36];
     out[0..4].copy_from_slice(&STAKE_SELECTOR);
     out[4..36].copy_from_slice(amount);
+    out
+}
+
+// unstakePosition(index) on the staking proxy: selector then the position
+// index word. Closing a position returns its whole stake, so no amount is
+// carried here.
+pub fn unstake_position_calldata(index: &[u8; 32]) -> [u8; 36] {
+    let mut out = [0u8; 36];
+    out[0..4].copy_from_slice(&UNSTAKE_POSITION_SELECTOR);
+    out[4..36].copy_from_slice(index);
+    out
+}
+
+// stakeLocked(amount, lockPeriod) on the staking proxy: selector, the amount
+// word, then the term in seconds.
+pub fn stake_locked_calldata(amount: &[u8; 32], lock: &[u8; 32]) -> [u8; 68] {
+    let mut out = [0u8; 68];
+    out[0..4].copy_from_slice(&STAKE_LOCKED_SELECTOR);
+    out[4..36].copy_from_slice(amount);
+    out[36..68].copy_from_slice(lock);
     out
 }

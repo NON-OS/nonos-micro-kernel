@@ -11,7 +11,7 @@
 
 [package]
 name = "nonos_capsule_driver_e1000"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 publish = false
 license = "AGPL-3.0"
@@ -24,6 +24,7 @@ path = "src/main.rs"
 
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_mac = { path = "../nonos_mac" }
 
 [profile.release]
 panic = "abort"

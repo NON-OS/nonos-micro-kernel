@@ -13,14 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-#[cfg(not(target_arch = "x86_64"))]
+#[cfg(target_arch = "aarch64")]
+mod aarch64;
+// Anything with no trap of its own gets the stub, which reports ENOSYS rather
+// than pretending a call happened.
+#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
 mod fallback;
 #[cfg(target_arch = "x86_64")]
 mod x86;
 #[cfg(target_arch = "x86_64")]
 mod x86_asm;
 
-#[cfg(not(target_arch = "x86_64"))]
+#[cfg(target_arch = "aarch64")]
+pub(super) use aarch64::raw;
+#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
 pub(super) use fallback::raw;
 #[cfg(target_arch = "x86_64")]
 pub(super) use x86::raw;

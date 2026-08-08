@@ -31,7 +31,7 @@ pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 const SERVICE_NAME: &str = "entropy_pool";
 const SERVICE_PORT: u32 = 4100;
 const REPLY_PORT: u32 = 4101;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 // The capsule itself is the entropy authority, so it does not hold
 // CAP_ENTROPY. IPC for mk_ipc_*, Memory for heap, Crypto for the

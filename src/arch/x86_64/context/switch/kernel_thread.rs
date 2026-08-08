@@ -23,7 +23,7 @@ use crate::process::core::{ProcessControlBlock, ProcessState, CURRENT_PID};
 use crate::process::nonos_core::{
     has_saved_fpu_state, init_fpu, restore_fpu_state, INTERRUPT_SAVED_CONTEXTS,
 };
-use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLICE};
+use crate::process::scheduler::preemption::{set_time_slice, DEFAULT_TIME_SLICE};
 use crate::smp::percpu;
 
 fn restore_syscall_user_rsp(pcb: &Arc<ProcessControlBlock>) {
@@ -76,7 +76,7 @@ pub(super) fn resume_kernel_thread(pcb: &Arc<ProcessControlBlock>, pid: u32) {
     let cr3v = pcb.cr3.load(Ordering::Relaxed);
     *pcb.state.lock() = ProcessState::Running;
     CURRENT_PID.store(pid, Ordering::SeqCst);
-    CURRENT_TIME_SLICE.store(DEFAULT_TIME_SLICE, Ordering::SeqCst);
+    set_time_slice(DEFAULT_TIME_SLICE);
 
     if cr3v != 0 && switch_to_process_address_space(pid).is_err() {
         crate::memory::paging::tlb::set_cr3(crate::memory::PhysAddr::new(cr3v));

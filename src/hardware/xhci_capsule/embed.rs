@@ -20,9 +20,11 @@
 //! get pulled in or replaced by an empty slice.
 
 #[cfg(feature = "nonos-capsule-driver-xhci")]
-pub(super) const DRIVER_XHCI_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_driver_xhci/target/x86_64-nonos-user/release/driver_xhci"
-);
+pub(super) const DRIVER_XHCI_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_driver_xhci/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/driver_xhci"
+));
 
 #[cfg(feature = "nonos-capsule-driver-xhci")]
 pub(super) const DRIVER_XHCI_NONOS_ID_CERT_BYTES: &[u8] =

@@ -14,15 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-
 use super::envelope::call;
+use super::errno::{E_ERRNO, E_LEN, RX_EMPTY};
 
 const OP_CONNECT: u16 = 3;
-const OP_SEND: u16 = 5;
 const OP_RECV: u16 = 6;
 const OP_CLOSE: u16 = 7;
-const SEGMENT_MAX: usize = 1460;
 
 pub fn connect(port: u32, ip: [u8; 4], dst_port: u16) -> Result<u32, u16> {
     let mut body = [0u8; 6];
@@ -30,29 +27,26 @@ pub fn connect(port: u32, ip: [u8; 4], dst_port: u16) -> Result<u32, u16> {
     body[4..6].copy_from_slice(&dst_port.to_le_bytes());
     let mut out = [0u8; 4];
     if call(port, OP_CONNECT, &body, &mut out)? != 4 {
-        return Err(4);
+        return Err(E_LEN);
     }
     Ok(u32::from_le_bytes(out))
 }
 
-pub fn send_all(port: u32, handle: u32, payload: &[u8]) -> Result<(), u16> {
-    for chunk in payload.chunks(SEGMENT_MAX) {
-        send_chunk(port, handle, chunk)?;
-    }
-    Ok(())
-}
-
 pub fn recv(port: u32, handle: u32, out: &mut [u8]) -> Result<usize, u16> {
-    call(port, OP_RECV, &handle.to_le_bytes(), out)
+    // State how much can be held. A read takes bytes out of the socket, so
+    // whatever net.tcp sends back that does not fit here is lost rather than
+    // kept for the next call.
+    let mut body = [0u8; 8];
+    body[0..4].copy_from_slice(&handle.to_le_bytes());
+    body[4..8].copy_from_slice(&(out.len() as u32).to_le_bytes());
+    match call(port, OP_RECV, &body, out) {
+        // Nothing has arrived yet. That is a state, not a failure: a peer
+        // that has not answered is the normal case while waiting on one.
+        Err(e) if e == E_ERRNO + RX_EMPTY => Ok(0),
+        other => other,
+    }
 }
 
 pub fn close(port: u32, handle: u32) -> Result<(), u16> {
     call(port, OP_CLOSE, &handle.to_le_bytes(), &mut []).map(|_| ())
-}
-
-fn send_chunk(port: u32, handle: u32, chunk: &[u8]) -> Result<(), u16> {
-    let mut body = vec![0u8; 4 + chunk.len()];
-    body[0..4].copy_from_slice(&handle.to_le_bytes());
-    body[4..].copy_from_slice(chunk);
-    call(port, OP_SEND, &body, &mut []).map(|_| ())
 }

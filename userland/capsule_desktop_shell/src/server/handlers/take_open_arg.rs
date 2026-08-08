@@ -21,10 +21,8 @@ use crate::state::apps::LAUNCHER_APPS;
 use crate::state::Context;
 
 pub fn handle(ctx: &mut Context, sender_pid: u32, req: &Request, tx: &mut [u8]) {
-    let svc = LAUNCHER_APPS
-        .iter()
-        .find(|a| lookup_pid(a.service) == Some(sender_pid))
-        .map(|a| a.service);
+    let svc =
+        LAUNCHER_APPS.iter().find(|a| lookup_pid(a.service) == Some(sender_pid)).map(|a| a.service);
     let path = match svc
         .and_then(|s| core::str::from_utf8(s).ok())
         .and_then(|s| ctx.pending_open.remove(s))

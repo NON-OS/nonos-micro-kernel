@@ -19,15 +19,22 @@ use crate::memory::paging;
 
 pub fn init_module_memory_protection() {
     paging::enable_write_protection();
-    unsafe {
-        let mut cr4: u64;
-        core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nostack, preserves_flags));
-        if cr4 & CR4_SMEP == 0 {
-            cr4 |= CR4_SMEP;
-        }
-        if cr4 & CR4_SMAP == 0 {
-            cr4 |= CR4_SMAP;
-        }
-        core::arch::asm!("mov cr4, {}", in(reg) cr4, options(nostack, preserves_flags));
+// SMEP and SMAP are CR4 bits. The same two properties, that the kernel
+// cannot execute or read user pages by accident, come from PAN and the
+// PXN and UXN table bits on aarch64, and those are set where the tables
+// are built rather than from a control register here.
+#[cfg(target_arch = "x86_64")]
+// SAFETY: reading CR4 has no side effect, and setting SMEP or SMAP only
+// tightens what ring 0 may touch.
+unsafe {
+    let mut cr4: u64;
+    core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nostack, preserves_flags));
+    if cr4 & CR4_SMEP == 0 {
+        cr4 |= CR4_SMEP;
     }
+    if cr4 & CR4_SMAP == 0 {
+        cr4 |= CR4_SMAP;
+    }
+    core::arch::asm!("mov cr4, {}", in(reg) cr4, options(nostack, preserves_flags));
+}
 }

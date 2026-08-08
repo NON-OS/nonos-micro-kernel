@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-std-proof")]
-pub(crate) const STD_PROOF_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_std_proof/target/x86_64-nonos-user/release/std_proof"
-);
+pub(crate) const STD_PROOF_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_std_proof/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/std_proof"
+));
 
 #[cfg(feature = "nonos-capsule-std-proof")]
 pub(crate) const STD_PROOF_NONOS_ID_CERT_BYTES: &[u8] =

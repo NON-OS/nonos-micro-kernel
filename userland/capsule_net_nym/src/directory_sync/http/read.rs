@@ -15,20 +15,30 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec::Vec;
+use nonos_libc::{mk_uptime_ms, mk_yield};
 
 use crate::tcp_client;
 
 const RESPONSE_CAP: usize = 16 * 1024;
+/// A directory is fetched across the internet, so the wait is measured in
+/// round trips rather than in attempts. Counting reads gave up in
+/// microseconds.
+const RESPONSE_DEADLINE_MS: i64 = 8_000;
 
 pub fn response(tcp_port: u32, stream: u32) -> Result<Vec<u8>, u16> {
     let mut resp = Vec::with_capacity(RESPONSE_CAP);
     let mut chunk = [0u8; 1024];
-    for _ in 0..64 {
+    let deadline = mk_uptime_ms().saturating_add(RESPONSE_DEADLINE_MS);
+    loop {
         let n = tcp_client::recv(tcp_port, stream, &mut chunk)?;
         if n == 0 {
             if header_done(&resp) {
                 return Ok(resp);
             }
+            if mk_uptime_ms() >= deadline {
+                return Err(20);
+            }
+            mk_yield();
             continue;
         }
         if resp.len() + n > RESPONSE_CAP {
@@ -39,7 +49,6 @@ pub fn response(tcp_port: u32, stream: u32) -> Result<Vec<u8>, u16> {
             return Ok(resp);
         }
     }
-    Err(20)
 }
 
 fn complete(resp: &[u8]) -> bool {

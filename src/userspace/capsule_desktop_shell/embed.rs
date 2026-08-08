@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "nonos-capsule-desktop-shell")]
-pub(crate) const DESKTOP_SHELL_ELF: &[u8] = include_bytes!(
-    "../../../userland/capsule_desktop_shell/target/x86_64-nonos-user/release/desktop_shell",
-);
+pub(crate) const DESKTOP_SHELL_ELF: &[u8] = include_bytes!(concat!(
+    "../../../userland/capsule_desktop_shell/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/desktop_shell"
+));
 
 #[cfg(feature = "nonos-capsule-desktop-shell")]
 pub(crate) const DESKTOP_SHELL_NONOS_ID_CERT_BYTES: &[u8] =

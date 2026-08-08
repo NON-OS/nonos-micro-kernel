@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::definition::Context;
-use super::consts::{RFLAGS_PRIVILEGED_MASK, RFLAGS_RESERVED_SET};
+use crate::arch::x86_64::context::rflags;
 
 impl Context {
     // Keep the saved IF value. These contexts resume at CPL=0: a yield or
@@ -26,6 +26,6 @@ impl Context {
     // IF=1 from the iretq frame sanitizer, not from here.
     #[inline]
     pub(in crate::process::context::full) fn sanitize_rflags(rflags: u64) -> u64 {
-        (rflags & !RFLAGS_PRIVILEGED_MASK) | RFLAGS_RESERVED_SET
+        rflags::sanitize(rflags)
     }
 }

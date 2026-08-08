@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+// The RFLAGS masks live in arch::x86_64::context::rflags, which both restore
+// paths share.
 pub(super) const USER_SPACE_MAX: u64 = 0x0000_7FFF_FFFF_FFFF;
 pub(super) const KERNEL_SPACE_MIN: u64 = 0xFFFF_8000_0000_0000;
-pub(super) const RFLAGS_PRIVILEGED_MASK: u64 = 0x0000_0000_001F_7500;
-pub(super) const RFLAGS_RESERVED_SET: u64 = 0x0000_0000_0000_0002;

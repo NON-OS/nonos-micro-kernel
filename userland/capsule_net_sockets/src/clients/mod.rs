@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod envelope;
 pub mod dns;
+mod envelope;
 pub mod nym;
 pub mod tcp;
+mod tcp_send;
+mod tcp_status;
 pub mod udp;

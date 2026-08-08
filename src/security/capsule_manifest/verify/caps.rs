@@ -16,13 +16,13 @@
 
 use super::super::error::ManifestVerifyError;
 use super::super::schema::CapsuleManifest;
+use super::caps_bits::{grant_within_manifest, install_caps, within_ceiling};
 
 pub(super) fn check_ceiling(
     manifest: &CapsuleManifest,
     allowed_caps_ceiling: u64,
 ) -> Result<(), ManifestVerifyError> {
-    let union = manifest.required_caps | manifest.optional_caps;
-    if union & !allowed_caps_ceiling != 0 {
+    if !within_ceiling(manifest.required_caps, manifest.optional_caps, allowed_caps_ceiling) {
         return Err(ManifestVerifyError::CapsExceedCeiling);
     }
     Ok(())
@@ -32,9 +32,8 @@ pub(super) fn check_grant(
     manifest: &CapsuleManifest,
     granted_caps: u64,
 ) -> Result<u64, ManifestVerifyError> {
-    let allowed = manifest.required_caps | manifest.optional_caps;
-    if granted_caps & !allowed != 0 {
+    if !grant_within_manifest(manifest.required_caps, manifest.optional_caps, granted_caps) {
         return Err(ManifestVerifyError::GrantOutsideManifest);
     }
-    Ok(manifest.required_caps | (manifest.optional_caps & granted_caps))
+    Ok(install_caps(manifest.required_caps, manifest.optional_caps, granted_caps))
 }

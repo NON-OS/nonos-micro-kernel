@@ -16,8 +16,10 @@
 
 use super::canary::init_stack_canary;
 use super::erase::{dod_5220_erase, sanitize};
+use super::kernel_stacks::wipe_kernel_stacks;
 use super::state::{BYTES_SANITIZED, INITIALIZED, SANITIZATION_CALLS, SANITIZATION_LEVEL};
 use super::types::{SanitizationLevel, SanitizationStats};
+use super::user_range::wipe_user_range;
 use core::sync::atomic::Ordering;
 
 pub fn on_free(ptr: *mut u8, size: usize) {
@@ -35,22 +37,21 @@ pub fn on_realloc(old_ptr: *mut u8, old_size: usize) {
 pub fn sanitize_process_memory(pid: u64) {
     crate::log::info!("[SANITIZE] Sanitizing memory for process {}", pid);
 
+    // The ranges below are user virtual addresses in the target process, which
+    // is not the address space this runs in. They are resolved in the owner's
+    // address space and wiped through the directmap; dereferencing them here
+    // would fault, or hit the caller's own pages at the same addresses.
+    let Some(asid) = crate::memory::paging::manager::lookup_asid_for_process(pid as u32) else {
+        return;
+    };
+
     if let Some(pcb) = crate::process::get_process_table().find_by_pid(pid as u32) {
         let memory = pcb.memory.lock();
 
-        let code_start = memory.code_start.as_u64() as *mut u8;
-        let code_size =
-            memory.code_end.as_u64().saturating_sub(memory.code_start.as_u64()) as usize;
-        if code_size > 0 && code_size < 256 * 1024 * 1024 {
-            sanitize(code_start, code_size);
-        }
+        wipe_user_range(asid, memory.code_start.as_u64(), memory.code_end.as_u64());
 
         for vma in &memory.vmas {
-            let vma_start = vma.start.as_u64() as *mut u8;
-            let vma_size = vma.end.as_u64().saturating_sub(vma.start.as_u64()) as usize;
-            if vma_size > 0 && vma_size < 256 * 1024 * 1024 {
-                sanitize(vma_start, vma_size);
-            }
+            wipe_user_range(asid, vma.start.as_u64(), vma.end.as_u64());
         }
     }
 }
@@ -65,17 +66,36 @@ pub fn zerostate_shutdown_wipe() {
         sanitize_process_memory(process.pid as u64);
     }
 
-    let heap_start = crate::memory::layout::KHEAP_BASE as *mut u8;
-    let heap_size = crate::memory::layout::KHEAP_SIZE as usize;
-    if heap_size > 0 && heap_size < 512 * 1024 * 1024 {
-        dod_5220_erase(heap_start, heap_size);
-    }
+    // Kernel stacks hold what the kernel did for each process: bytes copied
+    // in from user space, key material a syscall touched. They come from the
+    // page allocator, so neither the heap erase nor the process wipe reaches
+    // them.
+    wipe_kernel_stacks();
 
+    // Filesystem caches and the cryptofs state. Most of this is heap resident
+    // and would go with the erase below, but clearing it structurally also
+    // drops what the caches hold outside the heap.
+    crate::fs::clear_caches();
+
+    // The key vault walks a map that lives in the heap, so it has to run while
+    // the heap is still readable.
     crate::crypto::vault::zeroize_all_keys();
 
     SANITIZATION_LEVEL.store(saved_level, Ordering::SeqCst);
-
     crate::log::info!("[SANITIZE] ZeroState shutdown wipe complete");
+
+    // The heap goes last and nothing may allocate afterwards, because the
+    // erase covers the allocator's own free list. terminate() calls into the
+    // firmware from here, which does not allocate.
+    //
+    // The extent comes from the allocator, not from layout::KHEAP_BASE. That
+    // window is only mapped by heap::init, which never runs: init_bootstrap
+    // claims the heap first and init returns early once it is initialized. The
+    // wipe was erasing an unmapped range while every heap-resident secret, IPC
+    // payloads and loader scratch among them, stayed in DRAM.
+    if let Some((heap_start, heap_size)) = crate::memory::heap::get_allocator().extent() {
+        dod_5220_erase(heap_start, heap_size);
+    }
 }
 
 pub fn sanitization_stats() -> SanitizationStats {

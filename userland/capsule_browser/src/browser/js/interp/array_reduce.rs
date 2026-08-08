@@ -40,8 +40,7 @@ pub(super) fn array_reduce(
     };
     let len = a.borrow().len();
     let right = method == "reduceRight";
-    let order: Vec<usize> =
-        if right { (0..len).rev().collect() } else { (0..len).collect() };
+    let order: Vec<usize> = if right { (0..len).rev().collect() } else { (0..len).collect() };
     let mut seq = order.into_iter();
     let mut acc = match argv.get(1) {
         Some(v) => v.clone(),

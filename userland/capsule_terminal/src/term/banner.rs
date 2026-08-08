@@ -18,7 +18,7 @@ use crate::term::scrollback::Scrollback;
 
 pub fn paint_motd(sb: &mut Scrollback) {
     sb.push_line(b"");
-    sb.push_line(b"  \xd8 NONOS shell");
+    sb.push_line("  \u{00D8} NONOS shell".as_bytes());
     sb.push_line(b"");
     sb.push_line(b"  RAM-ephemeral microkernel. Capsules, not processes.");
     sb.push_line(b"  Hybrid Ed25519 + ML-DSA-65 trust chain end to end.");

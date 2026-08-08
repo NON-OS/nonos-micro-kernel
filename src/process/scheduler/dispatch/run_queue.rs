@@ -32,19 +32,36 @@ use crate::interrupts::disable_interrupts_guard;
 static PID_RUN_QUEUE: Mutex<VecDeque<u32>> = Mutex::new(VecDeque::new());
 
 pub fn add_to_run_queue(pid: u32) {
-    let _irq = disable_interrupts_guard();
-    let mut q = PID_RUN_QUEUE.lock();
-    if !q.iter().any(|p| *p == pid) {
-        q.push_back(pid);
+    if insert(pid, false) {
+        crate::smp::wake_idle_cpu();
     }
 }
 
 pub fn add_to_run_queue_front(pid: u32) {
+    if insert(pid, true) {
+        crate::smp::wake_idle_cpu();
+    }
+}
+
+/// Enqueue `pid` unless it is already queued. Returns whether it went in, so
+/// the caller can tell a real arrival from a duplicate and only then pay for
+/// waking a CPU.
+///
+/// The wake happens outside this function on purpose: it sends an IPI, and the
+/// woken CPU takes this same lock, so doing it here would have it spin with
+/// interrupts off on a lock we still hold.
+fn insert(pid: u32, front: bool) -> bool {
     let _irq = disable_interrupts_guard();
     let mut q = PID_RUN_QUEUE.lock();
-    if !q.iter().any(|p| *p == pid) {
-        q.push_front(pid);
+    if q.iter().any(|p| *p == pid) {
+        return false;
     }
+    if front {
+        q.push_front(pid);
+    } else {
+        q.push_back(pid);
+    }
+    true
 }
 
 pub fn remove_from_run_queue(pid: u32) {

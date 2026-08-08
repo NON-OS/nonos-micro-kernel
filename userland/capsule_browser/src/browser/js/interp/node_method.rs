@@ -64,9 +64,40 @@ pub(super) fn node_method(ctx: &mut Ctx, id: usize, method: &str, argv: &[Value]
         }
         "appendChild" => {
             if let Some(Value::Node(child)) = argv.first() {
-                if ctx.dom.attach(id, *child) {
+                if ctx.dom.place(id, *child, usize::MAX) {
                     ctx.dirty = true;
                     return Value::Node(*child);
+                }
+            }
+            Value::Undef
+        }
+        // A framework reorders by inserting ahead of a sibling. Appending can
+        // only build a list once; this is what keeps it correct after that.
+        "insertBefore" => {
+            if let Some(Value::Node(child)) = argv.first() {
+                let before = match argv.get(1) {
+                    Some(Value::Node(r)) => *r,
+                    // A null reference means append, which is what the
+                    // caller asks for when it is adding at the end.
+                    _ => usize::MAX,
+                };
+                if ctx.dom.place(id, *child, before) {
+                    ctx.dirty = true;
+                    return Value::Node(*child);
+                }
+            }
+            Value::Undef
+        }
+        "replaceChild" => {
+            if let (Some(Value::Node(fresh)), Some(Value::Node(old))) = (argv.first(), argv.get(1))
+            {
+                let (fresh, old) = (*fresh, *old);
+                if ctx.dom.nodes.get(old).is_some_and(|n| n.parent == id)
+                    && ctx.dom.insert_before(id, fresh, old)
+                {
+                    ctx.dom.detach(old);
+                    ctx.dirty = true;
+                    return Value::Node(old);
                 }
             }
             Value::Undef
@@ -82,6 +113,19 @@ pub(super) fn node_method(ctx: &mut Ctx, id: usize, method: &str, argv: &[Value]
             }
             Value::Undef
         }
+        // A page writes a row's shape once in markup and every row is a copy
+        // of it. Without this a script has to build each one tag by tag.
+        "cloneNode" => {
+            let deep = matches!(argv.first(), Some(Value::Bool(true)));
+            match ctx.dom.clone_node(id, deep) {
+                Some(copy) => Value::Node(copy),
+                None => Value::Undef,
+            }
+        }
+        "contains" => match argv.first() {
+            Some(Value::Node(other)) => Value::Bool(in_subtree(ctx.dom, id, *other)),
+            _ => Value::Bool(false),
+        },
         "remove" => {
             ctx.dom.detach(id);
             ctx.dirty = true;

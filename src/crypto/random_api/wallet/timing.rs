@@ -21,7 +21,7 @@ pub(super) struct TimingSeed {
 }
 
 pub(super) fn collect(pool: &mut EntropyPool) -> TimingSeed {
-    let tsc_start = super::super::platform::read_tsc_full();
+    let tsc_start = super::super::platform::read_cycle_counter();
     pool.push_u64(tsc_start);
 
     for i in 0..16 {
@@ -32,15 +32,15 @@ pub(super) fn collect(pool: &mut EntropyPool) -> TimingSeed {
 }
 
 fn collect_jitter_sample(pool: &mut EntropyPool, sample: u32) {
-    let pit = super::super::platform::read_pit_counter_safe();
-    let tsc_before = super::super::platform::read_tsc_full();
+    let pit = super::super::platform::read_second_clock();
+    let tsc_before = super::super::platform::read_cycle_counter();
     let delay = ((pit & 0x3F) as u32) + (sample + 1) * 5;
 
     for _ in 0..delay {
         core::hint::spin_loop();
     }
 
-    let jitter = super::super::platform::read_tsc_full().wrapping_sub(tsc_before);
+    let jitter = super::super::platform::read_cycle_counter().wrapping_sub(tsc_before);
     let mixed = (pit as u64) ^ jitter.rotate_left((sample % 63) + 1);
     pool.push_u64(mixed);
 }

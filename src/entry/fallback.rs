@@ -14,20 +14,25 @@
 use core::arch::asm;
 
 pub fn vga_fallback() -> ! {
-    const VGA_BUFFER: *mut u8 = 0xB8000 as *mut u8;
-    unsafe {
-        for i in 0..(80 * 25) {
-            *VGA_BUFFER.add(i * 2) = b' ';
-            *VGA_BUFFER.add(i * 2 + 1) = 0x1F;
-        }
-        let msg = b"NONOS v1.0.0 - No framebuffer available";
-        for (i, &ch) in msg.iter().enumerate() {
-            *VGA_BUFFER.add(i * 2) = ch;
-        }
-    }
-    loop {
+    // The last resort when there is no framebuffer to draw on: the legacy text
+    // buffer at 0xB8000, which only a PC has. Somewhere else there is nothing to
+    // write to and the message is skipped, but the halt below still runs, because
+    // the point of this path is to stop rather than to print.
+    #[cfg(target_arch = "x86_64")]
+    {
+        const VGA_BUFFER: *mut u8 = 0xB8000 as *mut u8;
+        // SAFETY: identity-mapped legacy text memory, present on any PC that
+        // reached this point, written within its 80x25 two-bytes-per-cell bound.
         unsafe {
-            asm!("hlt");
+            for i in 0..(80 * 25) {
+                *VGA_BUFFER.add(i * 2) = b' ';
+                *VGA_BUFFER.add(i * 2 + 1) = 0x1F;
+            }
+            let msg = b"NONOS v1.0.0 - No framebuffer available";
+            for (i, &ch) in msg.iter().enumerate() {
+                *VGA_BUFFER.add(i * 2) = ch;
+            }
         }
     }
+    crate::arch::halt_loop()
 }

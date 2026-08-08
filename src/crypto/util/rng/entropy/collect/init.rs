@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::error::EntropyError;
-use super::super::hardware::{has_rdrand, has_rdseed};
+use super::super::hardware::{has_cpu_entropy, has_cpu_random};
 use super::super::state::{BOOTLOADER_ENTROPY_PROVIDED, HARDWARE_ENTROPY_VERIFIED};
 use crate::drivers::virtio_rng;
 use core::sync::atomic::Ordering;
@@ -25,7 +25,7 @@ pub fn init_entropy() -> Result<(), EntropyError> {
         HARDWARE_ENTROPY_VERIFIED.store(true, Ordering::SeqCst);
         return Ok(());
     }
-    if has_rdrand() || has_rdseed() {
+    if has_cpu_random() || has_cpu_entropy() {
         HARDWARE_ENTROPY_VERIFIED.store(true, Ordering::SeqCst);
         return Ok(());
     }
@@ -42,8 +42,8 @@ pub fn mark_bootloader_entropy_provided() {
 #[inline]
 pub fn has_adequate_entropy() -> bool {
     virtio_rng::is_available()
-        || has_rdrand()
-        || has_rdseed()
+        || has_cpu_random()
+        || has_cpu_entropy()
         || BOOTLOADER_ENTROPY_PROVIDED.load(Ordering::Acquire)
 }
 
@@ -51,7 +51,7 @@ pub fn verify_entropy_sources() -> Result<(), EntropyError> {
     if virtio_rng::is_available() {
         return Ok(());
     }
-    if has_rdrand() || has_rdseed() {
+    if has_cpu_random() || has_cpu_entropy() {
         return Ok(());
     }
     if BOOTLOADER_ENTROPY_PROVIDED.load(Ordering::Acquire) {

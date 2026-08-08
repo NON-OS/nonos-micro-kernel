@@ -18,6 +18,7 @@ mod fill;
 mod new;
 mod record_reseed;
 mod snapshot;
+mod source;
 mod types;
 
 pub use encode_stats::encode_stats;

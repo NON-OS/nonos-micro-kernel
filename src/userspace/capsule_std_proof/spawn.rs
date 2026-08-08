@@ -29,7 +29,7 @@ const SERVICE_NAME: &str = "std_proof";
 const SERVICE_PORT: u32 = 4502;
 const REPLY_INBOX: &str = "endpoint.std_proof.reply";
 const REPLY_PORT: u32 = 4503;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_std_proof_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

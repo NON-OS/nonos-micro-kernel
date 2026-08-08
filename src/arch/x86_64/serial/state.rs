@@ -176,4 +176,3 @@ pub fn is_initialized() -> bool {
 pub fn set_initialized(value: bool) -> bool {
     INITIALIZED.swap(value, Ordering::SeqCst)
 }
-

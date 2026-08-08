@@ -22,6 +22,12 @@ pub fn send_command_impl(state: &TpmState, cmd: &[u8]) -> Result<(), TpmError> {
     if !state.initialized {
         return Err(TpmError::NotPresent);
     }
+    // A CRB part takes commands through a buffer in memory, not a byte port.
+    // Handing it the FIFO sequence writes command bytes across its control
+    // registers, which is what made every reply from one look invalid.
+    if state.is_crb {
+        return super::crb_send(state, cmd);
+    }
     state.write_reg8(TPM_STS, TPM_STS_READY);
     state.wait_for_status(TPM_STS_READY, TPM_STS_READY)?;
     for byte in cmd {

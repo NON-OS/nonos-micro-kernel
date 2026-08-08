@@ -65,6 +65,7 @@ const COMMANDS: &[&[u8]] = &[
     b"ifconfig",
     b"ip",
     b"nslookup",
+    b"nym",
     b"id",
     b"sys",
     b"apps",

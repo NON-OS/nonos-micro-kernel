@@ -1,8 +1,14 @@
-pub struct Dst<'a> { pub px: &'a mut [u32], pub stride: u32, pub w: u32, pub h: u32 }
+pub struct Dst<'a> {
+    pub px: &'a mut [u32],
+    pub stride: u32,
+    pub w: u32,
+    pub h: u32,
+}
 
-pub fn draw_nn(dst: &mut Dst, src: &[u32], sw: u32, sh: u32,
-               dx: i32, dy: i32, dw: u32, dh: u32) {
-    if sw == 0 || sh == 0 || dw == 0 || dh == 0 { return; }
+pub fn draw_nn(dst: &mut Dst, src: &[u32], sw: u32, sh: u32, dx: i32, dy: i32, dw: u32, dh: u32) {
+    if sw == 0 || sh == 0 || dw == 0 || dh == 0 {
+        return;
+    }
     let x0 = dx.max(0);
     let y0 = dy.max(0);
     let x1 = (dx + dw as i32).min(dst.w as i32);
@@ -22,9 +28,19 @@ pub fn draw_nn(dst: &mut Dst, src: &[u32], sw: u32, sh: u32,
     }
 }
 
-pub fn draw_bilinear(dst: &mut Dst, src: &[u32], sw: u32, sh: u32,
-                     dx: i32, dy: i32, dw: u32, dh: u32) {
-    if sw == 0 || sh == 0 || dw == 0 || dh == 0 { return; }
+pub fn draw_bilinear(
+    dst: &mut Dst,
+    src: &[u32],
+    sw: u32,
+    sh: u32,
+    dx: i32,
+    dy: i32,
+    dw: u32,
+    dh: u32,
+) {
+    if sw == 0 || sh == 0 || dw == 0 || dh == 0 {
+        return;
+    }
     let x0 = dx.max(0);
     let y0 = dy.max(0);
     let x1 = (dx + dw as i32).min(dst.w as i32);
@@ -46,7 +62,8 @@ pub fn draw_bilinear(dst: &mut Dst, src: &[u32], sw: u32, sh: u32,
             let top = lerp_px(c00, c01, wx);
             let bot = lerp_px(c10, c11, wx);
             let px = lerp_px(top, bot, wy);
-            dst.px[yy as usize * dst.stride as usize + xx as usize] = 0xFF00_0000 | (px & 0x00FF_FFFF);
+            dst.px[yy as usize * dst.stride as usize + xx as usize] =
+                0xFF00_0000 | (px & 0x00FF_FFFF);
             xx += 1;
         }
         yy += 1;
@@ -54,9 +71,13 @@ pub fn draw_bilinear(dst: &mut Dst, src: &[u32], sw: u32, sh: u32,
 }
 
 fn split(f: f32, n: u32) -> (u32, f32) {
-    if f <= 0.0 { return (0, 0.0); }
+    if f <= 0.0 {
+        return (0, 0.0);
+    }
     let i = f as u32;
-    if i >= n - 1 { return (n - 1, 0.0); }
+    if i >= n - 1 {
+        return (n - 1, 0.0);
+    }
     (i, f - i as f32)
 }
 

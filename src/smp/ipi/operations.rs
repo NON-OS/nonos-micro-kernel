@@ -20,14 +20,23 @@ use alloc::vec::Vec;
 use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use spin::Mutex;
 
-use super::types::{IpiFn, IpiWork, IpiWorkQueue, IPI_BARRIER, IPI_CALL_FUNCTION};
+use super::types::{IpiFn, IpiWork, IpiWorkQueue};
+use crate::arch::interrupt_controller::{broadcast_ipi, send_ipi, Ipi};
+use crate::interrupts::disable_interrupts_guard;
 use crate::smp::{cpu_count, cpus_online, get_cpu, MAX_CPUS};
 
 pub use crate::smp::cpu_id;
 
-static IPI_QUEUES: Mutex<[IpiWorkQueue; MAX_CPUS]> = {
-    const INIT: IpiWorkQueue = IpiWorkQueue::new();
-    Mutex::new([INIT; MAX_CPUS])
+// One lock per queue, not one lock over the array. The handler runs in
+// interrupt context and takes the same lock the sender uses, so a CallFunction
+// IPI landing on a cpu that was itself in the middle of a push would have
+// spun in the handler on a lock only the interrupted code could release. Every
+// critical section below therefore also masks interrupts, and splitting the
+// lock keeps a cpu draining its own queue from blocking a sender aimed
+// somewhere else.
+static IPI_QUEUES: [Mutex<IpiWorkQueue>; MAX_CPUS] = {
+    const INIT: Mutex<IpiWorkQueue> = Mutex::new(IpiWorkQueue::new());
+    [INIT; MAX_CPUS]
 };
 
 static BARRIER_ARRIVED: AtomicU32 = AtomicU32::new(0);
@@ -52,13 +61,13 @@ pub fn call_on_cpu(target_cpu: usize, func: IpiFn, arg: usize) -> Result<(), &'s
     let work = IpiWork { func, arg, done: AtomicBool::new(false) };
 
     {
-        let mut queues = IPI_QUEUES.lock();
-        if !queues[target_cpu].push(work) {
+        let _irq = disable_interrupts_guard();
+        if !IPI_QUEUES[target_cpu].lock().push(work) {
             return Err("IPI queue full");
         }
     }
 
-    crate::arch::x86_64::interrupt::apic::ipi_one(cpu.apic_id, IPI_CALL_FUNCTION);
+    send_ipi(cpu.apic_id, Ipi::CallFunction).map_err(|_| "IPI not deliverable")?;
 
     Ok(())
 }
@@ -87,13 +96,19 @@ pub fn call_on_others(func: IpiFn, arg: usize) {
     }
 }
 
+/// Run everything queued for this cpu. Safe to call outside interrupt context:
+/// a cpu spinning for a peer can drain its own queue by hand so the two do not
+/// wait on each other.
 pub fn handle_call_function_ipi() {
     let my_cpu = cpu_id();
 
     loop {
+        // The work runs with the lock released. It can be arbitrarily long,
+        // and a callback that queued more work would otherwise deadlock on a
+        // lock its own caller still holds.
         let work = {
-            let mut queues = IPI_QUEUES.lock();
-            queues[my_cpu].pop()
+            let _irq = disable_interrupts_guard();
+            IPI_QUEUES[my_cpu].lock().pop()
         };
 
         match work {
@@ -116,7 +131,7 @@ pub fn barrier_all() {
 
     BARRIER_TARGET.store(target, Ordering::Release);
 
-    crate::arch::x86_64::interrupt::apic::ipi_others(IPI_BARRIER);
+    let _ = broadcast_ipi(Ipi::Barrier);
 
     let arrived = BARRIER_ARRIVED.fetch_add(1, Ordering::AcqRel) + 1;
 

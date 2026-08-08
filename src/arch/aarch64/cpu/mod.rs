@@ -27,7 +27,7 @@ mod wait;
 pub use barrier::{data_sync_barrier, instruction_barrier, memory_barrier};
 pub use features::{has_feature, CpuFeature};
 pub use halt::halt;
-pub use id::{cluster_id, core_id, cpu_id};
+pub use id::{cluster_id, core_id, cpu_affinity, cpu_id, mpidr_affinity, pack_affinity};
 pub use init::init_cpu;
 pub use irq::{disable_interrupts, enable_interrupts, interrupts_enabled};
 pub use state::{current_el, is_el1, is_el2};

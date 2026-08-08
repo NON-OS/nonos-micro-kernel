@@ -45,8 +45,18 @@ pub fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
         }
     }
     match event.code {
-        KEY_ESC => EventOutcome::Close,
+        // Clears the line. Esc used to close the window, so one stray press
+        // took the scrollback, history and working directory with it. Closing
+        // is the titlebar's job.
+        KEY_ESC => {
+            state.line.clear();
+            EventOutcome::Repaint
+        }
         KEY_ENTER => on_enter(state),
+        KEY_BACKSPACE if state.search.is_some() => {
+            super::search_edit::search_backspace(state);
+            EventOutcome::Repaint
+        }
         KEY_BACKSPACE => bool_to_outcome(state.line.backspace()),
         KEY_DELETE => bool_to_outcome(state.line.delete()),
         KEY_LEFT => bool_to_outcome(state.line.move_left()),

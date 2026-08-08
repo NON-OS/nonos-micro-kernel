@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! The memory types this kernel maps, and the MAIR_EL1 slot each one owns.
+//!
+//! A page descriptor names its memory type by index, and MAIR_EL1 says what
+//! that index means. The two halves must agree or every mapping silently gets
+//! the wrong caching and ordering rules, so both live here and `control::mair`
+//! builds the register by walking [`MemoryType::ALL`] rather than repeating the
+//! table by hand.
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MemoryType {
     DeviceNGnRnE,
@@ -26,6 +34,18 @@ pub enum MemoryType {
 }
 
 impl MemoryType {
+    /// Every type, in MAIR slot order. `control::mair` iterates this.
+    pub const ALL: [Self; 7] = [
+        Self::DeviceNGnRnE,
+        Self::DeviceNGnRE,
+        Self::DeviceNGRE,
+        Self::DeviceGRE,
+        Self::NormalNC,
+        Self::NormalWT,
+        Self::NormalWB,
+    ];
+
+    /// The MAIR_EL1 slot this type occupies, as written into `AttrIndx[2:0]`.
     pub const fn attr_index(&self) -> u64 {
         match self {
             Self::DeviceNGnRnE => 0,
@@ -35,6 +55,23 @@ impl MemoryType {
             Self::NormalNC => 4,
             Self::NormalWT => 5,
             Self::NormalWB => 6,
+        }
+    }
+
+    /// The MAIR_EL1 attribute byte for that slot.
+    ///
+    /// A zero high nibble marks Device memory, and the low nibble then picks
+    /// the gathering, reordering and early-ack rules. Both nibbles non-zero
+    /// marks Normal memory: outer cacheability high, inner low.
+    pub const fn mair_attr(&self) -> u8 {
+        match self {
+            Self::DeviceNGnRnE => 0x00,
+            Self::DeviceNGnRE => 0x04,
+            Self::DeviceNGRE => 0x08,
+            Self::DeviceGRE => 0x0C,
+            Self::NormalNC => 0x44,
+            Self::NormalWT => 0xBB,
+            Self::NormalWB => 0xFF,
         }
     }
 }

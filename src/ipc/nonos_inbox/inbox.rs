@@ -120,4 +120,3 @@ impl Inbox {
         count
     }
 }
-

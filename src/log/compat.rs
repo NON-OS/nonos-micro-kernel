@@ -25,10 +25,12 @@ pub mod logger {
 }
 
 pub mod nonos_logger {
+    #[cfg(target_arch = "x86_64")]
+    pub use crate::log::VgaBackend;
     pub use crate::log::{
         clear_log_buffer, debug, enter_panic_mode, get_log_entries, get_recent_logs, init,
         init_logger, log, log_critical, log_entry_count, try_get_logger, LogBackend, LogEntry,
-        LogManager, RamBufferBackend, Severity, VgaBackend, LOGGER, PANIC_MODE, RAM_BUF_SIZE,
+        LogManager, RamBufferBackend, Severity, LOGGER, PANIC_MODE, RAM_BUF_SIZE,
     };
 }
 

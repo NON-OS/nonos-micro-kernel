@@ -27,7 +27,7 @@ mod ttbr;
 mod unmap;
 
 pub use attributes::{MemoryType, PageAttributes};
-pub use boot_map::init_mmu;
+pub use boot_map::{init_mmu, KERNEL_SPACE_START};
 pub use granule::{Granule, GRANULE_16K, GRANULE_4K, GRANULE_64K};
 pub use map::map_page;
 pub use table::PageTable;

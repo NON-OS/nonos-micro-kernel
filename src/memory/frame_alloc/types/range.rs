@@ -17,7 +17,6 @@
 use super::super::constants::FRAME_SIZE;
 use super::super::error::{FrameAllocError, FrameResult};
 use crate::memory::addr::PhysAddr;
-use x86_64::structures::paging::PhysFrame;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FrameRange {
@@ -34,17 +33,6 @@ impl FrameRange {
             return Err(FrameAllocError::RegionNotAligned);
         }
         Ok(Self { start, end })
-    }
-
-    pub fn next_frame(&mut self) -> Option<PhysFrame> {
-        let aligned = self.start.align_up(FRAME_SIZE);
-        if aligned + FRAME_SIZE <= self.end {
-            let frame = PhysFrame::containing_address(aligned.into());
-            self.start = aligned + FRAME_SIZE;
-            Some(frame)
-        } else {
-            None
-        }
     }
 
     pub fn frames_remaining(&self) -> usize {

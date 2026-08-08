@@ -31,8 +31,7 @@ pub fn decode_body(
     };
     match encoding {
         "gzip" => nonos_inflate::gunzip(&body),
-        "deflate" => nonos_inflate::zlib(&body)
-            .or_else(|| nonos_inflate::inflate(&body)),
+        "deflate" => nonos_inflate::zlib(&body).or_else(|| nonos_inflate::inflate(&body)),
         _ => Some(body),
     }
 }

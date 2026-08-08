@@ -17,7 +17,10 @@
 use alloc::vec::Vec;
 
 use super::call::keyring_call;
-use super::constants::{HDR_LEN, OP_SIGN_NOX_STAKE, OP_SIGN_NOX_STAKE_APPROVE};
+use super::constants::{
+    HDR_LEN, OP_SIGN_NOX_STAKE, OP_SIGN_NOX_STAKE_APPROVE, OP_SIGN_NOX_STAKE_LOCKED,
+    OP_SIGN_NOX_UNSTAKE,
+};
 use super::eip1559_fees::eip1559_fees;
 use super::push_word::push_word;
 
@@ -73,4 +76,35 @@ pub fn sign_stake(
 ) -> Result<Vec<u8>, i32> {
     let body = payload(owner_pid, wallet_id, nonce, 150_000, amount_wei, gas_price_wei);
     call(port, OP_SIGN_NOX_STAKE, &body)
+}
+
+// Close a staked position by its index. The contract returns the whole
+// position, so the figure carried is a position and never an amount.
+pub fn sign_unstake_position(
+    port: u32,
+    owner_pid: u32,
+    wallet_id: u32,
+    nonce: u64,
+    position: u64,
+    gas_price_wei: u64,
+) -> Result<Vec<u8>, i32> {
+    let body = payload(owner_pid, wallet_id, nonce, 200_000, position as u128, gas_price_wei);
+    call(port, OP_SIGN_NOX_UNSTAKE, &body)
+}
+
+// Stake for a term. The lock is seconds and must be one the contract names;
+// the caller picks it from the contract's own table rather than inventing a
+// duration, since an unnamed term is rejected on chain.
+pub fn sign_stake_locked(
+    port: u32,
+    owner_pid: u32,
+    wallet_id: u32,
+    nonce: u64,
+    amount_wei: u128,
+    lock_seconds: u32,
+    gas_price_wei: u64,
+) -> Result<Vec<u8>, i32> {
+    let mut body = payload(owner_pid, wallet_id, nonce, 200_000, amount_wei, gas_price_wei);
+    push_word(&mut body, lock_seconds as u128);
+    call(port, OP_SIGN_NOX_STAKE_LOCKED, &body)
 }

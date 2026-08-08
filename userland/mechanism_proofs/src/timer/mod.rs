@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// The real elapsed-tick test the load balancer runs.
-// `LoadBalanceState::should_balance` in the kernel delegates to this.
-#[allow(dead_code)]
-#[path = "../../../../src/process/scheduler/smp/interval.rs"]
-pub mod interval;
+// The load balancer's elapsed-tick test used to be bound here. The per-cpu
+// scheduler it belonged to was removed, taking should_balance and the interval
+// module with it, so there is no longer any kernel code for this to refine.

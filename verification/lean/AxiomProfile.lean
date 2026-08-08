@@ -111,6 +111,15 @@ import Nonos
 #print axioms Nonos.AttestBinding.admitted_accepted_after_trace
 #print axioms Nonos.AttestBinding.no_cross_policy_replay
 #print axioms Nonos.Spawn.only_attested_capsules_run
+#print axioms Nonos.Spawn.enforcing_run_admits_only_verified
+#print axioms Nonos.Spawn.enforcing_refuses_a_missing_trailer
+#print axioms Nonos.Spawn.production_is_always_enforcing
+#print axioms Nonos.SpawnCaps.installed_within_ceiling
+#print axioms Nonos.SpawnCaps.installed_within_manifest
+#print axioms Nonos.SpawnCaps.authority_only_narrows
+#print axioms Nonos.Delegation.never_outlives_parent
+#print axioms Nonos.Delegation.never_outlasts_request
+#print axioms Nonos.Delegation.live_child_implies_live_parent
 #print axioms Nonos.Stark.AssociationSet.an_excluded_deposit_cannot_pass
 #print axioms Nonos.Stark.AssociationSet.the_registry_only_grows
 #print axioms Nonos.Stark.Attest.a_proof_for_one_capsule_is_rejected_for_another
@@ -170,6 +179,16 @@ import Nonos
 #print axioms Nonos.MemGrant.run_conserves
 #print axioms Nonos.MemGrant.run_granted_le_capacity
 #print axioms Nonos.Scheduler.rotate_mem
+#print axioms Nonos.Scheduler.at_most_one_cpu_wins
+#print axioms Nonos.Scheduler.a_ready_process_is_claimed_once
+#print axioms Nonos.Scheduler.only_ready_is_claimed
+#print axioms Nonos.PageDescriptor.leaf_present_iff_requested
+#print axioms Nonos.PageDescriptor.kernel_leaf_never_reaches_el0
+#print axioms Nonos.PageDescriptor.user_leaf_reaches_el0
+#print axioms Nonos.PageDescriptor.read_only_leaf_never_writable
+#print axioms Nonos.PageDescriptor.user_leaf_never_executes_at_el1
+#print axioms Nonos.PageDescriptor.kernel_leaf_never_executes_at_el0
+#print axioms Nonos.PageDescriptor.table_is_present_and_not_a_block
 #print axioms Nonos.PageTable.mapAllChecked_safe
 #print axioms Nonos.Iommu.empty_grant_denies
 #print axioms Nonos.Dispatch.serviced_requires_cap
@@ -178,6 +197,9 @@ import Nonos
 #print axioms Nonos.Interval.disjoint_not_mem
 #print axioms Nonos.Interval.mem_of_subset
 #print axioms Nonos.Refcount.dec_from_one_dead
+#print axioms Nonos.Rflags.mask_is_exactly_the_privileged_bits
+#print axioms Nonos.Rflags.iopl_is_masked
+#print axioms Nonos.Rflags.interrupt_flag_is_not_masked
 #print axioms Nonos.Timer.tickAll_monotone
 #print axioms Nonos.Endpoint.recv_was_sent
 #print axioms Nonos.Heap.double_free_safe
@@ -249,10 +271,19 @@ import Nonos
 #print axioms Nonos.UserCopy.accepted_within_user
 #print axioms Nonos.UserCopy.accepted_nonzero_addr
 
+-- The page walk behind that policy: every table above a returned leaf granted
+-- user, and a leaf a transfer accepts is user and, for writes, writable.
+#print axioms Nonos.UserWalk.tables_above_grant_user
+#print axioms Nonos.UserWalk.read_path_is_user_accessible
+#print axioms Nonos.UserWalk.write_path_is_user_writable
+#print axioms Nonos.UserWalk.write_implies_read
+
 -- Demand paging: the fault router and the per-process page budget, and the
 -- fact that a served page is never executable.
 #print axioms Nonos.DemandPaging.kernel_half_never_mapped
 #print axioms Nonos.DemandPaging.refused_forever
+#print axioms Nonos.DemandPaging.saturated_refused
+#print axioms Nonos.DemandPaging.saturated_admission_bounded
 #print axioms Nonos.DemandPaging.demand_not_wx
 
 -- ELF load protection: no writable-and-executable segment is admitted, and the
@@ -347,6 +378,13 @@ import Nonos
 #print axioms Nonos.FrameNoAlias.fixed_none_on_empty
 #print axioms Nonos.InputConsumer.drain_implies_post
 #print axioms Nonos.InputConsumer.irq_only_cannot_drain
+-- And who can hold a token to stamp with in the first place: only the process
+-- the call was addressed to, spent once.
+#print axioms Nonos.ReplyAuthorization.a_reply_token_comes_from_a_call_to_the_replier
+#print axioms Nonos.ReplyAuthorization.a_redirect_token_comes_from_a_call_to_the_sender
+#print axioms Nonos.ReplyAuthorization.remove_consumes_one
+#print axioms Nonos.ReplyAuthorization.pop_consumes_one
+
 #print axioms Nonos.ReplyCorrelation.forged_never_delivered
 #print axioms Nonos.ReplyCorrelation.firstMatch_matches
 #print axioms Nonos.ReplyCorrelation.all_forged_none
@@ -354,3 +392,17 @@ import Nonos
 #print axioms Nonos.ServiceRegisterAuth.old_low_pid_bypass
 #print axioms Nonos.FramebufferSwap.swap_involutive
 #print axioms Nonos.FramebufferSwap.present_rgb_converts
+#print axioms Nonos.ZeroState.off_was_wiped
+#print axioms Nonos.ZeroState.wipe_covers_every_region
+#print axioms Nonos.ZeroState.wiped_residue_empty
+#print axioms Nonos.ZeroState.off_holds_nothing
+#print axioms Nonos.ZeroState.into_off_only_from_wiped
+#print axioms Nonos.ZeroState.no_shortcut_to_off
+#print axioms Nonos.ZeroState.quiescing_is_not_wiping
+#print axioms Nonos.ZeroState.secrets_imply_still_here
+#print axioms Nonos.ZeroState.off_is_terminal
+#print axioms Nonos.StationAddress.never_group
+#print axioms Nonos.StationAddress.always_local
+#print axioms Nonos.StationAddress.never_a_factory_address
+#print axioms Nonos.StationAddress.never_broadcast
+#print axioms Nonos.StationAddress.never_zero

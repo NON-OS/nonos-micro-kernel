@@ -17,8 +17,9 @@
 //! Create a file or folder from the desktop right-click menu.
 
 use alloc::string::String;
+use nonos_libc::mk_time_millis;
 
-use crate::state::Context;
+use crate::state::{Context, NotifyLevel};
 
 /// Create a new file or folder at the root under a non-colliding name and pull
 /// the desktop back in sync. Repainting is left to the caller so it can first
@@ -35,5 +36,9 @@ pub fn create_entry(ctx: &mut Context, is_file: bool) {
     };
     if created {
         let _ = super::refresh::refresh(ctx);
+    } else {
+        // A full or read-only volume produced nothing and said nothing.
+        let now = mk_time_millis();
+        ctx.toasts.push(b"could not create", NotifyLevel::Error, now);
     }
 }

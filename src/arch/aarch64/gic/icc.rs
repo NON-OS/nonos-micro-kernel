@@ -25,4 +25,4 @@ pub use ack::{acknowledge_interrupt, drop_priority, end_interrupt};
 pub use binary_point::{binary_point, set_binary_point};
 pub use init::init;
 pub use priority::{highest_pending_priority, running_priority, set_priority_mask};
-pub use sgi::send_sgi;
+pub use sgi::{send_sgi, send_sgi_all_others};

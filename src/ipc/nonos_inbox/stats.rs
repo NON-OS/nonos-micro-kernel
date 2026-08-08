@@ -99,4 +99,3 @@ impl core::fmt::Display for InboxStatsSnapshot {
         )
     }
 }
-

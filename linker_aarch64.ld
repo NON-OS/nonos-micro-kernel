@@ -30,6 +30,12 @@ SECTIONS {
         *(.lrodata .lrodata.*)
     } :rodata
 
+    /* Writable data starts on a 2MB boundary so the boot identity map, which
+       uses 2MB blocks, can keep text read only and executable without also
+       making .data and .bss read only. */
+    . = ALIGN(0x200000);
+    __kernel_rw_start = .;
+
     .data ALIGN(0x1000) : {
         *(.data .data.*)
     } :data
@@ -54,7 +60,9 @@ SECTIONS {
         __bss_end = .;
     } :data
 
-    . = ALIGN(0x1000);
+    /* 2MB so the boot identity map, which uses 2MB blocks, can mark the text
+       below executable without making the stack executable with it. */
+    . = ALIGN(0x200000);
     __stack_bottom = .;
     . += 64K;
     __stack_top = .;

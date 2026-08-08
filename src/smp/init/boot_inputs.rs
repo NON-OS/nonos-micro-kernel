@@ -34,5 +34,5 @@ pub(super) fn prepare() -> Result<ApBootInputs, &'static str> {
 }
 
 fn read_cr3_pml4() -> u64 {
-    crate::arch::x86_64::paging::read_cr3() & !0xFFFu64
+    crate::arch::paging::read_root()
 }

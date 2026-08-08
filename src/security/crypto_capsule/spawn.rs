@@ -31,7 +31,7 @@ pub use crate::kernel_core::process_spawn::capsule_spawn::SpawnError;
 const SERVICE_NAME: &str = "crypto_pool";
 const SERVICE_PORT: u32 = 4102;
 const REPLY_PORT: u32 = 4103;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 // CAP_CRYPTO is the caller-facing gate, not the capsule's own bit.
 // The capsule needs IPC for mk_ipc_*, Memory for heap, and Crypto to

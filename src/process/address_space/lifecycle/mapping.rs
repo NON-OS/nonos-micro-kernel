@@ -29,7 +29,7 @@ pub fn map_user_stack(
     top: VirtAddr,
     size: usize,
 ) -> Result<(), &'static str> {
-    use x86_64::structures::paging::PageTableFlags;
+    use crate::arch::paging::descriptor::flags;
     let bottom = top.as_u64().saturating_sub(size as u64);
     let pages = (size + 4095) / 4096;
     let perms = crate::memory::paging::types::PagePermissions::user_rw();
@@ -46,10 +46,7 @@ pub fn map_user_stack(
     mem.vmas.push(Vma {
         start: VirtAddr::new(bottom),
         end: top,
-        flags: PageTableFlags::PRESENT
-            | PageTableFlags::WRITABLE
-            | PageTableFlags::USER_ACCESSIBLE
-            | PageTableFlags::NO_EXECUTE,
+        flags: flags::PRESENT | flags::WRITABLE | flags::USER | flags::NO_EXECUTE,
     });
     Ok(())
 }

@@ -6,7 +6,7 @@
 
 [package]
 name = "nonos_capsule_net_nym"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 publish = false
 license = "AGPL-3.0"
@@ -20,6 +20,7 @@ path = "src/main.rs"
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 spin = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex"] }
+nonos_tls = { path = "../nonos_tls" }
 
 [profile.release]
 panic = "abort"

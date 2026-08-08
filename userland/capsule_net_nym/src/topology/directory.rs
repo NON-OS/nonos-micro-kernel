@@ -18,12 +18,28 @@ use alloc::vec::Vec;
 
 use super::types::Node;
 
+/// Where a directory came from, which decides how it earns trust. Fetched
+/// bytes need a signature; a table compiled into the image is already covered
+/// by the image's own signatures and STARK enrollment.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Provenance {
+    /// Compiled into the attested image.
+    Image,
+    /// Received over the network, signed by a trusted authority.
+    Signed,
+    /// Fetched over TLS from a named API. The chain proves who answered, not
+    /// that an operator vouched for the answer, so it is kept apart from
+    /// `Signed` rather than folded into it.
+    Fetched,
+}
+
 #[derive(Clone, Copy)]
 pub struct DirectoryMeta {
     pub epoch: u64,
     pub not_before_ms: u64,
     pub not_after_ms: u64,
     pub issuer: [u8; 32],
+    pub provenance: Provenance,
 }
 
 pub struct ParsedDirectory {

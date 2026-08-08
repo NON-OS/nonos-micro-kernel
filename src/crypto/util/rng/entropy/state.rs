@@ -19,6 +19,3 @@ use core::sync::atomic::{AtomicBool, AtomicU64};
 pub(crate) static ENTROPY_COUNTER: AtomicU64 = AtomicU64::new(0);
 pub(crate) static HARDWARE_ENTROPY_VERIFIED: AtomicBool = AtomicBool::new(false);
 pub(crate) static BOOTLOADER_ENTROPY_PROVIDED: AtomicBool = AtomicBool::new(false);
-
-pub(crate) const RDRAND_RETRY_LIMIT: u32 = 10;
-pub(crate) const RDSEED_RETRY_LIMIT: u32 = 100;

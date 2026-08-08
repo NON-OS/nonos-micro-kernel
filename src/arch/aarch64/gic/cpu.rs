@@ -15,17 +15,18 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::icc;
-use super::redistributor::GicRedistributor;
+use super::redistributor;
 use super::state::redist_base;
+use crate::sys::serial;
 
+/// Bring up the per-CPU half of the GIC on the calling core.
 pub fn init_gic_cpu() {
-    let redist_base = redist_base();
-
-    if redist_base != 0 {
-        let cpu_id = crate::arch::aarch64::cpu::cpu_id();
-        let redist_offset = cpu_id as u64 * 0x20000;
-        let redist = GicRedistributor::new(redist_base + redist_offset);
-        redist.init();
+    match redistributor::for_this_cpu(redist_base()) {
+        Some(redist) => redist.init(),
+        // Without its redistributor this CPU can neither wake for SGIs nor
+        // enable its private interrupts, so the timer tick will not arrive.
+        // Say so; a silent miss looks like a hung scheduler later.
+        None => serial::println(b"[GIC] no redistributor claims this CPU"),
     }
 
     icc::init();

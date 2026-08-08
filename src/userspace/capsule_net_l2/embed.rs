@@ -22,7 +22,11 @@
 
 #[cfg(feature = "nonos-capsule-net-l2")]
 pub(super) const NET_L2_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_net_l2/target/x86_64-nonos-user/release/net_l2");
+    include_bytes!(concat!(
+    "../../../userland/capsule_net_l2/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_l2"
+));
 
 #[cfg(feature = "nonos-capsule-net-l2")]
 pub(super) const NET_L2_NONOS_ID_CERT_BYTES: &[u8] =

@@ -14,23 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::types::{PCI_CONFIG_ADDRESS, PCI_CONFIG_DATA};
-use crate::sys::io::{inl, outl};
-
-pub(super) fn pci_address(bus: u8, device: u8, function: u8, offset: u8) -> u32 {
-    (1u32 << 31)
-        | ((bus as u32) << 16)
-        | ((device as u32) << 11)
-        | ((function as u32) << 8)
-        | ((offset as u32) & 0xFC)
-}
+//! The dword primitives go through the driver layer's accessor, which picks
+//! ECAM or the 0xCF8 port pair from what the platform published. The ports are
+//! an x86_64 mechanism, and on a board that reaches config space only as
+//! memory, going straight to them left this layer, and every driver that
+//! enumerates through it, finding nothing at all.
 
 pub fn pci_read32(bus: u8, device: u8, function: u8, offset: u8) -> u32 {
-    let address = pci_address(bus, device, function, offset);
-    unsafe {
-        outl(PCI_CONFIG_ADDRESS, address);
-        inl(PCI_CONFIG_DATA)
-    }
+    crate::drivers::pci::read32_unchecked(bus, device, function, offset)
 }
 
 pub fn pci_read16(bus: u8, device: u8, function: u8, offset: u8) -> u16 {
@@ -44,11 +35,7 @@ pub fn pci_read8(bus: u8, device: u8, function: u8, offset: u8) -> u8 {
 }
 
 pub fn pci_write32(bus: u8, device: u8, function: u8, offset: u8, value: u32) {
-    let address = pci_address(bus, device, function, offset);
-    unsafe {
-        outl(PCI_CONFIG_ADDRESS, address);
-        outl(PCI_CONFIG_DATA, value);
-    }
+    crate::drivers::pci::write32_unchecked(bus, device, function, offset, value);
 }
 
 pub fn pci_write16(bus: u8, device: u8, function: u8, offset: u8, value: u16) {

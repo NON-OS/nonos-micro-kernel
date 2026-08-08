@@ -29,7 +29,8 @@ pub(super) fn ctrl_paste(state: &mut State) -> EventOutcome {
                 state.insert(&scratch[..n])
             } =>
         {
-            state.status = b"pasted into /notes.txt";
+            // Named /notes.txt whatever document was actually open.
+            state.status = b"pasted";
             let rows = state.visible_rows;
             follow_caret(state, rows);
             EventOutcome::Repaint

@@ -123,7 +123,7 @@ fn scan_kernel_integrity() -> Vec<String> {
     if !crate::memory::verify_kernel_data_integrity() {
         out.push("Kernel data section modified".into());
     }
-    if !crate::arch::x86_64::idt::verify_idt_integrity() {
+    if !crate::arch::trap::vector_table_is_intact() {
         out.push("Interrupt Descriptor Table modified".into());
     }
     if !crate::memory::verify_kernel_page_tables() {

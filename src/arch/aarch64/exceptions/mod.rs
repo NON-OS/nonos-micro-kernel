@@ -19,7 +19,9 @@ pub mod frame;
 pub mod handlers;
 pub mod install;
 pub mod syndrome;
+pub mod verify;
 
 pub use frame::ExceptionFrame;
 pub use install::install_vbar_el1;
 pub use syndrome::{decode_esr, ExceptionClass};
+pub use verify::vectors_installed;

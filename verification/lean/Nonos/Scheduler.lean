@@ -91,4 +91,84 @@ theorem rotate_length (q : Queue) : (rotate q).length = q.length := by
 theorem rotate_keeps_head (a : Nat) (as : Queue) : a ∈ rotate (a :: as) := by
   simp [rotate]
 
+/-! ### Claiming a process to run
+
+Picking a process only reads its state, and `Running` is not written until the
+architecture switch several calls later. With one CPU that gap is invisible.
+With two it is the whole problem: both pick the same pid, both switch into the
+same control block, and one process runs on two cores at once.
+
+`select_next_process` closes it by taking the state from `Ready` to `Running`
+under the state lock at the moment of selection, and picking again when that
+fails. What follows is that transition and the property it has to carry. -/
+
+/-- The part of `ProcessState` this transition distinguishes. Everything that
+    is not `ready` behaves alike here: the claim is refused. -/
+inductive PState where
+  | ready
+  | running
+  | other
+  deriving DecidableEq, Repr
+
+/-- `claim`: succeed only from `ready`, and leave the process `running` so a
+    later attempt cannot also succeed. Holding the state lock is what makes
+    this one step rather than a read followed by a write. -/
+def claim : PState → Bool × PState
+  | .ready => (true, .running)
+  | s => (false, s)
+
+/-- `n` CPUs attempting the claim in turn, counting how many won. -/
+def claimsWon : PState → Nat → Nat
+  | _, 0 => 0
+  | s, n + 1 =>
+    let (won, s') := claim s
+    (if won then 1 else 0) + claimsWon s' n
+
+/-- A claim never leaves the process claimable again. This is what the write
+    buys: without it every attempt would still see `ready`. -/
+theorem claim_consumes (s : PState) : (claim s).2 ≠ .ready := by
+  cases s <;> simp [claim]
+
+/-- Claims against a process that is not ready never succeed. -/
+theorem only_ready_is_claimed (s : PState) (h : s ≠ .ready) (n : Nat) :
+    claimsWon s n = 0 := by
+  induction n with
+  | zero => simp [claimsWon]
+  | succ k ih =>
+    cases s with
+    | ready => exact absurd rfl h
+    | running => simpa [claimsWon, claim] using ih
+    | other => simpa [claimsWon, claim] using ih
+
+/-- **Mutual exclusion.** However many CPUs attempt to claim one process, at
+    most one of them runs it.
+
+    False if `claim` left the state unchanged, or accepted anything other than
+    `ready`: either way a second CPU wins the same process and two cores enter
+    one control block. -/
+theorem at_most_one_cpu_wins (s : PState) (n : Nat) : claimsWon s n ≤ 1 := by
+  cases n with
+  | zero => simp [claimsWon]
+  | succ k =>
+    cases s with
+    | ready =>
+      have h := only_ready_is_claimed .running (by simp) k
+      simp [claimsWon, claim, h]
+    | running =>
+      have h := only_ready_is_claimed .running (by simp) k
+      simp [claimsWon, claim, h]
+    | other =>
+      have h := only_ready_is_claimed .other (by simp) k
+      simp [claimsWon, claim, h]
+
+/-- A ready process is claimed by exactly one caller, so selection does not
+    drop a runnable process on the floor either. -/
+theorem a_ready_process_is_claimed_once (n : Nat) (h : 0 < n) :
+    claimsWon .ready n = 1 := by
+  cases n with
+  | zero => exact absurd h (by simp)
+  | succ k =>
+    have hr := only_ready_is_claimed .running (by simp) k
+    simp [claimsWon, claim, hr]
+
 end Nonos.Scheduler

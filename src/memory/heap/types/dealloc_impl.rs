@@ -59,7 +59,7 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
         }
 
         #[cfg(feature = "heap-track")]
-        crate::arch::x86_64::idt::without_interrupts(|| {
+        crate::arch::run_without_interrupts(|| {
             allocator.allocated_ptrs.lock().remove(&(ptr as usize));
         });
 
@@ -71,7 +71,7 @@ pub(super) unsafe fn dealloc_impl(allocator: &SecureHeapAllocator, ptr: *mut u8,
         let align = layout.align().max(MIN_ALIGNMENT);
         if let Ok(adjusted_layout) = Layout::from_size_align(total_size, align) {
             super::super::manager::HEAP_STATS.record_deallocation(layout.size());
-            crate::arch::x86_64::idt::without_interrupts(|| {
+            crate::arch::run_without_interrupts(|| {
                 allocator.inner.dealloc(raw_ptr, adjusted_layout)
             });
         }

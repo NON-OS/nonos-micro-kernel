@@ -14,14 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Four-level x86-64 page-table walker. Reads every level through
-//! the directmap so the user virtual address itself is never
-//! dereferenced. Honours 1 GiB and 2 MiB huge pages.
+//! Four-level page-table walker. Reads every level through the directmap so
+//! the user virtual address itself is never dereferenced. Honours 1 GiB and
+//! 2 MiB huge pages.
+//!
+//! Both supported architectures index four levels of nine bits over a 4 KiB
+//! page, so the shape of the walk is shared. What an entry means is not, and
+//! every test here goes through `arch::paging::descriptor`: reading the wrong
+//! bit in the walk that decides whether userspace may touch an address is a
+//! privilege bug, not a portability nit.
+//!
+//! One asymmetry the boundary hides is worth knowing about. x86_64 intersects
+//! permissions down the hierarchy, so a table entry without the user bit
+//! denies EL0 whatever the leaf says. An aarch64 table descriptor restricts
+//! nothing unless its hierarchical bits say so. `table_grants_user` answers
+//! that per architecture; `is_user` answers it for the leaf.
 
 use super::bounds::{directmap_of, leaf_in_directmap};
 use super::leaf::UserLeaf;
 use super::root::page_table_root;
-use crate::memory::paging::constants::{PTE_ADDR_MASK, PTE_HUGE_PAGE, PTE_PRESENT, PTE_USER};
+use crate::arch::paging::descriptor;
 use crate::usercopy::error::UsercopyError;
 
 const PAGE_TABLE_INDEX_MASK: u64 = 0x1FF;
@@ -31,8 +43,11 @@ const PAGE_1G_MASK: u64 = (1 << 30) - 1;
 const PAGE_4K_SIZE: u64 = 1 << 12;
 const PAGE_2M_SIZE: u64 = 1 << 21;
 const PAGE_1G_SIZE: u64 = 1 << 30;
-const PAGE_2M_ADDR_MASK: u64 = 0x000F_FFFF_FFE0_0000;
-const PAGE_1G_ADDR_MASK: u64 = 0x000F_FFFF_C000_0000;
+/// A block descriptor's output address is the page-address bits with the bits
+/// the block spans cleared, so both are derived from the architecture's own
+/// address mask rather than written out.
+const PAGE_2M_ADDR_MASK: u64 = descriptor::ADDR_MASK & !PAGE_2M_MASK;
+const PAGE_1G_ADDR_MASK: u64 = descriptor::ADDR_MASK & !PAGE_1G_MASK;
 
 // Internal entry: page-table walk only. Permission-aware callers
 // live in `access.rs` and are the only translators the rest of the
@@ -52,20 +67,19 @@ fn walk(pt_root: u64, va: u64) -> Result<UserLeaf, UsercopyError> {
     let i1 = (va >> 12) & PAGE_TABLE_INDEX_MASK;
 
     let e4 = read_pte(directmap_of(pt_root)?, i4);
-    if e4 & PTE_PRESENT == 0 {
+    if !descriptor::is_present(e4) {
         return Err(UsercopyError::PageNotMapped);
     }
-    if e4 & PTE_USER == 0 {
+    if !descriptor::table_grants_user(e4) {
         return Err(UsercopyError::PageNotUser);
     }
-    let e3 = read_pte(directmap_of(e4 & PTE_ADDR_MASK)?, i3);
-    if e3 & PTE_PRESENT == 0 {
+    let e3 = read_pte(directmap_of(descriptor::address(e4))?, i3);
+    if !descriptor::is_present(e3) {
         return Err(UsercopyError::PageNotMapped);
     }
-    if e3 & PTE_USER == 0 {
-        return Err(UsercopyError::PageNotUser);
-    }
-    if e3 & PTE_HUGE_PAGE != 0 {
+    if descriptor::is_block(e3) {
+        // Permission on the leaf itself belongs to `access.rs`, which is the
+        // only caller and checks it on the entry returned here.
         return leaf_in_directmap(UserLeaf {
             entry: e3,
             phys_base: e3 & PAGE_1G_ADDR_MASK,
@@ -73,14 +87,14 @@ fn walk(pt_root: u64, va: u64) -> Result<UserLeaf, UsercopyError> {
             size: PAGE_1G_SIZE,
         });
     }
-    let e2 = read_pte(directmap_of(e3 & PTE_ADDR_MASK)?, i2);
-    if e2 & PTE_PRESENT == 0 {
-        return Err(UsercopyError::PageNotMapped);
-    }
-    if e2 & PTE_USER == 0 {
+    if !descriptor::table_grants_user(e3) {
         return Err(UsercopyError::PageNotUser);
     }
-    if e2 & PTE_HUGE_PAGE != 0 {
+    let e2 = read_pte(directmap_of(descriptor::address(e3))?, i2);
+    if !descriptor::is_present(e2) {
+        return Err(UsercopyError::PageNotMapped);
+    }
+    if descriptor::is_block(e2) {
         return leaf_in_directmap(UserLeaf {
             entry: e2,
             phys_base: e2 & PAGE_2M_ADDR_MASK,
@@ -88,13 +102,16 @@ fn walk(pt_root: u64, va: u64) -> Result<UserLeaf, UsercopyError> {
             size: PAGE_2M_SIZE,
         });
     }
-    let e1 = read_pte(directmap_of(e2 & PTE_ADDR_MASK)?, i1);
-    if e1 & PTE_PRESENT == 0 {
+    if !descriptor::table_grants_user(e2) {
+        return Err(UsercopyError::PageNotUser);
+    }
+    let e1 = read_pte(directmap_of(descriptor::address(e2))?, i1);
+    if !descriptor::is_present(e1) {
         return Err(UsercopyError::PageNotMapped);
     }
     leaf_in_directmap(UserLeaf {
         entry: e1,
-        phys_base: e1 & PTE_ADDR_MASK,
+        phys_base: descriptor::address(e1),
         offset: va & PAGE_4K_MASK,
         size: PAGE_4K_SIZE,
     })

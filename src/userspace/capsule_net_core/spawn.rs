@@ -15,8 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::embed::{
-    NET_CORE_ATTESTATION_BYTES, NET_CORE_ELF, NET_CORE_MANIFEST_BYTES,
-    NET_CORE_NONOS_ID_CERT_BYTES,
+    NET_CORE_ATTESTATION_BYTES, NET_CORE_ELF, NET_CORE_MANIFEST_BYTES, NET_CORE_NONOS_ID_CERT_BYTES,
 };
 use super::state;
 use crate::capabilities::Capability;
@@ -32,7 +31,7 @@ const SERVICE_NAME: &str = "net.core";
 const SERVICE_PORT: u32 = 4480;
 const REPLY_INBOX: &str = "endpoint.net.core.reply";
 const REPLY_PORT: u32 = 4481;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_net_core_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

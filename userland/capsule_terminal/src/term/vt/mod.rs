@@ -21,3 +21,4 @@ pub mod decset;
 pub mod parser;
 pub mod sgr;
 pub mod state;
+pub mod utf8;

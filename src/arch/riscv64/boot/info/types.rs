@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
-
 use super::memory::MemoryRegion;
+
+/// Enough for the memory nodes a board actually publishes. Fixed because the
+/// device tree is walked before the heap exists.
+pub const MAX_MEMORY_REGIONS: usize = 8;
 
 #[derive(Debug, Clone)]
 pub struct BootInfo {
@@ -31,7 +33,10 @@ pub struct BootInfo {
     pub clint_base: u64,
     pub hart_count: u32,
     pub boot_hart: u32,
-    pub memory_regions: Vec<MemoryRegion>,
+    /// Fixed storage: this is filled from the device tree in the entry path,
+    /// long before the heap exists, so it cannot be a `Vec`.
+    pub memory_regions: [MemoryRegion; MAX_MEMORY_REGIONS],
+    pub memory_region_count: usize,
 }
 
 impl Default for BootInfo {
@@ -48,7 +53,8 @@ impl Default for BootInfo {
             clint_base: 0x0200_0000,
             hart_count: 1,
             boot_hart: 0,
-            memory_regions: Vec::new(),
+            memory_regions: [MemoryRegion::EMPTY; MAX_MEMORY_REGIONS],
+            memory_region_count: 0,
         }
     }
 }

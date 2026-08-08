@@ -30,9 +30,9 @@ impl MMU {
     }
 
     pub(super) fn load_page_table(&self, pml4_frame: PhysAddr) -> MmuResult<()> {
-        unsafe {
-            asm!("mov cr3, {}", in(reg) pml4_frame.as_u64(), options(nostack, preserves_flags));
-        }
+        // Installing a freshly built table, so no address-space id to carry:
+        // zero keeps the classic flush-on-write behaviour.
+        crate::arch::paging::write_root(pml4_frame.as_u64(), 0);
         *self.current_cr3.lock() = pml4_frame.as_u64();
         self.invalidate_tlb_all();
         Ok(())

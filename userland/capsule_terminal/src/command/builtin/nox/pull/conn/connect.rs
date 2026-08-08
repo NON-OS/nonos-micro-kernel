@@ -38,7 +38,14 @@ pub fn connect(ip: [u8; 4], port: u16) -> Option<Conn> {
     body[4..6].copy_from_slice(&port.to_le_bytes());
     let tx = frame(OP_CONNECT, &body);
     let mut rx = [0u8; HDR + 4];
-    let n = mk_ipc_call_timeout(svc as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), CONNECT_MS);
+    let n = mk_ipc_call_timeout(
+        svc as u64,
+        tx.as_ptr(),
+        tx.len(),
+        rx.as_mut_ptr(),
+        rx.len(),
+        CONNECT_MS,
+    );
     if n < (HDR + 4) as i64 || status(&rx) != 0 {
         return None;
     }

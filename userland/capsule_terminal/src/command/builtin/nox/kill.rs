@@ -35,9 +35,7 @@ pub fn run(state: &mut State, args: &[&[u8]]) -> bool {
     };
     let sig = args.get(1).and_then(|a| parse_u64(a)).unwrap_or(9);
     if mk_kill(pid, sig) < 0 {
-        state
-            .scrollback
-            .push_error(b"kill: no such pid, or not permitted");
+        state.scrollback.push_error(b"kill: no such pid, or not permitted");
         return false;
     }
     let mut line: Vec<u8> = Vec::new();

@@ -22,7 +22,7 @@ use super::super::ctx::{Ctx, TimerReq};
 use super::super::to_str::to_str;
 use super::builtins::builtin;
 use super::console::console_log;
-use super::document_create::create_element;
+use super::document_create::{create_element, create_fragment, create_text_node};
 use super::document_get::get_by_id;
 use super::document_query::query;
 use super::document_query_all::query_all;
@@ -41,6 +41,8 @@ pub fn dispatch(ctx: &mut Ctx, name: &'static str, argv: Vec<Value>) -> Result<V
         "document.querySelector" => Ok(query(ctx, &argv)),
         "document.querySelectorAll" => Ok(query_all(ctx, &argv)),
         "document.createElement" => Ok(create_element(ctx, &argv)),
+        "document.createTextNode" => Ok(create_text_node(ctx, &argv)),
+        "document.createDocumentFragment" => Ok(create_fragment(ctx)),
         "Math.floor" | "Math.round" | "Math.abs" | "Math.max" | "Math.min" => Ok(math(name, &argv)),
         "parseInt" | "parseFloat" | "Number" | "String" | "Boolean" | "isNaN" => {
             Ok(builtin(name, &argv))

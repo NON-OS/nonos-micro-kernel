@@ -63,4 +63,3 @@ pub fn hmac_sha384_verify(key: &[u8], message: &[u8], mac: &[u8]) -> bool {
     let expect = hmac_sha384(key, message);
     constant_time::ct_eq(&expect, mac)
 }
-

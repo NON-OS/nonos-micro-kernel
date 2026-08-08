@@ -43,7 +43,12 @@ fn cpu_id() -> usize {
     {
         let id: u32;
         unsafe {
-            core::arch::asm!("mov {:e}, gs:8", out(reg) id, options(nostack, preserves_flags));
+            core::arch::asm!(
+                "mov {0:e}, gs:[{off}]",
+                out(reg) id,
+                off = const crate::smp::percpu::layout::CPU_ID,
+                options(nostack, preserves_flags),
+            );
         }
         (id as usize) % MAX_CPUS
     }

@@ -42,10 +42,7 @@ pub fn split_lines(head: &[u8]) -> Vec<&[u8]> {
 }
 
 pub fn eq_ci(a: &[u8], b: &[u8]) -> bool {
-    a.len() == b.len()
-        && a.iter()
-            .zip(b)
-            .all(|(x, y)| x.to_ascii_lowercase() == y.to_ascii_lowercase())
+    a.eq_ignore_ascii_case(b)
 }
 
 pub fn parse_usize(s: &[u8]) -> Option<usize> {
@@ -65,10 +62,6 @@ pub fn parse_usize(s: &[u8]) -> Option<usize> {
 
 fn trim(s: &[u8]) -> &[u8] {
     let a = s.iter().position(|c| !c.is_ascii_whitespace()).unwrap_or(s.len());
-    let b = s
-        .iter()
-        .rposition(|c| !c.is_ascii_whitespace())
-        .map(|i| i + 1)
-        .unwrap_or(a);
+    let b = s.iter().rposition(|c| !c.is_ascii_whitespace()).map(|i| i + 1).unwrap_or(a);
     &s[a..b]
 }

@@ -16,22 +16,23 @@
 
 extern crate alloc;
 
+#[cfg(target_arch = "x86_64")]
 mod ap;
 mod constants;
 mod cpu;
 mod init;
+mod ipi_dispatch;
 mod ipi_handler;
-mod ipi_idt;
 mod preempt;
 mod sole_cpu;
 mod state;
 mod stats;
-mod tlb;
 mod types;
 
 pub mod ipi;
 pub mod percpu;
 pub mod topology;
+#[cfg(target_arch = "x86_64")]
 pub mod trampoline;
 
 pub use constants::*;
@@ -42,9 +43,9 @@ pub use types::*;
 pub fn current_cpu_id() -> u32 {
     cpu_id() as u32
 }
+#[cfg(target_arch = "x86_64")]
 pub use ap::*;
 pub use init::*;
 pub use ipi_handler::*;
 pub use preempt::*;
 pub use stats::*;
-pub use tlb::*;

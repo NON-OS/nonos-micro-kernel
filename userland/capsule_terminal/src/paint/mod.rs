@@ -27,10 +27,15 @@ mod fetch_palette;
 mod fetch_uptime;
 mod footer;
 mod header;
+mod line_chars;
+mod line_text;
+mod line_window;
 mod metrics;
+mod prompt;
 mod shade;
+mod suggestion;
+mod syntax;
 pub mod tabstrip;
 
-pub use compose::paint;
 pub use compose::paint_tabs;
 pub use tabstrip::draw_tabstrip;

@@ -40,7 +40,7 @@ pub fn load(state: &mut State, target: &str) -> Result<(), &'static str> {
         let _ = net::socket_close(state.sockets_port, h);
         return Err("connect failed");
     }
-    let phase = if proxy.is_some() {
+    let phase = if proxy.is_some() || crate::browser::net::mixnet::is_on() {
         Phase::SocksHello
     } else if url.scheme == url::Scheme::Https {
         Phase::TlsHello

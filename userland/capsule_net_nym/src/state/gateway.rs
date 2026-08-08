@@ -26,4 +26,10 @@ pub struct Gateway {
     pub port: u16,
     pub stream: u32,
     pub transport: Transport,
+    /// The gateway's Ed25519 identity from the directory. Zero means none was
+    /// supplied and registration is skipped: there would be nothing to
+    /// authenticate against.
+    pub identity: [u8; 32],
+    /// Derived by the handshake; zero until it completes.
+    pub shared_key: [u8; 32],
 }

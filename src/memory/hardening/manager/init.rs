@@ -67,7 +67,7 @@ impl MemoryHardening {
 
     pub(super) fn generate_stack_canary(&self) -> u64 {
         let nonce = kaslr::boot_nonce().unwrap_or(0x1337DEADBEEF);
-        let timestamp = unsafe { core::arch::x86_64::_rdtsc() };
+        let timestamp = crate::arch::read_time_counter();
         nonce.wrapping_mul(timestamp).wrapping_add(CANARY_MIX_CONSTANT)
     }
 }

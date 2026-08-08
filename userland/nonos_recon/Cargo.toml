@@ -1,0 +1,11 @@
+[package]
+name = "nonos_recon"
+version = "0.2.0"
+edition = "2021"
+description = "TCP connect-scan reconnaissance engine for the NONOS recon tool, no_std"
+license = "AGPL-3.0"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]

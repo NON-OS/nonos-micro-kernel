@@ -59,7 +59,5 @@ fn ttl_ms(body: &[u8]) -> u64 {
     if body.len() < 12 {
         return state::surb_ttl_ms();
     }
-    u64::from_le_bytes([
-        body[4], body[5], body[6], body[7], body[8], body[9], body[10], body[11],
-    ])
+    u64::from_le_bytes([body[4], body[5], body[6], body[7], body[8], body[9], body[10], body[11]])
 }

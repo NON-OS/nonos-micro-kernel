@@ -34,3 +34,7 @@ pub fn disable_irq(irq: u32) {
 pub fn send_sgi(target: u32, intid: u32) -> Result<(), ()> {
     super::icc::send_sgi(target, intid)
 }
+
+pub fn send_sgi_all_others(intid: u32) -> Result<(), ()> {
+    super::icc::send_sgi_all_others(intid)
+}

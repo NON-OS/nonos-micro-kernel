@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod caps;
+mod caps_bits;
 mod capsule_id;
 mod cert_binding;
 mod dispatch;

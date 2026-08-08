@@ -22,7 +22,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_capsule_policy"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "nonos_policy_proto",
  "nonos_userland_libc",
@@ -31,11 +31,11 @@ dependencies = [
 
 [[package]]
 name = "nonos_policy_proto"
-version = "0.1.0"
+version = "0.3.0"
 
 [[package]]
 name = "nonos_userland_libc"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "linked_list_allocator",
 ]

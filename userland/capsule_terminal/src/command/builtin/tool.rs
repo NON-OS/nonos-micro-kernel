@@ -15,15 +15,8 @@ use crate::term::state::State;
 
 /// The installed command-line tools, by the bare name typed at the prompt. Each
 /// maps to its baked `tool.<name>` service. Kept in step with userland/apps.list.
-pub const TOOLS: &[&[u8]] = &[
-    b"grex",
-    b"dotenv-linter",
-    b"pastel",
-    b"jsonxf",
-    b"tokei",
-    b"huniq",
-    b"csview",
-];
+pub const TOOLS: &[&[u8]] =
+    &[b"grex", b"dotenv-linter", b"pastel", b"jsonxf", b"tokei", b"huniq", b"csview"];
 
 pub fn is_tool(name: &[u8]) -> bool {
     TOOLS.contains(&name)

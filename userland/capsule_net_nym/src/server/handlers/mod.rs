@@ -15,25 +15,35 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod close;
+mod control;
 mod cover;
 mod dispatch;
+mod find_exit;
 mod gateway;
+mod get_exit;
 mod health;
 mod io;
 mod open;
 mod recv;
 mod recv_drain;
 mod recv_plain;
+mod route_reply;
 mod send;
+mod send_ready;
 mod send_reply;
+mod send_sphinx;
 mod set_authority;
 mod set_credential;
+mod set_destination;
+mod set_identity;
 mod set_timing;
 mod set_topology;
 mod surb;
 mod sync_directory;
 mod timing_status;
+mod top_up;
 mod topology_errno;
 mod topology_status;
 
 pub use dispatch::dispatch;
+pub use recv_drain::drain_stream;

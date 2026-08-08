@@ -1,6 +1,6 @@
 [package]
 name = "nonos_seal"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 description = "ChaCha20-Poly1305 AEAD sealing for NONOS keyring seed-at-rest, no_std"
 license = "AGPL-3.0"

@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-entropy")]
 pub(super) const ENTROPY_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_entropy/target/x86_64-nonos-user/release/entropy");
+    include_bytes!(concat!(
+    "../../../userland/capsule_entropy/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/entropy"
+));
 
 #[cfg(feature = "nonos-capsule-entropy")]
 pub(super) const ENTROPY_NONOS_ID_CERT_BYTES: &[u8] =

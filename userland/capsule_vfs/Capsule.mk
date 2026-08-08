@@ -31,6 +31,10 @@ CAPSULE_CARGO_FEATURES   := seed-audio-store
 #
 # The rg entries below predate this change and were already inert: nothing under
 # src/ has ever referenced ripgrep. They are left in place pending a decision.
+#
+# Their paths name the x86_64 user target explicitly, so the block stays guarded
+# and any other target depends on nothing here.
+ifeq ($(NONOS_USER_TARGET),x86_64-nonos-user)
 CAPSULE_EXTRA_DEPS := \
 	userland/capsule_ripgrep/target/x86_64-nonos-user/release/rg \
 	nonos-data/trust/capsules/rg.nonos_id_cert.bin \
@@ -38,5 +42,6 @@ CAPSULE_EXTRA_DEPS := \
 
 CAPSULE_EXTRA_ORDER_DEPS := \
 	nonos-data/trust/capsules/rg.zk_trailer.bin
+endif
 
 include nonos-mk/capsule.mk

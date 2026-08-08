@@ -21,13 +21,15 @@ use super::embed::{
 use crate::capabilities::Capability;
 use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified, SpawnError};
 use crate::security::nonos_id_cert::IdCertVerifyError;
-use crate::security::nonos_trust_anchor::{decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY};
+use crate::security::nonos_trust_anchor::{
+    decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
+};
 
 const SERVICE_NAME: &str = "tokio_smoke";
 const SERVICE_PORT: u32 = 4504;
 const REPLY_INBOX: &str = "endpoint.tokio_smoke.reply";
 const REPLY_PORT: u32 = 4505;
-const TARGET_TRIPLE: &str = "x86_64-nonos-user";
+const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
 pub fn spawn_tokio_smoke_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

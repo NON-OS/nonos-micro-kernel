@@ -6,7 +6,7 @@
 
 [package]
 name = "nonos_browser"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 publish = false
 license = "AGPL-3.0"
@@ -25,6 +25,7 @@ harness = []
 
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_tls = { path = "../nonos_tls" }
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_toolkit = { path = "../toolkit" }
 nonos_inflate = { path = "../inflate" }

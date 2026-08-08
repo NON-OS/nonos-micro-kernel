@@ -45,12 +45,29 @@ contract the code owes. Moving an entry to level 2 or 1 is tracked work.
 | `Nonce` | `src/capabilities/resource` | `userland/mechanism_proofs` (differential tests and Kani over the composition in `nonce_compose.rs`) |
 | `Bounds` | `src/elf/reloc` | `userland/mechanism_proofs` (differential tests and Kani over the range test in `range.rs`) |
 | `Priority` | `src/process/scheduler` | `userland/mechanism_proofs` (differential tests and Kani over `SchedAttr::effective_priority`) |
+| `Rflags` | `src/arch/x86_64/context/rflags.rs` | `userland/mechanism_proofs` (differential tests and Kani over `sanitize` and `sanitize_user` for every 64-bit input; the Lean side pins the mask constant to the bit positions it stands for) |
+| `SpawnCaps` | `src/security/capsule_manifest/verify/caps_bits.rs` | `userland/mechanism_proofs` (differential tests and Kani over the ceiling, grant and install arithmetic that `check_ceiling` and `check_grant` delegate to) |
+| `Delegation` | `src/capabilities/delegation/lifetime.rs` | `userland/mechanism_proofs` (differential tests and Kani over the expiry meet `create_delegation` delegates to) |
 | `Isolation`, `Paging` | `src/memory/paging` | `userland/kernel_proofs` (page permission W xor X, over all bit patterns) |
 | `Loader` | `src/elf` loader | `userland/kernel_proofs` (segment bounds) |
 | `Syscall` | `src/syscall` numbers | `userland/kernel_proofs` (decode totality and registry agreement) |
 
 The proof crates run in CI: `.github/workflows/verify.yml` runs each crate's
 `cargo test` and clippy, and a Kani job runs the model checks for all inputs.
+
+### Constants
+
+A level 3 module states the kernel's constants as its own Lean literals, so
+the two agree only until someone edits one of them. `mechanism_proofs`
+includes the real constant definitions by `#[path]` and holds them against the
+numbers the specifications quote, in `constants_tests.rs`. Editing
+`CANONICAL_LOW_MAX`, the page sizes, or `MAX_MESSAGE_SIZE` without editing the
+Lean file that quotes it fails CI.
+
+This covers the constants the specifications actually rest on. Bounds defined
+privately inside a module that pulls in kernel dependencies, such as
+`MAX_DEMAND_PAGES` and `MAX_TRACKED` in `demand_cap.rs`, cannot be included
+this way and are still stated in Lean alone.
 
 ## Level 3: specification, binding pending
 
@@ -59,6 +76,8 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 
 | Module | Kernel subsystem |
 | --- | --- |
+| `ReplyAuthorization` | `src/syscall/microkernel/ipc/pending_reply` (the table operations as written, with the key each caller passes) |
+| `UserWalk` | `src/usercopy/walk` (the model mirrors `walk` branch for branch and `access.rs` on top of it; the descriptor predicates it names are already code-bound through `verification/extraction`) |
 | `Mutex` | `src/sys/sync/irq_mutex` |
 | `Rwlock` | `src/sys/sync/irq_rwlock` |
 | `Spinlock` | `spin::Mutex` wrappers in `src/sys/sync` |
@@ -67,7 +86,7 @@ kernel subsystem it abstracts. The mechanical tie to that code is the backlog.
 | `Iommu` | device DMA windows under `src/hardware` |
 | `Tlb` | TLB shootdown under `src/memory` |
 | `CapTable`, `Dispatch` | capability tables and the syscall dispatch under `src/syscall` |
-| `Scheduler` | `src/process/scheduler` |
+| `Scheduler` | `src/process/scheduler` (the claim transition in `selection/select.rs` is modelled, not code-bound: `ProcessState` lives in `process/core/types.rs`, which pulls in `VirtAddr`, `Context` and `Vec`, so it cannot be `#[path]`-included without duplicating the state type) |
 | `Epoch` | RCU-style reclamation across the kernel |
 | `Signal` | signal delivery |
 | `Reaper` | the process table |

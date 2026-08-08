@@ -14,20 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hardware::tpm::constants::{TPM_DATA_FIFO, TPM_STS, TPM_STS_GO, TPM_STS_READY};
 use crate::hardware::tpm::state::TpmState;
 
+/// Hand the ReadPublic command to the TPM.
+///
+/// Goes through the shared transport rather than driving registers here. This
+/// wrote the FIFO sequence out again by hand, so the EK read spoke FIFO
+/// whatever the part actually presented and could never work on a CRB TPM even
+/// once the rest of the driver did. One transport, chosen from the detected
+/// interface, is the only arrangement where the two cannot drift apart.
 pub fn send_read_public(state: &TpmState, cmd: &[u8]) -> Result<(), &'static str> {
-    state.write_reg8(TPM_STS, TPM_STS_READY);
-    for _ in 0..10000 {
-        if (state.read_reg8(TPM_STS) & TPM_STS_READY) != 0 {
-            break;
-        }
-        core::hint::spin_loop();
-    }
-    for byte in cmd {
-        state.write_reg8(TPM_DATA_FIFO, *byte);
-    }
-    state.write_reg8(TPM_STS, TPM_STS_GO);
-    Ok(())
+    state.send_command(cmd).map_err(|_| "TPM command submit failed")
 }

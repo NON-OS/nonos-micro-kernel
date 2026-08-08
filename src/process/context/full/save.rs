@@ -60,6 +60,19 @@ impl Context {
         );
     }
 
+    /// A context that resumes at `entry` on the stack `stack_top`, with every
+    /// other register clear and interrupts enabled. Used where a thread has to be
+    /// given a starting point rather than have one recovered from it, so shared
+    /// code can ask for that without naming a register file.
+    pub fn for_resume(stack_top: u64, entry: u64) -> Self {
+        let mut ctx: Context = unsafe { core::mem::zeroed() };
+        ctx.rsp = stack_top;
+        ctx.rip = entry;
+        // Bit 1 reads as one, bit 9 is IF: a resumed thread runs interruptible.
+        ctx.rflags = 0x202;
+        ctx
+    }
+
     #[inline(never)]
     pub fn save() -> Self {
         let mut ctx: Context = unsafe { core::mem::zeroed() };

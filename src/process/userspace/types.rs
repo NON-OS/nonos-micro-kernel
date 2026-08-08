@@ -83,6 +83,12 @@ impl FpuState {
         // self.data is 1024 bytes and 64-byte aligned (repr(C, align(64))), which
         // exceeds the 16-byte alignment requirement for FXSAVE. The nostack option
         // is correct as FXSAVE only writes to the provided memory location.
+        // FXSAVE writes the x86_64 legacy area. The aarch64 register file has a
+        // different shape and is saved by `arch::aarch64::fpu`, so this body is
+        // the one architecture that uses this layout.
+        #[cfg(target_arch = "x86_64")]
+        // SAFETY: the destination is this struct is own 512-byte align(64)
+        // buffer, which meets FXSAVE is alignment and size requirement.
         unsafe {
             core::arch::asm!(
                 "fxsave [{}]",
@@ -98,6 +104,8 @@ impl FpuState {
         // self.data must have been previously populated by save() or be zeroed.
         // The alignment requirement (16 bytes) is satisfied by our align(64) repr.
         // The nostack option is correct as FXRSTOR only reads from memory.
+        #[cfg(target_arch = "x86_64")]
+        // SAFETY: reads back the same buffer `save` wrote, at the same alignment.
         unsafe {
             core::arch::asm!(
                 "fxrstor [{}]",
@@ -114,6 +122,9 @@ impl FpuState {
     #[inline(always)]
     pub fn init() {
         let mxcsr: u32 = 0x1F80;
+        // x87 and SSE control words, so this is the x86_64 unit. The aarch64
+        // FPCR is set where that FPU is brought up.
+        #[cfg(target_arch = "x86_64")]
         // SAFETY: FNINIT resets the x87 unit; LDMXCSR loads the SSE control word
         // from the 4-byte `mxcsr` local. Neither touches the stack.
         unsafe {

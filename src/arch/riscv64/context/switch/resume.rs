@@ -20,7 +20,7 @@ use core::sync::atomic::Ordering;
 use crate::arch::riscv64::context::resume::resume_user;
 use crate::arch::riscv64::fpu;
 use crate::process::core::{ProcessControlBlock, ProcessState, CURRENT_PID};
-use crate::process::scheduler::preemption::{CURRENT_TIME_SLICE, DEFAULT_TIME_SLICE};
+use crate::process::scheduler::preemption::{set_time_slice, DEFAULT_TIME_SLICE};
 
 use super::address_space::swap_address_space;
 
@@ -46,7 +46,7 @@ pub(super) fn try_resume(pcb: &Arc<ProcessControlBlock>, pid: u32) -> bool {
 
     *pcb.state.lock() = ProcessState::Running;
     CURRENT_PID.store(pid, Ordering::SeqCst);
-    CURRENT_TIME_SLICE.store(DEFAULT_TIME_SLICE, Ordering::SeqCst);
+    set_time_slice(DEFAULT_TIME_SLICE);
 
     fpu::prepare_incoming();
 

@@ -16,7 +16,11 @@
 
 #[cfg(feature = "nonos-capsule-net-nym")]
 pub(super) const NET_NYM_ELF: &[u8] =
-    include_bytes!("../../../userland/capsule_net_nym/target/x86_64-nonos-user/release/net_nym");
+    include_bytes!(concat!(
+    "../../../userland/capsule_net_nym/target/",
+    env!("NONOS_USER_TARGET"),
+    "/release/net_nym"
+));
 
 #[cfg(feature = "nonos-capsule-net-nym")]
 pub(super) const NET_NYM_NONOS_ID_CERT_BYTES: &[u8] =

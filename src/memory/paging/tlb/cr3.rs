@@ -14,27 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! The active page-table root, as the paging manager sees it. The register
+//! itself belongs to the architecture; this layer only adds the `PhysAddr`
+//! typing the manager works in.
+
 use crate::memory::addr::PhysAddr;
 
-#[inline]
-pub fn flush_address_space(cr3_value: PhysAddr) {
-    unsafe {
-        core::arch::asm!("mov cr3, {}", in(reg) cr3_value.as_u64(), options(nostack, preserves_flags));
-    }
-}
-
+/// Physical base of the table the CPU is translating through.
 #[inline]
 pub fn get_cr3() -> PhysAddr {
-    let cr3: u64;
-    unsafe {
-        core::arch::asm!("mov {}, cr3", out(reg) cr3, options(nostack, preserves_flags));
-    }
-    PhysAddr::new(cr3 & !0xFFF)
+    PhysAddr::new(crate::arch::paging::read_root())
 }
 
+/// Point the CPU at `page_table_pa`, untagged.
+///
+/// The zero is the address-space id, and it is honest rather than incidental:
+/// `AddressSpace` keeps the id in its own field and stores the raw page-table
+/// frame here, so the value reaching this function is page aligned and carries
+/// no id to pass on. Every switch therefore loads the table under id 0, which
+/// `pcid::KERNEL_PCID` also names. That is correct, because writing the root
+/// invalidates the entries tagged with the id being loaded, but it means
+/// tagged invalidation buys nothing on this path even once `enable_pcid` has
+/// turned it on. Wiring the id through is a behaviour change and wants a
+/// measurement, not a guess.
 #[inline]
 pub fn set_cr3(page_table_pa: PhysAddr) {
-    unsafe {
-        core::arch::asm!("mov cr3, {}", in(reg) page_table_pa.as_u64(), options(nostack, preserves_flags));
-    }
+    crate::arch::paging::write_root(page_table_pa.as_u64(), 0);
 }

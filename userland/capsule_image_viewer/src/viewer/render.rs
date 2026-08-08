@@ -1,9 +1,9 @@
-use nonos_app_skeleton::PaintBuffer;
-use crate::viewer::state::ViewerState;
-use crate::viewer::viewport::{place_mode, clamp_pan_mode, FitMode};
-use crate::viewer::scale::{draw_nn, draw_bilinear, Dst};
-use crate::viewer::overlay;
 use crate::viewer::nav::{button_rects, BTN_H, BTN_W};
+use crate::viewer::overlay;
+use crate::viewer::scale::{draw_bilinear, draw_nn, Dst};
+use crate::viewer::state::ViewerState;
+use crate::viewer::viewport::{clamp_pan_mode, place_mode, FitMode};
+use nonos_app_skeleton::PaintBuffer;
 
 const BG: u32 = 0xFF10_1418;
 const FG: u32 = 0xFFE6_E6E6;

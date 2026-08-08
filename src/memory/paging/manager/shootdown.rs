@@ -27,6 +27,7 @@ use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use spin::Mutex;
 
 use super::super::tlb;
+use crate::arch::interrupt_controller::Ipi;
 use crate::memory::addr::VirtAddr;
 use crate::memory::paging::constants::PAGE_SIZE_4K;
 use crate::smp::cpus_online;
@@ -87,7 +88,18 @@ pub fn flush_tlb_all_smp(asid: u32) {
 }
 
 fn broadcast(va: VirtAddr, page_count: u32, asid: u32) {
-    let _guard = SHOOTDOWN_LOCK.lock();
+    // Serve any round already in flight while waiting for our turn. Page-table
+    // mutation sites reach here with interrupts masked, so a cpu that simply
+    // blocked on the lock could not answer the holder's IPI, and the two would
+    // wait on each other until the timeout below halted the machine.
+    let _guard = loop {
+        if let Some(guard) = SHOOTDOWN_LOCK.try_lock() {
+            break guard;
+        }
+        handle_shootdown_ipi();
+        core::hint::spin_loop();
+    };
+
     let self_cpu = crate::smp::cpu_id();
     let count = cpus_online();
     let mut targets: u32 = 0;
@@ -101,14 +113,19 @@ fn broadcast(va: VirtAddr, page_count: u32, asid: u32) {
         if !cpu_should_flush(d, asid) {
             continue;
         }
+        // Mark the target before the request is published so it cannot be
+        // read as "not my round" by a cpu that is already spinning here.
+        d.tlb_flush_pending.store(1, Ordering::Relaxed);
         targets += 1;
     }
     if targets == 0 {
         return;
     }
+
     REQ_VA.store(va.as_u64(), Ordering::Release);
     REQ_PAGES.store(page_count, Ordering::Release);
     REQ_PENDING_ACKS.store(targets, Ordering::SeqCst);
+
     for cpu in 0..count {
         if cpu == self_cpu {
             continue;
@@ -116,12 +133,12 @@ fn broadcast(va: VirtAddr, page_count: u32, asid: u32) {
         let Some(d) = crate::smp::percpu::get(cpu) else {
             continue;
         };
-        if !cpu_should_flush(d, asid) {
+        if d.tlb_flush_pending.load(Ordering::Relaxed) == 0 {
             continue;
         }
-        let _ = crate::smp::ipi::call_on_cpu(cpu, ipi_handler, 0);
+        let _ = crate::arch::interrupt_controller::send_ipi(d.apic_id, Ipi::TlbShootdown);
     }
-    wait_for_acks(va, asid);
+    wait_for_acks();
 }
 
 #[inline]
@@ -133,7 +150,17 @@ fn cpu_should_flush(data: &crate::smp::percpu::PerCpuData, asid: u32) -> bool {
     active != ASID_NONE && active == asid
 }
 
-fn ipi_handler(_arg: usize) {
+/// Flush for the round in progress, if this cpu is one of its targets.
+///
+/// Driven by the TlbShootdown vector, and also called directly by a cpu
+/// spinning for the lock in `broadcast`. The pending flag makes it safe either
+/// way: it is what says the round applies to us, and clearing it before the
+/// ack means neither path can acknowledge twice.
+pub fn handle_shootdown_ipi() {
+    let me = crate::smp::percpu::current();
+    if me.tlb_flush_pending.swap(0, Ordering::AcqRel) == 0 {
+        return;
+    }
     let pages = REQ_PAGES.load(Ordering::Acquire);
     if pages == 0 {
         tlb::invalidate_all();
@@ -147,7 +174,7 @@ fn ipi_handler(_arg: usize) {
     REQ_PENDING_ACKS.fetch_sub(1, Ordering::Release);
 }
 
-fn wait_for_acks(va: VirtAddr, asid: u32) {
+fn wait_for_acks() {
     let deadline = read_tsc().wrapping_add(SHOOTDOWN_TIMEOUT_TSC);
     while REQ_PENDING_ACKS.load(Ordering::Acquire) > 0 {
         if read_tsc() > deadline {
@@ -157,12 +184,11 @@ fn wait_for_acks(va: VirtAddr, asid: u32) {
         }
         core::hint::spin_loop();
     }
-    let _ = (va, asid);
 }
 
 #[inline]
 fn read_tsc() -> u64 {
     // SAFETY: eK@nonos.systems — rdtsc has no side effects and is
     // unconditionally available on every x86_64 CPU NØNOS supports.
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }

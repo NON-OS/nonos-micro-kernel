@@ -36,5 +36,8 @@ pub fn map_device(domain: DomainId, bus: u8, device: u8, function: u8) -> Result
         return Err(VtdError::DeviceAlreadyAttached);
     }
     state.bindings.push(DeviceBinding { source, domain }).map_err(|_| VtdError::DomainTableFull)?;
-    Ok(())
+    // Binding recorded, nothing programmed: confining the device needs a
+    // context entry and translation enabled, and neither happens here.
+    // Returning Ok claimed an isolation the device did not have.
+    Err(VtdError::NotEnforcing)
 }

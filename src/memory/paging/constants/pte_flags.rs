@@ -14,17 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const PTE_PRESENT: u64 = 1 << 0;
-pub const PTE_WRITABLE: u64 = 1 << 1;
-pub const PTE_USER: u64 = 1 << 2;
-pub const PTE_WRITE_THROUGH: u64 = 1 << 3;
-pub const PTE_CACHE_DISABLE: u64 = 1 << 4;
-pub const PTE_ACCESSED: u64 = 1 << 5;
-pub const PTE_DIRTY: u64 = 1 << 6;
-pub const PTE_HUGE_PAGE: u64 = 1 << 7;
-pub const PTE_GLOBAL: u64 = 1 << 8;
-pub const PTE_NO_EXECUTE: u64 = 1u64 << 63;
-pub const PTE_ADDR_MASK: u64 = 0x000F_FFFF_FFFF_F000;
-pub const PTE_FLAGS_MASK: u64 = 0xFFF0_0000_0000_0FFF;
-pub const PTE_TABLE_FLAGS: u64 = PTE_PRESENT | PTE_WRITABLE | PTE_USER;
-pub const PTE_KERNEL_TABLE: u64 = PTE_PRESENT | PTE_WRITABLE;
+//! What a mapping is asked to be.
+//!
+//! These describe intent, not hardware. `arch::paging::descriptor` owns the
+//! vocabulary and every backend translates it into its own descriptor bits, so
+//! nothing here may be written into a page table directly: build entries with
+//! `descriptor::leaf` and `descriptor::table`.
+
+use crate::arch::paging::descriptor::flags;
+
+pub const PTE_PRESENT: u64 = flags::PRESENT;
+pub const PTE_WRITABLE: u64 = flags::WRITABLE;
+pub const PTE_USER: u64 = flags::USER;
+pub const PTE_WRITE_THROUGH: u64 = flags::WRITE_THROUGH;
+pub const PTE_CACHE_DISABLE: u64 = flags::NO_CACHE;
+pub const PTE_ACCESSED: u64 = flags::ACCESSED;
+pub const PTE_DIRTY: u64 = flags::DIRTY;
+pub const PTE_HUGE_PAGE: u64 = flags::HUGE;
+pub const PTE_GLOBAL: u64 = flags::GLOBAL;
+pub const PTE_NO_EXECUTE: u64 = flags::NO_EXECUTE;
+
+/// The output-address bits of a live entry on this architecture. Prefer
+/// `pte_address`, which is the same thing without the caller doing the mask.
+pub const PTE_ADDR_MASK: u64 = crate::arch::paging::descriptor::ADDR_MASK;
+pub const PTE_FLAGS_MASK: u64 = !PTE_ADDR_MASK;

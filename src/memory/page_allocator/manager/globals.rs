@@ -22,5 +22,5 @@ pub(super) static PAGE_ALLOCATOR: Mutex<PageAllocator> = Mutex::new(PageAllocato
 pub(super) static ALLOCATOR_STATS: AllocatorStats = AllocatorStats::new();
 
 pub(super) fn get_timestamp() -> u64 {
-    unsafe { core::arch::x86_64::_rdtsc() }
+    crate::arch::read_time_counter()
 }

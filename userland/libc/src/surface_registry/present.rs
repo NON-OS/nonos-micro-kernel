@@ -16,7 +16,16 @@
 
 use crate::syscall::{call_raw, N_MK_SURFACE_PRESENT};
 
+/// Present the whole surface.
 #[no_mangle]
 pub extern "C" fn mk_surface_present(handle: u64) -> i64 {
     call_raw(N_MK_SURFACE_PRESENT, [handle, 0, 0, 0, 0, 0])
+}
+
+/// Present one rectangle of the surface. The kernel copies what it is handed
+/// with the CPU, so a caller that knows what changed should say so. Zero width
+/// or height means the whole surface.
+#[no_mangle]
+pub extern "C" fn mk_surface_present_rect(handle: u64, x: u32, y: u32, w: u32, h: u32) -> i64 {
+    call_raw(N_MK_SURFACE_PRESENT, [handle, x as u64, y as u64, w as u64, h as u64, 0])
 }

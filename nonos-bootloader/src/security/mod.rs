@@ -26,6 +26,7 @@ pub mod hardware;
 mod init;
 pub mod integrity;
 pub mod memory;
+pub mod root_of_trust;
 pub mod timing;
 mod tpm_extend;
 mod tpm_nv;

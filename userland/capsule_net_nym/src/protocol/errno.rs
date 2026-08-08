@@ -38,3 +38,6 @@ pub const E_DIRECTORY_PROTO: u16 = 20;
 pub const E_DIRECTORY_SOURCE: u16 = 21;
 pub const E_TOPOLOGY_EXPIRED: u16 = 22;
 pub const E_PERM: u16 = 23;
+
+/// A second session tried to bind a destination while one already holds it.
+pub const E_BUSY: u16 = 24;

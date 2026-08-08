@@ -28,7 +28,14 @@ impl Conn {
     pub fn recv(&self, out: &mut Vec<u8>) -> Rx {
         let tx = frame(OP_RECV, &self.handle.to_le_bytes());
         let mut rx = vec![0u8; RX_CAP];
-        let n = mk_ipc_call_timeout(self.port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), IO_MS);
+        let n = mk_ipc_call_timeout(
+            self.port as u64,
+            tx.as_ptr(),
+            tx.len(),
+            rx.as_mut_ptr(),
+            rx.len(),
+            IO_MS,
+        );
         if n < HDR as i64 {
             return Rx::Gone;
         }
@@ -46,7 +53,14 @@ impl Conn {
     pub fn state(&self) -> u8 {
         let tx = frame(OP_STATE, &self.handle.to_le_bytes());
         let mut rx = [0u8; HDR + 1];
-        let n = mk_ipc_call_timeout(self.port as u64, tx.as_ptr(), tx.len(), rx.as_mut_ptr(), rx.len(), IO_MS);
+        let n = mk_ipc_call_timeout(
+            self.port as u64,
+            tx.as_ptr(),
+            tx.len(),
+            rx.as_mut_ptr(),
+            rx.len(),
+            IO_MS,
+        );
         if n < (HDR + 1) as i64 || status(&rx) != 0 {
             return 0xff;
         }

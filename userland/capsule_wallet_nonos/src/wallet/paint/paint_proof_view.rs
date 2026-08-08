@@ -72,7 +72,7 @@ pub fn paint_proof_view(state: &State, fb: &mut PaintBuffer) {
 }
 
 // "0x" + first two and last two bytes of the 32-byte hash.
-fn short_hash(h: &[u8; 32], out: &mut [u8; 13]) {
+pub(super) fn short_hash(h: &[u8; 32], out: &mut [u8; 13]) {
     const HEX: &[u8; 16] = b"0123456789abcdef";
     out[0] = b'0';
     out[1] = b'x';

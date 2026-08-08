@@ -23,6 +23,11 @@ pub const REG_IMR: usize = 0x3C;
 pub const REG_ISR: usize = 0x3E;
 pub const REG_TX_CONFIG: usize = 0x40;
 pub const REG_RX_CONFIG: usize = 0x44;
+/// EEPROM command register, which holds the config-write lock. The IDR bytes at
+/// `REG_MAC0` ignore writes until it is unlocked.
+pub const REG_CFG9346: usize = 0x50;
+pub const CFG9346_UNLOCK: u8 = 0xC0;
+pub const CFG9346_LOCK: u8 = 0x00;
 pub const REG_PHY_STATUS: usize = 0x6C;
 pub const REG_RMS: usize = 0xDA;
 pub const REG_RXDESC_ADDR_LO: usize = 0xE4;

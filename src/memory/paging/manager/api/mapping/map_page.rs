@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::globals::{PAGING_MANAGER, PAGING_STATS};
-use crate::arch::x86_64::idt::without_interrupts;
+use crate::arch::run_without_interrupts as without_interrupts;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::paging::error::PagingResult;
 use crate::memory::paging::types::{PagePermissions, PageSize};
