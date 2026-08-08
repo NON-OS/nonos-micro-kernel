@@ -19,6 +19,7 @@ mod dispatch;
 pub mod handlers;
 mod input;
 mod installed_apps;
+mod packages;
 mod paint_initial;
 mod ready_to_block;
 mod refresh_taskbar;

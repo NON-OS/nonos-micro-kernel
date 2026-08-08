@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NotifyLevel, SpotlightState, TaskbarState, ToastQueue, TrayTable};
+use super::{NotifyLevel, PkgInstallPrompt, SpotlightState, TaskbarState, ToastQueue, TrayTable};
 
 pub struct Context {
     pub compositor_port: u32,
@@ -47,6 +47,10 @@ pub struct Context {
     /// installer service is up, then left alone.
     pub installed_apps: alloc::vec::Vec<alloc::vec::Vec<u8>>,
     pub installed_apps_loaded: bool,
+    /// File names of the `.nonos` packages sitting in /pkgs, rescanned every
+    /// tick so one dropped in after boot appears without a restart.
+    pub pkg_files: alloc::vec::Vec<alloc::string::String>,
+    pub pkg_files_loaded: bool,
     /// Pid the installer handed back for each store app we have launched, so a
     /// second click focuses that window instead of loading another copy. An
     /// entry is dropped once its pid stops accepting control frames.
@@ -75,6 +79,9 @@ pub struct Context {
     /// Name of the runtime-installed app whose launch is awaiting the consent
     /// modal, or None when no dialog is up.
     pub pending_consent: Option<alloc::vec::Vec<u8>>,
+    /// The /pkgs package whose install awaits the consent modal, carrying the
+    /// summary pkg_query returned, or None when no dialog is up.
+    pub pending_pkg_install: Option<PkgInstallPrompt>,
 }
 
 impl Context {
