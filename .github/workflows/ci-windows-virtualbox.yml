@@ -16,9 +16,13 @@ name: windows-virtualbox
 on:
   workflow_dispatch:
     inputs:
-      iso_url:
-        description: "URL of the ISO to boot"
+      release_tag:
+        description: "Tag of the release carrying the ISO. A draft works, so an image can be tested before it is published."
         required: true
+      asset:
+        description: "Name of the ISO asset on that release"
+        required: false
+        default: "nonos.iso"
       boot_seconds:
         description: "How long to let it run before capturing"
         required: false
@@ -37,9 +41,13 @@ jobs:
       - name: Fetch the image
         run: |
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
-          Invoke-WebRequest -Uri "${{ inputs.iso_url }}" -OutFile artifacts\nonos.iso
+          gh release download "${{ inputs.release_tag }}" --repo "$env:GITHUB_REPOSITORY" `
+              --pattern "${{ inputs.asset }}" --dir artifacts --clobber
+          Move-Item artifacts\* artifacts\nonos.iso -Force -EA SilentlyContinue
           Get-FileHash artifacts\nonos.iso -Algorithm SHA256
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: Create the machine
         run: |
