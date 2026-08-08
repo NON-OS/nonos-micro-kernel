@@ -23,12 +23,11 @@ use super::client::{capacity, read_blocks};
 use super::digest::digest16;
 use super::error::BlkError;
 use super::store_header::{entry_count, ENTRY_LEN, HEADER_LEN, MAX_ENTRIES};
-use super::store_toc::{decode, TocEntry, MAX_TOTAL_BYTES};
+use super::store_toc::{decode, valid_name, TocEntry, MAX_TOTAL_BYTES, NAME_LEN};
 use super::wire::SECTOR_SIZE;
 
 const STORE_BASE_LBA: u64 = 256;
 const MAX_WRITE_BYTES: usize = 8192;
-const NAME_LEN: usize = 96;
 
 pub fn append(name: &str, data: &[u8]) -> Result<(), BlkError> {
     let mut head = [0u8; SECTOR_SIZE];
@@ -53,7 +52,7 @@ pub fn append(name: &str, data: &[u8]) -> Result<(), BlkError> {
     if committed.saturating_add(data.len() as u64) > MAX_TOTAL_BYTES {
         return Err(BlkError::BadLength);
     }
-    if count >= MAX_ENTRIES || name.len() > NAME_LEN {
+    if count >= MAX_ENTRIES || !valid_name(name) {
         return Err(BlkError::BadContainer);
     }
     write_payload(next_off, data)?;

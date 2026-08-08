@@ -25,7 +25,7 @@ use super::error::BlkError;
 use super::store_header::{le_u64, ENTRY_LEN, HEADER_LEN};
 use super::wire::SECTOR_SIZE;
 
-const NAME_LEN: usize = 96;
+pub(super) const NAME_LEN: usize = 96;
 pub(super) const MAX_TOTAL_BYTES: u64 = 16 * 1024 * 1024;
 
 pub struct TocEntry {
@@ -61,8 +61,20 @@ pub fn decode(toc: &[u8], count: usize, capacity_bytes: u64) -> Result<Vec<TocEn
 fn decode_name(field: &[u8]) -> Result<String, BlkError> {
     let end = field.iter().position(|&b| b == 0).unwrap_or(field.len());
     let name = core::str::from_utf8(&field[..end]).map_err(|_| BlkError::BadContainer)?;
-    if name.is_empty() || !name.is_ascii() {
+    if !valid_name(name) {
         return Err(BlkError::BadContainer);
     }
     Ok(String::from(name))
+}
+
+// The single acceptance predicate for a TOC name, shared with the appender so a
+// name that writes cannot be a name that later fails to decode: one such entry
+// makes `decode` reject the whole table and takes every installed app with it.
+// The NUL and length bounds are implied for a name `decode_name` just carved
+// out of a fixed NUL-padded field, and are what the writer actually needs.
+pub(super) fn valid_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.is_ascii()
+        && name.len() <= NAME_LEN
+        && !name.as_bytes().contains(&0)
 }
