@@ -75,6 +75,7 @@ pub fn teardown(pid: Pid, exit_code: i32, _by_signal: bool) {
         }
         reap_log.insert(pid, (pcb.parent_pid(), exit_code));
     }
+    super::postmortem::retain(pid, pcb.parent_pid());
     crate::sched::remove_from_run_queue(pid);
     clear_current_if(pid);
     crate::process::scheduler::preemption::proc_ticks::clear(pid);

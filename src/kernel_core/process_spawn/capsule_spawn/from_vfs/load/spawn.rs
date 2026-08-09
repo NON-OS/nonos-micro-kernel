@@ -52,7 +52,7 @@ pub(crate) fn load_capsule_from_vfs(
         manifest_bytes: leak_bytes(artifacts.manifest),
         attestation_trailer: leak_bytes(artifacts.trailer),
         target_triple: leak_str(manifest.target_triple_str()),
-        requested_caps,
+        requested_caps: requested_caps & (manifest.required_caps | manifest.optional_caps),
         debug_tag: b"[RUNTIME-LOAD] elf error:",
     };
     let trust = decode_trust(BAKED_TRUST_ANCHOR_POLICY).map_err(|_| LoadError::TrustAnchor)?;

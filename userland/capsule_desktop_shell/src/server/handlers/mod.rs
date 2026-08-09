@@ -14,12 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod consent;
 pub mod health;
+pub mod installed_launch;
 pub mod launcher_focus;
 pub mod launcher_request;
 pub mod launchpad;
 pub mod notify;
 pub mod open_with;
+pub mod pkg_consent;
+pub mod pkg_install;
 pub mod spotlight_open;
 pub mod take_open_arg;
 pub mod tray_register;

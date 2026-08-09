@@ -9,6 +9,35 @@ $(QEMU_BLK_IMG):
 	@mkdir -p $(dir $@)
 	@truncate -s 64M $@
 
+# The capsule package store lives at LBA 0 of the virtio-blk image instead of
+# being baked into the kernel with include_bytes!. The image itself is an
+# order-only prerequisite: its rule has no prerequisites, so a normal dep would
+# re-pack on every mtime bump while still not ordering creation before packing.
+QEMU_BLK_STORE_STAMP := $(QEMU_BLK_IMG).store.stamp
+
+$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
+	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) --lba 256 \
+		--entry /capsules/std_proof.elf=$(std-proof_BIN) \
+		--entry /capsules/std_proof.nonos_id_cert.bin=$(std-proof_CERT) \
+		--entry /capsules/std_proof.manifest.bin=$(std-proof_MANIFEST) \
+		--entry /capsules/std_proof.zk_trailer.bin=$(std-proof_ATTESTATION) \
+		--entry /capsules/gui_demo.elf=$(gui_demo_BIN) \
+		--entry /capsules/gui_demo.nonos_id_cert.bin=$(gui_demo_CERT) \
+		--entry /capsules/gui_demo.manifest.bin=$(gui_demo_MANIFEST) \
+		--entry /capsules/gui_demo.zk_trailer.bin=$(gui_demo_ATTESTATION) \
+		--entry /capsules/game_2048.elf=$(game_2048_BIN) \
+		--entry /capsules/game_2048.nonos_id_cert.bin=$(game_2048_CERT) \
+		--entry /capsules/game_2048.manifest.bin=$(game_2048_MANIFEST) \
+		--entry /capsules/game_2048.zk_trailer.bin=$(game_2048_ATTESTATION) \
+		--entry /capsules/egui_proof.elf=$(egui_proof_BIN) \
+		--entry /capsules/egui_proof.nonos_id_cert.bin=$(egui_proof_CERT) \
+		--entry /capsules/egui_proof.manifest.bin=$(egui_proof_MANIFEST) \
+		--entry /capsules/egui_proof.zk_trailer.bin=$(egui_proof_ATTESTATION)
+	@touch $@
+
+# Declared in mk/20-build.mk; this only extends its prerequisites.
+nonos-mk-run-from-config: $(QEMU_BLK_STORE_STAMP)
+
 $(QEMU_OVMF_VARS_RW): $(OVMF_VARS)
 	@mkdir -p $(dir $@)
 	@[ -n "$(OVMF_VARS)" ] || { echo "::error::OVMF_VARS not found"; exit 1; }
@@ -31,7 +60,7 @@ nonos-mk-dev-run:
 	@$(MAKE) --no-print-directory NONOS_DEV=1 \
 		NONOS_GOP_PREF=$(QEMU_XRES)x$(QEMU_YRES) nonos-mk-run
 
-nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-zerostate nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-zerostate nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
 	@echo "Booting NONOS in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  TPM: swtpm CRB"
@@ -107,7 +136,7 @@ nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF
 		$(QEMU_GPU) $(QEMU_RNG) \
 		-serial mon:stdio -no-reboot
 
-nonos-mk-run-serial: nonos-mk-desktop-gui-prod nonos-mk-esp
+nonos-mk-run-serial: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
 	@echo "Booting NONOS serial console in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
@@ -122,7 +151,7 @@ nonos-mk-run-serial-net:
 nonos-mk-run-serial-nat:
 	@$(MAKE) --no-print-directory QEMU_NET_MODE=nat nonos-mk-run-serial
 
-nonos-mk-run-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG)
+nonos-mk-run-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
 	@mkdir -p $(dir $(QEMU_SERIAL_LOG))
 	@echo "Booting NONOS serial console in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
@@ -221,6 +250,10 @@ nonos-mk-boot-image-viewer:
 		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
 		exit $$rc
 
+.PHONY: nonos-mk-pack-install-test
+nonos-mk-pack-install-test: $(NONOS_PACK_BIN)
+	@./tests/boot/pack_install_boot.sh
+
 .PHONY: nonos-mk-boot-terminal
 nonos-mk-boot-terminal:
 	@./tests/boot/terminal_round_trip.sh; rc=$$?; \
@@ -228,7 +261,7 @@ nonos-mk-boot-terminal:
 		$(MAKE) -B nonos-mk-terminal-sign >/dev/null 2>&1; \
 		exit $$rc
 
-nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_RW)
+nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
 	@QEMU="$(QEMU)" OVMF="$(OVMF)" OVMF_VARS="$(OVMF_VARS)" \
 		QEMU_OVMF_VARS_RW="$(QEMU_OVMF_VARS_RW)" QEMU_BLK_IMG="$(QEMU_BLK_IMG)" \
 		ESP_DIR="$(ESP_DIR)" ./nonos-ci/plan-a-runtime.sh

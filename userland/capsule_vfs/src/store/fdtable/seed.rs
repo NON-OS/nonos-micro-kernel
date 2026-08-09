@@ -28,10 +28,6 @@ impl Store {
         let _ = self.mkdir("/docs");
         // Scratch space; std's env::temp_dir() on NONOS points here.
         let _ = self.mkdir("/tmp");
-        // The package store. It starts empty: capsules land here at runtime
-        // when the installer fetches and verifies them, not baked into the
-        // image. `install <name>` reads /capsules/<name>.{elf,cert,manifest,
-        // trailer} from this directory.
         let _ = self.mkdir("/capsules");
         self.seed_file("/readme.txt", README);
         self.seed_file("/docs/about.txt", ABOUT);

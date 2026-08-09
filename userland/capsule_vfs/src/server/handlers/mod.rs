@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod artifact_path;
 mod chmod;
 mod close;
 mod copy;
 mod healthcheck;
+mod installer_gate;
 mod list;
 mod mkdir;
 mod open;
@@ -27,6 +29,11 @@ mod rename;
 mod rmdir;
 mod seek;
 mod stat;
+mod store_install;
+mod store_persist;
+mod store_remove;
+mod store_status;
+mod store_uninstall;
 mod truncate;
 mod unlink;
 mod usage;
@@ -45,6 +52,11 @@ pub(super) use rename::rename;
 pub(super) use rmdir::rmdir;
 pub(super) use seek::seek;
 pub(super) use stat::stat;
+pub(super) use store_install::store_install;
+pub(super) use store_persist::store_persist;
+pub(super) use store_remove::store_remove;
+pub(super) use store_status::store_status;
+pub(super) use store_uninstall::store_uninstall;
 pub(super) use truncate::truncate;
 pub(super) use unlink::unlink;
 pub(super) use usage::usage;

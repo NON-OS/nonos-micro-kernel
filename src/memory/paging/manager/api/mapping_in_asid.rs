@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::globals::{PAGING_MANAGER, PAGING_STATS};
+use crate::arch::x86_64::idt::without_interrupts;
 use crate::memory::addr::{PhysAddr, VirtAddr};
 use crate::memory::paging::error::PagingResult;
 use crate::memory::paging::types::{PagePermissions, PageSize};
@@ -25,14 +26,32 @@ pub fn map_page_in_asid(
     physical_addr: PhysAddr,
     permissions: PagePermissions,
 ) -> PagingResult<()> {
-    PAGING_MANAGER.lock().map_page_in_asid(
-        asid,
-        virtual_addr,
-        physical_addr,
-        permissions,
-        PageSize::Size4KiB,
-        &PAGING_STATS,
-    )
+    without_interrupts(|| {
+        PAGING_MANAGER.lock().map_page_in_asid(
+            asid,
+            virtual_addr,
+            physical_addr,
+            permissions,
+            PageSize::Size4KiB,
+            &PAGING_STATS,
+        )
+    })
+}
+
+pub fn unmap_page_in_asid(
+    asid: u32,
+    virtual_addr: VirtAddr,
+    permissions: PagePermissions,
+) -> PagingResult<PhysAddr> {
+    without_interrupts(|| {
+        PAGING_MANAGER.lock().unmap_page_in_asid(
+            asid,
+            virtual_addr,
+            permissions,
+            PageSize::Size4KiB,
+            &PAGING_STATS,
+        )
+    })
 }
 
 pub fn translate_in_asid(asid: u32, virtual_addr: VirtAddr) -> Option<PhysAddr> {

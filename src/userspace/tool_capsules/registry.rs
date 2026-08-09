@@ -15,8 +15,8 @@ use super::spec::ToolCapsule;
 use crate::sys::boot_log;
 
 /// Every embedded tool capsule, generated from `userland/apps.list`. Off the
-/// `nonos-tool-capsules` feature (core builds that do not cross-compile the tool
-/// binaries) the list is empty, so nothing is `include_bytes`d.
+/// `nonos-tool-capsules` feature (core builds that do not cross-compile the
+/// tool binaries) the list is empty, so nothing is `include_bytes`d.
 #[cfg(not(feature = "nonos-tool-capsules"))]
 fn embedded_tools() -> Vec<ToolCapsule> {
     Vec::new()
@@ -86,12 +86,10 @@ fn embedded_tools() -> Vec<ToolCapsule> {
     ]
 }
 
-/// Run the embedded tool whose service name matches `name` (for example
-/// `tool.tokei`), verified under the baked trust anchor and parented to the
+/// Run the embedded tool whose service name matches `name`, parented to the
 /// caller so it can drive the tool's stdin and stdout. `argv` is the NUL
-/// separated argument blob. Returns the tool's pid, or `None` when no tool
-/// matches or the spawn is rejected. A command-line tool has nothing to do
-/// until invoked, so tools are launched here on demand, not at boot.
+/// separated argument blob. Returns the tool's pid, or `None`. Tools run on
+/// demand, not at boot: a command-line tool has nothing to do until invoked.
 pub fn run_named(name: &[u8], argv: &[u8]) -> Option<u32> {
     let tool = embedded_tools().into_iter().find(|t| t.name.as_bytes() == name)?;
     match tool.spawn_with_args(argv) {

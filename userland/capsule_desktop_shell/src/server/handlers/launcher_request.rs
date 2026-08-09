@@ -88,7 +88,7 @@ pub(crate) fn lookup_pid(service: &[u8]) -> Option<u32> {
     Some(pid)
 }
 
-fn focus_frame() -> [u8; CONTROL_LEN] {
+pub(crate) fn focus_frame() -> [u8; CONTROL_LEN] {
     let mut frame = [0u8; CONTROL_LEN];
     frame[0..4].copy_from_slice(&CONTROL_MAGIC.to_le_bytes());
     frame[4..6].copy_from_slice(&CONTROL_VERSION.to_le_bytes());

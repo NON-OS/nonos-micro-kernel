@@ -63,6 +63,7 @@ pub fn spawn_audio_player_instance() -> Result<u32, SpawnError> {
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
+            | Capability::FileSystem.bit()
             | Capability::GraphicsDisplayQuery.bit()
             | Capability::GraphicsSurfaceCreate.bit()
             | Capability::Debug.bit(),
@@ -87,6 +88,7 @@ pub fn spawn_audio_player_capsule() -> Result<(), SpawnError> {
         requested_caps: Capability::CoreExec.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
+            | Capability::FileSystem.bit()
             | Capability::GraphicsDisplayQuery.bit()
             | Capability::GraphicsSurfaceCreate.bit()
             | Capability::Debug.bit(),

@@ -346,6 +346,11 @@ $(CAPSULE_SIGN_BIN):
 	@echo "Building capsule-sign host tool..."
 	@cd nonos-sign && cargo build --release --bin capsule-sign
 
+NONOS_PACK_BIN := tools/nonos-pack/target/release/nonos-pack
+$(NONOS_PACK_BIN):
+	@echo "Building nonos-pack host tool..."
+	@cd tools/nonos-pack && cargo build --release --bin nonos-pack
+
 .PHONY: nonos-mk-host-trust-elfs
 nonos-mk-host-trust-elfs: $(USERLAND_LIBC) $(MARKETPLACE_ABI_LIB) \
 		$(proof-io_BIN) $(ramfs_BIN) $(keyring_BIN) $(entropy_BIN) \
@@ -403,6 +408,9 @@ include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_sd/Capsule.mk
+ifneq ($(wildcard userland/capsule_flacprobe/Capsule.mk),)
+  include userland/capsule_flacprobe/Capsule.mk
+endif
 include userland/capsule_csview/Capsule.mk
 include userland/capsule_huniq/Capsule.mk
 include userland/capsule_tokei/Capsule.mk
@@ -429,6 +437,11 @@ include userland/capsule_login/Capsule.mk
 include userland/toolkit/Capsule.mk
 include userland/capsule_about/Capsule.mk
 include userland/capsule_hello/Capsule.mk
+include userland/capsule_gui_demo/Capsule.mk
+include userland/capsule_game_2048/Capsule.mk
+include userland/capsule_egui_proof/Capsule.mk
+include userland/capsule_mdview/Capsule.mk
+include userland/capsule_qrgen/Capsule.mk
 include userland/capsule_boot_splash/Capsule.mk
 include userland/capsule_calculator/Capsule.mk
 include userland/capsule_clock/Capsule.mk
@@ -923,6 +936,7 @@ nonos-mk-audio-player-smoketest-dev-test: $(proof-io_MANIFEST) $(audio_MANIFEST)
 # yet and are kept separate from the base set.
 DESKTOP_STD_TOOL_ARTIFACTS := $(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) \
 		$(sd_ARTIFACTS) \
+		$(flacprobe_ARTIFACTS) \
 		$(csview_ARTIFACTS) \
 		$(huniq_ARTIFACTS) \
 		$(tokei_ARTIFACTS) \

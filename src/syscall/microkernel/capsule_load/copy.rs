@@ -22,7 +22,7 @@ const MAX_ARTIFACT: usize = 16 * 1024 * 1024;
 
 // Copy one artifact blob out of user memory after bounds-checking the length and
 // validating the user range. Returns a negative errno on a bad length or fault.
-pub(super) fn read_blob(ptr: u64, len: u32) -> Result<Vec<u8>, i64> {
+pub(crate) fn read_blob(ptr: u64, len: u32) -> Result<Vec<u8>, i64> {
     let n = len as usize;
     if n == 0 || n > MAX_ARTIFACT {
         return Err(ERRNO_INVAL);

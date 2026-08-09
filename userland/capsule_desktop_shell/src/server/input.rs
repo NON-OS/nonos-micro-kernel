@@ -105,6 +105,12 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
         return true;
     }
     let (px, py) = (x as u32, y as u32);
+    if super::handlers::consent::click(ctx, px, py) {
+        return true;
+    }
+    if super::handlers::pkg_consent::click(ctx, px, py) {
+        return true;
+    }
     // The Launchpad, while open, captures every click: a tile launches its app
     // or tool, and anything else dismisses the overlay.
     if ctx.launchpad {

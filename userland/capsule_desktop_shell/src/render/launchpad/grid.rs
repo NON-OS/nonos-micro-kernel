@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Grid geometry for the Launchpad: a centred, row-major grid holding every
-//! desktop app followed by every installed tool.
+//! desktop app, then every installed tool, then every capsule-store app.
 
 use crate::state::{LAUNCHER_APPS, TOOL_APPS};
 
@@ -12,9 +12,11 @@ pub(super) const CELL_W: u32 = 120;
 pub(super) const CELL_H: u32 = 108;
 pub(super) const TOP_PAD: u32 = 110;
 
-/// Total tiles: the desktop apps first, then the installed command-line tools.
-pub(super) fn count() -> usize {
-    LAUNCHER_APPS.len() + TOOL_APPS.len()
+/// Total tiles: the built-in apps, then the command-line tools, then the
+/// `installed` capsule-store apps the installer reported this boot, then the
+/// `packages` installable files waiting in /pkgs.
+pub(super) fn count(installed: usize, packages: usize) -> usize {
+    LAUNCHER_APPS.len() + TOOL_APPS.len() + installed + packages
 }
 
 /// Columns that fit the display, kept within a sensible range so the grid stays

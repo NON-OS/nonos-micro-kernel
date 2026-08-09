@@ -73,13 +73,13 @@ pub(super) fn resume_kernel_thread(pcb: &Arc<ProcessControlBlock>, pid: u32) {
     }
     percpu::set_kernel_stack(kstack);
 
-    let has_own_addr_space = pcb.cr3.load(Ordering::Relaxed) != 0;
+    let cr3v = pcb.cr3.load(Ordering::Relaxed);
     *pcb.state.lock() = ProcessState::Running;
     CURRENT_PID.store(pid, Ordering::SeqCst);
     set_time_slice(DEFAULT_TIME_SLICE);
 
-    if has_own_addr_space {
-        let _ = switch_to_process_address_space(pid);
+    if cr3v != 0 && switch_to_process_address_space(pid).is_err() {
+        crate::memory::paging::tlb::set_cr3(crate::memory::PhysAddr::new(cr3v));
     }
 
     if has_saved_fpu_state(pid) {

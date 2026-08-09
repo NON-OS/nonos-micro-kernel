@@ -12,6 +12,7 @@
 #   nonos-app add <crate> [bin]   install a crate (bin defaults to the crate name)
 #   nonos-app regen               rewrite the registry block from apps.list
 #   nonos-app list                show installed tool apps
+#   nonos-app pack <dir> [--out F] build+sign a capsule dir into a signed .nonos
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -23,6 +24,7 @@ RTOBJ="$ROOT/target/nonos_rt.o"
 TC="nightly-2026-01-16"
 NB="$(dirname "$(RUSTUP_TOOLCHAIN=$TC rustup which rustc)")"
 CS="$ROOT/nonos-sign/target/release/capsule-sign"
+PACK="$ROOT/tools/nonos-pack/target/release/nonos-pack"
 
 die() { echo "nonos-app: $*" >&2; exit 1; }
 
@@ -291,9 +293,45 @@ cmd_add() {
 
 cmd_list() { grep -vE '^\s*#|^\s*$' "$APPS" | awk '{printf "  %-16s %s:%s\n",$1,$3,$4}'; }
 
+# Build (if needed), sign, and seal a capsule dir into a dual-signed .nonos
+# package via nonos-pack, then self-check it with `nonos-pack verify`.
+cmd_pack() {
+  local dir="$1" out="" slug bin
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --out) out="$2"; shift 2 ;;
+      *)     die "pack: unknown arg $1" ;;
+    esac
+  done
+  [ -d "$dir" ] || die "pack: no such directory $dir"
+  dir="$(cd "$dir" && pwd)"
+  [ -f "$dir/Capsule.mk" ] || die "pack: $dir/Capsule.mk not found"
+  slug="$(sed -n 's/^CAPSULE_SLUG *:= *//p' "$dir/Capsule.mk" | head -1)"
+  bin="$(sed -n 's/^CAPSULE_BIN_NAME *:= *//p' "$dir/Capsule.mk" | head -1)"
+  [ -n "$slug" ] && [ -n "$bin" ] || die "pack: could not read CAPSULE_SLUG/CAPSULE_BIN_NAME from $dir/Capsule.mk"
+  out="${out:-$bin.nonos}"
+  make -C "$ROOT" "nonos-mk-$slug" "nonos-mk-$slug-sign"
+  local elf manifest cert trailer seed_ed seed_mldsa f
+  elf="$dir/target/$(basename "$TARGET" .json)/release/$bin"
+  manifest="$ROOT/nonos-data/trust/capsules/$bin.manifest.bin"
+  cert="$ROOT/nonos-data/trust/capsules/$bin.nonos_id_cert.bin"
+  trailer="$ROOT/nonos-data/trust/capsules/$bin.zk_trailer.bin"
+  seed_ed="$ROOT/.keys/${bin}_publisher_ed25519.seed"
+  seed_mldsa="$ROOT/.keys/${bin}_publisher_mldsa65.seed"
+  for f in "$elf" "$manifest" "$cert" "$trailer" "$seed_ed" "$seed_mldsa"; do
+    [ -n "$f" ] && [ -f "$f" ] || die "pack: missing artifact for $bin (build/sign did not produce it)"
+  done
+  [ -x "$PACK" ] || { echo "  building nonos-pack..."; (cd "$ROOT/tools/nonos-pack" && cargo build --release --bin nonos-pack); }
+  "$PACK" pack --out "$out" --manifest "$manifest" --elf "$elf" --id-cert "$cert" --trailer "$trailer" \
+    --seed ed25519="$seed_ed" --seed mldsa65="$seed_mldsa"
+  "$PACK" verify --in "$out" || die "pack: verify failed on $out"
+}
+
 case "${1:-}" in
   add)   shift; [ $# -ge 1 ] || die "usage: nonos-app add <crate> [bin]"; cmd_add "$@" ;;
   regen) regen_registry; regen_tool_apps ;;
   list)  cmd_list ;;
-  *)     die "usage: nonos-app {add <crate> [bin] | regen | list}" ;;
+  pack)  shift; [ $# -ge 1 ] || die "usage: nonos-app pack <dir> [--out F]"; cmd_pack "$@" ;;
+  *)     die "usage: nonos-app {add <crate> [bin] | regen | list | pack <dir> [--out F]}" ;;
 esac

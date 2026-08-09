@@ -1,0 +1,22 @@
+# NONOS userland: capsule_mdview layout tests
+#
+# Host-only harness. `../src/mdview/layout/` is written to depend on nothing
+# but std and pulldown-cmark, so it compiles and asserts on the build host
+# with a plain `cargo test`, away from the CPL=3 syscall surface that the
+# capsule binary itself needs. Kept as a sibling crate rather than a `tests/`
+# dir inside the capsule so `cargo test` never has to link nonos_libc.
+
+[package]
+name = "mdview_layout_tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "Host-side layout tests for the NONOS mdview capsule"
+
+[lib]
+name = "mdview_layout_tests"
+path = "src/lib.rs"
+
+[dependencies]
+pulldown-cmark = { version = "0.13", default-features = false }

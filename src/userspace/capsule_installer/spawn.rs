@@ -27,12 +27,12 @@ use crate::security::nonos_trust_anchor::{
 
 const SERVICE_NAME: &str = "installer";
 const SERVICE_PORT: u32 = 4112;
-const REPLY_INBOX: &str = "endpoint.installer.reply";
+const REPLY_INBOX: &str = "endpoint.4294967322";
 const REPLY_PORT: u32 = 4113;
 const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
-// CoreExec | IPC | Memory | SpawnBroker; kept hand-synced with
+// CoreExec | IPC | Memory | FileSystem | SpawnBroker; kept hand-synced with
 // userland/capsule_installer/Capsule.mk's CAPSULE_REQUIRED_CAPS.
-const REQUIRED_CAPS: u64 = 0x800019;
+const REQUIRED_CAPS: u64 = 0x800059;
 
 pub fn spawn_installer_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

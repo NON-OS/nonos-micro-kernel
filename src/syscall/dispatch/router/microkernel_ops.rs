@@ -32,6 +32,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkMunmap
             | MkSpawn
             | MkCapsuleLoad
+            | MkCapsuleVerify
             | MkExit
             | MkPidAlive
             | MkWait
@@ -73,6 +74,8 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkPioWrite
             | MkPioRelease
             | MkDebug
+            | MkStdoutWrite
+            | MkStoreWrite
             | MkSpawnInstance
             | MkToolRun
     )

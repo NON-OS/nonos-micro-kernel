@@ -45,6 +45,7 @@ impl Capability {
             Self::SpawnBroker => "SpawnBroker",
             Self::SpawnWindow => "SpawnWindow",
             Self::ProcessControl => "ProcessControl",
+            Self::StoreWrite => "StoreWrite",
         }
     }
 }

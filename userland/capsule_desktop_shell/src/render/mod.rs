@@ -15,13 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod bottom_taskbar;
+mod cap_names;
 pub mod chrome;
+pub mod consent;
 pub mod desktop_icons;
 pub mod desktop_menu;
 pub mod fill;
 mod icons;
 pub mod launchpad;
 pub mod layout;
+pub mod pkg_consent;
 pub mod text;
 pub mod toasts;
 pub mod topbar;

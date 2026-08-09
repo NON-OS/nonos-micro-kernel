@@ -16,7 +16,7 @@
 mod map_data;
 mod map_header;
 mod map_queue;
-mod rollback;
+pub(super) mod rollback;
 pub use self::map_data::map_data;
 pub use self::map_header::map_header;
 pub use self::map_queue::map_queue;

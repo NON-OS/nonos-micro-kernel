@@ -20,11 +20,14 @@ use crate::discover::find_virtio_blk;
 use crate::init::bring_up;
 use crate::queue::Queue;
 use nonos_libc::mk_irq_ack;
+
+const MSIX_CONFIG_SHIFT: usize = 4;
+
 pub fn run() -> Result<Driver, &'static str> {
     let dev = find_virtio_blk().ok_or("no virtio-blk device")?;
     let claim_epoch = claim::claim(dev.device_id)?;
     let register_grant = registers::grant(dev, claim_epoch)?;
-    let irq_grant = irq::bind(dev, claim_epoch, register_grant)?;
+    let (irq_grant, msix) = irq::bind(dev, claim_epoch, register_grant)?;
     let queue_dma = dma::map_queue(dev.device_id, claim_epoch, register_grant, &irq_grant)?;
     let header_dma =
         dma::map_header(dev.device_id, claim_epoch, register_grant, &irq_grant, &queue_dma)?;
@@ -37,7 +40,20 @@ pub fn run() -> Result<Driver, &'static str> {
         &header_dma,
     )?;
     let regs = register_grant.regs();
-    let init = bring_up(regs, queue_dma.device_addr, Queue::max_supported_size())?;
+    let init = match bring_up(regs, queue_dma.device_addr, Queue::max_supported_size()) {
+        Ok(init) => init,
+        Err(e) => {
+            dma::rollback::data(
+                dev.device_id,
+                register_grant,
+                &irq_grant,
+                &queue_dma,
+                &header_dma,
+                &data_dma,
+            )?;
+            return Err(e);
+        }
+    };
     let queue = Queue::new(
         queue_dma.user_va,
         queue_dma.device_addr,
@@ -47,11 +63,29 @@ pub fn run() -> Result<Driver, &'static str> {
         data_dma.user_va,
         data_dma.device_addr,
     );
-    let capacity_sectors = unsafe { regs.r64(LEG_CFG_CAPACITY) };
+    let capacity_offset =
+        if msix { LEG_CFG_CAPACITY + MSIX_CONFIG_SHIFT } else { LEG_CFG_CAPACITY };
+    let capacity_sectors = unsafe { regs.r64(capacity_offset) };
     if capacity_sectors == 0 {
+        dma::rollback::data(
+            dev.device_id,
+            register_grant,
+            &irq_grant,
+            &queue_dma,
+            &header_dma,
+            &data_dma,
+        )?;
         return Err("virtio-blk: zero capacity");
     }
     if mk_irq_ack(irq_grant.grant_id) < 0 {
+        dma::rollback::data(
+            dev.device_id,
+            register_grant,
+            &irq_grant,
+            &queue_dma,
+            &header_dma,
+            &data_dma,
+        )?;
         return Err("virtio-blk: irq ack failed");
     }
     Ok(Driver { irq_grant: irq_grant.grant_id, queue, regs, capacity_sectors })

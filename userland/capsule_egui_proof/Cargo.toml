@@ -1,0 +1,22 @@
+[package]
+name = "egui_proof"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+description = "Proof capsule: unmodified egui 0.35 laying out and tessellating at CPL=3"
+
+[[bin]]
+name = "egui_proof"
+path = "src/main.rs"
+
+[dependencies]
+nonos_app_skeleton = { path = "../app_skeleton", default-features = false }
+egui = "0.35"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

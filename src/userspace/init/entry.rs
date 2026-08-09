@@ -33,6 +33,7 @@ pub fn run_init() -> ! {
     spawn_plan::spawn_market();
     spawn_plan::spawn_apps();
     run_tokio_smoke();
+    run_flacprobe();
     boot_log::ok("INIT", "Capsules spawned");
     run_tool_selftest();
     lower_init_priority();
@@ -59,6 +60,17 @@ fn run_std_proof() {
 
 #[cfg(not(feature = "nonos-capsule-std-proof"))]
 fn run_std_proof() {}
+
+#[cfg(feature = "nonos-capsule-flacprobe")]
+fn run_flacprobe() {
+    match crate::userspace::capsule_flacprobe::spawn_flacprobe_capsule() {
+        Ok(()) => boot_log::ok("FLAC-PROBE", "capsule spawned"),
+        Err(_) => boot_log::error("FLAC-PROBE capsule spawn failed"),
+    }
+}
+
+#[cfg(not(feature = "nonos-capsule-flacprobe"))]
+fn run_flacprobe() {}
 
 #[cfg(feature = "nonos-capsule-ripgrep")]
 fn run_ripgrep() {

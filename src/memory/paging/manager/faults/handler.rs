@@ -36,6 +36,9 @@ impl PagingManager {
         }
 
         if error_code & PF_PRESENT == 0 {
+            if error_code & PF_INSTRUCTION != 0 {
+                return Err(PagingError::UnhandledPageFault);
+            }
             stats.record_demand_load();
             return self.handle_demand_fault(virtual_addr, stats);
         }

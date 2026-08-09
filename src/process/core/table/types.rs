@@ -100,6 +100,7 @@ pub fn allocate_tid() -> Option<Pid> {
     match super::pid_alloc::choose_pid(current, |p| PROCESS_TABLE.is_active_pid(p as u64)) {
         Some((pid, next)) => {
             NEXT_PID.store(next, Ordering::SeqCst);
+            crate::process::exit::postmortem::purge_for_new_pid(pid);
             Some(pid)
         }
         None => {

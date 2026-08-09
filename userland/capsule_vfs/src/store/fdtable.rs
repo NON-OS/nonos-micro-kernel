@@ -17,11 +17,13 @@
 mod chmod;
 mod close;
 mod copy;
+mod install;
 mod lookup;
 mod mkdir;
 mod new;
 mod open;
 mod packages;
+mod persist;
 mod query;
 mod read;
 mod rename;

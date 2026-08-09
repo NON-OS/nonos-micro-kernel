@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NotifyLevel, SpotlightState, TaskbarState, ToastQueue, TrayTable};
+use super::{NotifyLevel, PkgInstallPrompt, SpotlightState, TaskbarState, ToastQueue, TrayTable};
 
 pub struct Context {
     pub compositor_port: u32,
@@ -42,6 +42,19 @@ pub struct Context {
     /// Entries at the VFS root, shown as icons on the desktop. Loaded lazily
     /// once the vfs_pool service is up, then refreshed after we mutate it.
     pub desktop_items: alloc::vec::Vec<crate::vfs_client::Entry>,
+    /// Base names of the capsule-store apps the installer reports, already
+    /// filtered of anything impersonating a built-in. Loaded lazily once the
+    /// installer service is up, then left alone.
+    pub installed_apps: alloc::vec::Vec<alloc::vec::Vec<u8>>,
+    pub installed_apps_loaded: bool,
+    /// File names of the `.nonos` packages sitting in /pkgs, rescanned every
+    /// tick so one dropped in after boot appears without a restart.
+    pub pkg_files: alloc::vec::Vec<alloc::string::String>,
+    pub pkg_files_loaded: bool,
+    /// Pid the installer handed back for each store app we have launched, so a
+    /// second click focuses that window instead of loading another copy. An
+    /// entry is dropped once its pid stops accepting control frames.
+    pub installed_pids: alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
     /// Top-left corner of the desktop right-click menu, or None when hidden.
     pub desktop_menu: Option<(u32, u32)>,
     /// Which menu row the pointer is over, so it can be highlighted.
@@ -63,6 +76,12 @@ pub struct Context {
     /// Open-with broker: path handed to a target app's service name by
     /// `OP_OPEN_WITH`, pulled once via `OP_TAKE_OPEN_ARG` after the app wakes.
     pub pending_open: alloc::collections::BTreeMap<alloc::string::String, alloc::string::String>,
+    /// Name of the runtime-installed app whose launch is awaiting the consent
+    /// modal, or None when no dialog is up.
+    pub pending_consent: Option<alloc::vec::Vec<u8>>,
+    /// The /pkgs package whose install awaits the consent modal, carrying the
+    /// summary pkg_query returned, or None when no dialog is up.
+    pub pending_pkg_install: Option<PkgInstallPrompt>,
 }
 
 impl Context {

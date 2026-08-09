@@ -100,7 +100,7 @@ fn read_artifact(pid: u32, name: &[u8], ext: &[u8]) -> Result<Vec<u8>, &'static 
     read_file(pid, &path, MAX_ARTIFACT)
 }
 
-fn valid_name(name: &[u8]) -> bool {
+pub(super) fn valid_name(name: &[u8]) -> bool {
     !name.is_empty()
         && name.len() <= 64
         && name.iter().all(|&b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')

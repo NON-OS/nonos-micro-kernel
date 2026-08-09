@@ -41,6 +41,11 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         policy_port: 0,
         next_request_id: 2,
         desktop_items: alloc::vec::Vec::new(),
+        installed_apps: alloc::vec::Vec::new(),
+        installed_apps_loaded: false,
+        pkg_files: alloc::vec::Vec::new(),
+        pkg_files_loaded: false,
+        installed_pids: alloc::collections::BTreeMap::new(),
         desktop_menu: None,
         menu_hover: None,
         menu_target: None,
@@ -51,5 +56,7 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         drag_x: 0,
         drag_y: 0,
         pending_open: alloc::collections::BTreeMap::new(),
+        pending_consent: None,
+        pending_pkg_install: None,
     }
 }

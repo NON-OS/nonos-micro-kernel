@@ -1,0 +1,34 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use super::layout::Style;
+
+pub const BG: u32 = 0xFF10161C;
+pub const ACCENT: u32 = 0xFF00D4AA;
+pub const TEXT: u32 = 0xFFE8F0F8;
+pub const DIM: u32 = 0xFF667788;
+pub const FAIL: u32 = 0xFFFF5566;
+pub const CODE_BG: u32 = 0xFF18212B;
+pub const MARGIN: i32 = 24;
+
+pub fn colour(style: Style) -> u32 {
+    match style {
+        Style::H1 | Style::H2 => ACCENT,
+        Style::H3 => DIM,
+        Style::Code => 0xFFB6E3D4,
+        _ => TEXT,
+    }
+}

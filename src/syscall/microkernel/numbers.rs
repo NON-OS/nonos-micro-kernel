@@ -31,6 +31,7 @@ pub const SYS_MMAP: u64 = tag4(b"MMAP");
 pub const SYS_MUNMAP: u64 = tag4(b"MUMP");
 pub const SYS_SPAWN: u64 = tag4(b"MSPN");
 pub const SYS_CAPSULE_LOAD: u64 = tag4(b"MCLD");
+pub const SYS_CAPSULE_VERIFY: u64 = tag4(b"MCVF");
 pub const SYS_EXIT: u64 = tag4(b"MEXT");
 pub const SYS_PID_ALIVE: u64 = tag4(b"MPAL");
 pub const SYS_WAIT: u64 = tag4(b"MWAT");
@@ -51,6 +52,11 @@ pub const SYS_PROC_STAT: u64 = tag4(b"MPST");
 pub const SYS_PROC_OUTPUT: u64 = tag4(b"MOUT");
 pub const SYS_PROC_INPUT: u64 = tag4(b"MPIN");
 pub const SYS_STDIN_READ: u64 = tag4(b"MSRD");
+// Program stdout: mirrors bytes into the caller's own `proc.<pid>` inbox and
+// writes nothing to serial. Gated on the IPC capability so a capsule without
+// `Capability::Debug` still has a stdout.
+pub const SYS_STDOUT_WRITE: u64 = tag4(b"MSOW");
+pub const SYS_STORE_WRITE: u64 = tag4(b"MSWR");
 pub const SYS_ATTEST_STATUS: u64 = tag4(b"MAST");
 pub const SYS_CAP_GRANT: u64 = tag4(b"MCGT");
 pub const SYS_CAP_REVOKE: u64 = tag4(b"MCRV");

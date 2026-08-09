@@ -14,8 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::blk::error::BlkError;
 use crate::protocol::{EACCES, EBADF, EEXIST, EINVAL, EISDIR, ENOENT, ENOSPC, ENOTEMPTY};
 use crate::store::StoreError;
+
+// A name already in the TOC and the 16 MiB extent budget are both refusals a
+// caller can act on, so they must not collapse into the generic EINVAL that
+// every wire-level block failure maps to.
+pub(super) fn map_blk_err(e: BlkError) -> i32 {
+    match e {
+        BlkError::Exists => EEXIST,
+        BlkError::BadLength => ENOSPC,
+        _ => EINVAL,
+    }
+}
 
 pub(super) fn map_store_err(e: StoreError) -> i32 {
     match e {

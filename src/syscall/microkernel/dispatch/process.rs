@@ -18,6 +18,7 @@ use super::args::Args;
 use crate::syscall::microkernel::attest::sys_attest_status;
 use crate::syscall::microkernel::battery::sys_battery_status;
 use crate::syscall::microkernel::capsule_load::sys_capsule_load;
+use crate::syscall::microkernel::capsule_verify::sys_capsule_verify;
 use crate::syscall::microkernel::futex::{sys_futex_wait, sys_futex_wake};
 use crate::syscall::microkernel::kill::sys_kill;
 use crate::syscall::microkernel::memory::{sys_mmap, sys_munmap};
@@ -30,6 +31,8 @@ use crate::syscall::microkernel::process::{
 };
 use crate::syscall::microkernel::procstat::sys_proc_stat;
 use crate::syscall::microkernel::spawn_instance::sys_spawn_instance;
+use crate::syscall::microkernel::stdout_write::sys_stdout_write;
+use crate::syscall::microkernel::store_write::sys_store_write;
 use crate::syscall::microkernel::time::{
     sys_time_adjust, sys_time_millis, sys_time_monotonic, sys_time_rtc,
 };
@@ -42,6 +45,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_MUNMAP => sys_munmap(a.a0, a.a1 as usize),
         SYS_SPAWN => sys_spawn(a.a0, a.a1 as usize),
         SYS_CAPSULE_LOAD => sys_capsule_load(a.a0),
+        SYS_CAPSULE_VERIFY => sys_capsule_verify(a.a0, a.a1),
         SYS_EXIT => sys_exit(a.a0 as i32),
         SYS_PID_ALIVE => sys_pid_alive(a.a0 as u32),
         SYS_WAIT => sys_wait(a.a0, a.a1),
@@ -62,6 +66,8 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_PROC_OUTPUT => sys_proc_output(a.a0, a.a1, a.a2 as usize),
         SYS_PROC_INPUT => sys_proc_input(a.a0, a.a1, a.a2 as usize),
         SYS_STDIN_READ => sys_stdin_read(a.a0, a.a1 as usize),
+        SYS_STDOUT_WRITE => sys_stdout_write(a.a0, a.a1),
+        SYS_STORE_WRITE => sys_store_write(a.a0, a.a1, a.a2),
         SYS_ATTEST_STATUS => sys_attest_status(a.a0),
         SYS_SPAWN_INSTANCE => sys_spawn_instance(a.a0, a.a1),
         SYS_TOOL_RUN => sys_tool_run(a.a0, a.a1, a.a2, a.a3),

@@ -42,6 +42,11 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
                 && caps.grants_all(&[Capability::CoreExec, Capability::IPC, Capability::Memory])
         }
 
+        SyscallNumber::MkCapsuleVerify => {
+            caps.is_valid()
+                && caps.grants_all(&[Capability::CoreExec, Capability::IPC, Capability::Memory])
+        }
+
         SyscallNumber::MkGetPid => caps.can_getpid(),
         SyscallNumber::MkArgs => caps.can_getpid(),
         SyscallNumber::MkThreadSpawn => caps.can_ipc(),
@@ -82,6 +87,8 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkPioRelease => caps.can_pio(),
 
         SyscallNumber::MkDebug => caps.can_debug(),
+        SyscallNumber::MkStdoutWrite => caps.can_ipc(),
+        SyscallNumber::MkStoreWrite => caps.can_store_write(),
 
         SyscallNumber::MkSurfaceRegister
         | SyscallNumber::MkSurfaceShare

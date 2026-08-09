@@ -62,4 +62,5 @@ pub enum Capability {
     // arbitrary pids, held only by the process manager so a compromised app
     // cannot kill unrelated capsules.
     ProcessControl,
+    StoreWrite,
 }

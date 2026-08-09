@@ -49,4 +49,7 @@ pub fn paint_chrome(ctx: &Context) {
     }
     // The right-click menu floats above everything else, dock included.
     super::desktop_menu::paint(ctx);
+    // The consent modal draws last so it sits above every other layer.
+    super::consent::paint_consent(ctx);
+    super::pkg_consent::paint_pkg_consent(ctx);
 }

@@ -20,14 +20,14 @@
 //! filesystem-backing role layers `CAP_STORAGE` on top.
 
 use super::error::DriverBlkError;
-use crate::services::caps::{has_capability, CAP_DRIVER};
+use crate::services::caps::{has_capability, CAP_DRIVER, CAP_STORAGE};
 
 pub(super) fn gate_call() -> Result<u32, DriverBlkError> {
     let pid = match crate::process::current_pid() {
         Some(p) => p,
         None => return Err(DriverBlkError::NoCallerPid),
     };
-    if !has_capability(pid, CAP_DRIVER) {
+    if !has_capability(pid, CAP_DRIVER) && !has_capability(pid, CAP_STORAGE) {
         return Err(DriverBlkError::AccessDenied);
     }
     Ok(pid)

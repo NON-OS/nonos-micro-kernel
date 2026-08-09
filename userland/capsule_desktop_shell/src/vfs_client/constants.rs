@@ -28,6 +28,7 @@ pub(super) const OP_MKDIR: u16 = 8;
 pub(super) const OP_UNLINK: u16 = 9;
 pub(super) const OP_RENAME: u16 = 10;
 pub(super) const OP_RMDIR: u16 = 11;
+pub(super) const OP_STORE_STATUS: u16 = 19;
 
 pub(super) const O_CREATE: u32 = 1;
 

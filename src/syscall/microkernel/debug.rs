@@ -63,7 +63,7 @@ pub fn sys_mk_debug(user_ptr: u64, len: u64) -> i64 {
 // launcher (the terminal) can drain a child capsule's stdout into its
 // window. Best effort: a missing or full inbox is ignored, and serial
 // above stays the source of truth for trust logs.
-fn mirror_to_proc_inbox(bytes: &[u8]) {
+pub(super) fn mirror_to_proc_inbox(bytes: &[u8]) {
     let Some(pid) = crate::process::current_pid() else {
         return;
     };

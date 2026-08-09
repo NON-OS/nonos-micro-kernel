@@ -31,6 +31,7 @@ mod parse;
 mod path;
 mod remove;
 mod rename;
+mod store_status;
 mod walk;
 
 pub use create_file::create_file;
@@ -39,3 +40,4 @@ pub use list::list;
 pub use mkdir::mkdir;
 pub use remove::remove;
 pub use rename::rename;
+pub use store_status::store_status;

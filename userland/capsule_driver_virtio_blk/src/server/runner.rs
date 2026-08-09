@@ -17,18 +17,20 @@ use crate::protocol::{
     decode_request, E_INVAL, HDR_LEN, MAX_RW_PAYLOAD_BYTES, OP_CAPACITY, OP_FLUSH, OP_HEALTHCHECK,
     OP_READ_BLOCKS, OP_WRITE_BLOCKS, RESP_HDR_LEN, STATUS_LEN,
 };
+use crate::server::acl;
 use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::handlers;
 use crate::setup::Driver;
 use alloc::vec;
-use nonos_libc::{mk_ipc_recv, mk_yield};
+use nonos_libc::{mk_ipc_recv_from, mk_yield};
 pub fn run(driver: &mut Driver) -> ! {
     let rx_len = HDR_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let tx_len = RESP_HDR_LEN + STATUS_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
     loop {
-        let n = mk_ipc_recv(0, rx.as_mut_ptr(), rx_len, 0);
+        let mut sender_pid: u32 = 0;
+        let n = mk_ipc_recv_from(0, rx.as_mut_ptr(), rx_len, 0, &mut sender_pid);
         if n <= 0 {
             mk_yield();
             continue;
@@ -41,6 +43,10 @@ pub fn run(driver: &mut Driver) -> ! {
                 continue;
             }
         };
+        if !acl::permits(req.op, sender_pid) {
+            let _ = reply_with_status(&mut tx, &req, E_INVAL);
+            continue;
+        }
         let body = &rx[HDR_LEN..len];
         match req.op {
             OP_HEALTHCHECK => handlers::health::handle(&req, &mut tx),

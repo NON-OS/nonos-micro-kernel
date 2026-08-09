@@ -31,11 +31,12 @@ pub fn sys_proc_output(pid: u64, buf_ptr: u64, buf_len: usize) -> i64 {
     // by passing its pid, since the inbox name is derived from the argument.
     let target = pid as u32;
     let caller = current_pid().unwrap_or(0);
-    if caller == 0 || get_parent_pid(target) != Some(caller) {
+    if caller == 0 || parent_of(target) != Some(caller) {
         return ERRNO_PERM;
     }
     let name = alloc::format!("proc.{}", target);
     let Some(msg) = crate::ipc::nonos_inbox::try_dequeue_existing(&name) else {
+        crate::process::exit::postmortem::release(target);
         return 0;
     };
     let n = msg.data.len().min(buf_len);
@@ -43,4 +44,11 @@ pub fn sys_proc_output(pid: u64, buf_ptr: u64, buf_len: usize) -> i64 {
         return ERRNO_FAULT;
     }
     n as i64
+}
+
+/// The pid that launched `pid`, from the PCB while it lives and from the
+/// post-mortem stdout retention afterwards, so a parent can still drain a
+/// short-lived child that has already been finalized.
+fn parent_of(pid: u32) -> Option<u32> {
+    get_parent_pid(pid).or_else(|| crate::process::exit::postmortem::retained_parent(pid))
 }

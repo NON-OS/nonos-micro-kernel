@@ -33,6 +33,15 @@ pub const OP_TRUNCATE: u16 = 13;
 pub const OP_USAGE: u16 = 14;
 pub const OP_CHMOD: u16 = 15;
 pub const OP_SEEK: u16 = 16;
+pub const OP_STORE_PERSIST: u16 = 17;
+pub const OP_STORE_REMOVE: u16 = 18;
+pub const OP_STORE_STATUS: u16 = 19;
+pub const OP_STORE_INSTALL: u16 = 20;
+pub const OP_STORE_UNINSTALL: u16 = 21;
+
+// Set on the last OP_STORE_INSTALL chunk of an artifact: the RAM copy is
+// complete and the whole file is handed to the on-device store.
+pub const STORE_INSTALL_FINAL: u8 = 1 << 0;
 
 // Seek whence values, matching the POSIX ordering std uses.
 pub const SEEK_SET: u8 = 0;

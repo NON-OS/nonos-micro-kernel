@@ -16,10 +16,21 @@
 
 mod health;
 mod install;
+mod list_installed;
 mod load_by_name;
 mod load_store;
+mod pkg_body;
+mod pkg_commit;
+mod pkg_paths;
+mod pkg_query;
+mod pkg_remove;
+mod pkg_verify;
 
 pub(super) use health::health;
 pub(super) use install::install;
+pub(super) use list_installed::list_installed;
 pub(super) use load_by_name::load_by_name;
 pub(super) use load_store::load_store;
+pub(super) use pkg_commit::pkg_commit;
+pub(super) use pkg_query::pkg_query;
+pub(super) use pkg_remove::pkg_remove;

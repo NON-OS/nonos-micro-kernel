@@ -17,6 +17,7 @@ use super::tag::tag4;
 
 pub(crate) const N_MK_MMAP: i64 = tag4(b"MMAP");
 pub(crate) const N_MK_CAPSULE_LOAD: i64 = tag4(b"MCLD");
+pub(crate) const N_MK_CAPSULE_VERIFY: i64 = tag4(b"MCVF");
 pub(crate) const N_MK_EXIT: i64 = tag4(b"MEXT");
 pub(crate) const N_MK_PID_ALIVE: i64 = tag4(b"MPAL");
 pub(crate) const N_MK_GETPID: i64 = tag4(b"MGPD");
