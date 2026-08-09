@@ -46,8 +46,12 @@ mod kani_proofs;
 // The vfs wire protocol codec.
 pub mod vfs_protocol;
 
+// The block-layer error taxonomy the vfs handlers turn into errnos.
+pub mod vfs_blk;
+
 // Aliases so capsule source that uses crate-absolute paths (`crate::protocol`,
-// `crate::store`) resolves when included here.
+// `crate::store`, `crate::blk`) resolves when included here.
+pub use vfs_blk as blk;
 pub use vfs_protocol as protocol;
 pub use vfs_store as store;
 
@@ -58,6 +62,9 @@ mod vfs_util;
 // Public surface for the attestation helpers so they are exercised as API.
 pub fn split_caller(payload: &[u8], sender_pid: u32) -> Result<(u32, &[u8]), i32> {
     vfs_util::split_caller(payload, sender_pid)
+}
+pub fn map_blk_err(err: blk::error::BlkError) -> i32 {
+    vfs_util::map_blk_err(err)
 }
 pub fn map_store_err(err: store::StoreError) -> i32 {
     vfs_util::map_store_err(err)

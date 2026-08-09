@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::blk::error::BlkError;
 use crate::store::StoreError;
-use crate::{map_store_err, split_caller};
+use crate::{map_blk_err, map_store_err, split_caller};
 
 // Errno values mirrored from the protocol header.
 const ENOENT: i32 = -2;
@@ -67,4 +68,18 @@ fn store_errors_map_to_expected_errnos() {
     assert_eq!(map_store_err(StoreError::Exists), EEXIST);
     assert_eq!(map_store_err(StoreError::NotEmpty), ENOTEMPTY);
     assert_eq!(map_store_err(StoreError::IsDir), EISDIR);
+}
+
+#[test]
+fn blk_errors_map_to_expected_errnos() {
+    assert_eq!(map_blk_err(BlkError::Exists), EEXIST);
+    assert_eq!(map_blk_err(BlkError::BadLength), ENOSPC);
+    assert_eq!(map_blk_err(BlkError::NoService), EINVAL);
+    assert_eq!(map_blk_err(BlkError::Transport(-11)), EINVAL);
+    assert_eq!(map_blk_err(BlkError::ShortReply(3)), EINVAL);
+    assert_eq!(map_blk_err(BlkError::BadHeader), EINVAL);
+    assert_eq!(map_blk_err(BlkError::IdMismatch), EINVAL);
+    assert_eq!(map_blk_err(BlkError::Status(-6)), EINVAL);
+    assert_eq!(map_blk_err(BlkError::Inval), EINVAL);
+    assert_eq!(map_blk_err(BlkError::BadContainer), EINVAL);
 }
