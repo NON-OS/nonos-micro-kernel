@@ -408,7 +408,9 @@ include userland/capsule_proof_io/Capsule.mk
 include userland/capsule_std_proof/Capsule.mk
 include userland/capsule_ripgrep/Capsule.mk
 include userland/capsule_sd/Capsule.mk
-include userland/capsule_flacprobe/Capsule.mk
+ifneq ($(wildcard userland/capsule_flacprobe/Capsule.mk),)
+  include userland/capsule_flacprobe/Capsule.mk
+endif
 include userland/capsule_csview/Capsule.mk
 include userland/capsule_huniq/Capsule.mk
 include userland/capsule_tokei/Capsule.mk
