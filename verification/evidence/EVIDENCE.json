@@ -28,7 +28,7 @@
       "generated_files": [
         {
           "path": "verification/extraction/lean/NonosExtraction/Caps.lean",
-          "sha256": "9a879b8d0361506ca4dd8ee831094d0b1562fdadf142f7975b3f2bc3519af59f"
+          "sha256": "d0f73f72ab7acbe5a56378007a58c9b3e2dfc49888e308b5ae0155e96b1bbfc3"
         },
         {
           "path": "verification/extraction/lean/NonosExtraction/Irq.lean",
