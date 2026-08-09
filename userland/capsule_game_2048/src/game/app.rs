@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
-use nonos_libc::mk_time_millis;
+use nonos_libc::{mk_exit, mk_time_millis};
 use tools_2048::Game;
 
 pub struct Game2048 {
@@ -23,10 +23,16 @@ pub struct Game2048 {
     over: bool,
 }
 
+pub fn new_board() -> Game<4> {
+    match Game::<4>::new_seeded(mk_time_millis() as u64) {
+        Ok(game) => game,
+        Err(_) => mk_exit(1),
+    }
+}
+
 impl Game2048 {
     pub fn new() -> Self {
-        let game = Game::<4>::new_seeded(mk_time_millis() as u64).unwrap();
-        Game2048 { game, over: false }
+        Game2048 { game: new_board(), over: false }
     }
 }
 

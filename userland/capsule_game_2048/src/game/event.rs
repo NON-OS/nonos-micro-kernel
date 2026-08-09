@@ -17,7 +17,6 @@
 use nonos_app_skeleton::{
     EventOutcome, InputEvent, InputKind, KEY_DOWN, KEY_ESC, KEY_LEFT, KEY_RIGHT, KEY_UP,
 };
-use nonos_libc::mk_time_millis;
 use tools_2048::{Game, GameMove, GameState};
 
 pub fn on_event(event: InputEvent, game: &mut Game<4>, over: &mut bool) -> EventOutcome {
@@ -31,7 +30,7 @@ pub fn on_event(event: InputEvent, game: &mut Game<4>, over: &mut bool) -> Event
         KEY_DOWN => GameMove::Down,
         KEY_ESC => return EventOutcome::Close,
         0x52 | 0x72 => {
-            *game = Game::<4>::new_seeded(mk_time_millis() as u64).unwrap();
+            *game = super::app::new_board();
             *over = false;
             return EventOutcome::Repaint;
         }

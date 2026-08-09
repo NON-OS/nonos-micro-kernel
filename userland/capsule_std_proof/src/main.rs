@@ -68,7 +68,7 @@ fn prove_threads() -> Result<String, String> {
             .name(format!("worker-{id}"))
             .spawn(move || {
                 for _ in 0..ROUNDS {
-                    *counter.lock().unwrap() += 1;
+                    *counter.lock().unwrap_or_else(|e| e.into_inner()) += 1;
                 }
                 thread::sleep(Duration::from_millis(2));
                 let _ = tx.send(id);
@@ -85,7 +85,7 @@ fn prove_threads() -> Result<String, String> {
         handle.join().map_err(|_| "join panicked".to_string())?;
     }
 
-    let total = *counter.lock().unwrap();
+    let total = *counter.lock().unwrap_or_else(|e| e.into_inner());
     if total != ROUNDS * 3 {
         return Err(format!("counter={total}, expected {}", ROUNDS * 3));
     }
