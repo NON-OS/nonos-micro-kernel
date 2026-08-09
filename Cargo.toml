@@ -825,7 +825,7 @@ bitvec   = { version = "1.0",  default-features = false, features = ["alloc"] }
 heapless = { version = "0.8",  default-features = false }
 
 # External crypto (optional; in-tree implementations are the default).
-ed25519-dalek    = { version = "2.1.1", default-features = false, features = ["alloc", "zeroize"], optional = true }
+ed25519-dalek    = { version = "3.0.0", default-features = false, features = ["alloc", "zeroize"], optional = true }
 curve25519-dalek = { version = "4.1.3", default-features = false, features = ["alloc", "zeroize"], optional = true }
 x25519-dalek     = { version = "2",     default-features = false, features = ["static_secrets"], optional = true }
 sha3             = { version = "0.10",  default-features = false, optional = true }
@@ -855,7 +855,7 @@ blake3 = { version = "1.0", default-features = false, features = ["pure"] }
 blake3        = { version = "1.5",  default-features = false }
 cc            = "1.1"
 glob          = "0.3"
-ed25519-dalek = { version = "2.1.1", default-features = false, features = ["alloc", "zeroize"] }
+ed25519-dalek = { version = "3.0.0", default-features = false, features = ["alloc", "zeroize"] }
 sha2          = { version = "0.10", default-features = false }
 
 [dev-dependencies]
