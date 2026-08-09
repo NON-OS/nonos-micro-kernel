@@ -26,7 +26,9 @@ use crate::state::Context;
 /// installed-app adoption: a transient empty reply before vfs_pool answers
 /// never wipes a list we already have.
 pub fn refresh(ctx: &mut Context) {
-    let listed = crate::vfs_client::list(b"/pkgs");
+    let Some(listed) = crate::vfs_client::list(b"/pkgs") else {
+        return;
+    };
     if listed.is_empty() && !ctx.pkg_files_loaded {
         return;
     }
