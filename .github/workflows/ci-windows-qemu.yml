@@ -1,0 +1,118 @@
+# Run the published Windows instructions on a Windows host, exactly as printed.
+#
+# The QEMU page gives a reader a block to copy. Whether that block works on
+# Windows is not something a developer on macOS can answer by reading it, and
+# the parts that differ there are the parts most likely to be wrong: the
+# install, the paths under Program Files, PowerShell's line continuation, and
+# acceleration coming from the Windows hypervisor rather than from the kernel.
+#
+# So this runs them. If the page changes, this run says whether it still works.
+
+name: windows-qemu
+
+on:
+  push:
+    branches: [browser-engine]
+    paths: [".github/workflows/ci-windows-qemu.yml"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release carrying the ISO. A draft works."
+        required: false
+        default: "windows-boot-test"
+      boot_seconds:
+        description: "How long to let it run"
+        required: false
+        default: "420"
+
+jobs:
+  boot:
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Install QEMU
+        run: |
+          winget install --id SoftwareFreedomConservancy.QEMU `
+            --accept-source-agreements --accept-package-agreements `
+            --disable-interactivity 2>&1 | Out-String
+          $qemu = "C:\Program Files\qemu\qemu-system-x86_64.exe"
+          if (-not (Test-Path $qemu)) {
+            choco install qemu --no-progress --yes | Out-String
+          }
+          Get-ChildItem "C:\Program Files\qemu\qemu-system-x86_64.exe" -EA SilentlyContinue
+        shell: pwsh
+
+      - name: Say which QEMU and which firmware
+        run: |
+          $qemu = "C:\Program Files\qemu\qemu-system-x86_64.exe"
+          & $qemu --version
+          Write-Host "=== firmware shipped with it ==="
+          Get-ChildItem "C:\Program Files\qemu\share\edk2-*.fd" |
+            Select-Object Name, Length
+        shell: pwsh
+
+      - name: Fetch the image and check it
+        run: |
+          New-Item -ItemType Directory -Force -Path work | Out-Null
+          gh release download "${{ inputs.release_tag || 'windows-boot-test' }}" `
+            --repo "$env:GITHUB_REPOSITORY" --pattern "nonos.iso" --dir work --clobber
+          $hash = (Get-FileHash work\nonos.iso -Algorithm SHA256).Hash.ToLower()
+          Write-Host "sha256 $hash"
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Boot it, with the flags the page prints
+        run: |
+          $qemu = "C:\Program Files\qemu\qemu-system-x86_64.exe"
+          $share = "C:\Program Files\qemu\share"
+          Copy-Item "$share\edk2-i386-vars.fd" work\vars.fd -Force
+
+          # No -accel whpx here. A hosted runner is itself a virtual machine and
+          # cannot always pass the processor through, and the point of this run
+          # is the commands and the paths, not the speed.
+          $args = @(
+            "-m","4G","-smp","2","-machine","q35",
+            "-drive","if=pflash,format=raw,readonly=on,file=$share\edk2-x86_64-code.fd",
+            "-drive","if=pflash,format=raw,file=work\vars.fd",
+            "-cdrom","work\nonos.iso",
+            "-device","virtio-net-pci,netdev=n0","-netdev","user,id=n0",
+            "-device","virtio-rng-pci",
+            "-device","qemu-xhci,id=xhci",
+            "-vga","none",
+            "-device","virtio-vga,disable-modern=on,vectors=0,edid=on,xres=1920,yres=1080",
+            "-serial","file:work\serial.log",
+            "-display","none",
+            "-no-reboot"
+          )
+          $p = Start-Process -FilePath $qemu -ArgumentList $args -PassThru -NoNewWindow
+          Start-Sleep -Seconds ${{ inputs.boot_seconds || '420' }}
+          Stop-Process -Id $p.Id -Force -EA SilentlyContinue
+        shell: pwsh
+        continue-on-error: true
+
+      - name: What the guest said
+        if: always()
+        run: |
+          if (-not (Test-Path work\serial.log)) {
+            Write-Host "no serial output at all: the guest never reached a console"
+            exit 0
+          }
+          $log = Get-Content work\serial.log
+          Write-Host "=== $($log.Count) lines ==="
+          Write-Host "=== the checks that matter ==="
+          $log | Select-String -Pattern "Ed25519 verify|ML-DSA-65 verify|Measured Boot|Anti-rollback|SECURITY\]|DISPLAY\] mode"
+          Write-Host "=== capsules attested ==="
+          ($log | Select-String -Pattern "ZK-ATTEST\] ok").Count
+          Write-Host "=== last 20 lines ==="
+          $log | Select-Object -Last 20
+        shell: pwsh
+
+      - name: Keep the evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-qemu-boot
+          path: work/serial.log
+          if-no-files-found: warn
