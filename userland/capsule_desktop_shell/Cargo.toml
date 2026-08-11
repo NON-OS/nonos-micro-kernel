@@ -12,6 +12,10 @@ description = "NONOS desktop shell capsule skeleton"
 name = "desktop_shell"
 path = "src/main.rs"
 
+[features]
+default = []
+shell-frametime = []
+
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_toolkit = { path = "../toolkit" }

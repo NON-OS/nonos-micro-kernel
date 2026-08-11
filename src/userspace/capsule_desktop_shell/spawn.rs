@@ -51,6 +51,7 @@ pub fn spawn_desktop_shell_capsule() -> Result<(), SpawnError> {
             | Capability::IPC.bit()
             | Capability::Network.bit()
             | Capability::Memory.bit()
+            | Capability::Debug.bit()
             | Capability::GraphicsDisplayQuery.bit()
             | Capability::GraphicsSurfaceCreate.bit()
             // Authority to open extra terminal/browser windows on demand.
