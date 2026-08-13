@@ -43,12 +43,21 @@ pub const CAP_INPUT: u64 = 1 << 7;
 pub const CAP_AUDIO: u64 = 1 << 8;
 pub const CAP_ZK: u64 = 1 << 9;
 pub const CAP_GPU: u64 = 1 << 10;
-pub const CAP_APPS: u64 = 1 << 11;
+// CAP_APPS must equal the kernel AppInstall bit, not 1<<11 which is
+// GraphicsDisplayQuery. Every capsule that draws a window holds that, so the
+// marketplace gate was open to all of them.
+pub const CAP_APPS: u64 = crate::capabilities::Capability::AppInstall.bit();
 pub const CAP_AGENTS: u64 = 1 << 12;
 pub const CAP_SHELL: u64 = 1 << 13;
 pub const CAP_KERNEL: u64 = 1 << 14;
-pub const CAP_ENTROPY: u64 = 1 << 15;
-pub const CAP_KEYRING: u64 = 1 << 16;
+// CAP_ENTROPY must equal the kernel Entropy bit, not 1<<15 which is DeviceEnum.
+// The entropy read gate therefore admitted anything that could enumerate
+// devices, which is every driver capsule and the broker.
+pub const CAP_ENTROPY: u64 = crate::capabilities::Capability::Entropy.bit();
+// CAP_KEYRING must equal the kernel Keyring bit, not 1<<16 which is Driver.
+// Every driver capsule holds Driver, since CAP_DRIVER is bound to the real bit,
+// so the keyring gate admitted all of them to key material.
+pub const CAP_KEYRING: u64 = crate::capabilities::Capability::Keyring.bit();
 // CAP_STORAGE must equal the kernel StoreWrite bit, not an independent 1<<17
 // that no PCB ever carries. It gates the block surface for the runtime store
 // path (sys_store_write runs in the caller's context), so it has to match the
@@ -57,7 +66,10 @@ pub const CAP_STORAGE: u64 = crate::capabilities::Capability::StoreWrite.bit();
 pub const CAP_UDEV: u64 = 1 << 18;
 pub const CAP_WALLET: u64 = 1 << 19;
 pub const CAP_TLS: u64 = 1 << 20;
-pub const CAP_ADMIN: u64 = 1 << 63;
+// CAP_ADMIN must equal the kernel Admin bit. At 1<<63 it sat above every bit a
+// PCB can carry, so the gate it guards, entropy reseed, could not be passed by
+// anything and the path was unreachable rather than restricted.
+pub const CAP_ADMIN: u64 = crate::capabilities::Capability::Admin.bit();
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ServiceCap {
