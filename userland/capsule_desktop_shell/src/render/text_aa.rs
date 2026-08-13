@@ -37,7 +37,7 @@ pub fn text_aa(ctx: &Context, x: u32, top_y: u32, text: &str, argb: u32, px: f32
         top_y as i32,
         text,
         argb,
-        px,
+        super::ui_font::scaled(px),
         false,
     );
     pen.max(0) as u32

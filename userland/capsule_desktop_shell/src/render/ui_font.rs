@@ -18,7 +18,27 @@
 //! a box. `ttf` clamps every draw and measure to `MIN_UI_PX`, so `UI_PX` is that
 //! floor rather than a smaller size that would be silently ignored.
 
+use core::sync::atomic::{AtomicU32, Ordering};
 use nonos_toolkit::font::ttf;
+
+static SCALE: AtomicU32 = AtomicU32::new(1);
+
+/// Latch the display scale. Every size below is a logical size multiplied by
+/// this, so a denser mode draws the same physical type rather than half-height
+/// type. Set once from the surface geometry before the first frame.
+pub fn set_scale(scale: u32) {
+    SCALE.store(scale.max(1), Ordering::Relaxed);
+}
+
+pub fn scale() -> u32 {
+    SCALE.load(Ordering::Relaxed)
+}
+
+/// Convert a logical point size to device pixels. Draw and measure both route
+/// through here, so they cannot disagree about how large a glyph is.
+pub fn scaled(px: f32) -> f32 {
+    px * scale() as f32
+}
 
 /// Body text: menu bar, status cluster, labels, dialogs.
 pub const UI_PX: f32 = ttf::MIN_UI_PX;
