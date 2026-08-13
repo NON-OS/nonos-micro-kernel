@@ -23,12 +23,6 @@ const TASKBAR_ENTRY_W_LOGICAL: u32 = 80;
 const DOCK_GAP_LOGICAL: u32 = 6;
 const DOCK_PAD_LOGICAL: u32 = 12;
 
-/// Measured `ui_font::line_h(UI_PX)`. The facade reads the face at run time, so the
-/// bar records the line box it was sized against.
-pub fn ui_line_h() -> u32 {
-    UI_LINE_H_LOGICAL * ui_font::scale()
-}
-
 /// One `UI_PX` line box plus symmetric padding, so the type clears the tile border.
 pub fn menubar_tile_h() -> u32 {
     (UI_LINE_H_LOGICAL + 6) * ui_font::scale()
