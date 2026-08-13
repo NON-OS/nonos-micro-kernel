@@ -65,11 +65,13 @@ nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-zeros
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  TPM: swtpm CRB"
 	@echo "  Quit: Ctrl+A then X"
+	@rm -f "$(QEMU_QMP_SOCK)"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) $(QEMU_TPM) $(QEMU_AUDIO) \
+		$(QEMU_QMP) \
 		-serial mon:stdio -vga none -display $(QEMU_DISPLAY) -no-reboot
 
 nonos-mk-run-net:
