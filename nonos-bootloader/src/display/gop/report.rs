@@ -16,7 +16,7 @@
 
 use super::init::preferred_mode;
 use super::state::{get_dimensions, is_initialized};
-use crate::log::logger::{log_error, log_info};
+use crate::log::logger::{log_error, log_warn};
 use alloc::format;
 
 pub fn report_gop_mode() {
@@ -28,11 +28,11 @@ pub fn report_gop_mode() {
     let (want_w, want_h) = match preferred_mode() {
         Some(mode) => mode,
         None => {
-            log_info("gop", &format!("[GOP] want=auto got={}x{}", got_w, got_h));
+            log_warn("gop", &format!("[GOP] want=auto got={}x{}", got_w, got_h));
             return;
         }
     };
-    log_info(
+    log_warn(
         "gop",
         &format!("[GOP] want={}x{} got={}x{}", want_w, want_h, got_w, got_h),
     );
