@@ -16,7 +16,7 @@
 
 //! Which menu row, if any, sits under a point.
 
-use super::metrics::{items, row_h, width, PAD_Y};
+use super::metrics::{items, pad_y, row_h, width};
 use super::origin::origin;
 use crate::state::Context;
 
@@ -27,7 +27,7 @@ pub fn hit(ctx: &Context, px: u32, py: u32) -> Option<usize> {
         return None;
     }
     for i in 0..items(ctx).len() {
-        let top = oy + PAD_Y + i as u32 * row_h();
+        let top = oy + pad_y() + i as u32 * row_h();
         if py >= top && py < top + row_h() {
             return Some(i);
         }
