@@ -43,7 +43,7 @@ pub fn init_gop(st: &mut SystemTable<Boot>) -> bool {
 // Unset (every hardware build), the picker keeps its largest-mode behaviour.
 const PREFERRED_MODE: Option<&str> = option_env!("NONOS_GOP_PREF");
 
-fn preferred_mode() -> Option<(usize, usize)> {
+pub(super) fn preferred_mode() -> Option<(usize, usize)> {
     let s = PREFERRED_MODE?;
     let (w, h) = s.split_once('x')?;
     Some((w.parse().ok()?, h.parse().ok()?))
