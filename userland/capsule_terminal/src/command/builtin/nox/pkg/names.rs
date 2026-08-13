@@ -18,7 +18,7 @@
 // hand-synced mirror of `src/capabilities/types/{defs,bit,as_str}.rs`: the
 // order is `bit.rs`'s and the strings are `as_str.rs`'s verbatim, so a new
 // capability must be appended here in the same position it takes there.
-pub(super) const CAP_NAMES: [&[u8]; 27] = [
+pub(super) const CAP_NAMES: [&[u8]; 31] = [
     b"CoreExec",
     b"IO",
     b"Network",
@@ -46,4 +46,8 @@ pub(super) const CAP_NAMES: [&[u8]; 27] = [
     b"SpawnWindow",
     b"ProcessControl",
     b"StoreWrite",
+    b"EnrolDevRoot",
+    b"Keyring",
+    b"Entropy",
+    b"AppInstall",
 ];
