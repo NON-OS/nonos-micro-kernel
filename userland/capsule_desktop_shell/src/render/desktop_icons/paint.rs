@@ -18,12 +18,12 @@
 //! so the text stays readable over a busy wallpaper.
 
 use super::cell_rect::cell_rect;
-use super::metrics::{CARET_W, ICON};
+use super::metrics::{caret_w, icon};
 use crate::render::fill::fill_rect;
 use crate::render::icons::draw_fs_icon;
 use crate::render::measure_aa::{measure_aa, truncate_to_width};
 use crate::render::text_aa::text_aa;
-use crate::render::ui_font::{line_h, top_y_centered, UI_PX};
+use crate::render::ui_font::{line_h, scale, top_y_centered, UI_PX};
 use crate::state::Context;
 
 const LABEL_FG: u32 = 0xFFE4_EEF8;
@@ -31,16 +31,24 @@ const PILL_BG: u32 = 0xFF0C_1119;
 const EDIT_BG: u32 = 0xFF1E_2C46;
 const EDIT_FG: u32 = 0xFFFF_FFFF;
 const CARET: u32 = 0xFF66_E6FF;
-const PILL_PAD: u32 = 6;
-const PILL_VPAD: u32 = 2;
+const PILL_PAD_LOGICAL: u32 = 6;
+const PILL_VPAD_LOGICAL: u32 = 2;
+
+fn pill_pad() -> u32 {
+    PILL_PAD_LOGICAL * scale()
+}
+
+fn pill_vpad() -> u32 {
+    PILL_VPAD_LOGICAL * scale()
+}
 
 pub fn paint_desktop_icons(ctx: &Context) {
     for (i, item) in ctx.desktop_items.iter().enumerate() {
         let (cx, cy, cw, _) = cell_rect(ctx, i);
-        let icon_x = cx + (cw - ICON) / 2;
-        draw_fs_icon(ctx, icon_x, cy, ICON, item.is_dir);
+        let icon_x = cx + (cw - icon()) / 2;
+        draw_fs_icon(ctx, icon_x, cy, icon(), item.is_dir);
 
-        let label_y = cy + ICON + 8;
+        let label_y = cy + icon() + 8 * scale();
         if ctx.rename == Some(i) {
             paint_rename(ctx, cx, cw, label_y);
         } else {
@@ -51,31 +59,31 @@ pub fn paint_desktop_icons(ctx: &Context) {
     // A dragged icon rides under the cursor until it is dropped.
     if ctx.drag_moved {
         if let Some(item) = ctx.drag_from.and_then(|i| ctx.desktop_items.get(i)) {
-            let gx = ctx.drag_x.saturating_sub(ICON / 2);
-            let gy = ctx.drag_y.saturating_sub(ICON / 2);
-            draw_fs_icon(ctx, gx, gy, ICON, item.is_dir);
+            let gx = ctx.drag_x.saturating_sub(icon() / 2);
+            let gy = ctx.drag_y.saturating_sub(icon() / 2);
+            draw_fs_icon(ctx, gx, gy, icon(), item.is_dir);
         }
     }
 }
 
 // The static label on its dark pill.
 fn paint_label(ctx: &Context, name: &str, cx: u32, cw: u32, label_y: u32) {
-    let shown = truncate_to_width(name, UI_PX, cw.saturating_sub(PILL_PAD * 2));
+    let shown = truncate_to_width(name, UI_PX, cw.saturating_sub(pill_pad() * 2));
     let text_w = measure_aa(shown, UI_PX);
-    let pill_x = cx + cw.saturating_sub(text_w + PILL_PAD * 2) / 2;
+    let pill_x = cx + cw.saturating_sub(text_w + pill_pad() * 2) / 2;
     pill(ctx, pill_x, label_y, text_w, PILL_BG);
-    text_aa(ctx, pill_x + PILL_PAD, text_top(label_y), shown, LABEL_FG, UI_PX);
+    text_aa(ctx, pill_x + pill_pad(), text_top(label_y), shown, LABEL_FG, UI_PX);
 }
 
 // The inline rename field: the edit buffer with a caret, on a lit pill.
 fn paint_rename(ctx: &Context, cx: u32, cw: u32, label_y: u32) {
-    let room = cw.saturating_sub(PILL_PAD * 2 + CARET_W);
+    let room = cw.saturating_sub(pill_pad() * 2 + caret_w());
     let shown = tail_to_width(&ctx.rename_buf, room);
     let text_w = measure_aa(shown, UI_PX);
-    let pill_x = cx + cw.saturating_sub(text_w + PILL_PAD * 2 + CARET_W) / 2;
-    pill(ctx, pill_x, label_y, text_w + CARET_W, EDIT_BG);
-    text_aa(ctx, pill_x + PILL_PAD, text_top(label_y), shown, EDIT_FG, UI_PX);
-    let caret_x = pill_x + PILL_PAD + text_w;
+    let pill_x = cx + cw.saturating_sub(text_w + pill_pad() * 2 + caret_w()) / 2;
+    pill(ctx, pill_x, label_y, text_w + caret_w(), EDIT_BG);
+    text_aa(ctx, pill_x + pill_pad(), text_top(label_y), shown, EDIT_FG, UI_PX);
+    let caret_x = pill_x + pill_pad() + text_w;
     fill_rect(
         ctx.backing_va,
         ctx.stride,
@@ -83,7 +91,7 @@ fn paint_rename(ctx: &Context, cx: u32, cw: u32, label_y: u32) {
         ctx.height,
         caret_x,
         label_y,
-        CARET_W,
+        caret_w(),
         label_h(),
         CARET,
     );
@@ -106,11 +114,11 @@ fn label_h() -> u32 {
 }
 
 fn pill_h() -> u32 {
-    label_h() + PILL_VPAD * 2
+    label_h() + pill_vpad() * 2
 }
 
 fn text_top(label_y: u32) -> u32 {
-    top_y_centered(label_y.saturating_sub(PILL_VPAD), pill_h(), UI_PX)
+    top_y_centered(label_y.saturating_sub(pill_vpad()), pill_h(), UI_PX)
 }
 
 fn pill(ctx: &Context, pill_x: u32, label_y: u32, text_w: u32, bg: u32) {
@@ -120,8 +128,8 @@ fn pill(ctx: &Context, pill_x: u32, label_y: u32, text_w: u32, bg: u32) {
         ctx.width,
         ctx.height,
         pill_x,
-        label_y.saturating_sub(PILL_VPAD),
-        text_w + PILL_PAD * 2,
+        label_y.saturating_sub(pill_vpad()),
+        text_w + pill_pad() * 2,
         pill_h(),
         bg,
     );
