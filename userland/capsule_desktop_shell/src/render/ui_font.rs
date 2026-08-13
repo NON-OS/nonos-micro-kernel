@@ -48,7 +48,7 @@ pub const TITLE_PX: f32 = 20.0;
 
 /// Height of one line box at `px`.
 pub fn line_h(px: f32) -> u32 {
-    ttf::line_height(px).max(0) as u32
+    ttf::line_height(scaled(px)).max(0) as u32
 }
 
 /// Top edge that centres one line of `px` text inside a box of `box_h`.
