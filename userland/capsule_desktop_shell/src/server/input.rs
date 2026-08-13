@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::protocol::{read_i32, read_u16, read_u32};
-use crate::render::layout::{bottom_dock_rect, MENUBAR_HEIGHT};
+use crate::render::layout::{bottom_dock_rect, menubar_height};
 use crate::render::{desktop_icons, desktop_menu, topbar};
 use crate::server::desktop;
 use crate::server::handlers::{launcher_focus, launcher_request, launchpad};
@@ -141,7 +141,7 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     // New File on empty space, or Open / Rename / Delete on an icon.
     if kind == INPUT_KIND_BUTTON_DOWN && read_u32(buf, 12) == Some(2) {
         let dock_top = bottom_dock_rect(ctx.width, ctx.height).y.saturating_sub(18);
-        if py > MENUBAR_HEIGHT && py < dock_top {
+        if py > menubar_height() && py < dock_top {
             ctx.menu_target = desktop_icons::hit(ctx, px, py);
             ctx.desktop_menu = Some((px, py));
             ctx.menu_hover = None;

@@ -16,7 +16,7 @@
 
 use nonos_libc::mk_time_millis;
 
-use crate::render::layout::{bottom_dock_rect, launchpad_slot_x, TASKBAR_ENTRY_W};
+use crate::render::layout::{bottom_dock_rect, launchpad_slot_x, taskbar_entry_w};
 use crate::server::handlers::launcher_request::{self, LaunchOutcome};
 use crate::server::handlers::launchpad;
 use crate::server::refresh_taskbar::refresh_taskbar;
@@ -27,7 +27,7 @@ pub fn handle(ctx: &mut Context, x: u32, y: u32) {
     let mut row_x = bottom.x + 12;
     for (index, app) in LAUNCHER_APPS.iter().enumerate() {
         if x >= row_x
-            && x < row_x + TASKBAR_ENTRY_W
+            && x < row_x + taskbar_entry_w()
             && y >= bottom.y + 10
             && y < bottom.y + bottom.height - 10
         {
@@ -62,12 +62,12 @@ pub fn handle(ctx: &mut Context, x: u32, y: u32) {
             refresh_taskbar(ctx);
             return;
         }
-        row_x += TASKBAR_ENTRY_W + 6;
+        row_x += taskbar_entry_w() + 6;
     }
     // The trailing dock slot is the Launchpad button.
     let lp = launchpad_slot_x(bottom);
     if x >= lp
-        && x < lp + TASKBAR_ENTRY_W
+        && x < lp + taskbar_entry_w()
         && y >= bottom.y + 10
         && y < bottom.y + bottom.height - 10
     {

@@ -16,8 +16,8 @@
 
 //! Y of the first icon row, just below the menu bar.
 
-use crate::render::layout::MENUBAR_HEIGHT;
+use crate::render::layout::menubar_height;
 
 pub(super) fn top() -> u32 {
-    MENUBAR_HEIGHT + 20
+    menubar_height() + 20
 }

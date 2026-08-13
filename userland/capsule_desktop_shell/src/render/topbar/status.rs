@@ -19,7 +19,7 @@
 
 use super::battery_glyph::battery_glyph;
 use super::metrics::{
-    BATT_GLYPH_W, DOT, FG, GAP, NET_GLYPH_W, PAD_X, RIGHT_MARGIN, TILE_BG, TILE_BORDER, TILE_H,
+    BATT_GLYPH_W, DOT, FG, GAP, NET_GLYPH_W, PAD_X, RIGHT_MARGIN, TILE_BG, TILE_BORDER, tile_h,
 };
 use super::net_glyph::net_glyph;
 use super::notify_dot::notify_dot;
@@ -63,12 +63,12 @@ pub(super) fn status(ctx: &Context) {
     }
 
     let x0 = bar.x + bar.width - RIGHT_MARGIN - total;
-    let tile_y = bar.y + (bar.height - TILE_H) / 2;
+    let tile_y = bar.y + (bar.height - tile_h()) / 2;
     tile(ctx, x0, tile_y, total);
 
-    let glyph_y = tile_y + (TILE_H - 11) / 2;
-    let text_y = top_y_centered(tile_y, TILE_H, UI_PX);
-    let dot_y = tile_y + (TILE_H - DOT) / 2;
+    let glyph_y = tile_y + (tile_h() - 11) / 2;
+    let text_y = top_y_centered(tile_y, tile_h(), UI_PX);
+    let dot_y = tile_y + (tile_h() - DOT) / 2;
     let mut x = x0 + PAD_X;
 
     if has_notify {
@@ -87,7 +87,7 @@ pub(super) fn status(ctx: &Context) {
 // A rounded, bordered tile behind the cluster, matching the dock's entries.
 fn tile(ctx: &Context, x: u32, y: u32, w: u32) {
     let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    let h = TILE_H;
+    let h = tile_h();
     fill_rect(va, st, vw, vh, x, y, w, h, TILE_BG);
     let bg = super::metrics::BAR_BG;
     for &(cx, cy) in &[(x, y), (x + w - 2, y), (x, y + h - 2), (x + w - 2, y + h - 2)] {

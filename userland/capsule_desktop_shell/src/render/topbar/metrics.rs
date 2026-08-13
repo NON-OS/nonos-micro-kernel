@@ -31,7 +31,9 @@ pub(super) const WORDMARK_X: u32 = 40;
 pub(super) const BRAND_RIGHT: u32 = 118;
 
 pub(super) const RIGHT_MARGIN: u32 = 12;
-pub(super) const TILE_H: u32 = crate::render::layout::MENUBAR_TILE_H;
+pub(super) fn tile_h() -> u32 {
+    crate::render::layout::menubar_tile_h()
+}
 pub(super) const PAD_X: u32 = 12;
 pub(super) const GAP: u32 = 10;
 

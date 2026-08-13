@@ -16,7 +16,7 @@
 
 use super::draw_app_icon;
 use super::fill::fill_rect;
-use super::layout::{bottom_dock_rect, launchpad_slot_x, TASKBAR_ENTRY_W};
+use super::layout::{bottom_dock_rect, launchpad_slot_x, taskbar_entry_w};
 use crate::state::{Context, LAUNCHER_APPS, TASKBAR_NO_ACTIVE};
 
 const ICON_SIZE: u32 = 40;
@@ -26,7 +26,7 @@ const LAUNCHPAD_DOT: u32 = 0xFF9F_B4D6;
 // slot just past the last app.
 fn draw_launchpad_button(ctx: &Context, box_top: u32, box_h: u32) {
     let slot_x = launchpad_slot_x(bottom_dock_rect(ctx.width, ctx.height));
-    let x0 = slot_x + (TASKBAR_ENTRY_W - ICON_SIZE) / 2;
+    let x0 = slot_x + (taskbar_entry_w() - ICON_SIZE) / 2;
     let y0 = box_top + (box_h - ICON_SIZE) / 2;
     let cell = ICON_SIZE / 3;
     let dot = cell.saturating_sub(4);
@@ -75,7 +75,7 @@ pub fn paint_bottom_taskbar(ctx: &Context) {
             ctx.height,
             x,
             box_top,
-            TASKBAR_ENTRY_W,
+            taskbar_entry_w(),
             box_h,
             bg,
         );
@@ -88,15 +88,15 @@ pub fn paint_bottom_taskbar(ctx: &Context) {
                 ctx.height,
                 x + 18,
                 box_top + box_h - 3,
-                TASKBAR_ENTRY_W - 36,
+                taskbar_entry_w() - 36,
                 3,
                 indicator,
             );
         }
-        let icon_x = x + (TASKBAR_ENTRY_W - ICON_SIZE) / 2;
+        let icon_x = x + (taskbar_entry_w() - ICON_SIZE) / 2;
         let icon_y = box_top + (box_h - ICON_SIZE) / 2;
         draw_app_icon(ctx, icon_x, icon_y, app.icon, ICON_SIZE);
-        x += TASKBAR_ENTRY_W + 6;
+        x += taskbar_entry_w() + 6;
     }
     draw_launchpad_button(ctx, box_top, box_h);
 }

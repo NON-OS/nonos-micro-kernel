@@ -24,7 +24,7 @@ use crate::render::ui_font::{top_y_centered, TITLE_PX};
 use crate::state::Context;
 
 pub(super) fn brand(ctx: &Context) {
-    let bar_h = crate::render::layout::MENUBAR_HEIGHT;
+    let bar_h = crate::render::layout::menubar_height();
     let logo_y = bar_h.saturating_sub(LOGO_SIZE) / 2;
     draw_logo(ctx, LOGO_X, logo_y, LOGO_SIZE);
     let text_y = top_y_centered(0, bar_h, TITLE_PX);
