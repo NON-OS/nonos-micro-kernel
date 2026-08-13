@@ -7,11 +7,12 @@
 //! distinct, with the tool's uppercase initial in the centre.
 
 use crate::render::fill::fill_rect;
-use crate::render::text::draw_overlay_text;
+use crate::render::measure_aa::measure_aa_bytes;
+use crate::render::text_aa::text_aa_bytes;
+use crate::render::ui_font::{top_y_centered, TITLE_PX};
 use crate::state::Context;
 
 const TILE_BG: u32 = 0xFF0C_1016;
-const GLYPH_ADV: u32 = 8;
 
 pub(super) fn draw(ctx: &Context, x: u32, y: u32, size: u32, label: &[u8]) {
     let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
@@ -24,9 +25,9 @@ pub(super) fn draw(ctx: &Context, x: u32, y: u32, size: u32, label: &[u8]) {
         fill_rect(va, st, vw, vh, cx, cy, 2, 2, TILE_BG);
     }
     let ch = [initial(label)];
-    let gx = x + size / 2 - GLYPH_ADV / 2;
-    let gy = y + size / 2 - 6;
-    draw_overlay_text(ctx, gx, gy, &ch, 0xFF0A_0E14);
+    let gx = x + size.saturating_sub(measure_aa_bytes(&ch, TITLE_PX)) / 2;
+    let gy = top_y_centered(y, size, TITLE_PX);
+    text_aa_bytes(ctx, gx, gy, &ch, 0xFF0A_0E14, TITLE_PX);
 }
 
 // The tool's first letter, uppercased for the tile glyph.

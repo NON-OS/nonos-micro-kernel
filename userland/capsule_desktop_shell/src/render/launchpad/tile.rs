@@ -8,16 +8,17 @@
 //! embed, and all three carry a centred label underneath.
 
 use super::gen_icon;
-use super::grid::{cell_origin, CELL_W, TILE};
+use super::grid::{cell_origin, CELL_H, CELL_W, TILE};
 use super::hit::{target, Target};
 use super::tool_icons;
 use crate::render::draw_app_icon;
-use crate::render::text::draw_overlay_text;
+use crate::render::measure_aa::{measure_aa, truncate_to_width};
+use crate::render::text_aa::text_aa;
+use crate::render::ui_font::{top_y_centered, valid_str, UI_PX};
 use crate::state::{Context, LAUNCHER_APPS, TOOL_APPS};
 
 const LABEL_FG: u32 = 0xFFE4_EEF8;
-const GLYPH_ADV: u32 = 8;
-const MAX_LABEL: usize = 14;
+const LABEL_GAP: u32 = 8;
 
 pub(super) fn paint(ctx: &Context, index: usize) {
     let (cx, cy) = cell_origin(ctx.width, index);
@@ -45,13 +46,13 @@ pub(super) fn paint(ctx: &Context, index: usize) {
             stem.as_bytes()
         }
     };
-    paint_label(ctx, label, cx, cy + TILE + 8);
+    paint_label(ctx, label, cx, cy + TILE + LABEL_GAP);
 }
 
 // The tile label, centred within the cell.
-fn paint_label(ctx: &Context, name: &[u8], cx: u32, y: u32) {
-    let shown = if name.len() > MAX_LABEL { &name[..MAX_LABEL] } else { name };
-    let text_w = shown.len() as u32 * GLYPH_ADV;
-    let x = cx + CELL_W.saturating_sub(text_w) / 2;
-    draw_overlay_text(ctx, x, y, shown, LABEL_FG);
+fn paint_label(ctx: &Context, name: &[u8], cx: u32, band_y: u32) {
+    let shown = truncate_to_width(valid_str(name), UI_PX, CELL_W);
+    let x = cx + CELL_W.saturating_sub(measure_aa(shown, UI_PX)) / 2;
+    let band_h = CELL_H.saturating_sub(TILE + LABEL_GAP);
+    text_aa(ctx, x, top_y_centered(band_y, band_h, UI_PX), shown, LABEL_FG, UI_PX);
 }
