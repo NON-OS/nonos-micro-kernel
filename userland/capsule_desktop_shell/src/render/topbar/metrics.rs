@@ -24,8 +24,6 @@ pub(super) const TILE_BORDER: u32 = 0xFF2E_3A4C;
 pub(super) const FG: u32 = 0xFFCF_E6E9;
 pub(super) const WORDMARK: u32 = 0xFFE6_F0FA;
 
-pub(super) const GLYPH_ADV: u32 = 8;
-
 pub(super) const LOGO_X: u32 = 12;
 pub(super) const LOGO_SIZE: u32 = 20;
 pub(super) const WORDMARK_X: u32 = 40;
@@ -33,7 +31,7 @@ pub(super) const WORDMARK_X: u32 = 40;
 pub(super) const BRAND_RIGHT: u32 = 118;
 
 pub(super) const RIGHT_MARGIN: u32 = 12;
-pub(super) const TILE_H: u32 = 20;
+pub(super) const TILE_H: u32 = crate::render::layout::MENUBAR_TILE_H;
 pub(super) const PAD_X: u32 = 12;
 pub(super) const GAP: u32 = 10;
 

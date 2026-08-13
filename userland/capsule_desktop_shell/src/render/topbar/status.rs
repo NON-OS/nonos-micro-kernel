@@ -19,14 +19,15 @@
 
 use super::battery_glyph::battery_glyph;
 use super::metrics::{
-    BATT_GLYPH_W, DOT, FG, GAP, GLYPH_ADV, NET_GLYPH_W, PAD_X, RIGHT_MARGIN, TILE_BG, TILE_BORDER,
-    TILE_H,
+    BATT_GLYPH_W, DOT, FG, GAP, NET_GLYPH_W, PAD_X, RIGHT_MARGIN, TILE_BG, TILE_BORDER, TILE_H,
 };
 use super::net_glyph::net_glyph;
 use super::notify_dot::notify_dot;
 use crate::render::fill::fill_rect;
 use crate::render::layout::menubar_rect;
-use crate::render::text::draw_overlay_text;
+use crate::render::measure_aa::measure_aa_bytes;
+use crate::render::text_aa::text_aa_bytes;
+use crate::render::ui_font::{top_y_centered, UI_PX};
 use crate::state::indicators::{battery, clock, net};
 use crate::state::Context;
 
@@ -47,15 +48,15 @@ pub(super) fn status(ctx: &Context) {
     // Widths.
     let has_notify = ctx.last_notify_level.is_some();
     let dot_w = if has_notify { DOT + GAP } else { 0 };
-    let batt_w = BATT_GLYPH_W + 4 + btext.len() as u32 * GLYPH_ADV;
+    let batt_w = BATT_GLYPH_W + 4 + measure_aa_bytes(btext, UI_PX);
     let inner = dot_w
         + batt_w
         + GAP
         + NET_GLYPH_W
         + GAP
-        + time.len() as u32 * GLYPH_ADV
+        + measure_aa_bytes(time, UI_PX)
         + GAP
-        + date.len() as u32 * GLYPH_ADV;
+        + measure_aa_bytes(date, UI_PX);
     let total = inner + PAD_X * 2;
     if bar.width <= total + RIGHT_MARGIN {
         return;
@@ -66,7 +67,7 @@ pub(super) fn status(ctx: &Context) {
     tile(ctx, x0, tile_y, total);
 
     let glyph_y = tile_y + (TILE_H - 11) / 2;
-    let text_y = tile_y + (TILE_H - 8) / 2;
+    let text_y = top_y_centered(tile_y, TILE_H, UI_PX);
     let dot_y = tile_y + (TILE_H - DOT) / 2;
     let mut x = x0 + PAD_X;
 
@@ -76,13 +77,11 @@ pub(super) fn status(ctx: &Context) {
     }
     battery_glyph(ctx, x, glyph_y, pct);
     x += BATT_GLYPH_W + 4;
-    draw_overlay_text(ctx, x, text_y, btext, FG);
-    x += btext.len() as u32 * GLYPH_ADV + GAP;
+    x = text_aa_bytes(ctx, x, text_y, btext, FG, UI_PX) + GAP;
     net_glyph(ctx, x, glyph_y, online);
     x += NET_GLYPH_W + GAP;
-    draw_overlay_text(ctx, x, text_y, time, FG);
-    x += time.len() as u32 * GLYPH_ADV + GAP;
-    draw_overlay_text(ctx, x, text_y, date, FG);
+    x = text_aa_bytes(ctx, x, text_y, time, FG, UI_PX) + GAP;
+    text_aa_bytes(ctx, x, text_y, date, FG, UI_PX);
 }
 
 // A rounded, bordered tile behind the cluster, matching the dock's entries.

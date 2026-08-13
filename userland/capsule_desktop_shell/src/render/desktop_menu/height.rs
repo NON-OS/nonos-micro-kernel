@@ -16,9 +16,9 @@
 
 //! Total pixel height of the menu panel.
 
-use super::metrics::{items, PAD_Y, ROW_H};
+use super::metrics::{items, row_h, PAD_Y};
 use crate::state::Context;
 
 pub(super) fn height(ctx: &Context) -> u32 {
-    items(ctx).len() as u32 * ROW_H + PAD_Y * 2
+    items(ctx).len() as u32 * row_h() + PAD_Y * 2
 }

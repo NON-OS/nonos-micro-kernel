@@ -19,11 +19,14 @@
 
 use super::metrics::{LOGO_SIZE, LOGO_X, WORDMARK, WORDMARK_X};
 use crate::render::icons::draw_logo;
-use crate::render::text::draw_overlay_text;
+use crate::render::text_aa::text_aa_bytes;
+use crate::render::ui_font::{top_y_centered, TITLE_PX};
 use crate::state::Context;
 
 pub(super) fn brand(ctx: &Context) {
-    let logo_y = crate::render::layout::MENUBAR_HEIGHT.saturating_sub(LOGO_SIZE) / 2;
+    let bar_h = crate::render::layout::MENUBAR_HEIGHT;
+    let logo_y = bar_h.saturating_sub(LOGO_SIZE) / 2;
     draw_logo(ctx, LOGO_X, logo_y, LOGO_SIZE);
-    draw_overlay_text(ctx, WORDMARK_X, 10, b"NONOS", WORDMARK);
+    let text_y = top_y_centered(0, bar_h, TITLE_PX);
+    text_aa_bytes(ctx, WORDMARK_X, text_y, b"NONOS", WORDMARK, TITLE_PX);
 }

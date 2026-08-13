@@ -24,10 +24,12 @@ pub mod fill;
 mod icons;
 pub mod launchpad;
 pub mod layout;
+pub mod measure_aa;
 pub mod pkg_consent;
-pub mod text;
+pub mod text_aa;
 pub mod toasts;
 pub mod topbar;
+pub mod ui_font;
 
 pub use bottom_taskbar::paint_bottom_taskbar;
 pub use chrome::paint_chrome;

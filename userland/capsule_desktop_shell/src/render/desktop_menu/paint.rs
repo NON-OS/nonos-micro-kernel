@@ -19,10 +19,11 @@
 
 use super::glyph::glyph;
 use super::height::height;
-use super::metrics::{items, PAD_X, PAD_Y, ROW_H, W};
+use super::metrics::{items, row_h, width, LABEL_X, PAD_X, PAD_Y};
 use super::origin::origin;
 use crate::render::fill::fill_rect;
-use crate::render::text::draw_overlay_text;
+use crate::render::text_aa::text_aa_bytes;
+use crate::render::ui_font::{top_y_centered, UI_PX};
 use crate::state::Context;
 
 const SHADOW: u32 = 0xFF07_0B11;
@@ -39,35 +40,37 @@ pub fn paint(ctx: &Context) {
     let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
     let (ox, oy) = origin(ctx);
     let h = height(ctx);
+    let w = width(ctx);
+    let rh = row_h();
     let rows = items(ctx);
     let with_glyph = ctx.menu_target.is_none();
 
     // Shadow first, then the panel, with the four corners knocked back to the
     // shadow colour so the edge reads as rounded.
-    fill_rect(va, st, vw, vh, ox + 3, oy + 4, W, h, SHADOW);
-    fill_rect(va, st, vw, vh, ox, oy, W, h, PANEL);
-    for &(cx, cy) in &[(ox, oy), (ox + W - 2, oy), (ox, oy + h - 2), (ox + W - 2, oy + h - 2)] {
+    fill_rect(va, st, vw, vh, ox + 3, oy + 4, w, h, SHADOW);
+    fill_rect(va, st, vw, vh, ox, oy, w, h, PANEL);
+    for &(cx, cy) in &[(ox, oy), (ox + w - 2, oy), (ox, oy + h - 2), (ox + w - 2, oy + h - 2)] {
         fill_rect(va, st, vw, vh, cx, cy, 2, 2, SHADOW);
     }
 
     // Border, skipping the knocked corners.
-    fill_rect(va, st, vw, vh, ox + 2, oy, W - 4, 1, BORDER);
-    fill_rect(va, st, vw, vh, ox + 2, oy + h - 1, W - 4, 1, BORDER);
+    fill_rect(va, st, vw, vh, ox + 2, oy, w - 4, 1, BORDER);
+    fill_rect(va, st, vw, vh, ox + 2, oy + h - 1, w - 4, 1, BORDER);
     fill_rect(va, st, vw, vh, ox, oy + 2, 1, h - 4, BORDER);
-    fill_rect(va, st, vw, vh, ox + W - 1, oy + 2, 1, h - 4, BORDER);
+    fill_rect(va, st, vw, vh, ox + w - 1, oy + 2, 1, h - 4, BORDER);
 
     for (i, label) in rows.iter().enumerate() {
-        let top = oy + PAD_Y + i as u32 * ROW_H;
+        let top = oy + PAD_Y + i as u32 * rh;
         if ctx.menu_hover == Some(i) {
-            fill_rect(va, st, vw, vh, ox + 4, top, W - 8, ROW_H, HOVER);
+            fill_rect(va, st, vw, vh, ox + 4, top, w - 8, rh, HOVER);
         }
         // The New Folder / New File rows carry a folder or document glyph; the
         // per-item actions are text with a small accent tick.
         if with_glyph {
-            glyph(ctx, ox + PAD_X, top + (ROW_H - GLYPH_H) / 2, i == 0);
+            glyph(ctx, ox + PAD_X, top + rh.saturating_sub(GLYPH_H) / 2, i == 0);
         } else {
-            fill_rect(va, st, vw, vh, ox + PAD_X + 4, top + ROW_H / 2 - 3, 3, 6, 0xFF66_E6FF);
+            fill_rect(va, st, vw, vh, ox + PAD_X + 4, top + rh / 2 - 3, 3, 6, 0xFF66_E6FF);
         }
-        draw_overlay_text(ctx, ox + PAD_X + 32, top + ROW_H / 2 - 4, label, FG);
+        text_aa_bytes(ctx, ox + LABEL_X, top_y_centered(top, rh, UI_PX), label, FG, UI_PX);
     }
 }

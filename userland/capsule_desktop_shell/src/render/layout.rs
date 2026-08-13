@@ -17,7 +17,12 @@
 use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 use crate::state::LAUNCHER_APPS;
 
-pub const MENUBAR_HEIGHT: u32 = 28;
+/// Measured `ui_font::line_h(UI_PX)`. The facade reads the face at run time, so the
+/// bar records the line box it was sized against.
+pub const UI_LINE_H: u32 = 17;
+/// One `UI_PX` line box plus symmetric padding, so the type clears the tile border.
+pub const MENUBAR_TILE_H: u32 = UI_LINE_H + 6;
+pub const MENUBAR_HEIGHT: u32 = MENUBAR_TILE_H + 6;
 // One slot per desktop app, plus a trailing slot for the Launchpad button.
 pub const BOTTOM_DOCK_WIDTH: u32 =
     (LAUNCHER_APPS.len() as u32 + 1) * (TASKBAR_ENTRY_W + 6) - 6 + 24;

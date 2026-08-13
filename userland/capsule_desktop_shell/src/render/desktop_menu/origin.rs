@@ -17,12 +17,12 @@
 //! Clamp the stored anchor so the whole panel stays on screen.
 
 use super::height::height;
-use super::metrics::W;
+use super::metrics::width;
 use crate::state::Context;
 
 pub(super) fn origin(ctx: &Context) -> (u32, u32) {
     let (rx, ry) = ctx.desktop_menu.unwrap_or((0, 0));
-    let x = rx.min(ctx.width.saturating_sub(W));
+    let x = rx.min(ctx.width.saturating_sub(width(ctx)));
     let y = ry.min(ctx.height.saturating_sub(height(ctx)));
     (x, y)
 }

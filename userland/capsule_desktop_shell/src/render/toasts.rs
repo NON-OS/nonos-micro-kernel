@@ -16,28 +16,45 @@
 
 use super::fill::fill_rect;
 use super::layout::{bottom_dock_rect, Rect};
-use super::text::draw_status;
+use super::measure_aa::{measure_aa_bytes, truncate_to_width};
+use super::text_aa::text_aa;
+use super::ui_font::{line_h, top_y_centered, valid_str, UI_PX};
 use crate::compositor_client::push_damage_commit;
+use crate::state::toasts::MAX_TOASTS;
 use crate::state::Context;
 
-const TOAST_WIDTH: u32 = 320;
-const TOAST_HEIGHT: u32 = 86;
+const TOAST_MAX_WIDTH: u32 = 460;
+const TOAST_MIN_WIDTH: u32 = 260;
 const TOAST_RIGHT_INSET: u32 = 12;
 const TOAST_DOCK_GAP: u32 = 10;
-const ROW_HEIGHT: u32 = 26;
+const ROW_PAD: u32 = 12;
 const ROW_GAP: u32 = 2;
 const ACCENT_WIDTH: u32 = 4;
-const TEXT_MAX_GLYPHS: usize = 34;
+const TEXT_INSET: u32 = 12;
 const PANEL_ARGB: u32 = 0xFF0E_1218;
 const ROW_ARGB: u32 = 0xFF1B_2030;
 const TEXT_ARGB: u32 = 0xFFCF_E6E9;
 const TRANSPARENT: u32 = 0x0000_0000;
 
+fn row_height() -> u32 {
+    line_h(UI_PX) + ROW_PAD
+}
+
+fn panel_height() -> u32 {
+    ROW_GAP + MAX_TOASTS as u32 * (row_height() + ROW_GAP)
+}
+
+fn row_chrome_width() -> u32 {
+    4 + ACCENT_WIDTH + TEXT_INSET * 2
+}
+
 pub fn toast_rect(display_width: u32, display_height: u32) -> Rect {
     let dock = bottom_dock_rect(display_width, display_height);
-    let x = display_width.saturating_sub(TOAST_WIDTH + TOAST_RIGHT_INSET);
-    let y = dock.y.saturating_sub(TOAST_HEIGHT + TOAST_DOCK_GAP);
-    Rect { x, y, width: TOAST_WIDTH, height: TOAST_HEIGHT }
+    let height = panel_height();
+    let width = TOAST_MAX_WIDTH.min(display_width.saturating_sub(TOAST_RIGHT_INSET * 2));
+    let x = display_width.saturating_sub(width + TOAST_RIGHT_INSET);
+    let y = dock.y.saturating_sub(height + TOAST_DOCK_GAP);
+    Rect { x, y, width, height }
 }
 
 pub fn sync_toast_layer(ctx: &mut Context) {
@@ -67,14 +84,30 @@ pub fn sync_toast_layer(ctx: &mut Context) {
     let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
 }
 
+fn panel_width(ctx: &Context, layer_width: u32) -> u32 {
+    let widest = ctx
+        .toasts
+        .iter_live()
+        .map(|t| measure_aa_bytes(&t.text[..t.len], UI_PX))
+        .max()
+        .unwrap_or(0);
+    (widest + row_chrome_width()).clamp(TOAST_MIN_WIDTH.min(layer_width), layer_width)
+}
+
 fn paint_toasts(ctx: &Context, r: Rect) {
     let (va, st, w, h) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    fill_rect(va, st, w, h, r.x, r.y, r.width, r.height, PANEL_ARGB);
+    fill_rect(va, st, w, h, r.x, r.y, r.width, r.height, TRANSPARENT);
+    let panel_w = panel_width(ctx, r.width);
+    let panel_x = r.x + (r.width - panel_w);
+    let row_h = row_height();
+    fill_rect(va, st, w, h, panel_x, r.y, panel_w, r.height, PANEL_ARGB);
     for (i, toast) in ctx.toasts.iter_live().enumerate() {
-        let row_y = r.y + ROW_GAP + i as u32 * (ROW_HEIGHT + ROW_GAP);
-        fill_rect(va, st, w, h, r.x + 2, row_y, r.width - 4, ROW_HEIGHT, ROW_ARGB);
-        fill_rect(va, st, w, h, r.x + 2, row_y, ACCENT_WIDTH, ROW_HEIGHT, toast.level.tint());
-        let glyphs = toast.len.min(TEXT_MAX_GLYPHS);
-        draw_status(ctx, r.x + 12, row_y + 9, &toast.text[..glyphs], TEXT_ARGB);
+        let row_y = r.y + ROW_GAP + i as u32 * (row_h + ROW_GAP);
+        fill_rect(va, st, w, h, panel_x + 2, row_y, panel_w.saturating_sub(4), row_h, ROW_ARGB);
+        fill_rect(va, st, w, h, panel_x + 2, row_y, ACCENT_WIDTH, row_h, toast.level.tint());
+        let text_x = panel_x + 2 + ACCENT_WIDTH + TEXT_INSET;
+        let text_max_w = (panel_x + panel_w).saturating_sub(text_x + TEXT_INSET);
+        let label = truncate_to_width(valid_str(&toast.text[..toast.len]), UI_PX, text_max_w);
+        text_aa(ctx, text_x, top_y_centered(row_y, row_h, UI_PX), label, TEXT_ARGB, UI_PX);
     }
 }

@@ -27,6 +27,7 @@ const SPOTLIGHT_ARGB: u32 = 0xFF14_1B26;
 const PANEL_BORDER_ARGB: u32 = 0xFF2A_3446;
 
 pub fn paint_chrome(ctx: &Context) {
+    let frame_start = crate::frametime::begin();
     clear_overlay::clear_overlay(ctx);
     super::topbar::paint(ctx);
     super::desktop_icons::paint_desktop_icons(ctx);
@@ -52,4 +53,5 @@ pub fn paint_chrome(ctx: &Context) {
     // The consent modal draws last so it sits above every other layer.
     super::consent::paint_consent(ctx);
     super::pkg_consent::paint_pkg_consent(ctx);
+    crate::frametime::end(frame_start);
 }
