@@ -16,7 +16,6 @@
 
 pub mod desktop;
 mod dispatch;
-mod frametime;
 pub mod handlers;
 mod input;
 mod installed_apps;

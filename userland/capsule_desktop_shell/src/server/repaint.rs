@@ -24,9 +24,7 @@ use crate::render::paint_chrome;
 use crate::state::Context;
 
 pub fn repaint(ctx: &mut Context) {
-    let frame_start = super::frametime::begin();
     paint_chrome(ctx);
     let rid = ctx.issue_request_id();
     let _ = push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, ctx.height);
-    super::frametime::end(frame_start);
 }
