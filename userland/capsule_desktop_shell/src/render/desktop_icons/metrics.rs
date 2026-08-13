@@ -21,9 +21,8 @@ pub(super) const CELL_W: u32 = 104;
 pub(super) const CELL_H: u32 = 96;
 pub(super) const LEFT: u32 = 24;
 
-/// Bitmap font advance, matching draw_overlay_text, used to centre labels.
-pub(super) const GLYPH_ADV: u32 = 8;
-pub(super) const MAX_LABEL: usize = 12;
+/// Width of the rename caret, which is a rule rather than a glyph cell.
+pub(super) const CARET_W: u32 = 2;
 
 /// Leave room at the bottom for the floating dock plus a little breathing space.
 pub(super) const BOTTOM_RESERVE: u32 = 120;
