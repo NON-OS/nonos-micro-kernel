@@ -12,6 +12,7 @@ use crate::render::fill::fill_rect;
 use crate::render::layout::Rect;
 use crate::render::measure_aa::{measure_aa, truncate_to_width};
 use crate::render::text_aa::text_aa;
+use crate::render::ui_font;
 use crate::render::ui_font::{line_h, top_y_centered, valid_str, TITLE_PX, UI_PX};
 use crate::server::handlers::consent::{approve_rect, cancel_rect, panel_rect};
 use crate::state::Context;
@@ -22,11 +23,15 @@ pub(super) const APPROVE_BG: u32 = 0xFF1E_7A3C;
 pub(super) const CANCEL_BG: u32 = 0xFF3A_2430;
 pub(super) const FG: u32 = 0xFFDF_EAF7;
 pub(super) const DIM: u32 = 0xFFAF_BED2;
-pub(super) const MARGIN: u32 = 20;
+const MARGIN_LOGICAL: u32 = 20;
 
 const ELLIPSIS: &str = "...";
 const TITLE: &str = "Launch third-party app?";
 const NOTE: &str = "Publisher-signed. The system grants only its manifest permissions.";
+
+pub(super) fn margin() -> u32 {
+    MARGIN_LOGICAL * ui_font::scale()
+}
 
 pub fn paint_consent(ctx: &Context) {
     let Some(name) = ctx.pending_consent.as_deref() else {
@@ -35,9 +40,9 @@ pub fn paint_consent(ctx: &Context) {
     let p = panel_rect(ctx.width, ctx.height);
     fill(ctx, p, PANEL);
     border(ctx, p, BORDER);
-    let x = p.x + MARGIN;
-    let max_w = p.width.saturating_sub(MARGIN * 2);
-    let mut y = p.y + MARGIN;
+    let x = p.x + margin();
+    let max_w = p.width.saturating_sub(margin() * 2);
+    let mut y = p.y + margin();
     line(ctx, x, y, TITLE, FG, TITLE_PX, max_w);
     y += line_h(TITLE_PX);
     line(ctx, x, y, valid_str(name), FG, UI_PX, max_w);
@@ -85,7 +90,7 @@ pub(super) fn wrap_at(text: &str, px: f32, max_w: u32) -> usize {
 pub(super) fn button(ctx: &Context, r: Rect, bg: u32, label: &str) {
     fill(ctx, r, bg);
     border(ctx, r, BORDER);
-    let inner = r.width.saturating_sub(8);
+    let inner = r.width.saturating_sub(8 * ui_font::scale());
     let fitted = truncate_to_width(label, UI_PX, inner);
     let tx = r.x + r.width.saturating_sub(measure_aa(fitted, UI_PX)) / 2;
     text_aa(ctx, tx, top_y_centered(r.y, r.height, UI_PX), fitted, FG, UI_PX);
@@ -97,8 +102,9 @@ pub(super) fn fill(ctx: &Context, r: Rect, argb: u32) {
 
 pub(super) fn border(ctx: &Context, r: Rect, argb: u32) {
     let (va, st, w, h) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    fill_rect(va, st, w, h, r.x, r.y, r.width, 1, argb);
-    fill_rect(va, st, w, h, r.x, r.y + r.height - 1, r.width, 1, argb);
-    fill_rect(va, st, w, h, r.x, r.y, 1, r.height, argb);
-    fill_rect(va, st, w, h, r.x + r.width - 1, r.y, 1, r.height, argb);
+    let s = ui_font::scale();
+    fill_rect(va, st, w, h, r.x, r.y, r.width, s, argb);
+    fill_rect(va, st, w, h, r.x, r.y + r.height.saturating_sub(s), r.width, s, argb);
+    fill_rect(va, st, w, h, r.x, r.y, s, r.height, argb);
+    fill_rect(va, st, w, h, r.x + r.width.saturating_sub(s), r.y, s, r.height, argb);
 }
