@@ -26,7 +26,6 @@ pub mod launchpad;
 pub mod layout;
 pub mod measure_aa;
 pub mod pkg_consent;
-pub mod text;
 pub mod text_aa;
 pub mod toasts;
 pub mod topbar;
