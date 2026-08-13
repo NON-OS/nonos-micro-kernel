@@ -16,12 +16,13 @@
 
 //! A small dot in the last notification's colour, at the left of the cluster.
 
-use super::metrics::DOT;
+use super::metrics::dot;
 use crate::render::fill::fill_rect;
 use crate::state::Context;
 
 pub(super) fn notify_dot(ctx: &Context, x: u32, y: u32) {
     if let Some(level) = ctx.last_notify_level {
-        fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, x, y, DOT, DOT, level.tint());
+        let d = dot();
+        fill_rect(ctx.backing_va, ctx.stride, ctx.width, ctx.height, x, y, d, d, level.tint());
     }
 }
