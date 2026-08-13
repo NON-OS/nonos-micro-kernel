@@ -16,19 +16,19 @@
 
 //! Which menu row, if any, sits under a point.
 
-use super::metrics::{items, PAD_Y, ROW_H, W};
+use super::metrics::{items, row_h, width, PAD_Y};
 use super::origin::origin;
 use crate::state::Context;
 
 pub fn hit(ctx: &Context, px: u32, py: u32) -> Option<usize> {
     ctx.desktop_menu?;
     let (ox, oy) = origin(ctx);
-    if px < ox || px >= ox + W {
+    if px < ox || px >= ox + width(ctx) {
         return None;
     }
     for i in 0..items(ctx).len() {
-        let top = oy + PAD_Y + i as u32 * ROW_H;
-        if py >= top && py < top + ROW_H {
+        let top = oy + PAD_Y + i as u32 * row_h();
+        if py >= top && py < top + row_h() {
             return Some(i);
         }
     }

@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Fixed geometry and labels for the right-click menu.
+//! Measured geometry and labels for the right-click menu.
 
+use crate::render::measure_aa::measure_aa_bytes;
+use crate::render::ui_font::{line_h, UI_PX};
 use crate::state::Context;
 
 /// Rows for the empty-desktop menu and the per-item menu. Row index doubles as
@@ -32,7 +34,26 @@ pub(super) fn items(ctx: &Context) -> &'static [&'static [u8]] {
     }
 }
 
-pub(super) const W: u32 = 200;
-pub(super) const ROW_H: u32 = 36;
 pub(super) const PAD_Y: u32 = 8;
 pub(super) const PAD_X: u32 = 14;
+
+/// Left edge of a row label: past the glyph column and its trailing gap.
+pub(super) const LABEL_X: u32 = PAD_X + 32;
+
+const ROW_LEAD: u32 = 12;
+const MIN_W: u32 = 200;
+
+/// Height of one row: the measured line box plus breathing room above and below.
+pub(super) fn row_h() -> u32 {
+    line_h(UI_PX) + ROW_LEAD
+}
+
+/// Panel width: wide enough for the longest label the open menu can show.
+pub(super) fn width(ctx: &Context) -> u32 {
+    let widest = items(ctx)
+        .iter()
+        .map(|label| measure_aa_bytes(label, UI_PX))
+        .max()
+        .unwrap_or(0);
+    (LABEL_X + widest + PAD_X).max(MIN_W)
+}
