@@ -27,6 +27,7 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         wm_notify_ready: false,
         width: overlay.width,
         height: overlay.height,
+        scale: crate::state::scale::scale_for(overlay.width, overlay.height),
         stride: overlay.stride,
         backing_va: overlay.backing_va,
         tray: TrayTable::new(),

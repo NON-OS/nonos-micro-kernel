@@ -25,6 +25,7 @@ pub struct Context {
     pub wm_notify_ready: bool,
     pub width: u32,
     pub height: u32,
+    pub scale: u32,
     pub stride: u32,
     pub backing_va: u64,
     pub tray: TrayTable,
