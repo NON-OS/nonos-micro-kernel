@@ -26,6 +26,10 @@ impl ProcessTable {
             inner.remove(pos);
             drop(inner);
             crate::sched::remove_from_run_queue(pid);
+            // The registry states what is running, so a process that has
+            // stopped must leave it or every later attestation overstates
+            // the machine.
+            crate::security::attest_registry::forget_attested(pid);
             Ok(())
         } else {
             Err("Process not found")
