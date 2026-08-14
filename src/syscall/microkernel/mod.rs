@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod attest;
+pub mod attest_doc;
+pub mod enrol_dev_root;
 pub mod battery;
 pub mod capability;
 pub mod capsule_load;
@@ -49,6 +51,8 @@ pub mod tool_run;
 pub mod wait;
 
 pub use attest::sys_attest_status;
+pub use attest_doc::sys_attest_doc;
+pub use enrol_dev_root::{sys_dev_root_confirm, sys_dev_root_request};
 pub use battery::sys_battery_status;
 pub use capability::{sys_cap_check, sys_cap_grant, sys_cap_revoke};
 pub use debug::sys_mk_debug;

@@ -15,43 +15,40 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::error::AttestError;
-#[cfg(not(feature = "nonos-stark-attest"))]
-use super::layout::POLICY_EPOCH;
-#[cfg(not(feature = "nonos-stark-attest"))]
-use super::policy_root;
-#[cfg(not(feature = "nonos-stark-attest"))]
-use super::trailer::parse;
-#[cfg(not(feature = "nonos-stark-attest"))]
-use crate::crypto::zk_kernel::verify_enrolled;
+use super::proved::Proved;
+use crate::security::dev_roots::{authority_for, enrolled_roots, Authority};
 
-/// Gate a spawn on the capsule's attestation. With `nonos-stark-attest` the proof is
-/// the transparent, post-quantum STARK; otherwise the legacy pairing proof. The
-/// trusted root is always the kernel's own.
+/// Gate a spawn on the capsule's attestation.
+///
+/// The vendor root is tried first and always. Only if that fails are enrolled
+/// developer roots attempted, so a capsule that verifies under the shipped
+/// policy is never attributed to a local key, and a local key can never
+/// shadow the vendor's answer.
+///
+/// Returns what was proved and who proved it. The caller records both: a
+/// measurement without its authority is a claim that something was verified
+/// without saying against what, which is the kind of half-truth attestation
+/// exists to eliminate.
 #[must_use = "a capsule must not be spawned unless its attestation verifies"]
 pub fn verify_capsule_attestation(
     trailer: &[u8],
     elf: &[u8],
     granted_caps: u64,
-) -> Result<(), AttestError> {
-    #[cfg(feature = "nonos-stark-attest")]
-    {
-        super::stark::verify_capsule_attestation_stark(trailer, elf, granted_caps)
+) -> Result<Proved, AttestError> {
+    let vendor = super::policy_root::root().ok_or(AttestError::RootUnavailable)?;
+    if let Ok(measurement) = super::against_root::verify(trailer, elf, granted_caps, &vendor) {
+        return Ok(Proved { measurement, authority: Authority::Vendor });
     }
-    #[cfg(not(feature = "nonos-stark-attest"))]
-    {
-        let proof = parse(trailer)?;
-        let root = policy_root::root().ok_or(AttestError::RootUnavailable)?;
 
-        let capsule_hash = *blake3::hash(elf).as_bytes();
-        let mut ctx = [0u8; 48];
-        ctx[..32].copy_from_slice(&capsule_hash);
-        ctx[32..40].copy_from_slice(&granted_caps.to_be_bytes());
-        ctx[40..48].copy_from_slice(&POLICY_EPOCH.to_be_bytes());
-
-        if verify_enrolled(&proof, &root, &ctx) {
-            Ok(())
-        } else {
-            Err(AttestError::Rejected)
+    let (roots, n) = enrolled_roots();
+    for root in roots.iter().take(n) {
+        if let Ok(measurement) = super::against_root::verify(trailer, elf, granted_caps, root) {
+            // The slot is looked up rather than inferred from the loop index,
+            // so the reported authority is the table's answer and cannot drift
+            // from it if the table is reordered.
+            let authority = authority_for(root).ok_or(AttestError::Rejected)?;
+            return Ok(Proved { measurement, authority });
         }
     }
+    Err(AttestError::Rejected)
 }

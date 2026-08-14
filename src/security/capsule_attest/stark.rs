@@ -22,7 +22,6 @@
 
 use super::error::AttestError;
 use super::layout::{POLICY_EPOCH, POLICY_TREE_DEPTH};
-use super::policy_root;
 use crate::crypto::stark::air::{
     deserialize_proof_ext, stark_verify_ext_blown_bound, MerkleMembership, Poseidon, RATE,
 };
@@ -46,15 +45,20 @@ fn to_rate(bytes: &[u8]) -> [Fp; RATE] {
     out
 }
 
-/// Verify a capsule's transparent-STARK attestation against the kernel policy
-/// root, bound to its measurement, its granted capabilities and the epoch. True
-/// only for a money-grade membership proof under exactly this root and context.
+/// Verify a capsule's transparent-STARK attestation against `policy`, bound to
+/// its measurement, its granted capabilities and the epoch. True only for a
+/// money-grade membership proof under exactly this root and context.
+///
+/// The root is a parameter rather than a lookup, so a capsule built on this
+/// machine clears exactly the bar a shipped one does. Only whose tree it is
+/// proved against differs.
 #[must_use = "a capsule must not be spawned unless its attestation verifies"]
-pub fn verify_capsule_attestation_stark(
+pub(super) fn verify_against(
     trailer: &[u8],
     elf: &[u8],
     granted_caps: u64,
-) -> Result<(), AttestError> {
+    policy: &[u8; 32],
+) -> Result<[u8; 32], AttestError> {
     let dir_bytes = POLICY_TREE_DEPTH.div_ceil(8);
     let sib_end = 9 + POLICY_TREE_DEPTH * 32;
     if trailer.len() < sib_end + dir_bytes
@@ -74,7 +78,7 @@ pub fn verify_capsule_attestation_stark(
     let proof =
         deserialize_proof_ext(&trailer[sib_end + dir_bytes..]).ok_or(AttestError::Malformed)?;
 
-    let root = to_rate(&policy_root::root().ok_or(AttestError::RootUnavailable)?);
+    let root = to_rate(policy);
 
     // Bind the proof to the capsule: its measurement, its capabilities, the epoch.
     let capsule_hash = *blake3::hash(elf).as_bytes();
@@ -91,7 +95,7 @@ pub fn verify_capsule_attestation_stark(
         directions,
     );
     if stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP, &ctx) {
-        Ok(())
+        Ok(capsule_hash)
     } else {
         Err(AttestError::Rejected)
     }
