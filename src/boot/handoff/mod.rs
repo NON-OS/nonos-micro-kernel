@@ -18,7 +18,9 @@ pub mod api;
 pub mod kernel_handoff;
 pub mod types;
 
-pub use api::{get_handoff, init_handoff, is_initialized, total_memory, HandoffError};
+pub use api::{
+    get_handoff, init_handoff, is_initialized, total_memory, wipe_boot_seed, HandoffError,
+};
 pub use kernel_handoff::{
     ArchSpecificHandoff, CpuTopology, EarlyConsole, Framebuffer, KernelHandoff, Measurement,
     MemoryHandoff, TimingHandoff,
