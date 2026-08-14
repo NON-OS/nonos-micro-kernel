@@ -15,5 +15,4 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub use crate::sdk_main;
-pub use crate::SDK_CAPS;
 pub use nonos_prelude::*;

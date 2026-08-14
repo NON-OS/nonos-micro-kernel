@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_cap::{
-    CAP_CORE_EXEC, CAP_DEBUG, CAP_GRAPHICS_DISPLAY_QUERY, CAP_GRAPHICS_PRESENT,
-    CAP_GRAPHICS_SURFACE_CREATE, CAP_GRAPHICS_SURFACE_MAP, CAP_MEMORY,
-};
+//! What an app is allowed to do, declared by the app itself.
+//!
+//! Every capability an app holds is written in its own source, expands into
+//! the manifest it is signed and proved against, and is enforced by the
+//! kernel at spawn. There is no set of powers an app gets for free beyond
+//! `BASE`, and nothing it can acquire later.
 
-pub const SDK_CAPS: u64 = CAP_CORE_EXEC
-    | CAP_MEMORY
-    | CAP_DEBUG
-    | CAP_GRAPHICS_DISPLAY_QUERY
-    | CAP_GRAPHICS_SURFACE_CREATE
-    | CAP_GRAPHICS_SURFACE_MAP
-    | CAP_GRAPHICS_PRESENT;
+mod base;
+mod groups;
+
+pub use base::BASE;
+pub use groups::{BUILD_TOOLING, CRYPTO, DEBUG, IPC, NETWORK, SERVICE, STORAGE, WINDOW};

@@ -23,4 +23,5 @@ fn app() {
     let _ = App::new("Hello").window().show();
 }
 
-sdk_main!(app);
+// It opens a window, so it asks for a window. Nothing else.
+sdk_main!(app, caps: [WINDOW]);
