@@ -37,19 +37,13 @@ pub const CAP_DRIVER: u64 = crate::capabilities::Capability::Driver.bit();
 // crypto syscall dispatch, which already requires Capability::Crypto, so every
 // caller holds it and this closes the open alias without locking anyone out.
 pub const CAP_CRYPTO: u64 = crate::capabilities::Capability::Crypto.bit();
-pub const CAP_PROCESS: u64 = 1 << 5;
-pub const CAP_MEMORY: u64 = 1 << 6;
-pub const CAP_INPUT: u64 = 1 << 7;
-pub const CAP_AUDIO: u64 = 1 << 8;
-pub const CAP_ZK: u64 = 1 << 9;
-pub const CAP_GPU: u64 = 1 << 10;
+pub const CAP_PROCESS: u64 = crate::capabilities::Capability::ProcessControl.bit();
+pub const CAP_MEMORY: u64 = crate::capabilities::Capability::Memory.bit();
+pub const CAP_INPUT: u64 = crate::capabilities::Capability::InputSource.bit();
 // CAP_APPS must equal the kernel AppInstall bit, not 1<<11 which is
 // GraphicsDisplayQuery. Every capsule that draws a window holds that, so the
 // marketplace gate was open to all of them.
 pub const CAP_APPS: u64 = crate::capabilities::Capability::AppInstall.bit();
-pub const CAP_AGENTS: u64 = 1 << 12;
-pub const CAP_SHELL: u64 = 1 << 13;
-pub const CAP_KERNEL: u64 = 1 << 14;
 // CAP_ENTROPY must equal the kernel Entropy bit, not 1<<15 which is DeviceEnum.
 // The entropy read gate therefore admitted anything that could enumerate
 // devices, which is every driver capsule and the broker.
@@ -63,9 +57,13 @@ pub const CAP_KEYRING: u64 = crate::capabilities::Capability::Keyring.bit();
 // path (sys_store_write runs in the caller's context), so it has to match the
 // same authority vfs already holds to persist installed capsules.
 pub const CAP_STORAGE: u64 = crate::capabilities::Capability::StoreWrite.bit();
-pub const CAP_UDEV: u64 = 1 << 18;
-pub const CAP_WALLET: u64 = 1 << 19;
-pub const CAP_TLS: u64 = 1 << 20;
+// CAP_AUDIO, CAP_ZK, CAP_GPU, CAP_AGENTS, CAP_SHELL, CAP_KERNEL, CAP_UDEV,
+// CAP_WALLET and CAP_TLS were defined here as independent 1<<N and used by
+// nothing. Every one of them named a permission the kernel has no bit for, so
+// each sat on a real capability: CAP_WALLET was Dma, CAP_TLS was Pio, CAP_ZK
+// was Admin. The first gate written against any of them would have tested that
+// capability instead, correctly and silently. A capability belongs here when a
+// gate needs it and the kernel enforces it, not in advance.
 // CAP_ADMIN must equal the kernel Admin bit. At 1<<63 it sat above every bit a
 // PCB can carry, so the gate it guards, entropy reseed, could not be passed by
 // anything and the path was unreachable rather than restricted.
