@@ -48,30 +48,14 @@ max_devices     = 256
 [numbers]
 CRND = 0x444E5243
 CHSH = 0x48534843
-CSGN = 0x4E475343
-CVRF = 0x46525643
 CENC = 0x434E4543
 CDEC = 0x43454443
-CKGN = 0x4E474B43
-CZKP = 0x504B5A43
-CZKV = 0x564B5A43
 CEDV = 0x56444543
-
-DLOG = 0x474F4C44
-DTRC = 0x43525444
 
 ARBT = 0x54425241
 ASDN = 0x4E445341
-AMOD = 0x444F4D41
 
 GDIM = 0x4D494447
-GSCR = 0x52435347
-GSDS = 0x53445347
-GSMP = 0x504D5347
-GPRF = 0x46525047
-GPRR = 0x52525047
-GDLS = 0x534C4447
-GCUR = 0x52554347
 
 MISD = 0x4453494D
 MIRC = 0x4352494D
@@ -126,18 +110,6 @@ caps = ["valid_token"]
 args = [{name="alg",type="u32",dir="in"},{name="data",type="u8*",dir="in"},{name="len",type="usize",dir="in"},{name="out",type="u8*",dir="out"},{name="out_len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
-[desc.CSGN]
-nr   = 0x4E475343
-caps = ["Crypto"]
-args = [{name="key_id",type="u64",dir="in"},{name="data",type="u8*",dir="in"},{name="len",type="usize",dir="in"},{name="sig_out",type="u8*",dir="out"},{name="sig_cap",type="usize",dir="in"}]
-ret  = {type="i64"}
-
-[desc.CVRF]
-nr   = 0x46525643
-caps = ["Crypto"]
-args = [{name="pubkey",type="u8*",dir="in"},{name="data",type="u8*",dir="in"},{name="data_len",type="usize",dir="in"},{name="sig",type="u8*",dir="in"},{name="sig_len",type="usize",dir="in"}]
-ret  = {type="i64"}
-
 [desc.CENC]
 nr   = 0x434E4543
 caps = ["Crypto"]
@@ -150,40 +122,10 @@ caps = ["Crypto"]
 args = [{name="key_id",type="u64",dir="in"},{name="ct",type="u8*",dir="in"},{name="ct_len",type="usize",dir="in"},{name="pt_out",type="u8*",dir="out"},{name="pt_cap",type="usize",dir="in"}]
 ret  = {type="i64"}
 
-[desc.CKGN]
-nr   = 0x4E474B43
-caps = ["Crypto"]
-args = [{name="alg",type="u32",dir="in"},{name="key_id_out",type="u64*",dir="out"}]
-ret  = {type="i64"}
-
-[desc.CZKP]
-nr   = 0x504B5A43
-caps = ["Crypto"]
-args = [{name="circuit_id",type="u32",dir="in"},{name="witness",type="u8*",dir="in"},{name="witness_len",type="usize",dir="in"},{name="proof_out",type="u8*",dir="out"},{name="proof_cap",type="usize",dir="in"}]
-ret  = {type="i64"}
-
-[desc.CZKV]
-nr   = 0x564B5A43
-caps = ["Crypto"]
-args = [{name="circuit_id",type="u32",dir="in"},{name="public",type="u8*",dir="in"},{name="public_len",type="usize",dir="in"},{name="proof",type="u8*",dir="in"},{name="proof_len",type="usize",dir="in"}]
-ret  = {type="i64"}
-
 [desc.CEDV]
 nr   = 0x56444543
 caps = ["Crypto"]
 args = [{name="pubkey",type="[u8;32]",dir="in"},{name="msg",type="u8*",dir="in"},{name="msg_len",type="usize",dir="in"},{name="sig",type="[u8;64]",dir="in"}]
-ret  = {type="i64"}
-
-[desc.DLOG]
-nr   = 0x474F4C44
-caps = ["Debug"]
-args = [{name="buf",type="u8*",dir="in"},{name="len",type="usize",dir="in"}]
-ret  = {type="i64"}
-
-[desc.DTRC]
-nr   = 0x43525444
-caps = ["Debug"]
-args = [{name="event_id",type="u32",dir="in"},{name="data",type="u8*",dir="in"},{name="len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
 [desc.ARBT]
@@ -198,58 +140,10 @@ caps = ["Admin"]
 args = []
 ret  = {type="!"}
 
-[desc.AMOD]
-nr   = 0x444F4D41
-caps = ["Admin"]
-args = [{name="elf",type="u8*",dir="in"},{name="len",type="usize",dir="in"},{name="manifest",type="u8*",dir="in"},{name="m_len",type="usize",dir="in"}]
-ret  = {type="i64"}
-
 [desc.GDIM]
 nr   = 0x4D494447
 caps = ["GraphicsDisplayQuery"]
 args = [{name="display_id",type="u32",dir="in"},{name="dims_out",type="u8*",dir="out"}]
-ret  = {type="i64"}
-
-[desc.GSCR]
-nr   = 0x52435347
-caps = ["GraphicsSurfaceCreate"]
-args = [{name="w",type="u32",dir="in"},{name="h",type="u32",dir="in"},{name="format",type="u32",dir="in"},{name="surface_id_out",type="u32*",dir="out"}]
-ret  = {type="i64"}
-
-[desc.GSDS]
-nr   = 0x53445347
-caps = ["GraphicsSurfaceCreate"]
-args = [{name="surface_id",type="u32",dir="in"}]
-ret  = {type="i64"}
-
-[desc.GSMP]
-nr   = 0x504D5347
-caps = ["GraphicsSurfaceMap"]
-args = [{name="surface_id",type="u32",dir="in"},{name="user_vaddr_out",type="u64*",dir="out"}]
-ret  = {type="i64"}
-
-[desc.GPRF]
-nr   = 0x46525047
-caps = ["GraphicsPresent"]
-args = [{name="surface_id",type="u32",dir="in"}]
-ret  = {type="i64"}
-
-[desc.GPRR]
-nr   = 0x52525047
-caps = ["GraphicsPresent"]
-args = [{name="surface_id",type="u32",dir="in"},{name="x",type="u32",dir="in"},{name="y",type="u32",dir="in"},{name="w",type="u32",dir="in"},{name="h",type="u32",dir="in"}]
-ret  = {type="i64"}
-
-[desc.GDLS]
-nr   = 0x534C4447
-caps = ["GraphicsDisplayQuery"]
-args = [{name="buf",type="u8*",dir="out"},{name="cap",type="usize",dir="in"}]
-ret  = {type="i64"}
-
-[desc.GCUR]
-nr   = 0x52554347
-caps = ["GraphicsPresent"]
-args = [{name="surface_id",type="u32",dir="in"},{name="hx",type="u32",dir="in"},{name="hy",type="u32",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MISD]
