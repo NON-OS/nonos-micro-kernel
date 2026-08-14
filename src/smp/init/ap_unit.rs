@@ -48,13 +48,10 @@ pub(super) fn start(
 }
 
 fn configure_descriptor(ap: &CpuDescriptor, cpu_id: usize, apic_id: u32, stack_base: u64) {
-    unsafe {
-        let ptr = ap as *const _ as *mut CpuDescriptor;
-        (*ptr).cpu_id = cpu_id as u32;
-        (*ptr).apic_id = apic_id;
-        (*ptr).stack_size = PERCPU_STACK_SIZE;
-    }
+    ap.set_identity(cpu_id as u32, apic_id, PERCPU_STACK_SIZE);
     ap.stack_base.store(stack_base, Ordering::Release);
+    // Published last: the AP, and anything sending it an IPI, must see a
+    // complete descriptor before they see it leave Offline.
     ap.set_state(CpuState::Starting);
 }
 

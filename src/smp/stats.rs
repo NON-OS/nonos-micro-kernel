@@ -27,8 +27,8 @@ pub fn get_smp_stats() -> SmpStats {
     for i in 0..cpu_count() {
         let cpu = &CPU_DESCRIPTORS[i];
         per_cpu.push(CpuStats {
-            cpu_id: cpu.cpu_id,
-            apic_id: cpu.apic_id,
+            cpu_id: cpu.get_cpu_id(),
+            apic_id: cpu.get_apic_id(),
             state: cpu.state(),
             idle_cycles: cpu.idle_cycles.load(Ordering::Relaxed),
             total_cycles: cpu.total_cycles.load(Ordering::Relaxed),
