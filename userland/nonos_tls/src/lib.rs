@@ -35,6 +35,9 @@ mod application_write;
 mod cert_at;
 mod cert_count;
 mod cert_dns_match;
+mod cert_ext;
+mod cert_ext_entry;
+mod cert_is_ca;
 mod cert_issuer;
 mod cert_sig_alg;
 mod cert_signature;
@@ -90,6 +93,10 @@ mod verify_p384;
 mod verify_rsa;
 
 pub use application_plaintext::{application_plaintext, application_plaintext_cached};
+// Exported so the browser's own chain walk enforces the same issuer rule from
+// the same code. A second copy is how one of them gets fixed and the other
+// does not.
+pub use cert_is_ca::cert_is_ca;
 pub use application_request::application_request;
 pub use application_write::application_write;
 pub use client_flight::client_flight;
