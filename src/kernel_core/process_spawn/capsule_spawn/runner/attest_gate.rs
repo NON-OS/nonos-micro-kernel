@@ -15,9 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::spec::{CapsuleSpecVerified, SpawnError};
-use crate::security::capsule_attest::verify_capsule_attestation;
+use crate::security::capsule_attest::{verify_capsule_attestation, Proved};
 
-pub(crate) fn attest_gate(spec: &CapsuleSpecVerified, install_caps: u64) -> Result<(), SpawnError> {
+/// Returns what was proved and who proved it, so the spawn path can record
+/// both once a pid exists. `None` only on the rollout path, where nothing was
+/// proved at all.
+pub(crate) fn attest_gate(
+    spec: &CapsuleSpecVerified,
+    install_caps: u64,
+) -> Result<Option<Proved>, SpawnError> {
     let trailer = spec.attestation_trailer;
     if trailer.is_empty() {
         crate::sys::bench::mark_named(b"capsule_attest_none", spec.name.as_bytes());
@@ -27,15 +33,19 @@ pub(crate) fn attest_gate(spec: &CapsuleSpecVerified, install_caps: u64) -> Resu
         #[cfg(not(feature = "nonos-zk-rollout"))]
         return Err(SpawnError::AttestationRejected);
         #[cfg(feature = "nonos-zk-rollout")]
-        return Ok(());
+        return Ok(None);
     }
     match verify_capsule_attestation(trailer, spec.elf, install_caps) {
-        Ok(()) => {
+        Ok(proved) => {
             crate::sys::bench::mark_named(b"capsule_attest_ok", spec.name.as_bytes());
             crate::sys::serial::print(b"[ZK-ATTEST] ok ");
             crate::sys::serial::print(spec.name.as_bytes());
+            // The authority is on the line: a reader of the boot log should be
+            // able to tell shipped capsules from ones built on this machine.
+            crate::sys::serial::print(b" ");
+            crate::sys::serial::print(proved.authority.as_str().as_bytes());
             crate::sys::serial::print(b"\n");
-            Ok(())
+            Ok(Some(proved))
         }
         Err(e) => {
             crate::sys::bench::mark_named(b"capsule_attest_fail", spec.name.as_bytes());
@@ -49,7 +59,7 @@ pub(crate) fn attest_gate(spec: &CapsuleSpecVerified, install_caps: u64) -> Resu
                 return Err(SpawnError::AttestationRejected);
             }
             #[cfg(feature = "nonos-zk-rollout")]
-            Ok(())
+            Ok(None)
         }
     }
 }

@@ -15,12 +15,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::spec::{CapsuleSpecVerified, SpawnError};
+use crate::security::capsule_attest::Proved;
 
 pub(crate) fn publisher_gate(
     spec: &CapsuleSpecVerified,
     namespace: &str,
     attest_caps: u64,
-) -> Result<(), SpawnError> {
+) -> Result<Option<Proved>, SpawnError> {
     if !matches!(super::tier::classify(namespace), super::tier::Tier::Publisher) {
         return Err(SpawnError::AttestationRejected);
     }
@@ -29,7 +30,7 @@ pub(crate) fn publisher_gate(
         crate::sys::serial::print(b"[ZK-ATTEST] pub ");
         crate::sys::serial::print(spec.name.as_bytes());
         crate::sys::serial::print(b"\n");
-        return Ok(());
+        return Ok(None);
     }
     super::attest_gate::attest_gate(spec, attest_caps)
 }
