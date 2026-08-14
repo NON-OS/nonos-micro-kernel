@@ -46,6 +46,48 @@ max_caps        = 1024
 max_devices     = 256
 
 [numbers]
+APPS = 0x53505041
+CDAD = 0x44414443
+CEAD = 0x44414543
+CEDP = 0x50444543
+CEDS = 0x53444543
+CHKF = 0x464B4843
+CHMC = 0x434D4843
+CKEC = 0x43454B43
+CSKS = 0x534B5343
+CSPB = 0x42505343
+CXPK = 0x4B505843
+CXSH = 0x48535843
+MAST = 0x5453414D
+MBAT = 0x5441424D
+MCLD = 0x444C434D
+MCVF = 0x4656434D
+MFTK = 0x4B54464D
+MFTW = 0x5754464D
+MGPD = 0x4450474D
+MIEW = 0x5745494D
+MIRW = 0x5752494D
+MIRY = 0x5952494D
+MKAR = 0x52414B4D
+MKIL = 0x4C494B4D
+MMON = 0x4E4F4D4D
+MOUT = 0x54554F4D
+MPCR = 0x5243504D
+MPCW = 0x5743504D
+MPIN = 0x4E49504D
+MPST = 0x5453504D
+MSOW = 0x574F534D
+MSPI = 0x4950534D
+MSRD = 0x4452534D
+MSTB = 0x4254534D
+MSVR = 0x5256534D
+MSWR = 0x5257534D
+MTAD = 0x4441544D
+MTMS = 0x534D544D
+MTRN = 0x4E52544D
+MTRT = 0x5452544D
+MTSP = 0x5053544D
+MWAT = 0x5441574D
 CRND = 0x444E5243
 CHSH = 0x48534843
 CENC = 0x434E4543
@@ -378,4 +420,254 @@ ret  = {type="i64"}
 nr   = 0x4445494D
 caps = ["IPC"]
 args = [{name="buf",type="u8*",dir="out"},{name="cap",type="usize",dir="in"},{name="count_out",type="u32*",dir="out"}]
+ret  = {type="i64"}
+
+[desc.APPS]
+nr   = 0x53505041
+caps = ["valid_token"]
+args = [{name="field_id",type="u64",dir="in"},{name="kind",type="u64",dir="in"},{name="value_ptr",type="u64",dir="in"},{name="value_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.CDAD]
+nr   = 0x44414443
+caps = ["valid_token"]
+args = [{name="algo",type="u64",dir="in"},{name="key_ptr",type="u64",dir="in"},{name="nonce_ptr",type="u64",dir="in"},{name="frame_ptr",type="u64",dir="in"},{name="frame_len",type="u64",dir="in"},{name="plaintext_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CEAD]
+nr   = 0x44414543
+caps = ["valid_token"]
+args = [{name="algo",type="u64",dir="in"},{name="key_ptr",type="u64",dir="in"},{name="nonce_ptr",type="u64",dir="in"},{name="frame_ptr",type="u64",dir="in"},{name="frame_len",type="u64",dir="in"},{name="ciphertext_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CEDP]
+nr   = 0x50444543
+caps = ["valid_token"]
+args = [{name="seed_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CEDS]
+nr   = 0x53444543
+caps = ["valid_token"]
+args = [{name="seed_ptr",type="u64",dir="in"},{name="msg_ptr",type="u64",dir="in"},{name="msg_len",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CHKF]
+nr   = 0x464B4843
+caps = ["valid_token"]
+args = [{name="frame_ptr",type="u64",dir="in"},{name="frame_len",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.CHMC]
+nr   = 0x434D4843
+caps = ["valid_token"]
+args = [{name="key_ptr",type="u64",dir="in"},{name="key_len",type="u64",dir="in"},{name="data_ptr",type="u64",dir="in"},{name="data_len",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CKEC]
+nr   = 0x43454B43
+caps = ["valid_token"]
+args = [{name="data",type="u64",dir="in"},{name="len",type="u64",dir="in"},{name="out",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.CSKS]
+nr   = 0x534B5343
+caps = ["valid_token"]
+args = [{name="sk_ptr",type="u64",dir="in"},{name="digest_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CSPB]
+nr   = 0x42505343
+caps = ["valid_token"]
+args = [{name="sk_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CXPK]
+nr   = 0x4B505843
+caps = ["valid_token"]
+args = [{name="private_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.CXSH]
+nr   = 0x48535843
+caps = ["valid_token"]
+args = [{name="private_ptr",type="u64",dir="in"},{name="public_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+[desc.MAST]
+nr   = 0x5453414D
+caps = ["valid_token"]
+args = [{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.MBAT]
+nr   = 0x5441424D
+caps = ["valid_token"]
+args = []
+ret  = {type="i64"}
+
+[desc.MCLD]
+nr   = 0x444C434D
+caps = ["valid_token"]
+args = [{name="req_ptr",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MCVF]
+nr   = 0x4656434D
+caps = ["valid_token"]
+args = [{name="req_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+[desc.MFTK]
+nr   = 0x4B54464D
+caps = ["valid_token"]
+args = [{name="vaddr",type="u64",dir="in"},{name="count",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MFTW]
+nr   = 0x5754464D
+caps = ["valid_token"]
+args = [{name="vaddr",type="u64",dir="in"},{name="expected",type="u32",dir="in"},{name="timeout_ms",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MGPD]
+nr   = 0x4450474D
+caps = ["valid_token"]
+args = []
+ret  = {type="i64"}
+
+[desc.MIEW]
+nr   = 0x5745494D
+caps = ["valid_token"]
+args = [{name="last_seq",type="u64",dir="in"},{name="timeout_ms",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.MIRW]
+nr   = 0x5752494D
+caps = ["valid_token"]
+args = [{name="grant_id",type="u64",dir="in"},{name="last_seq",type="u64",dir="in"},{name="timeout_ms",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.MIRY]
+nr   = 0x5952494D
+caps = ["valid_token"]
+args = [{name="dest_pid",type="u64",dir="in"},{name="buf",type="u64",dir="out"},{name="len",type="usize",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MKAR]
+nr   = 0x52414B4D
+caps = ["valid_token"]
+args = [{name="buf",type="u64",dir="out"},{name="len",type="usize",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MKIL]
+nr   = 0x4C494B4D
+caps = ["valid_token"]
+args = [{name="pid",type="u64",dir="in"},{name="sig",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MMON]
+nr   = 0x4E4F4D4D
+caps = ["valid_token"]
+args = []
+ret  = {type="i64"}
+
+[desc.MOUT]
+nr   = 0x54554F4D
+caps = ["valid_token"]
+args = [{name="pid",type="u64",dir="in"},{name="buf_ptr",type="u64",dir="out"},{name="buf_len",type="usize",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MPCR]
+nr   = 0x5243504D
+caps = ["valid_token"]
+args = [{name="device_id",type="u64",dir="in"},{name="claim_epoch",type="u64",dir="in"},{name="offset",type="u32",dir="in"},{name="width",type="u32",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MPCW]
+nr   = 0x5743504D
+caps = ["valid_token"]
+args = [{name="device_id",type="u64",dir="in"},{name="claim_epoch",type="u64",dir="in"},{name="offset",type="u32",dir="in"},{name="value",type="u32",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MPIN]
+nr   = 0x4E49504D
+caps = ["valid_token"]
+args = [{name="pid",type="u64",dir="in"},{name="buf_ptr",type="u64",dir="out"},{name="buf_len",type="usize",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MPST]
+nr   = 0x5453504D
+caps = ["valid_token"]
+args = [{name="buf_ptr",type="u64",dir="out"},{name="max_entries",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MSOW]
+nr   = 0x574F534D
+caps = ["valid_token"]
+args = [{name="user_ptr",type="u64",dir="in"},{name="len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MSPI]
+nr   = 0x4950534D
+caps = ["valid_token"]
+args = [{name="name_ptr",type="u64",dir="in"},{name="name_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MSRD]
+nr   = 0x4452534D
+caps = ["valid_token"]
+args = [{name="buf_ptr",type="u64",dir="out"},{name="buf_len",type="usize",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MSTB]
+nr   = 0x4254534D
+caps = ["valid_token"]
+args = [{name="base",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MSVR]
+nr   = 0x5256534D
+caps = ["valid_token"]
+args = [{name="name_ptr",type="u64",dir="in"},{name="name_len",type="usize",dir="in"},{name="port",type="u32",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MSWR]
+nr   = 0x5257534D
+caps = ["valid_token"]
+args = [{name="lba",type="u64",dir="in"},{name="user_ptr",type="u64",dir="in"},{name="len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MTAD]
+nr   = 0x4441544D
+caps = ["valid_token"]
+args = [{name="correct_ms",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MTMS]
+nr   = 0x534D544D
+caps = ["valid_token"]
+args = []
+ret  = {type="i64"}
+
+[desc.MTRN]
+nr   = 0x4E52544D
+caps = ["valid_token"]
+args = [{name="name_ptr",type="u64",dir="in"},{name="name_len",type="u64",dir="in"},{name="argv_ptr",type="u64",dir="in"},{name="argv_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MTRT]
+nr   = 0x5452544D
+caps = ["valid_token"]
+args = [{name="out_ptr",type="u64",dir="out"}]
+ret  = {type="i64"}
+
+[desc.MTSP]
+nr   = 0x5053544D
+caps = ["valid_token"]
+args = [{name="entry",type="u64",dir="in"},{name="stack",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MWAT]
+nr   = 0x5441574D
+caps = ["valid_token"]
+args = [{name="pid",type="u64",dir="in"},{name="timeout_ms",type="u64",dir="in"}]
 ret  = {type="i64"}
