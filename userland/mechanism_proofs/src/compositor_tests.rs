@@ -116,6 +116,31 @@ fn a_short_destination_is_not_overrun() {
     assert_eq!(dst, [0xFF00_00FF; 3]);
 }
 
+// A packed blend mixes red and blue inside one word, so a carry or a mask that
+// is one bit wrong corrupts a neighbouring channel only for particular operand
+// and alpha combinations. Every channel here carries a different value so that
+// such a leak cannot hide, and the whole input space is small enough to walk.
+#[test]
+fn blend_matches_the_per_channel_reference_for_every_input() {
+    fn reference(src: u32, dst: u32, alpha: u32) -> u32 {
+        (src * alpha + dst * (255 - alpha)) / 255
+    }
+    for alpha in 0u32..=255 {
+        for s in 0u32..=255 {
+            for d in 0u32..=255 {
+                let src = 0xFF00_0000 | (s << 16) | (d << 8) | (255 - s);
+                let dst = 0xFF00_0000 | (d << 16) | (s << 8) | (255 - d);
+                let got = blend(src, dst, alpha);
+                let want = 0xFF00_0000
+                    | (reference(s, d, alpha) << 16)
+                    | (reference(d, s, alpha) << 8)
+                    | reference(255 - s, 255 - d, alpha);
+                assert_eq!(got, want, "src={src:#010X} dst={dst:#010X} alpha={alpha}");
+            }
+        }
+    }
+}
+
 #[test]
 fn a_fully_transparent_row_leaves_the_frame_alone() {
     let src = [0x0000_0000u32; 16];
