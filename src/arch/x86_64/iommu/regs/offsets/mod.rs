@@ -14,15 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+mod fault;
+mod global;
+mod invalidate;
+mod timing;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+pub use fault::{frcd_reason, frcd_source, FRCD_FAULT, FRCD_TYPE_READ, FSTS_PFO, FSTS_PPF};
+pub use global::{
+    CAP, ECAP, FECTL, FSTS, GCMD, GCMD_SRTP, GCMD_TE, GCMD_WBF, GSTS, GSTS_RTPS, GSTS_TES,
+    GSTS_WBFS, RTADDR, VER,
+};
+pub use invalidate::{
+    iotlb_offset, iva_offset, CCMD, CCMD_CIRG_GLOBAL, CCMD_ICC, IOTLB_IAIG_MASK,
+    IOTLB_IIRG_GLOBAL, IOTLB_IVT,
+};
+pub use timing::COMMAND_SPINS;

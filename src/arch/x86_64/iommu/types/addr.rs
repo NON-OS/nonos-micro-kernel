@@ -14,15 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+use super::limits::PAGE_SIZE_4K;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct IoVirtAddr(u64);
+
+impl IoVirtAddr {
+    pub const fn new(addr: u64) -> Self {
+        Self(addr)
+    }
+
+    pub const fn as_u64(&self) -> u64 {
+        self.0
+    }
+
+    pub const fn is_page_aligned(&self) -> bool {
+        self.0 & (PAGE_SIZE_4K as u64 - 1) == 0
+    }
+}

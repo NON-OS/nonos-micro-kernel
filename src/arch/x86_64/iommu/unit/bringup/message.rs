@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+use crate::arch::x86_64::iommu::types::VtdError;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+pub(super) fn reason(e: VtdError) -> &'static [u8] {
+    match e {
+        VtdError::FirmwareOwnsUnit => b"firmware owns the unit",
+        VtdError::Timeout => b"unit did not acknowledge",
+        VtdError::PageTableExhausted => b"out of frames for tables",
+        VtdError::TableUnreachable => b"table outside the directmap",
+        VtdError::DomainTableFull => b"more devices than bindings",
+        _ => b"unexpected error",
+    }
+}

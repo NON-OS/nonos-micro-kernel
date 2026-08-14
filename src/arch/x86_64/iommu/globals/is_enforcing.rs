@@ -14,15 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+//! Whether DMA is actually being remapped, as opposed to merely describable.
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+use core::sync::atomic::Ordering;
+
+use super::state::ENFORCING;
+
+/// True once a unit has Translation Enable set with this kernel's tables
+/// installed. Every call that claims to confine a device checks this, because
+/// writing a page table entry into tables no hardware consults protects
+/// nothing while reporting success.
+pub fn is_enforcing() -> bool {
+    ENFORCING.load(Ordering::Acquire)
+}
+
+/// Record that a unit came into service. Called only from bring-up, after the
+/// hardware acknowledged the enable.
+pub fn set_enforcing() {
+    ENFORCING.store(true, Ordering::Release);
+}

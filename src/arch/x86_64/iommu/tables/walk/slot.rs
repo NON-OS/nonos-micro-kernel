@@ -14,15 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
-
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// Where a page's permissions live: the table holding the leaf, and the index
+/// of the leaf within it.
+pub struct LeafSlot {
+    pub table_phys: u64,
+    pub index: usize,
+}

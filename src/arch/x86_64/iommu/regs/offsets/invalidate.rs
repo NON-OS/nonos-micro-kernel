@@ -14,15 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+pub const CCMD: usize = 0x028;
+pub const CCMD_ICC: u64 = 1 << 63;
+pub const CCMD_CIRG_GLOBAL: u64 = 1 << 61;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// The IOTLB registers have no fixed offset; ECAP carries their position in
+/// 16-byte units.
+pub const fn iva_offset(ecap: u64) -> usize {
+    (((ecap >> 8) & 0x3FF) as usize) * 16
+}
+
+pub const fn iotlb_offset(ecap: u64) -> usize {
+    iva_offset(ecap) + 8
+}
+
+pub const IOTLB_IVT: u64 = 1 << 63;
+pub const IOTLB_IIRG_GLOBAL: u64 = 1 << 60;
+/// The granularity the unit actually performed. Zero means it did nothing.
+pub const IOTLB_IAIG_MASK: u64 = 0b11 << 57;

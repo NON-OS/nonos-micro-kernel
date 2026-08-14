@@ -14,15 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+use super::drain::drain_faults;
+use crate::arch::x86_64::iommu::globals::is_enforcing;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// Ticks between polls. One uncached status read every second or so costs
+/// nothing measurable, and a device being denied is a standing condition, not
+/// an event that has to be caught the instant it happens.
+const INTERVAL: u64 = 128;
+
+/// Called from the timer interrupt. Delivery by interrupt would need an MSI
+/// vector programmed into FECTL; until that exists this is what makes a
+/// denial visible rather than silent.
+pub fn poll_faults(ticks: u64) {
+    if !ticks.is_multiple_of(INTERVAL) {
+        return;
+    }
+    if !is_enforcing() {
+        return;
+    }
+    drain_faults();
+}

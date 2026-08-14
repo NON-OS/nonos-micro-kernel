@@ -14,15 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+use super::record::FaultRecord;
+use crate::sys::serial;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// The source id is printed raw rather than split into bus, device and
+/// function: it is what the DMAR tables and lspci both key on, so it is the
+/// form that can be looked up directly.
+pub(super) fn log_record(record: &FaultRecord) {
+    serial::print(b"[VT-D] denied ");
+    serial::print(if record.read { b"read " } else { b"write " });
+    serial::print(b"src=");
+    serial::print_hex(record.source as u64);
+    serial::print(b" addr=");
+    serial::print_hex(record.address);
+    serial::print(b" reason=");
+    serial::print_hex(record.reason as u64);
+    serial::println(b"");
+}

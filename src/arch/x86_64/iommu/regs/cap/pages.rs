@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+const SLLPS_2MB: u64 = 1 << 34;
+const SLLPS_1GB: u64 = 1 << 35;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// Shallowest level this unit can put a leaf at, leaf level 1. Larger leaves
+/// turn an identity map of several gigabytes into a handful of tables.
+pub const fn best_leaf_level(cap: u64) -> u8 {
+    if cap & SLLPS_1GB != 0 {
+        3
+    } else if cap & SLLPS_2MB != 0 {
+        2
+    } else {
+        1
+    }
+}

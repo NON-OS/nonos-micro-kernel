@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+mod agaw;
+mod behaviour;
+mod fault;
+mod limits;
+mod pages;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+pub use agaw::{preferred_levels, AgawLevels};
+pub use behaviour::{caching_mode, requires_write_buffer_flush};
+pub use fault::{fault_recording_count, fault_recording_offset};
+pub use limits::{domain_count, max_address_width};
+pub use pages::best_leaf_level;

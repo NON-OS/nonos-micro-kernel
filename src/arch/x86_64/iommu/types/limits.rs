@@ -14,15 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+pub const PAGE_SHIFT_4K: u32 = 12;
+pub const PAGE_SIZE_4K: usize = 1 << PAGE_SHIFT_4K;
+pub const PAGE_MASK_4K: u64 = !((PAGE_SIZE_4K as u64) - 1);
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+pub const MAX_VTD_DOMAINS: usize = 256;
+pub const MAX_VTD_DEVICES: usize = 256;
+pub const MAX_VTD_MAPPINGS_PER_DOMAIN: usize = 4096;

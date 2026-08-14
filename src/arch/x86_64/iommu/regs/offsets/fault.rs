@@ -14,15 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+/// An overflow, and at least one pending fault record.
+pub const FSTS_PFO: u32 = 1 << 0;
+pub const FSTS_PPF: u32 = 1 << 1;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// High half of a fault record. The record's position comes from
+/// `cap::fault_recording_offset`.
+pub const FRCD_FAULT: u64 = 1 << 63;
+pub const FRCD_TYPE_READ: u64 = 1 << 62;
+
+pub const fn frcd_reason(high: u64) -> u8 {
+    ((high >> 32) & 0xFF) as u8
+}
+
+pub const fn frcd_source(high: u64) -> u16 {
+    (high & 0xFFFF) as u16
+}

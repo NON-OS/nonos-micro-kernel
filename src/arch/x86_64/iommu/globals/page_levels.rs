@@ -14,15 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+use core::sync::atomic::Ordering;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+use super::state::PAGE_LEVELS;
+
+/// Depth the domains' tables are built to, or `None` before a unit was probed.
+pub fn page_levels() -> Option<u8> {
+    match PAGE_LEVELS.load(Ordering::Acquire) {
+        0 => None,
+        levels => Some(levels),
+    }
+}
+
+/// Record the depth a probed unit reported. Set once, from the unit bring-up.
+pub fn set_page_levels(levels: u8) {
+    PAGE_LEVELS.store(levels, Ordering::Release);
+}

@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+mod addr;
+mod error;
+mod flags;
+mod ids;
+mod limits;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+pub use addr::IoVirtAddr;
+pub use error::VtdError;
+pub use flags::IommuPageFlags;
+pub use ids::{DomainId, SourceId};
+pub use limits::{
+    MAX_VTD_DEVICES, MAX_VTD_DOMAINS, MAX_VTD_MAPPINGS_PER_DOMAIN, PAGE_MASK_4K, PAGE_SHIFT_4K,
+    PAGE_SIZE_4K,
+};

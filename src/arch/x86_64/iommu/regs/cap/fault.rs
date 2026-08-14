@@ -14,15 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+/// Byte offset of the fault-recording registers, stored as a 16-byte count.
+pub const fn fault_recording_offset(cap: u64) -> usize {
+    (((cap >> 24) & 0x3FF) as usize) * 16
+}
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// Number of fault-recording registers, stored as count - 1.
+pub const fn fault_recording_count(cap: u64) -> u16 {
+    (((cap >> 40) & 0xFF) as u16) + 1
+}

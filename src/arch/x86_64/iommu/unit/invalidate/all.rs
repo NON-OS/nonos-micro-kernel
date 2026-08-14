@@ -14,15 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod allocate_domain_id;
-mod is_enforcing;
-mod is_present;
-mod page_levels;
-mod set_present;
-pub(super) mod state;
+use super::context::invalidate_context_global;
+use super::iotlb::invalidate_iotlb_global;
+use crate::arch::x86_64::iommu::types::VtdError;
+use crate::arch::x86_64::iommu::unit::access::RemapUnit;
 
-pub use allocate_domain_id::allocate_domain_id;
-pub use is_enforcing::{is_enforcing, set_enforcing};
-pub use is_present::is_present;
-pub use page_levels::{page_levels, set_page_levels};
-pub use set_present::set_present;
+/// Both caches, in the order a table change requires.
+pub fn invalidate_all(unit: &RemapUnit, ecap: u64) -> Result<(), VtdError> {
+    invalidate_context_global(unit)?;
+    invalidate_iotlb_global(unit, ecap)
+}
