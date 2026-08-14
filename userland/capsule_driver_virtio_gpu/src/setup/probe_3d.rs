@@ -82,13 +82,13 @@ fn log_caps(id: u32, ver: u32, size: u32) {
     mk_debug(buf.as_ptr(), n);
 }
 
-fn push(buf: &mut [u8], n: &mut usize, bytes: &[u8]) {
+pub(super) fn push(buf: &mut [u8], n: &mut usize, bytes: &[u8]) {
     let take = bytes.len().min(buf.len() - *n);
     buf[*n..*n + take].copy_from_slice(&bytes[..take]);
     *n += take;
 }
 
-fn push_dec(buf: &mut [u8], n: &mut usize, mut v: u32) {
+pub(super) fn push_dec(buf: &mut [u8], n: &mut usize, mut v: u32) {
     let mut tmp = [0u8; 10];
     let mut k = 0;
     loop {
