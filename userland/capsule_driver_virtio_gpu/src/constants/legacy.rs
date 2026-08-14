@@ -13,20 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
-
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+pub const LEG_HOST_FEATURES: usize = 0x00;
+pub const LEG_GUEST_FEATURES: usize = 0x04;
+pub const LEG_QUEUE_PFN: usize = 0x08;
+pub const LEG_QUEUE_NUM: usize = 0x0C;
+pub const LEG_QUEUE_SEL: usize = 0x0E;
+pub const LEG_QUEUE_NOTIFY: usize = 0x10;
+pub const LEG_STATUS: usize = 0x12;

@@ -13,20 +13,22 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
+use super::wire::submit;
+use crate::constants::VG_CMD_CTX_ATTACH_RESOURCE;
+use crate::device::virtqueue::ControlQueue;
 
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+/// A command stream may only name resources its own context holds, which is
+/// what keeps one capsule's context from addressing another's textures.
+pub fn ctx_attach_resource(
+    q: &ControlQueue,
+    ctx_id: u32,
+    resource_id: u32,
+) -> Result<(), &'static str> {
+    submit(
+        q,
+        VG_CMD_CTX_ATTACH_RESOURCE,
+        ctx_id,
+        resource_id,
+        "virtio-gpu: ctx attach resource rejected",
+    )
+}

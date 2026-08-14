@@ -13,20 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
-
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+pub const VIRTIO_VENDOR_ID: u16 = 0x1AF4;
+pub const VIRTIO_GPU_TRANSITIONAL: u16 = 0x1010;
+pub const VIRTIO_GPU_MODERN: u16 = 0x1050;
+pub const BAR_OFFSET: u64 = 0;

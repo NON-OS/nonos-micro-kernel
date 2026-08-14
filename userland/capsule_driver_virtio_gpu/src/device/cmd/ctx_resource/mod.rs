@@ -13,20 +13,9 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
+mod attach;
+mod detach;
+mod wire;
 
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+pub use attach::ctx_attach_resource;
+pub use detach::ctx_detach_resource;

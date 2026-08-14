@@ -13,20 +13,8 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
-
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+pub const GPU_CFG_EVENTS_READ: usize = 0x14;
+pub const GPU_CFG_NUM_SCANOUTS: usize = 0x1C;
+pub const GPU_CFG_NUM_CAPSETS: usize = 0x20;
+pub const VG_MAX_SCANOUTS: usize = 16;
+pub const VG_FORMAT_B8G8R8A8_UNORM: u32 = 1;

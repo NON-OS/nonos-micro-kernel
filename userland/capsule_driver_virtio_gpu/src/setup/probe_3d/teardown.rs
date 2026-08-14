@@ -13,20 +13,17 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
 
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+use super::ids::{PROBE_RESOURCE_ID, RENDER_CTX_ID};
+use crate::device::cmd::{ctx_detach_resource, detach_backing, resource_unref};
+use crate::device::ControlQueue;
+use crate::state::FenceCounter;
+
+/// Reverse of acquisition: no context may name the resource, and no backing
+/// may be attached, before the host allocation is freed. The render context
+/// itself is kept: it is shared by every later 3D client.
+pub fn release(q: &ControlQueue, fences: &FenceCounter) -> Result<(), &'static str> {
+    ctx_detach_resource(q, RENDER_CTX_ID, PROBE_RESOURCE_ID)?;
+    detach_backing(q, fences.issue(), PROBE_RESOURCE_ID)?;
+    resource_unref(q, fences.issue(), PROBE_RESOURCE_ID)
+}

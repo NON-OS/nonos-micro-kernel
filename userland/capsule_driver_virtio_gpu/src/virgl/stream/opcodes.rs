@@ -13,20 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
+pub const CCMD_CREATE_OBJECT: u8 = 1;
+pub const CCMD_SET_VIEWPORT_STATE: u8 = 4;
+pub const CCMD_SET_FRAMEBUFFER_STATE: u8 = 5;
+pub const CCMD_CLEAR: u8 = 7;
 
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+pub const OBJ_NULL: u8 = 0;
+pub const OBJ_SURFACE: u8 = 8;
+
+pub const MAX_PAYLOAD_DWORDS: usize = 0xFFFF;

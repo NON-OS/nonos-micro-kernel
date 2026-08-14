@@ -13,20 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
-
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+pub const VG_CMD_GET_DISPLAY_INFO: u32 = 0x0100;
+pub const VG_CMD_RESOURCE_CREATE_2D: u32 = 0x0101;
+pub const VG_CMD_RESOURCE_UNREF: u32 = 0x0102;
+pub const VG_CMD_SET_SCANOUT: u32 = 0x0103;
+pub const VG_CMD_RESOURCE_FLUSH: u32 = 0x0104;
+pub const VG_CMD_TRANSFER_TO_HOST_2D: u32 = 0x0105;
+pub const VG_CMD_RESOURCE_ATTACH_BACKING: u32 = 0x0106;
+pub const VG_CMD_RESOURCE_DETACH_BACKING: u32 = 0x0107;
+pub const VG_RESP_OK_NODATA: u32 = 0x1100;
+pub const VG_RESP_OK_DISPLAY_INFO: u32 = 0x1101;
+/// The device signals completion through fence_id in the response, once
+/// host-side execution finished.
+pub const VG_FLAG_FENCE: u32 = 1 << 0;

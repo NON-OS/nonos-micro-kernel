@@ -13,20 +13,26 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
+#[derive(Clone, Copy)]
+pub struct Box3d {
+    pub x: u32,
+    pub y: u32,
+    pub z: u32,
+    pub w: u32,
+    pub h: u32,
+    pub d: u32,
+}
 
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+impl Box3d {
+    pub fn whole_2d(width: u32, height: u32) -> Self {
+        Self { x: 0, y: 0, z: 0, w: width, h: height, d: 1 }
+    }
+
+    pub(super) fn words(&self) -> [u32; 6] {
+        [self.x, self.y, self.z, self.w, self.h, self.d]
+    }
+
+    pub(super) fn is_empty(&self) -> bool {
+        self.w == 0 || self.h == 0 || self.d == 0
+    }
+}

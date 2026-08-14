@@ -13,20 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
+use super::super::stream::{Stream, CCMD_CREATE_OBJECT, OBJ_SURFACE};
 
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+/// A surface is the renderable view of a resource. Nothing can be drawn into
+/// a resource directly; the framebuffer takes surface handles.
+pub fn create_surface(
+    s: &mut Stream,
+    handle: u32,
+    res_handle: u32,
+    format: u32,
+) -> Result<(), &'static str> {
+    if handle == 0 {
+        return Err("virgl: surface handle 0 is reserved");
+    }
+    if res_handle == 0 {
+        return Err("virgl: surface over resource 0");
+    }
+    // level 0, layers 0: the first and only layer of a plain 2D texture.
+    s.push(CCMD_CREATE_OBJECT, OBJ_SURFACE, &[handle, res_handle, format, 0, 0]);
+    Ok(())
+}

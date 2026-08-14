@@ -42,9 +42,9 @@ pub fn run() -> Result<Driver, &'static str> {
     let fences = FenceCounter::new();
     let resources = ResourceTable::new();
     scanouts::seed(&control_queue, &scanouts, &fences)?;
-    // 3D bring-up is best-effort: a host without a GL backend still gets the
-    // full 2D scanout path, and the boot log records which one this is.
-    let virgl_ready = probe_3d::probe(&control_queue, &fences, init.virgl);
+    // Best effort: a host with no GL backend still gets full 2D scanout.
+    let virgl_ready =
+        probe_3d::probe(&control_queue, &fences, init.virgl, dev.device_id, claim_epoch);
     let primary = create_primary::create(
         dev.device_id,
         claim_epoch,

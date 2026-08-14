@@ -13,20 +13,20 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod cmd_2d;
-mod cmd_3d;
-mod config;
-mod legacy;
-mod modern;
-mod pci;
-mod queue;
-mod status;
+use super::region::Box3d;
+use super::wire::transfer;
+use crate::constants::VG_CMD_TRANSFER_FROM_HOST_3D;
+use crate::device::virtqueue::ControlQueue;
 
-pub use cmd_2d::*;
-pub use cmd_3d::*;
-pub use config::*;
-pub use legacy::*;
-pub use modern::*;
-pub use pci::*;
-pub use queue::*;
-pub use status::*;
+/// Reading back is how the 3D path is proved rather than assumed: the guest
+/// sees the pixels the host GPU actually produced.
+pub fn transfer_from_host_3d(
+    q: &ControlQueue,
+    ctx_id: u32,
+    fence_id: u64,
+    resource_id: u32,
+    region: &Box3d,
+    offset: u64,
+) -> Result<(), &'static str> {
+    transfer(q, VG_CMD_TRANSFER_FROM_HOST_3D, ctx_id, fence_id, resource_id, region, offset)
+}
