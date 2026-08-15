@@ -252,6 +252,13 @@ nonos-mk-boot-image-viewer:
 		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
 		exit $$rc
 
+.PHONY: nonos-mk-boot-video-player
+nonos-mk-boot-video-player:
+	@./tests/boot/video_player.sh; rc=$$?; \
+		echo "Restoring GUI video_player capsule (undo smoketest artifact)..."; \
+		$(MAKE) -B nonos-mk-video-player-sign >/dev/null 2>&1; \
+		exit $$rc
+
 .PHONY: nonos-mk-pack-install-test
 nonos-mk-pack-install-test: $(NONOS_PACK_BIN)
 	@./tests/boot/pack_install_boot.sh
