@@ -14,16 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![cfg_attr(not(test), no_std)]
+use crate::bytes::u32_at;
+use crate::error::AviError;
 
-mod bytes;
-mod chunk;
-mod error;
-mod header;
-mod stream;
+pub struct AviHeader {
+    pub micro_sec_per_frame: u32,
+    pub total_frames: u32,
+    pub width: u32,
+    pub height: u32,
+}
 
-pub use bytes::{fourcc_at, u16_at, u32_at};
-pub use chunk::{chunks, Chunk, ChunkIter};
-pub use error::AviError;
-pub use header::{parse_avih, AviHeader};
-pub use stream::{is_video_strh, parse_strf_video, parse_strh_rate, VideoInfo};
+pub fn parse_avih(d: &[u8]) -> Result<AviHeader, AviError> {
+    if d.len() < 56 {
+        return Err(AviError::Truncated);
+    }
+    Ok(AviHeader {
+        micro_sec_per_frame: u32_at(d, 0)?,
+        total_frames: u32_at(d, 16)?,
+        width: u32_at(d, 32)?,
+        height: u32_at(d, 36)?,
+    })
+}
