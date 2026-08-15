@@ -18,6 +18,12 @@ description = "NONOS video player capsule"
 name = "video_player"
 path = "src/main.rs"
 
+[features]
+# Self-test build: parse the baked MJPEG AVI, decode every frame and
+# letterbox-scale the last one (no IPC, no vfs), then emit a graded
+# [VIDEO] serial marker for the boot harness.
+nonos-video-player-smoketest = []
+
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
