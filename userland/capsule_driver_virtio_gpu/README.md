@@ -19,11 +19,15 @@ all desktop policy stays in userland display/compositor capsules.
 
 ## Microkernel contract
 
-The manifest grants `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
-`Dma`, and `Pio`:
+The manifest requires `IPC`, `Memory`, `Driver`, `DeviceEnum`, `Mmio`, `Irq`,
+`Dma`, and `Pio`. `Debug` is optional: it carries the `probe_3d` and EDID
+serial lines, and the kernel grants it only under `capsule-serial-debug`, so a
+hardened build drops it and the capsule runs without it.
 
 ```text
 CAPSULE_REQUIRED_CAPS = 0x1F9019
+CAPSULE_OPTIONAL_CAPS = 0x100
+CAPSULE_CAPS_CEILING  = 0x1F9119
 ```
 
 The capsule reaches hardware only through `MkDeviceList`, `MkDeviceClaim`,
