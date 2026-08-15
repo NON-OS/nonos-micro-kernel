@@ -64,6 +64,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "nonos_avi"
+version = "0.1.0"
+
+[[package]]
 name = "nonos_toolkit"
 version = "0.3.0"
 dependencies = [
@@ -84,6 +88,7 @@ name = "nonos_video_player"
 version = "0.1.0"
 dependencies = [
  "nonos_app_skeleton",
+ "nonos_avi",
  "nonos_userland_libc",
  "zune-jpeg",
 ]

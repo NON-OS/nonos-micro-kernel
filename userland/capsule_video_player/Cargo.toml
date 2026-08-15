@@ -21,6 +21,7 @@ path = "src/main.rs"
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
+nonos_avi = { path = "../nonos_avi" }
 zune-jpeg = { version = "0.4", default-features = false }
 
 [profile.release]

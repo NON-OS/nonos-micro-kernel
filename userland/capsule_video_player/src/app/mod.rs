@@ -14,17 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+mod state;
+mod tick;
+mod view;
 
-extern crate alloc;
-
-mod app;
-mod player;
-
-use nonos_app_skeleton::run;
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    run(app::VideoApp::new)
-}
+pub use state::VideoApp;
