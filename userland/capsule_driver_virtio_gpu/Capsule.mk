@@ -19,6 +19,9 @@ CAPSULE_REQUIRED_CAPS    := 0x1F9019
 # against what the kernel grants, and a build without capsule-serial-debug
 # grants nothing. Required and optional must stay disjoint (OverlappingCaps).
 CAPSULE_OPTIONAL_CAPS    := 0x100
+# The ceiling defaults to the required set alone, which would put the optional
+# bit outside the id-cert and fail the manifest signer. It has to span both.
+CAPSULE_CAPS_CEILING     := 0x1F9119
 CAPSULE_KERNEL_MIRROR    := src/hardware/virtio_gpu_capsule
 
 include nonos-mk/capsule.mk
