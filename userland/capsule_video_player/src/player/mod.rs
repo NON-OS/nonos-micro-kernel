@@ -15,5 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod clock;
+pub mod scale;
 
 pub use clock::{Clock, Step};
+pub use scale::{column_map, letterbox, scale_into};
