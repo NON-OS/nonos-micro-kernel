@@ -661,6 +661,7 @@ microkernel-image-viewer-smoketest = [
 microkernel-video-player-smoketest = [
   "microkernel-core",
   "capsule-serial-debug",
+  "nonos-stark-attest",
   "nonos-capsule-proof-io",
   "nonos-capsule-video-player",
   "nonos-video-player-smoketest",
