@@ -14,27 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+pub mod clock;
 
-extern crate alloc;
-
-mod player;
-
-use nonos_libc::{heap_init_sized, mk_exit};
-use zune_jpeg::JpegDecoder;
-
-const PROBE_HEAP_BYTES: usize = 1 << 20;
-
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init_sized(PROBE_HEAP_BYTES).is_err() {
-        mk_exit(1);
-    }
-    let mut decoder = JpegDecoder::new(&[] as &[u8]);
-    let status = match decoder.decode_headers() {
-        Ok(()) => 0,
-        Err(_) => 2,
-    };
-    mk_exit(status)
-}
+pub use clock::{Clock, Step};
