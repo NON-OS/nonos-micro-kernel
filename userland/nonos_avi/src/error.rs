@@ -23,5 +23,6 @@ pub enum AviError {
     NoVideoStream,
     UnsupportedCodec,
     NoFrames,
+    NoIndex,
     TooManyFrames,
 }
