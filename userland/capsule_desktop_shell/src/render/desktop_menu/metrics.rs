@@ -17,7 +17,7 @@
 //! Measured geometry and labels for the right-click menu.
 
 use crate::render::measure_aa::measure_aa_bytes;
-use crate::render::ui_font::{line_h, UI_PX};
+use crate::render::ui_font::{line_h, scale, UI_PX};
 use crate::state::Context;
 
 /// Rows for the empty-desktop menu and the per-item menu. Row index doubles as
@@ -34,18 +34,30 @@ pub(super) fn items(ctx: &Context) -> &'static [&'static [u8]] {
     }
 }
 
-pub(super) const PAD_Y: u32 = 8;
-pub(super) const PAD_X: u32 = 14;
+const PAD_Y_LOGICAL: u32 = 8;
+const PAD_X_LOGICAL: u32 = 14;
 
 /// Left edge of a row label: past the glyph column and its trailing gap.
-pub(super) const LABEL_X: u32 = PAD_X + 32;
+const LABEL_X_LOGICAL: u32 = PAD_X_LOGICAL + 32;
 
-const ROW_LEAD: u32 = 12;
-const MIN_W: u32 = 200;
+const ROW_LEAD_LOGICAL: u32 = 12;
+const MIN_W_LOGICAL: u32 = 200;
+
+pub(super) fn pad_y() -> u32 {
+    PAD_Y_LOGICAL * scale()
+}
+
+pub(super) fn pad_x() -> u32 {
+    PAD_X_LOGICAL * scale()
+}
+
+pub(super) fn label_x() -> u32 {
+    LABEL_X_LOGICAL * scale()
+}
 
 /// Height of one row: the measured line box plus breathing room above and below.
 pub(super) fn row_h() -> u32 {
-    line_h(UI_PX) + ROW_LEAD
+    line_h(UI_PX) + ROW_LEAD_LOGICAL * scale()
 }
 
 /// Panel width: wide enough for the longest label the open menu can show.
@@ -55,5 +67,5 @@ pub(super) fn width(ctx: &Context) -> u32 {
         .map(|label| measure_aa_bytes(label, UI_PX))
         .max()
         .unwrap_or(0);
-    (LABEL_X + widest + PAD_X).max(MIN_W)
+    (label_x() + widest + pad_x()).max(MIN_W_LOGICAL * scale())
 }

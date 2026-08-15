@@ -16,11 +16,11 @@
 
 //! How many icon rows fit in a column before wrapping.
 
-use super::metrics::{BOTTOM_RESERVE, CELL_H};
+use super::metrics::{bottom_reserve, cell_h};
 use super::top::top;
 use crate::state::Context;
 
 pub(super) fn rows(ctx: &Context) -> u32 {
-    let usable = ctx.height.saturating_sub(top() + BOTTOM_RESERVE);
-    (usable / CELL_H).max(1)
+    let usable = ctx.height.saturating_sub(top() + bottom_reserve());
+    (usable / cell_h()).max(1)
 }

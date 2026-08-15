@@ -20,6 +20,7 @@ pub mod context;
 pub mod indicators;
 pub mod notify;
 pub mod pkg_prompt;
+pub mod scale;
 pub mod spotlight;
 pub mod taskbar;
 pub mod toasts;

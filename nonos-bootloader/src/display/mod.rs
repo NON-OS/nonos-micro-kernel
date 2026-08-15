@@ -28,7 +28,7 @@ pub use boot::{
     tick_animation, update_stage, BootCryptoState, StageStatus,
 };
 pub use constants::*;
-pub use gop::init_gop;
+pub use gop::{init_gop, report_gop_mode};
 pub use log_panel::{
     get_cursor_y, log_error, log_hash, log_hash_full, log_hex, log_info, log_mem, log_ok,
     log_security, log_size, log_u32, log_warn,

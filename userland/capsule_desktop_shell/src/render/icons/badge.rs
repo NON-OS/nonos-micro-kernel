@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::render::fill::{blit_rgba8_tinted, fill_rect};
+use crate::render::ui_font;
 use crate::state::Context;
 
 const TILE_BG: u32 = 0xFF0C1016;
@@ -28,17 +29,19 @@ pub fn badge(ctx: &Context, x: u32, y: u32, size: u32, icon: &[u8], accent: u32)
 
     // rounded corners: knock a 2px stair off each corner
     let bg = 0xFF0B1019;
-    let s1 = size.saturating_sub(1);
-    let s2 = size.saturating_sub(2);
+    let sc = ui_font::scale();
+    let s1 = size.saturating_sub(sc);
+    let s2 = size.saturating_sub(2 * sc);
     for &(cx, cy) in &[(x, y), (x + s2, y), (x, y + s2), (x + s2, y + s2)] {
-        fill_rect(va, st, vw, vh, cx, cy, 2, 2, bg);
+        fill_rect(va, st, vw, vh, cx, cy, 2 * sc, 2 * sc, bg);
     }
     // a thin, dim accent frame skipping the corners
     let f = dim(accent, 45);
-    fill_rect(va, st, vw, vh, x + 2, y, s2.saturating_sub(2), 1, f);
-    fill_rect(va, st, vw, vh, x + 2, y + s1, s2.saturating_sub(2), 1, f);
-    fill_rect(va, st, vw, vh, x, y + 2, 1, s2.saturating_sub(2), f);
-    fill_rect(va, st, vw, vh, x + s1, y + 2, 1, s2.saturating_sub(2), f);
+    let span = s2.saturating_sub(2 * sc);
+    fill_rect(va, st, vw, vh, x + 2 * sc, y, span, sc, f);
+    fill_rect(va, st, vw, vh, x + 2 * sc, y + s1, span, sc, f);
+    fill_rect(va, st, vw, vh, x, y + 2 * sc, sc, span, f);
+    fill_rect(va, st, vw, vh, x + s1, y + 2 * sc, sc, span, f);
 
     // centered tinted glyph, ~60% of the tile
     let g = size * 60 / 100;

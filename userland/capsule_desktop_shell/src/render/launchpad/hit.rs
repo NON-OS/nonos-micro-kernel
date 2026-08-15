@@ -4,7 +4,7 @@
 
 //! Which Launchpad tile a point falls on, and what it launches.
 
-use super::grid::{cell_origin, count, CELL_H, CELL_W};
+use super::grid::{cell_h, cell_origin, cell_w, count};
 use crate::state::{LAUNCHER_APPS, TOOL_APPS};
 
 /// What a clicked tile launches: a desktop app by index, an installed tool by
@@ -24,7 +24,7 @@ pub enum Target {
 pub fn hit(width: u32, px: u32, py: u32, installed: usize, packages: usize) -> Option<usize> {
     (0..count(installed, packages)).find(|&i| {
         let (x, y) = cell_origin(width, i);
-        px >= x && px < x + CELL_W && py >= y && py < y + CELL_H
+        px >= x && px < x + cell_w() && py >= y && py < y + cell_h()
     })
 }
 

@@ -16,24 +16,29 @@
 
 use super::draw_app_icon;
 use super::fill::fill_rect;
-use super::layout::{bottom_dock_rect, launchpad_slot_x, TASKBAR_ENTRY_W};
+use super::layout::{bottom_dock_rect, launchpad_slot_x, taskbar_entry_w};
+use super::ui_font;
 use crate::state::{Context, LAUNCHER_APPS, TASKBAR_NO_ACTIVE};
 
-const ICON_SIZE: u32 = 40;
+const ICON_SIZE_LOGICAL: u32 = 40;
 const LAUNCHPAD_DOT: u32 = 0xFF9F_B4D6;
+
+fn icon_size() -> u32 {
+    ICON_SIZE_LOGICAL * ui_font::scale()
+}
 
 // The Launchpad button: the familiar 3x3 grid of cells, sitting in the dock
 // slot just past the last app.
 fn draw_launchpad_button(ctx: &Context, box_top: u32, box_h: u32) {
     let slot_x = launchpad_slot_x(bottom_dock_rect(ctx.width, ctx.height));
-    let x0 = slot_x + (TASKBAR_ENTRY_W - ICON_SIZE) / 2;
-    let y0 = box_top + (box_h - ICON_SIZE) / 2;
-    let cell = ICON_SIZE / 3;
-    let dot = cell.saturating_sub(4);
+    let x0 = slot_x + (taskbar_entry_w() - icon_size()) / 2;
+    let y0 = box_top + (box_h - icon_size()) / 2;
+    let cell = icon_size() / 3;
+    let dot = cell.saturating_sub(4 * ui_font::scale());
     for row in 0..3 {
         for col in 0..3 {
-            let x = x0 + col * cell + 2;
-            let y = y0 + row * cell + 2;
+            let x = x0 + col * cell + 2 * ui_font::scale();
+            let y = y0 + row * cell + 2 * ui_font::scale();
             fill_rect(
                 ctx.backing_va,
                 ctx.stride,
@@ -51,9 +56,9 @@ fn draw_launchpad_button(ctx: &Context, box_top: u32, box_h: u32) {
 
 pub fn paint_bottom_taskbar(ctx: &Context) {
     let dock = bottom_dock_rect(ctx.width, ctx.height);
-    let box_top = dock.y + 10;
-    let box_h = dock.height - 20;
-    let mut x = dock.x + 12;
+    let box_top = dock.y + 10 * ui_font::scale();
+    let box_h = dock.height - 20 * ui_font::scale();
+    let mut x = dock.x + 12 * ui_font::scale();
     for (index, app) in LAUNCHER_APPS.iter().enumerate() {
         let open = ctx.taskbar.open[index];
         let active =
@@ -75,7 +80,7 @@ pub fn paint_bottom_taskbar(ctx: &Context) {
             ctx.height,
             x,
             box_top,
-            TASKBAR_ENTRY_W,
+            taskbar_entry_w(),
             box_h,
             bg,
         );
@@ -86,17 +91,17 @@ pub fn paint_bottom_taskbar(ctx: &Context) {
                 ctx.stride,
                 ctx.width,
                 ctx.height,
-                x + 18,
-                box_top + box_h - 3,
-                TASKBAR_ENTRY_W - 36,
-                3,
+                x + 18 * ui_font::scale(),
+                box_top + box_h - 3 * ui_font::scale(),
+                taskbar_entry_w() - 36 * ui_font::scale(),
+                3 * ui_font::scale(),
                 indicator,
             );
         }
-        let icon_x = x + (TASKBAR_ENTRY_W - ICON_SIZE) / 2;
-        let icon_y = box_top + (box_h - ICON_SIZE) / 2;
-        draw_app_icon(ctx, icon_x, icon_y, app.icon, ICON_SIZE);
-        x += TASKBAR_ENTRY_W + 6;
+        let icon_x = x + (taskbar_entry_w() - icon_size()) / 2;
+        let icon_y = box_top + (box_h - icon_size()) / 2;
+        draw_app_icon(ctx, icon_x, icon_y, app.icon, icon_size());
+        x += taskbar_entry_w() + 6 * ui_font::scale();
     }
     draw_launchpad_button(ctx, box_top, box_h);
 }

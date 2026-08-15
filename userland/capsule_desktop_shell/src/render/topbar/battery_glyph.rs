@@ -18,6 +18,7 @@
 //! healthy, amber when low; on AC power the caller draws no fill.
 
 use crate::render::fill::fill_rect;
+use crate::render::ui_font::scale;
 use crate::state::Context;
 
 const SHELL: u32 = 0xFFB8_C6D6;
@@ -29,19 +30,21 @@ pub(super) fn battery_glyph(ctx: &Context, x: u32, y: u32, pct: Option<u32>) {
     let bar =
         |gx: u32, gy: u32, gw: u32, gh: u32, c: u32| fill_rect(va, st, w, h, gx, gy, gw, gh, c);
 
+    let s = scale();
+
     // Shell: a 20x11 outline with a small terminal nub on the right.
-    bar(x, y, 20, 1, SHELL);
-    bar(x, y + 10, 20, 1, SHELL);
-    bar(x, y, 1, 11, SHELL);
-    bar(x + 19, y, 1, 11, SHELL);
-    bar(x + 20, y + 3, 2, 5, SHELL);
+    bar(x, y, 20 * s, s, SHELL);
+    bar(x, y + 10 * s, 20 * s, s, SHELL);
+    bar(x, y, s, 11 * s, SHELL);
+    bar(x + 19 * s, y, s, 11 * s, SHELL);
+    bar(x + 20 * s, y + 3 * s, 2 * s, 5 * s, SHELL);
 
     if let Some(p) = pct {
         let p = p.min(100);
-        let fill_w = 18 * p / 100;
+        let fill_w = 18 * s * p / 100;
         if fill_w > 0 {
             let color = if p > 20 { GOOD } else { LOW };
-            bar(x + 1, y + 2, fill_w, 7, color);
+            bar(x + s, y + 2 * s, fill_w, 7 * s, color);
         }
     }
 }

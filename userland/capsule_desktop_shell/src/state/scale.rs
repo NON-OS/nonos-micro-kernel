@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Screen rectangle a desktop cell occupies, for drawing and hit-testing.
+const HIDPI_MIN_WIDTH: u32 = 2560;
+const HIDPI_MIN_HEIGHT: u32 = 1440;
 
-use super::metrics::{cell_h, cell_w, left};
-use super::slot::slot;
-use super::top::top;
-use crate::state::Context;
-
-pub(super) fn cell_rect(ctx: &Context, index: usize) -> (u32, u32, u32, u32) {
-    let (col, row) = slot(ctx, index);
-    (left() + col * cell_w(), top() + row * cell_h(), cell_w(), cell_h())
+pub fn scale_for(width: u32, height: u32) -> u32 {
+    if width >= HIDPI_MIN_WIDTH && height >= HIDPI_MIN_HEIGHT {
+        2
+    } else {
+        1
+    }
 }

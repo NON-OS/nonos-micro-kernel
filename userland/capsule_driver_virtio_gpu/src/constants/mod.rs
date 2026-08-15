@@ -63,8 +63,10 @@ pub const VG_CMD_SET_SCANOUT: u32 = 0x0103;
 pub const VG_CMD_RESOURCE_FLUSH: u32 = 0x0104;
 pub const VG_CMD_TRANSFER_TO_HOST_2D: u32 = 0x0105;
 pub const VG_CMD_RESOURCE_ATTACH_BACKING: u32 = 0x0106;
+pub const VG_CMD_GET_EDID: u32 = 0x010A;
 pub const VG_RESP_OK_NODATA: u32 = 0x1100;
 pub const VG_RESP_OK_DISPLAY_INFO: u32 = 0x1101;
+pub const VG_RESP_OK_EDID: u32 = 0x1104;
 pub const VG_FORMAT_B8G8R8A8_UNORM: u32 = 1;
 pub const VG_MAX_SCANOUTS: usize = 16;
 
@@ -73,6 +75,10 @@ pub const VG_MAX_SCANOUTS: usize = 16;
 // which only exists on the modern transport. The guest never renders: it
 // builds Gallium command streams and submits them for host-side execution.
 pub const VIRTIO_GPU_F_VIRGL: u32 = 1 << 0;
+// EDID surface. Feature bit 1 unlocks GET_EDID, through which the device hands
+// back the monitor's raw EDID block: the only source of the panel's physical
+// size, and so of a measured DPI rather than an assumed one.
+pub const VIRTIO_GPU_F_EDID: u32 = 1 << 1;
 pub const VG_CMD_GET_CAPSET_INFO: u32 = 0x0108;
 pub const VG_CMD_CTX_CREATE: u32 = 0x0200;
 pub const VG_CMD_SUBMIT_3D: u32 = 0x0207;

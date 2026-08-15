@@ -18,6 +18,7 @@
 //! network is down.
 
 use crate::render::fill::fill_rect;
+use crate::render::ui_font::scale;
 use crate::state::Context;
 
 const ON: u32 = 0xFF66_E6FF;
@@ -26,9 +27,10 @@ const OFF: u32 = 0xFF44_505F;
 pub(super) fn net_glyph(ctx: &Context, x: u32, y: u32, online: bool) {
     let (va, st, w, h) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
     let color = if online { ON } else { OFF };
-    let bottom = y + 11;
+    let s = scale();
+    let bottom = y + 11 * s;
     for (i, bh) in [4u32, 7, 10].iter().enumerate() {
-        let bx = x + i as u32 * 5;
-        fill_rect(va, st, w, h, bx, bottom - bh, 3, *bh, color);
+        let bx = x + i as u32 * 5 * s;
+        fill_rect(va, st, w, h, bx, bottom - bh * s, 3 * s, *bh * s, color);
     }
 }

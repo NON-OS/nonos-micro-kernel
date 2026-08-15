@@ -17,7 +17,7 @@
 use nonos_libc::mk_time_millis;
 
 use crate::compositor_client::push_damage_commit;
-use crate::render::layout::MENUBAR_HEIGHT;
+use crate::render::layout::menubar_height;
 use crate::render::paint_chrome;
 use crate::state::indicators::{net, policy};
 use crate::state::{Context, NotifyLevel};
@@ -37,5 +37,5 @@ pub(super) fn refresh_clock(ctx: &mut Context) {
     // including any open app window, which is what made the desktop hitch.
     paint_chrome(ctx);
     let rid = ctx.issue_request_id();
-    let _ = push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, MENUBAR_HEIGHT);
+    let _ = push_damage_commit(ctx.compositor_port, rid, 0, 0, ctx.width, menubar_height());
 }

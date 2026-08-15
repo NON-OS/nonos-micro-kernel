@@ -19,7 +19,7 @@
 
 use super::battery_glyph::battery_glyph;
 use super::metrics::{
-    BATT_GLYPH_W, DOT, FG, GAP, NET_GLYPH_W, PAD_X, RIGHT_MARGIN, TILE_BG, TILE_BORDER, TILE_H,
+    batt_glyph_w, dot, gap, net_glyph_w, pad_x, right_margin, tile_h, FG, TILE_BG, TILE_BORDER,
 };
 use super::net_glyph::net_glyph;
 use super::notify_dot::notify_dot;
@@ -27,7 +27,7 @@ use crate::render::fill::fill_rect;
 use crate::render::layout::menubar_rect;
 use crate::render::measure_aa::measure_aa_bytes;
 use crate::render::text_aa::text_aa_bytes;
-use crate::render::ui_font::{top_y_centered, UI_PX};
+use crate::render::ui_font::{scale, top_y_centered, UI_PX};
 use crate::state::indicators::{battery, clock, net};
 use crate::state::Context;
 
@@ -47,54 +47,58 @@ pub(super) fn status(ctx: &Context) {
 
     // Widths.
     let has_notify = ctx.last_notify_level.is_some();
-    let dot_w = if has_notify { DOT + GAP } else { 0 };
-    let batt_w = BATT_GLYPH_W + 4 + measure_aa_bytes(btext, UI_PX);
+    let dot_w = if has_notify { dot() + gap() } else { 0 };
+    let batt_w = batt_glyph_w() + 4 * scale() + measure_aa_bytes(btext, UI_PX);
     let inner = dot_w
         + batt_w
-        + GAP
-        + NET_GLYPH_W
-        + GAP
+        + gap()
+        + net_glyph_w()
+        + gap()
         + measure_aa_bytes(time, UI_PX)
-        + GAP
+        + gap()
         + measure_aa_bytes(date, UI_PX);
-    let total = inner + PAD_X * 2;
-    if bar.width <= total + RIGHT_MARGIN {
+    let total = inner + pad_x() * 2;
+    if bar.width <= total + right_margin() {
         return;
     }
 
-    let x0 = bar.x + bar.width - RIGHT_MARGIN - total;
-    let tile_y = bar.y + (bar.height - TILE_H) / 2;
+    let x0 = bar.x + bar.width - right_margin() - total;
+    let tile_y = bar.y + (bar.height - tile_h()) / 2;
     tile(ctx, x0, tile_y, total);
 
-    let glyph_y = tile_y + (TILE_H - 11) / 2;
-    let text_y = top_y_centered(tile_y, TILE_H, UI_PX);
-    let dot_y = tile_y + (TILE_H - DOT) / 2;
-    let mut x = x0 + PAD_X;
+    let glyph_y = tile_y + (tile_h() - 11 * scale()) / 2;
+    let text_y = top_y_centered(tile_y, tile_h(), UI_PX);
+    let dot_y = tile_y + (tile_h() - dot()) / 2;
+    let mut x = x0 + pad_x();
 
     if has_notify {
         notify_dot(ctx, x, dot_y);
-        x += DOT + GAP;
+        x += dot() + gap();
     }
     battery_glyph(ctx, x, glyph_y, pct);
-    x += BATT_GLYPH_W + 4;
-    x = text_aa_bytes(ctx, x, text_y, btext, FG, UI_PX) + GAP;
+    x += batt_glyph_w() + 4 * scale();
+    x = text_aa_bytes(ctx, x, text_y, btext, FG, UI_PX) + gap();
     net_glyph(ctx, x, glyph_y, online);
-    x += NET_GLYPH_W + GAP;
-    x = text_aa_bytes(ctx, x, text_y, time, FG, UI_PX) + GAP;
+    x += net_glyph_w() + gap();
+    x = text_aa_bytes(ctx, x, text_y, time, FG, UI_PX) + gap();
     text_aa_bytes(ctx, x, text_y, date, FG, UI_PX);
 }
 
 // A rounded, bordered tile behind the cluster, matching the dock's entries.
 fn tile(ctx: &Context, x: u32, y: u32, w: u32) {
     let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    let h = TILE_H;
+    let h = tile_h();
     fill_rect(va, st, vw, vh, x, y, w, h, TILE_BG);
     let bg = super::metrics::BAR_BG;
-    for &(cx, cy) in &[(x, y), (x + w - 2, y), (x, y + h - 2), (x + w - 2, y + h - 2)] {
-        fill_rect(va, st, vw, vh, cx, cy, 2, 2, bg);
+    let edge = scale();
+    let corner = 2 * edge;
+    for &(cx, cy) in
+        &[(x, y), (x + w - corner, y), (x, y + h - corner), (x + w - corner, y + h - corner)]
+    {
+        fill_rect(va, st, vw, vh, cx, cy, corner, corner, bg);
     }
-    fill_rect(va, st, vw, vh, x + 2, y, w - 4, 1, TILE_BORDER);
-    fill_rect(va, st, vw, vh, x + 2, y + h - 1, w - 4, 1, TILE_BORDER);
-    fill_rect(va, st, vw, vh, x, y + 2, 1, h - 4, TILE_BORDER);
-    fill_rect(va, st, vw, vh, x + w - 1, y + 2, 1, h - 4, TILE_BORDER);
+    fill_rect(va, st, vw, vh, x + corner, y, w - 2 * corner, edge, TILE_BORDER);
+    fill_rect(va, st, vw, vh, x + corner, y + h - edge, w - 2 * corner, edge, TILE_BORDER);
+    fill_rect(va, st, vw, vh, x, y + corner, edge, h - 2 * corner, TILE_BORDER);
+    fill_rect(va, st, vw, vh, x + w - edge, y + corner, edge, h - 2 * corner, TILE_BORDER);
 }

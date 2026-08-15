@@ -9,6 +9,7 @@
 use crate::render::fill::fill_rect;
 use crate::render::measure_aa::measure_aa_bytes;
 use crate::render::text_aa::text_aa_bytes;
+use crate::render::ui_font;
 use crate::render::ui_font::{top_y_centered, TITLE_PX};
 use crate::state::Context;
 
@@ -16,13 +17,17 @@ const TILE_BG: u32 = 0xFF0C_1016;
 
 pub(super) fn draw(ctx: &Context, x: u32, y: u32, size: u32, label: &[u8]) {
     let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
+    let sc = ui_font::scale();
     fill_rect(va, st, vw, vh, x, y, size, size, TILE_BG);
     let accent = hue(label);
-    fill_rect(va, st, vw, vh, x + 4, y + 4, size - 8, size - 8, accent);
+    let inset = 4 * sc;
+    fill_rect(va, st, vw, vh, x + inset, y + inset, size - 8 * sc, size - 8 * sc, accent);
     // Knock a small stair off each corner so the fill reads as rounded.
-    let s2 = size.saturating_sub(6);
-    for &(cx, cy) in &[(x + 4, y + 4), (x + s2, y + 4), (x + 4, y + s2), (x + s2, y + s2)] {
-        fill_rect(va, st, vw, vh, cx, cy, 2, 2, TILE_BG);
+    let s2 = size.saturating_sub(6 * sc);
+    for &(cx, cy) in
+        &[(x + inset, y + inset), (x + s2, y + inset), (x + inset, y + s2), (x + s2, y + s2)]
+    {
+        fill_rect(va, st, vw, vh, cx, cy, 2 * sc, 2 * sc, TILE_BG);
     }
     let ch = [initial(label)];
     let gx = x + size.saturating_sub(measure_aa_bytes(&ch, TITLE_PX)) / 2;
