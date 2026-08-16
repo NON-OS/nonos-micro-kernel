@@ -17,9 +17,11 @@
 pub mod clock;
 pub mod decode;
 pub mod scale;
+pub mod seek;
 pub mod source;
 
 pub use clock::{Clock, Step};
 pub use decode::FrameDecoder;
 pub use scale::{column_map, letterbox, scale_into};
+pub use seek::{duration_ms, frame_after_delta, frame_at_permille, permille_of};
 pub use source::Source;
