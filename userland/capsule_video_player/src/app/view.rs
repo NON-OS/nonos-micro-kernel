@@ -38,8 +38,8 @@ impl App for VideoApp {
         }
     }
 
-    fn on_event(&mut self, _event: InputEvent) -> EventOutcome {
-        EventOutcome::Idle
+    fn on_event(&mut self, event: InputEvent) -> EventOutcome {
+        crate::event::router::on_event(self, event)
     }
 
     fn on_tick(&mut self) -> bool {
@@ -59,6 +59,7 @@ impl App for VideoApp {
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
+        self.dims = (fb.width, fb.height);
         for px in fb.pixels.iter_mut() {
             *px = BACKDROP;
         }
