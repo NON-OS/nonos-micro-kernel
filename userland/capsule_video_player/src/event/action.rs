@@ -14,28 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
-mod app;
-mod event;
-mod player;
-#[cfg(feature = "nonos-video-player-smoketest")]
-mod selftest;
-mod ui;
-
-#[cfg(feature = "nonos-video-player-smoketest")]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    selftest::run()
-}
-
-#[cfg(not(feature = "nonos-video-player-smoketest"))]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    const PLAYER_HEAP: usize = 64 * 1024 * 1024;
-    let _ = nonos_libc::heap_init_sized(PLAYER_HEAP);
-    nonos_app_skeleton::run(app::VideoApp::new)
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Action {
+    None,
+    TogglePlay,
+    SeekBy(i32),
+    SeekToPermille(u32),
+    VolumeBy(i32),
+    ToggleMute,
+    Restart,
+    Close,
 }
