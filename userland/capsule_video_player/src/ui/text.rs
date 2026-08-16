@@ -14,6 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub const BODY_PX: f32 = 17.0;
+pub const TITLE_PX: f32 = 20.0;
+
 const MAX_SECS: i64 = 99 * 3600 + 59 * 60 + 59;
 
 pub fn hhmmss(ms: i64, out: &mut [u8; 8]) -> &str {
