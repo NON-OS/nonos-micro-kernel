@@ -19,7 +19,9 @@ use nonos_app_skeleton::input::InputEvent;
 use nonos_app_skeleton::paint::PaintBuffer;
 
 use super::state::{VideoApp, WINDOW_ID};
-use crate::player::{column_map, letterbox, scale_into};
+use crate::player::{column_map, duration_ms, letterbox, permille_of, scale_into};
+use crate::ui::chrome::{paint_bar, BarState};
+use crate::ui::layout::layout;
 
 const BACKDROP: u32 = 0xff00_0000;
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
@@ -67,11 +69,22 @@ impl App for VideoApp {
             return;
         };
         let (sw, sh) = (file.video.width, file.video.height);
+        let l = layout(fb.width, fb.height);
         if self.geom != (fb.width, fb.height) {
-            self.rect = letterbox(sw, sh, fb.width, fb.height);
-            self.cols = column_map(sw, self.rect.2);
+            let (bx, by, bw, bh) = letterbox(sw, sh, l.video.w, l.video.h);
+            self.rect = (l.video.x + bx, l.video.y + by, bw, bh);
+            self.cols = column_map(sw, bw);
             self.geom = (fb.width, fb.height);
         }
         scale_into(&self.frame, sw, sh, fb.pixels, fb.stride_words, self.rect, &self.cols);
+        let total = file.index.len() as u32;
+        let upf = file.header.micro_sec_per_frame;
+        let st = BarState {
+            playing: self.playing,
+            elapsed_ms: self.clock.pts_ms(self.next),
+            total_ms: duration_ms(total, upf),
+            permille: permille_of(self.next, total),
+        };
+        paint_bar(fb, &l, &st);
     }
 }

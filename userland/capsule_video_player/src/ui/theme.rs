@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod chrome;
-pub mod glyph;
-pub mod layout;
-pub mod text;
-pub mod theme;
+pub const BACKDROP: u32 = 0xff00_0000;
+pub const BAR_BG: u32 = 0xff0b_1220;
+pub const TRACK: u32 = 0xff26_3040;
+pub const FILL: u32 = 0xff4d_9fff;
+pub const TEXT: u32 = 0xffe8_eef8;
+pub const TEXT_DIM: u32 = 0xff8e_9bb0;
+pub const GLYPH: u32 = 0xffe8_eef8;
