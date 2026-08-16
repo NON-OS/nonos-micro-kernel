@@ -14,27 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+const MAX_SECS: i64 = 99 * 3600 + 59 * 60 + 59;
 
-extern crate alloc;
-
-mod app;
-mod player;
-#[cfg(feature = "nonos-video-player-smoketest")]
-mod selftest;
-mod ui;
-
-#[cfg(feature = "nonos-video-player-smoketest")]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    selftest::run()
-}
-
-#[cfg(not(feature = "nonos-video-player-smoketest"))]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    const PLAYER_HEAP: usize = 64 * 1024 * 1024;
-    let _ = nonos_libc::heap_init_sized(PLAYER_HEAP);
-    nonos_app_skeleton::run(app::VideoApp::new)
+pub fn hhmmss(ms: i64, out: &mut [u8; 8]) -> &str {
+    let secs = if ms <= 0 { 0 } else { (ms / 1000).min(MAX_SECS) };
+    let h = (secs / 3600) as u32;
+    let m = ((secs % 3600) / 60) as u32;
+    let s = (secs % 60) as u32;
+    out[0] = b'0' + (h / 10) as u8;
+    out[1] = b'0' + (h % 10) as u8;
+    out[2] = b':';
+    out[3] = b'0' + (m / 10) as u8;
+    out[4] = b'0' + (m % 10) as u8;
+    out[5] = b':';
+    out[6] = b'0' + (s / 10) as u8;
+    out[7] = b'0' + (s % 10) as u8;
+    core::str::from_utf8(out).unwrap_or("00:00:00")
 }
