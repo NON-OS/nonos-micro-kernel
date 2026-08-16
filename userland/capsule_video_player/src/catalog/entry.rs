@@ -14,29 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+const EXT: &[u8; 4] = b".avi";
 
-extern crate alloc;
-
-mod app;
-mod catalog;
-mod event;
-mod player;
-#[cfg(feature = "nonos-video-player-smoketest")]
-mod selftest;
-mod ui;
-
-#[cfg(feature = "nonos-video-player-smoketest")]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    selftest::run()
+pub fn file_name(path: &str) -> &str {
+    match path.rfind('/') {
+        Some(i) => &path[i + 1..],
+        None => path,
+    }
 }
 
-#[cfg(not(feature = "nonos-video-player-smoketest"))]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    const PLAYER_HEAP: usize = 64 * 1024 * 1024;
-    let _ = nonos_libc::heap_init_sized(PLAYER_HEAP);
-    nonos_app_skeleton::run(app::VideoApp::new)
+pub fn is_playable(path: &str) -> bool {
+    let name = file_name(path).as_bytes();
+    if name.len() <= EXT.len() {
+        return false;
+    }
+    let (stem, ext) = name.split_at(name.len() - EXT.len());
+    !stem.is_empty() && ext.eq_ignore_ascii_case(EXT)
 }

@@ -14,29 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use alloc::string::String;
+use alloc::vec::Vec;
 
-extern crate alloc;
+use nonos_app_skeleton::clients::vfs::list_paths;
 
-mod app;
-mod catalog;
-mod event;
-mod player;
-#[cfg(feature = "nonos-video-player-smoketest")]
-mod selftest;
-mod ui;
+use super::entry::is_playable;
 
-#[cfg(feature = "nonos-video-player-smoketest")]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    selftest::run()
-}
+pub const MAX_ENTRIES: usize = 256;
 
-#[cfg(not(feature = "nonos-video-player-smoketest"))]
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    const PLAYER_HEAP: usize = 64 * 1024 * 1024;
-    let _ = nonos_libc::heap_init_sized(PLAYER_HEAP);
-    nonos_app_skeleton::run(app::VideoApp::new)
+pub fn scan(owner_pid: u32) -> Vec<String> {
+    let mut out: Vec<String> = match list_paths(owner_pid, b"/") {
+        Ok(paths) => paths.into_iter().filter(|p| is_playable(p)).collect(),
+        Err(_) => Vec::new(),
+    };
+    out.sort();
+    out.truncate(MAX_ENTRIES);
+    out
 }
