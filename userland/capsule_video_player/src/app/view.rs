@@ -22,6 +22,7 @@ use super::state::{VideoApp, WINDOW_ID};
 use crate::player::{column_map, letterbox, scale_into};
 
 const BACKDROP: u32 = 0xff00_0000;
+const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 
 impl App for VideoApp {
     fn manifest(&self) -> AppManifest {
@@ -33,7 +34,7 @@ impl App for VideoApp {
             initial_y: 120,
             width: 960,
             height: 600,
-            input_kind_mask: 0,
+            input_kind_mask: INPUT_KEY_DOWN_BIT,
         }
     }
 
