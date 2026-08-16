@@ -46,7 +46,11 @@ impl App for VideoApp {
     }
 
     fn tick_interval_ms(&self) -> i64 {
-        4
+        if self.playing {
+            4
+        } else {
+            250
+        }
     }
 
     fn busy(&self) -> bool {
