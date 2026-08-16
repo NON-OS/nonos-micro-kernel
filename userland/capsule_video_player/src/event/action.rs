@@ -23,5 +23,9 @@ pub enum Action {
     VolumeBy(i32),
     ToggleMute,
     Restart,
+    OpenIndex(usize),
+    OpenSelected,
+    MoveSel(i32),
+    ShowLibrary,
     Close,
 }

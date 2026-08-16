@@ -17,5 +17,6 @@
 pub mod action;
 pub mod apply;
 pub mod key;
+pub mod navigate;
 pub mod pointer;
 pub mod router;

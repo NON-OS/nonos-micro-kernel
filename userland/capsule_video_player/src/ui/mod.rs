@@ -17,5 +17,8 @@
 pub mod chrome;
 pub mod glyph;
 pub mod layout;
+pub mod library;
+pub mod rows;
+pub mod screen;
 pub mod text;
 pub mod theme;

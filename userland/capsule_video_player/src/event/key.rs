@@ -16,6 +16,7 @@
 
 use super::action::Action;
 
+pub const KEY_ENTER: u32 = 0x0D;
 pub const KEY_ESC: u32 = 0x1B;
 pub const KEY_UP: u32 = 0x1201;
 pub const KEY_DOWN: u32 = 0x1202;
@@ -24,6 +25,16 @@ pub const KEY_RIGHT: u32 = 0x1204;
 
 const SKIP_SECS: i32 = 10;
 const VOLUME_STEP: i32 = 5;
+
+pub fn from_library_key(code: u32) -> Action {
+    match code {
+        KEY_ESC => Action::Close,
+        KEY_ENTER => Action::OpenSelected,
+        KEY_UP => Action::MoveSel(-1),
+        KEY_DOWN => Action::MoveSel(1),
+        _ => Action::None,
+    }
+}
 
 pub fn from_key(code: u32) -> Action {
     match code {
@@ -40,6 +51,7 @@ pub fn from_key(code: u32) -> Action {
     match code as u8 {
         b' ' => Action::TogglePlay,
         b'm' | b'M' => Action::ToggleMute,
+        b'l' | b'L' => Action::ShowLibrary,
         b'0' => Action::Restart,
         _ => Action::None,
     }

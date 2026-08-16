@@ -22,8 +22,10 @@ use super::state::{VideoApp, WINDOW_ID};
 use crate::player::{column_map, duration_ms, letterbox, permille_of, scale_into};
 use crate::ui::chrome::{paint_bar, BarState};
 use crate::ui::layout::layout;
+use crate::ui::library::paint_library;
+use crate::ui::screen::Screen;
+use crate::ui::theme;
 
-const BACKDROP: u32 = 0xff00_0000;
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 
 impl App for VideoApp {
@@ -62,8 +64,12 @@ impl App for VideoApp {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.dims = (fb.width, fb.height);
+        if self.screen == Screen::Library {
+            paint_library(fb, &self.items, self.sel, self.scroll);
+            return;
+        }
         for px in fb.pixels.iter_mut() {
-            *px = BACKDROP;
+            *px = theme::BACKDROP;
         }
         let Some(file) = self.file.as_ref() else {
             return;

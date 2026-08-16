@@ -18,6 +18,7 @@ use nonos_app_skeleton::app::EventOutcome;
 use nonos_libc::mk_uptime_ms;
 
 use super::action::Action;
+use super::navigate::navigate;
 use crate::app::VideoApp;
 use crate::player::{frame_after_delta, frame_at_permille, Clock};
 
@@ -26,6 +27,9 @@ const MAX_VOLUME: i32 = 100;
 pub fn apply(app: &mut VideoApp, action: Action) -> EventOutcome {
     if action == Action::Close {
         return EventOutcome::Close;
+    }
+    if let Some(outcome) = navigate(app, action) {
+        return outcome;
     }
     let Some(file) = app.file.as_ref() else {
         return EventOutcome::Idle;
@@ -61,7 +65,7 @@ pub fn apply(app: &mut VideoApp, action: Action) -> EventOutcome {
             app.muted = !app.muted;
             EventOutcome::Repaint
         }
-        Action::None | Action::Close => EventOutcome::Idle,
+        _ => EventOutcome::Idle,
     }
 }
 

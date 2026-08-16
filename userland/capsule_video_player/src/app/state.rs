@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::string::String;
 use alloc::vec::Vec;
 
 use nonos_avi::AviFile;
 use nonos_libc::{mk_getpid, mk_uptime_ms};
 
 use crate::player::{Clock, FrameDecoder, Source};
+use crate::ui::screen::Screen;
 
 pub const WINDOW_ID: u32 = 0x5649;
-pub const PATH: &[u8] = b"/video.avi";
+pub const PATH: &str = "/video.avi";
 pub const HEADER_MAX: u32 = 512 * 1024;
 
 pub struct VideoApp {
@@ -42,6 +44,12 @@ pub struct VideoApp {
     pub(crate) muted: bool,
     pub(crate) dims: (u32, u32),
     pub(crate) force_decode: bool,
+    pub(crate) screen: Screen,
+    pub(crate) items: Vec<String>,
+    pub(crate) sel: usize,
+    pub(crate) scroll: usize,
+    pub(crate) scanned: bool,
+    pub(crate) path: String,
 }
 
 impl VideoApp {
@@ -57,12 +65,18 @@ impl VideoApp {
             geom: (0, 0),
             next: 0,
             opened: false,
-            playing: true,
+            playing: false,
             status: None,
             volume: 80,
             muted: false,
             dims: (960, 600),
             force_decode: false,
+            screen: Screen::Library,
+            items: Vec::new(),
+            sel: 0,
+            scroll: 0,
+            scanned: false,
+            path: String::from(PATH),
         }
     }
 
@@ -78,7 +92,7 @@ impl VideoApp {
     }
 
     fn open(&mut self) -> Result<(), &'static str> {
-        let mut source = Source::open(mk_getpid(), PATH)?;
+        let mut source = Source::open(mk_getpid(), self.path.as_bytes())?;
         let head = source.read_header(HEADER_MAX)?;
         let file = AviFile::parse(&head).map_err(|_| "not a playable avi")?;
         let pixels = (file.video.width as usize)

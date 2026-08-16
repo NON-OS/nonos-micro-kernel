@@ -18,9 +18,15 @@ use nonos_libc::mk_uptime_ms;
 
 use super::state::VideoApp;
 use crate::player::Step;
+use crate::ui::screen::Screen;
 
 impl VideoApp {
     pub(super) fn advance(&mut self) -> bool {
+        if self.screen == Screen::Library {
+            let first_scan = !self.scanned;
+            self.refresh_library();
+            return first_scan;
+        }
         self.ensure_open();
         if !self.playing {
             if !core::mem::take(&mut self.force_decode) {
