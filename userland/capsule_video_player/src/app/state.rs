@@ -27,17 +27,21 @@ pub const HEADER_MAX: u32 = 512 * 1024;
 
 pub struct VideoApp {
     pub(super) source: Option<Source>,
-    pub(super) file: Option<AviFile>,
+    pub(crate) file: Option<AviFile>,
     pub(super) decoder: FrameDecoder,
-    pub(super) clock: Clock,
+    pub(crate) clock: Clock,
     pub(super) frame: Vec<u32>,
     pub(super) cols: Vec<u32>,
     pub(super) rect: (u32, u32, u32, u32),
     pub(super) geom: (u32, u32),
-    pub(super) next: u32,
+    pub(crate) next: u32,
     pub(super) opened: bool,
-    pub(super) playing: bool,
+    pub(crate) playing: bool,
     pub(super) status: Option<&'static str>,
+    pub(crate) volume: u32,
+    pub(crate) muted: bool,
+    pub(crate) dims: (u32, u32),
+    pub(crate) force_decode: bool,
 }
 
 impl VideoApp {
@@ -55,6 +59,10 @@ impl VideoApp {
             opened: false,
             playing: true,
             status: None,
+            volume: 80,
+            muted: false,
+            dims: (960, 600),
+            force_decode: false,
         }
     }
 

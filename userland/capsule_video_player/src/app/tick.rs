@@ -23,7 +23,17 @@ impl VideoApp {
     pub(super) fn advance(&mut self) -> bool {
         self.ensure_open();
         if !self.playing {
-            return false;
+            if !core::mem::take(&mut self.force_decode) {
+                return false;
+            }
+            let i = self.next;
+            return match self.decode_one(i) {
+                Ok(()) => true,
+                Err(e) => {
+                    self.status = Some(e);
+                    false
+                }
+            };
         }
         let total = match self.file.as_ref() {
             Some(f) => f.index.len() as u32,

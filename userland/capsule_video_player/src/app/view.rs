@@ -47,7 +47,7 @@ impl App for VideoApp {
     }
 
     fn tick_interval_ms(&self) -> i64 {
-        if self.playing {
+        if self.playing || self.force_decode {
             4
         } else {
             250
