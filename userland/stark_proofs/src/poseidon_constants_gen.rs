@@ -73,11 +73,8 @@ fn gen_poseidon_constants() {
         alloc::format!("\"left\":{},\"right\":{},", row_json(&l), row_json(&r)),
     );
     let hash_in = [fp(9), fp(10), fp(11), fp(12)];
-    let hash_kat = kat(
-        "hash",
-        h.hash(&hash_in),
-        alloc::format!("\"input\":{},", row_json(&hash_in)),
-    );
+    let hash_kat =
+        kat("hash", h.hash(&hash_in), alloc::format!("\"input\":{},", row_json(&hash_in)));
 
     // Note-commitment KAT over the 11 limbs 1..=11, so the Solidity compress-tree
     // reproduces the kernel digest bit-for-bit.
@@ -85,11 +82,8 @@ fn gen_poseidon_constants() {
     for (i, c) in note.iter_mut().enumerate() {
         *c = fp((i + 1) as u64);
     }
-    let commit_kat = kat(
-        "commit_note",
-        h.commit_note(&note),
-        alloc::format!("\"limbs\":{},", row_json(&note)),
-    );
+    let commit_kat =
+        kat("commit_note", h.commit_note(&note), alloc::format!("\"limbs\":{},", row_json(&note)));
 
     let json = alloc::format!(
         "{{\n\

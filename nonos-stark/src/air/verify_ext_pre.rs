@@ -28,7 +28,7 @@ use super::super::field::{Fp, Fp2};
 use super::super::fri::root_of_unity;
 use super::super::fri_ext::fri_verify_ext;
 use super::super::merkle::{verify_path_ext, verify_path_wide, verify_path_wide_periodic};
-use super::super::poly::eval_lagrange_ext;
+use super::super::poly::eval_subgroup_or_lagrange_ext;
 use super::super::transcript::Transcript;
 use super::composition::{compose_ext, domain_params_blown, num_coeffs};
 use super::prove_ext::draw_ood_point_ext;
@@ -99,7 +99,7 @@ pub fn stark_verify_ext_preprocessed<A: AirExt>(
         v
     };
     for (col, claim) in periodic_cols.iter().zip(pre.periodic_z.iter()) {
-        if eval_lagrange_ext(&h_pts, col, z) != *claim {
+        if eval_subgroup_or_lagrange_ext(g, &h_pts, col, z) != *claim {
             return false;
         }
     }

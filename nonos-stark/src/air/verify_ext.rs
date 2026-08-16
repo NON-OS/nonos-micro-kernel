@@ -25,7 +25,7 @@ use super::super::field::{Fp, Fp2};
 use super::super::fri::root_of_unity;
 use super::super::fri_ext::fri_verify_ext;
 use super::super::merkle::{verify_path_ext, verify_path_wide};
-use super::super::poly::eval_lagrange_ext;
+use super::super::poly::eval_subgroup_or_lagrange_ext;
 use super::super::transcript::Transcript;
 use super::composition::{compose_ext, domain_params_blown, num_coeffs};
 use super::prove_ext::draw_ood_point_ext;
@@ -109,8 +109,11 @@ pub fn stark_verify_ext_blown_bound<A: AirExt>(
         }
         v
     };
-    let periodic_z: Vec<Fp2> =
-        air.periodic_columns().iter().map(|col| eval_lagrange_ext(&h_pts, col, z)).collect();
+    let periodic_z: Vec<Fp2> = air
+        .periodic_columns()
+        .iter()
+        .map(|col| eval_subgroup_or_lagrange_ext(g, &h_pts, col, z))
+        .collect();
     let comp_z = compose_ext(air, g, z, &proof.ood_frame, &periodic_z, &coeffs);
 
     // The DEEP quotient polynomial must be low degree.

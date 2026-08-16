@@ -7,7 +7,13 @@ extern crate alloc;
 pub mod crypto;
 
 #[cfg(test)]
+mod aggregate_tests;
+#[cfg(test)]
 mod air_tests;
+#[cfg(test)]
+mod barycentric_tests;
+#[cfg(test)]
+mod enroll_batch_tests;
 #[cfg(test)]
 mod field_ext_tests;
 #[cfg(test)]
@@ -48,6 +54,8 @@ mod production_vector_gen;
 mod recursion_assembly;
 #[cfg(test)]
 mod recursion_assembly_tests;
+#[cfg(test)]
+mod shared_root_tests;
 #[cfg(test)]
 mod stark_selftest_gen;
 
