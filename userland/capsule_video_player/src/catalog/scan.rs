@@ -14,21 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::string::String;
 use alloc::vec::Vec;
 
 use nonos_app_skeleton::clients::vfs::list_paths;
 
-use super::entry::is_playable;
+use super::media::MediaItem;
 
 pub const MAX_ENTRIES: usize = 256;
 
-pub fn scan(owner_pid: u32) -> Vec<String> {
-    let mut out: Vec<String> = match list_paths(owner_pid, b"/") {
-        Ok(paths) => paths.into_iter().filter(|p| is_playable(p)).collect(),
-        Err(_) => Vec::new(),
-    };
-    out.sort();
+pub const ROOTS: [&[u8]; 5] = [b"/", b"/Movies", b"/Series", b"/Downloads", b"/Clips"];
+
+pub fn scan(owner_pid: u32) -> Vec<MediaItem> {
+    let mut out: Vec<MediaItem> = Vec::new();
+    for root in ROOTS {
+        collect(owner_pid, root, &mut out);
+    }
+    out.sort_by(|a, b| a.name.cmp(&b.name));
     out.truncate(MAX_ENTRIES);
     out
+}
+
+fn collect(owner_pid: u32, root: &[u8], out: &mut Vec<MediaItem>) {
+    let Ok(paths) = list_paths(owner_pid, root) else {
+        return;
+    };
+    for path in paths {
+        if out.iter().any(|m| m.path == path) {
+            continue;
+        }
+        if let Some(item) = MediaItem::from_path(&path) {
+            out.push(item);
+        }
+    }
 }

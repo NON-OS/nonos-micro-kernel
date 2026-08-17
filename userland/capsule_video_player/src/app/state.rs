@@ -20,8 +20,11 @@ use alloc::vec::Vec;
 use nonos_avi::AviFile;
 use nonos_libc::{mk_getpid, mk_uptime_ms};
 
+use super::browse::Browse;
+use super::nav::Nav;
+use super::prefs::Prefs;
 use crate::player::{Clock, FrameDecoder, Source};
-use crate::ui::screen::Screen;
+use crate::ui::screen::Route;
 
 pub const WINDOW_ID: u32 = 0x5649;
 pub const PATH: &str = "/video.avi";
@@ -39,16 +42,14 @@ pub struct VideoApp {
     pub(crate) next: u32,
     pub(super) opened: bool,
     pub(crate) playing: bool,
-    pub(super) status: Option<&'static str>,
+    pub(crate) status: Option<&'static str>,
     pub(crate) volume: u32,
     pub(crate) muted: bool,
     pub(crate) dims: (u32, u32),
     pub(crate) force_decode: bool,
-    pub(crate) screen: Screen,
-    pub(crate) items: Vec<String>,
-    pub(crate) sel: usize,
-    pub(crate) scroll: usize,
-    pub(crate) scanned: bool,
+    pub(crate) nav: Nav,
+    pub(crate) browse: Browse,
+    pub(crate) prefs: Prefs,
     pub(crate) path: String,
 }
 
@@ -69,15 +70,17 @@ impl VideoApp {
             status: None,
             volume: 80,
             muted: false,
-            dims: (960, 600),
+            dims: (1180, 760),
             force_decode: false,
-            screen: Screen::Library,
-            items: Vec::new(),
-            sel: 0,
-            scroll: 0,
-            scanned: false,
+            nav: Nav::new(Route::Home),
+            browse: Browse::new(),
+            prefs: Prefs::new(),
             path: String::from(PATH),
         }
+    }
+
+    pub(crate) fn route(&self) -> Route {
+        self.nav.current()
     }
 
     pub(super) fn ensure_open(&mut self) {

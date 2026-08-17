@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::ui::screen::Route;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Action {
     None,
@@ -21,11 +23,18 @@ pub enum Action {
     SeekBy(i32),
     SeekToPermille(u32),
     VolumeBy(i32),
+    SetVolume(u32),
     ToggleMute,
     Restart,
     OpenIndex(usize),
     OpenSelected,
     MoveSel(i32),
     ShowLibrary,
+    Goto(Route),
+    Back,
+    ToggleGrid,
+    TogglePref(usize),
+    SetSection(usize),
+    ResetPrefs,
     Close,
 }

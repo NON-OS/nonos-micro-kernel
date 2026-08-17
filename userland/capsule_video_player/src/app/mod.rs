@@ -14,8 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod browse;
+pub mod nav;
+pub mod prefs;
+mod present;
 mod select;
-mod state;
+pub mod state;
 mod tick;
 mod view;
 

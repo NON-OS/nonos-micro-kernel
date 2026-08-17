@@ -18,12 +18,12 @@ use nonos_libc::mk_uptime_ms;
 
 use super::state::VideoApp;
 use crate::player::Step;
-use crate::ui::screen::Screen;
+use crate::ui::screen::Route;
 
 impl VideoApp {
     pub(super) fn advance(&mut self) -> bool {
-        if self.screen == Screen::Library {
-            let first_scan = !self.scanned;
+        if self.route() != Route::Player {
+            let first_scan = !self.browse.scanned;
             self.refresh_library();
             return first_scan;
         }

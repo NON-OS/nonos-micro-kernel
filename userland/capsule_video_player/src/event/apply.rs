@@ -22,8 +22,6 @@ use super::navigate::navigate;
 use crate::app::VideoApp;
 use crate::player::{frame_after_delta, frame_at_permille, Clock};
 
-const MAX_VOLUME: i32 = 100;
-
 pub fn apply(app: &mut VideoApp, action: Action) -> EventOutcome {
     if action == Action::Close {
         return EventOutcome::Close;
@@ -55,14 +53,6 @@ pub fn apply(app: &mut VideoApp, action: Action) -> EventOutcome {
         }
         Action::Restart => {
             rebase(app, 0, upf);
-            EventOutcome::Repaint
-        }
-        Action::VolumeBy(d) => {
-            app.volume = (app.volume as i32 + d).clamp(0, MAX_VOLUME) as u32;
-            EventOutcome::Repaint
-        }
-        Action::ToggleMute => {
-            app.muted = !app.muted;
             EventOutcome::Repaint
         }
         _ => EventOutcome::Idle,

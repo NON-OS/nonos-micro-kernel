@@ -21,7 +21,7 @@ pub const ROW_H: u32 = 44;
 
 const BTN: u32 = 36;
 const GAP: u32 = 12;
-const PAD: u32 = 16;
+pub const PAD: u32 = 16;
 
 #[derive(Clone, Copy)]
 pub struct Rect {

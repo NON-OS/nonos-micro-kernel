@@ -19,35 +19,79 @@ use nonos_app_skeleton::app::EventOutcome;
 use super::action::Action;
 use crate::app::VideoApp;
 use crate::ui::rows::scroll_for;
-use crate::ui::screen::Screen;
+use crate::ui::screen::Route;
+
+const MAX_VOLUME: i32 = 100;
 
 pub fn navigate(app: &mut VideoApp, action: Action) -> Option<EventOutcome> {
     match action {
-        Action::ShowLibrary => {
-            app.screen = Screen::Library;
-            app.playing = false;
+        Action::ShowLibrary => Some(goto(app, Route::Library)),
+        Action::Goto(route) => Some(goto(app, route)),
+        Action::Back => Some(outcome(app.nav.back())),
+        Action::MoveSel(delta) => Some(move_sel(app, delta)),
+        Action::OpenSelected => Some(open(app, app.browse.sel)),
+        Action::OpenIndex(index) => Some(open(app, index)),
+        Action::ToggleGrid => {
+            app.browse.grid = !app.browse.grid;
             Some(EventOutcome::Repaint)
         }
-        Action::MoveSel(delta) => Some(move_sel(app, delta)),
-        Action::OpenSelected => Some(open(app, app.sel)),
-        Action::OpenIndex(index) => Some(open(app, index)),
+        Action::VolumeBy(delta) => Some(set_volume(app, app.volume as i32 + delta)),
+        Action::SetVolume(level) => Some(set_volume(app, level as i32)),
+        Action::ToggleMute => {
+            app.muted = !app.muted;
+            Some(EventOutcome::Repaint)
+        }
+        Action::TogglePref(index) => Some(outcome(app.prefs.toggle(index))),
+        Action::SetSection(index) => Some(set_section(app, index)),
+        Action::ResetPrefs => {
+            app.prefs.reset();
+            Some(EventOutcome::Repaint)
+        }
         _ => None,
     }
 }
 
+fn goto(app: &mut VideoApp, route: Route) -> EventOutcome {
+    if route != Route::Player {
+        app.playing = false;
+    }
+    outcome(app.nav.go(route))
+}
+
+fn set_volume(app: &mut VideoApp, level: i32) -> EventOutcome {
+    let level = level.clamp(0, MAX_VOLUME) as u32;
+    if app.volume == level {
+        return EventOutcome::Idle;
+    }
+    app.volume = level;
+    EventOutcome::Repaint
+}
+
+fn set_section(app: &mut VideoApp, index: usize) -> EventOutcome {
+    if index >= crate::app::prefs::SECTIONS.len() || app.prefs.section == index {
+        return EventOutcome::Idle;
+    }
+    app.prefs.section = index;
+    EventOutcome::Repaint
+}
+
 fn move_sel(app: &mut VideoApp, delta: i32) -> EventOutcome {
-    let count = app.items.len();
+    let count = app.browse.len();
     if count == 0 {
         return EventOutcome::Idle;
     }
-    let sel = (app.sel as i64 + delta as i64).clamp(0, count as i64 - 1) as usize;
-    app.sel = sel;
-    app.scroll = scroll_for(sel, app.scroll, app.dims.1);
+    let sel = (app.browse.sel as i64 + delta as i64).clamp(0, count as i64 - 1) as usize;
+    app.browse.sel = sel;
+    app.browse.scroll = scroll_for(sel, app.browse.scroll, app.dims.1);
     EventOutcome::Repaint
 }
 
 fn open(app: &mut VideoApp, index: usize) -> EventOutcome {
-    if app.open_index(index) {
+    outcome(app.open_index(index))
+}
+
+fn outcome(changed: bool) -> EventOutcome {
+    if changed {
         EventOutcome::Repaint
     } else {
         EventOutcome::Idle

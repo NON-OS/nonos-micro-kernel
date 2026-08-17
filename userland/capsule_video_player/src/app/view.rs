@@ -19,12 +19,14 @@ use nonos_app_skeleton::input::InputEvent;
 use nonos_app_skeleton::paint::PaintBuffer;
 
 use super::state::{VideoApp, WINDOW_ID};
-use crate::player::{column_map, duration_ms, letterbox, permille_of, scale_into};
-use crate::ui::chrome::{paint_bar, BarState};
+use crate::ui::icon;
 use crate::ui::layout::layout;
-use crate::ui::library::paint_library;
-use crate::ui::screen::Screen;
+use crate::ui::player::header::paint_header;
+use crate::ui::player::paint::paint_transport;
+use crate::ui::screen::Route;
 use crate::ui::theme;
+use crate::ui::view::render::paint_route;
+use crate::ui::widget::empty::paint_empty;
 
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 
@@ -64,33 +66,21 @@ impl App for VideoApp {
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.dims = (fb.width, fb.height);
-        if self.screen == Screen::Library {
-            paint_library(fb, &self.items, self.sel, self.scroll);
+        if self.route() != Route::Player {
+            paint_route(fb, self);
             return;
         }
         for px in fb.pixels.iter_mut() {
             *px = theme::BACKDROP;
         }
-        let Some(file) = self.file.as_ref() else {
-            return;
-        };
-        let (sw, sh) = (file.video.width, file.video.height);
         let l = layout(fb.width, fb.height);
-        if self.geom != (fb.width, fb.height) {
-            let (bx, by, bw, bh) = letterbox(sw, sh, l.video.w, l.video.h);
-            self.rect = (l.video.x + bx, l.video.y + by, bw, bh);
-            self.cols = column_map(sw, bw);
-            self.geom = (fb.width, fb.height);
+        let (w, title) = (fb.width, self.title());
+        paint_header(fb, w, title);
+        let st = self.bar_state();
+        if !self.blit_frame(fb, &l) {
+            let note = self.status.unwrap_or("Open a video from your library to start playback");
+            paint_empty(fb, l.video, icon::nav::video, "Nothing playing", note);
         }
-        scale_into(&self.frame, sw, sh, fb.pixels, fb.stride_words, self.rect, &self.cols);
-        let total = file.index.len() as u32;
-        let upf = file.header.micro_sec_per_frame;
-        let st = BarState {
-            playing: self.playing,
-            elapsed_ms: self.clock.pts_ms(self.next),
-            total_ms: duration_ms(total, upf),
-            permille: permille_of(self.next, total),
-        };
-        paint_bar(fb, &l, &st);
+        paint_transport(fb, &l, &st, self.muted, self.volume);
     }
 }

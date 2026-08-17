@@ -14,54 +14,78 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::app::EventOutcome;
-use nonos_app_skeleton::input::{self, InputEvent, InputKind};
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
 use super::action::Action;
-use super::apply::apply;
-use super::key::{self, from_key, from_library_key};
+use super::hit;
+use super::key::{from_key, from_library_key};
 use super::pointer::from_click;
-use crate::app::VideoApp;
-use crate::ui::layout::layout;
-use crate::ui::rows::row_at;
-use crate::ui::screen::Screen;
+use crate::app::state::VideoApp;
+use crate::ui::frame::region;
+use crate::ui::layout::{layout, Rect};
+use crate::ui::screen::Route;
+use crate::ui::view::{details, prefs_geom};
+use crate::ui::widget::tabs::tab_hit;
 
-const _: () = assert!(key::KEY_ENTER == input::KEY_ENTER);
-const _: () = assert!(key::KEY_ESC == input::KEY_ESC);
-const _: () = assert!(key::KEY_UP == input::KEY_UP);
-const _: () = assert!(key::KEY_DOWN == input::KEY_DOWN);
-const _: () = assert!(key::KEY_LEFT == input::KEY_LEFT);
-const _: () = assert!(key::KEY_RIGHT == input::KEY_RIGHT);
-
-pub fn on_event(app: &mut VideoApp, event: InputEvent) -> EventOutcome {
-    let action = match app.screen {
-        Screen::Library => library_action(app, event),
-        Screen::Player => player_action(app, event),
-    };
-    apply(app, action)
+fn settings_click(app: &VideoApp, body: Rect, x: i32, y: i32) -> Action {
+    if let Some(index) = prefs_geom::section_at(body, x, y) {
+        return Action::SetSection(index);
+    }
+    if let Some(index) = prefs_geom::toggle_at(body, app.prefs.section, x, y) {
+        return Action::TogglePref(index);
+    }
+    if prefs_geom::reset_button(body).contains(x, y) {
+        return Action::ResetPrefs;
+    }
+    if prefs_geom::cancel_button(body).contains(x, y) {
+        return Action::Back;
+    }
+    Action::None
 }
 
-fn library_action(app: &VideoApp, event: InputEvent) -> Action {
+fn chrome_click(app: &VideoApp, x: i32, y: i32) -> Action {
     let (w, h) = app.dims;
-    match event.kind {
-        InputKind::ButtonDown => {
-            match row_at(w, h, app.scroll, app.items.len(), event.x, event.y) {
-                Some(index) => Action::OpenIndex(index),
-                None => Action::None,
-            }
+    if let Some(route) = hit::nav(w, x, y) {
+        return Action::Goto(route);
+    }
+    let body = region::body(w, h);
+    if app.route() == Route::Settings {
+        return settings_click(app, body, x, y);
+    }
+    if app.route() == Route::Details {
+        return match tab_hit(body.x, body.y, &details::TABS, x, y) {
+            Some(0) => Action::Goto(Route::Player),
+            _ => Action::None,
+        };
+    }
+    if let Some(grid) = hit::view_mode(w, h, x, y) {
+        if grid != app.browse.grid {
+            return Action::ToggleGrid;
         }
-        InputKind::KeyDown => from_library_key(event.code),
-        _ => Action::None,
+        return Action::None;
+    }
+    match hit::item(&app.browse, body, x, y) {
+        Some(index) => Action::OpenIndex(index),
+        None => Action::None,
     }
 }
 
-fn player_action(app: &VideoApp, event: InputEvent) -> Action {
+fn action_for(app: &VideoApp, event: InputEvent) -> Action {
+    let chrome = app.route() != Route::Player;
     match event.kind {
+        InputKind::KeyDown if chrome => from_library_key(event.code),
+        InputKind::KeyDown => from_key(event.code),
+        InputKind::ButtonDown if chrome => chrome_click(app, event.x, event.y),
         InputKind::ButtonDown => {
             let l = layout(app.dims.0, app.dims.1);
-            from_click(&l, event.x, event.y)
+            from_click(&l, app.dims.0, event.x, event.y)
         }
-        InputKind::KeyDown => from_key(event.code),
+        InputKind::Wheel if chrome => Action::MoveSel(-event.delta_y.signum()),
         _ => Action::None,
     }
+}
+
+pub fn on_event(app: &mut VideoApp, event: InputEvent) -> EventOutcome {
+    let action = action_for(app, event);
+    super::apply::apply(app, action)
 }

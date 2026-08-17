@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-const EXT: &[u8; 4] = b".avi";
+use super::kind::kind_of;
 
 pub fn file_name(path: &str) -> &str {
     match path.rfind('/') {
@@ -23,11 +23,17 @@ pub fn file_name(path: &str) -> &str {
     }
 }
 
-pub fn is_playable(path: &str) -> bool {
-    let name = file_name(path).as_bytes();
-    if name.len() <= EXT.len() {
-        return false;
+pub fn parent_dir(path: &str) -> &str {
+    match path.rfind('/') {
+        Some(0) | None => "/",
+        Some(i) => &path[..i],
     }
-    let (stem, ext) = name.split_at(name.len() - EXT.len());
-    !stem.is_empty() && ext.eq_ignore_ascii_case(EXT)
+}
+
+pub fn is_media(path: &str) -> bool {
+    kind_of(file_name(path)).is_some()
+}
+
+pub fn is_playable(path: &str) -> bool {
+    kind_of(file_name(path)).is_some_and(|k| k.decodable())
 }

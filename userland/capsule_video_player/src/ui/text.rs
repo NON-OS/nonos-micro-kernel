@@ -16,6 +16,12 @@
 
 pub const BODY_PX: f32 = 17.0;
 pub const TITLE_PX: f32 = 20.0;
+pub const HEAD_PX: f32 = 24.0;
+pub const LINE_H: u32 = 21;
+
+pub fn center_y(y: u32, h: u32) -> i32 {
+    (y + h.saturating_sub(LINE_H) / 2) as i32
+}
 
 const MAX_SECS: i64 = 99 * 3600 + 59 * 60 + 59;
 

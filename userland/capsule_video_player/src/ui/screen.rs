@@ -15,7 +15,37 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Screen {
+pub enum Route {
+    Home,
     Library,
+    Playlists,
+    Files,
+    Settings,
     Player,
+    Details,
+}
+
+pub const NAV: [Route; 5] =
+    [Route::Home, Route::Library, Route::Playlists, Route::Files, Route::Settings];
+
+impl Route {
+    pub fn label(self) -> &'static str {
+        match self {
+            Route::Home => "Home",
+            Route::Library => "Library",
+            Route::Playlists => "Playlists",
+            Route::Files => "Files",
+            Route::Settings => "Settings",
+            Route::Player => "Now Playing",
+            Route::Details => "Media Details",
+        }
+    }
+
+    pub fn in_nav(self) -> bool {
+        NAV.iter().any(|r| *r == self)
+    }
+
+    pub fn chrome(self) -> bool {
+        !matches!(self, Route::Player)
+    }
 }

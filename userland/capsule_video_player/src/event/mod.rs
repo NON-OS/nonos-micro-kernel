@@ -16,6 +16,7 @@
 
 pub mod action;
 pub mod apply;
+pub mod hit;
 pub mod key;
 pub mod navigate;
 pub mod pointer;
