@@ -7,6 +7,7 @@ CAPSULE_FEATURE          := nonos-capsule-video-player
 CAPSULE_NAMESPACE        := systems.nonos.app.video_player
 CAPSULE_SERVICE_ENDPOINT := service:4926:app.video_player
 CAPSULE_REPLY_ENDPOINT   := reply:4927:endpoint.app.video_player.reply
+CAPSULE_INSTANCE_ENDPOINTS := service:4928:app.video_player.1 reply:4929:endpoint.app.video_player.1.reply service:4930:app.video_player.2 reply:4931:endpoint.app.video_player.2.reply
 # CoreExec|IPC|Memory|FileSystem|GraphicsDisplayQuery|GraphicsSurfaceCreate|GraphicsSurfaceMap
 CAPSULE_REQUIRED_CAPS    := 0x3859
 # Debug, granted only by a build that compiles `capsule-serial-debug`.

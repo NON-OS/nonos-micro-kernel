@@ -19,7 +19,9 @@ use super::embed::{
     VIDEO_PLAYER_NONOS_ID_CERT_BYTES,
 };
 use super::state;
-use crate::kernel_core::process_spawn::capsule_spawn::{self, CapsuleSpecVerified};
+use crate::kernel_core::process_spawn::capsule_spawn::{
+    self, CapsuleSpecVerified, InstanceEndpoint, InstanceSpawn,
+};
 use crate::security::nonos_id_cert::IdCertVerifyError;
 use crate::security::nonos_trust_anchor::{
     decode as decode_trust_anchor, BAKED_TRUST_ANCHOR_POLICY,
@@ -33,6 +35,34 @@ const REPLY_INBOX: &str = "endpoint.app.video_player.reply";
 const REPLY_PORT: u32 = 4927;
 const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 const REQUIRED_CAPS: u64 = 0x3859;
+
+const VIDEO_PLAYER_INSTANCES: &[InstanceEndpoint] = &[
+    InstanceEndpoint {
+        name: "app.video_player.1",
+        port: 4928,
+        reply_inbox: "endpoint.app.video_player.1.reply",
+        reply_port: 4929,
+    },
+    InstanceEndpoint {
+        name: "app.video_player.2",
+        port: 4930,
+        reply_inbox: "endpoint.app.video_player.2.reply",
+        reply_port: 4931,
+    },
+];
+
+pub fn spawn_video_player_instance() -> Result<u32, SpawnError> {
+    capsule_spawn::spawn_next_instance(&InstanceSpawn {
+        elf: VIDEO_PLAYER_ELF,
+        cert: VIDEO_PLAYER_NONOS_ID_CERT_BYTES,
+        manifest: VIDEO_PLAYER_MANIFEST_BYTES,
+        attestation: VIDEO_PLAYER_ATTESTATION_BYTES,
+        target_triple: TARGET_TRIPLE,
+        requested_caps: REQUIRED_CAPS | crate::capabilities::serial_debug_cap(),
+        instances: VIDEO_PLAYER_INSTANCES,
+        debug_tag: b"[VIDEO-PLAYER-INSTANCE] elf error:",
+    })
+}
 
 pub fn spawn_video_player_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)
