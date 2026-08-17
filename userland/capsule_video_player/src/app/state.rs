@@ -28,7 +28,7 @@ use crate::ui::screen::Route;
 
 pub const WINDOW_ID: u32 = 0x5649;
 pub const PATH: &str = "/video.avi";
-pub const HEADER_MAX: u32 = 512 * 1024;
+pub const HEADER_MAX: u32 = 2 * 1024 * 1024;
 
 pub struct VideoApp {
     pub(super) source: Option<Source>,
