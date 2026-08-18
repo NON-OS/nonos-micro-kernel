@@ -77,6 +77,7 @@ pub mod capsule_terminal;
 pub mod capsule_text_editor;
 pub mod capsule_tokio_smoke;
 pub mod capsule_toolkit;
+pub mod capsule_video_player;
 pub mod capsule_wallet_nonos;
 pub mod capsule_wallpaper;
 pub mod capsule_wallpaper_catalog;

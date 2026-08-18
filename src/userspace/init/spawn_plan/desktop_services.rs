@@ -17,6 +17,7 @@
 pub(super) fn spawn() {
     spawn_image_codec();
     spawn_image_viewer();
+    spawn_video_player();
     spawn_clipboard();
     spawn_attest();
     spawn_installer();
@@ -65,6 +66,19 @@ fn spawn_image_viewer() {
 }
 #[cfg(not(feature = "nonos-capsule-image-viewer"))]
 fn spawn_image_viewer() {}
+
+#[cfg(feature = "nonos-capsule-video-player")]
+fn spawn_video_player() {
+    use crate::userspace::capsule_video_player as c;
+    super::boot::capsule(
+        "VIDEO-PLAYER",
+        "video_player",
+        c::spawn_video_player_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-video-player"))]
+fn spawn_video_player() {}
 
 #[cfg(feature = "nonos-capsule-clipboard")]
 fn spawn_clipboard() {

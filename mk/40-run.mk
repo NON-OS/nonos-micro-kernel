@@ -15,7 +15,10 @@ $(QEMU_BLK_IMG):
 # re-pack on every mtime bump while still not ordering creation before packing.
 QEMU_BLK_STORE_STAMP := $(QEMU_BLK_IMG).store.stamp
 
-$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
+NONOS_MEDIA_DIR := media/samples
+NONOS_MEDIA_FILES := $(wildcard $(NONOS_MEDIA_DIR)/*)
+
+$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack $(NONOS_MEDIA_FILES) | $(QEMU_BLK_IMG)
 	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) --lba 256 \
 		--entry /capsules/std_proof.elf=$(std-proof_BIN) \
 		--entry /capsules/std_proof.nonos_id_cert.bin=$(std-proof_CERT) \
@@ -32,7 +35,13 @@ $(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_204
 		--entry /capsules/egui_proof.elf=$(egui_proof_BIN) \
 		--entry /capsules/egui_proof.nonos_id_cert.bin=$(egui_proof_CERT) \
 		--entry /capsules/egui_proof.manifest.bin=$(egui_proof_MANIFEST) \
-		--entry /capsules/egui_proof.zk_trailer.bin=$(egui_proof_ATTESTATION)
+		--entry /capsules/egui_proof.zk_trailer.bin=$(egui_proof_ATTESTATION) \
+		--entry /Movies/big_buck_bunny.avi=$(NONOS_MEDIA_DIR)/big_buck_bunny.avi \
+		--entry /Movies/blender_reel_2013.mp4=$(NONOS_MEDIA_DIR)/blender_reel_2013.mp4 \
+		--entry /Movies/caminandes_llamigos.avi=$(NONOS_MEDIA_DIR)/caminandes_llamigos.avi \
+		--entry /Movies/elephants_dream.avi=$(NONOS_MEDIA_DIR)/elephants_dream.avi \
+		--entry /Movies/sintel.avi=$(NONOS_MEDIA_DIR)/sintel.avi \
+		--entry /Movies/tears_of_steel.avi=$(NONOS_MEDIA_DIR)/tears_of_steel.avi
 	@touch $@
 
 # Declared in mk/20-build.mk; this only extends its prerequisites.
@@ -250,6 +259,13 @@ nonos-mk-boot-image-viewer:
 	@./tests/boot/image_viewer_round_trip.sh; rc=$$?; \
 		echo "Restoring GUI image_viewer capsule (undo smoketest artifact)..."; \
 		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
+		exit $$rc
+
+.PHONY: nonos-mk-boot-video-player
+nonos-mk-boot-video-player:
+	@./tests/boot/video_player.sh; rc=$$?; \
+		echo "Restoring GUI video_player capsule (undo smoketest artifact)..."; \
+		$(MAKE) -B nonos-mk-video-player-sign >/dev/null 2>&1; \
 		exit $$rc
 
 .PHONY: nonos-mk-pack-install-test

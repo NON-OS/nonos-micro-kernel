@@ -35,6 +35,7 @@ const WALLET: &[u8] = include_bytes!("../../assets/app_icons/wallet.rgba");
 const BROWSER: &[u8] = include_bytes!("../../assets/app_icons/browser.rgba");
 const IMAGE_VIEWER: &[u8] = include_bytes!("../../assets/app_icons/image_viewer.rgba");
 const AUDIO_PLAYER: &[u8] = include_bytes!("../../assets/app_icons/audio_player.rgba");
+const VIDEO_PLAYER: &[u8] = include_bytes!("../../assets/app_icons/video_player.rgba");
 
 // One brand accent for every app: NØNOS cyan on near-black tiles. No rainbow.
 const CYAN: u32 = 0xFF66E6FF;
@@ -54,6 +55,7 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         LauncherIcon::Browser => BROWSER,
         LauncherIcon::ImageViewer => IMAGE_VIEWER,
         LauncherIcon::AudioPlayer => AUDIO_PLAYER,
+        LauncherIcon::VideoPlayer => VIDEO_PLAYER,
     };
     badge::badge(ctx, x, y, size, glyph, CYAN);
 }

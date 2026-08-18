@@ -35,6 +35,7 @@ pub enum PendingApp {
     FileManager,
     ProcessManager,
     AudioPlayer,
+    VideoPlayer,
 }
 
 // A click enqueues one request; a few in flight at once is the most a user
