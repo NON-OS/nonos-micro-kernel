@@ -22,6 +22,7 @@ mod clear;
 mod fill_rect;
 mod glyph_advance;
 pub mod mixer;
+pub mod radius;
 mod text;
 mod text_scaled;
 mod text_ttf;
