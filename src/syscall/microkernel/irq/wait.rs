@@ -46,6 +46,13 @@ pub fn sys_irq_wait(grant_id: u64, last_seq: u64, timeout_ms: u64, out_ptr: u64)
     if out_ptr == 0 || validate_user_write(out_ptr, size_of::<u64>()).is_err() {
         return ERRNO_FAULT;
     }
+    // Token before arming: an interrupt that fires after the arm bumps the
+    // caller's wake generation, and the guarded sleep below refuses to sleep
+    // through it. Without the token that wake lands on a still-Running
+    // process as a no-op, and the caller sleeps out its whole slice with the
+    // completion already posted — the lost-wakeup shape again, costing a full
+    // timeout per interrupt that races the arm.
+    let token = crate::sched::wake_token(pid);
     let armed = match crate::hardware::broker::irq_wait_arm(pid, grant_id) {
         Ok(s) => s,
         Err(e) => return errno_for(e),
@@ -53,7 +60,7 @@ pub fn sys_irq_wait(grant_id: u64, last_seq: u64, timeout_ms: u64, out_ptr: u64)
     if armed == last_seq {
         let wait = if timeout_ms == 0 { DEFAULT_WAIT_MS } else { timeout_ms };
         let deadline = crate::time::timestamp_millis().saturating_add(wait);
-        crate::sched::sleep_until(pid, deadline);
+        crate::sched::sleep_until_unless_woken(pid, deadline, token);
         crate::sched::yield_now();
     }
     let current = match crate::hardware::broker::irq_wait_disarm(pid, grant_id) {
