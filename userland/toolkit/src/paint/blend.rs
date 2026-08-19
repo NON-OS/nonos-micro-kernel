@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-use super::mixer::mix;
+use super::mixer::over;
 use super::PaintBuffer;
 
 impl<'a> PaintBuffer<'a> {
@@ -33,7 +33,7 @@ impl<'a> PaintBuffer<'a> {
             return;
         }
         let dst = self.pixels[idx];
-        self.pixels[idx] = 0xFF00_0000 | mix(dst, argb, a);
+        self.pixels[idx] = over(dst, argb);
     }
 
     pub fn blend_rect(&mut self, x: u32, y: u32, w: u32, h: u32, argb: u32) {

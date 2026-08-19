@@ -41,3 +41,32 @@ pub fn lerp_argb(from: u32, to: u32, t: u32) -> u32 {
     }
     out
 }
+
+pub fn over(dst: u32, src: u32) -> u32 {
+    let sa = (src >> 24) & 0xFF;
+    if sa == 0 {
+        return dst;
+    }
+    if sa == 0xFF {
+        return src;
+    }
+    let da = (dst >> 24) & 0xFF;
+    if da == 0xFF {
+        return 0xFF00_0000 | mix(dst, src, sa);
+    }
+    let ia = 255 - sa;
+    let oa = sa + (da * ia + 127) / 255;
+    if oa == 0 {
+        return 0;
+    }
+    let den = oa * 255;
+    let mut out = oa << 24;
+    let mut shift = 0;
+    while shift < 24 {
+        let sc = (src >> shift) & 0xFF;
+        let dc = (dst >> shift) & 0xFF;
+        out |= ((sc * sa * 255 + dc * da * ia + den / 2) / den) << shift;
+        shift += 8;
+    }
+    out
+}
