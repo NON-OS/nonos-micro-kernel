@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::font::render::draw_text;
+use crate::font::render::draw_text;
 
 use super::buffer::PaintBuffer;
 

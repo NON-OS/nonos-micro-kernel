@@ -14,22 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::font::render::draw_text_scaled;
+use crate::font::atlas::FontAtlas;
 
 use super::buffer::PaintBuffer;
 
 impl<'a> PaintBuffer<'a> {
-    pub fn text_scaled(&mut self, x: u32, y: u32, bytes: &[u8], argb: u32, scale: u32) {
-        draw_text_scaled(
-            self.pixels,
-            self.stride_words as usize,
-            self.width,
-            self.height,
-            x,
-            y,
-            bytes,
-            argb,
-            scale,
-        );
+    pub fn glyph_advance(&self) -> u32 {
+        let atlas = FontAtlas::default();
+        atlas.glyph_width as u32 + atlas.letter_spacing as u32
     }
+}
+
+pub fn font_advance() -> u32 {
+    let atlas = FontAtlas::default();
+    atlas.glyph_width as u32 + atlas.letter_spacing as u32
 }

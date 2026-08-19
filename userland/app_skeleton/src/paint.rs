@@ -14,18 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::font::atlas::FontAtlas;
 
-use super::buffer::PaintBuffer;
-
-impl<'a> PaintBuffer<'a> {
-    pub fn glyph_advance(&self) -> u32 {
-        let atlas = FontAtlas::default();
-        atlas.glyph_width as u32 + atlas.letter_spacing as u32
-    }
-}
-
-pub fn font_advance() -> u32 {
-    let atlas = FontAtlas::default();
-    atlas.glyph_width as u32 + atlas.letter_spacing as u32
-}
+pub use nonos_toolkit::paint::*;
