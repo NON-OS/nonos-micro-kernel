@@ -22,9 +22,7 @@ mod clear_overlay;
 mod constants;
 mod paint_rect;
 
-const BOTTOM_DOCK_ARGB: u32 = 0xFF1B_2030;
 const SPOTLIGHT_ARGB: u32 = 0xFF14_1B26;
-const PANEL_BORDER_ARGB: u32 = 0xFF2A_3446;
 
 pub fn paint_chrome(ctx: &Context) {
     let frame_start = crate::frametime::begin();
@@ -32,12 +30,12 @@ pub fn paint_chrome(ctx: &Context) {
     super::topbar::paint(ctx);
     super::desktop_icons::paint_desktop_icons(ctx);
     if ctx.taskbar.visible {
-        paint_rect::paint_rect(ctx, bottom_dock_rect(ctx.width, ctx.height), BOTTOM_DOCK_ARGB);
-        paint_rect::paint_border(
+        super::panel::shadow_panel(
             ctx,
             bottom_dock_rect(ctx.width, ctx.height),
-            PANEL_BORDER_ARGB,
-            1,
+            super::palette::R_PANEL,
+            super::palette::PANEL,
+            super::palette::LINE,
         );
         paint_bottom_taskbar(ctx);
     }

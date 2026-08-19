@@ -15,93 +15,74 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::draw_app_icon;
-use super::fill::fill_rect;
-use super::layout::{bottom_dock_rect, launchpad_slot_x, taskbar_entry_w};
-use super::ui_font;
+use super::layout::{
+    bottom_dock_rect, dock_box_inset, dock_gap, dock_pad, launchpad_slot_x, taskbar_entry_w, Rect,
+};
+use super::surface::surface;
+use super::{palette, ui_font};
 use crate::state::{Context, LAUNCHER_APPS, TASKBAR_NO_ACTIVE};
 
 const ICON_SIZE_LOGICAL: u32 = 40;
-const LAUNCHPAD_DOT: u32 = 0xFF9F_B4D6;
 
 fn icon_size() -> u32 {
     ICON_SIZE_LOGICAL * ui_font::scale()
 }
 
-// The Launchpad button: the familiar 3x3 grid of cells, sitting in the dock
-// slot just past the last app.
+// The Launchpad button: the familiar 3x3 grid, sitting in the dock slot just
+// past the last app.
 fn draw_launchpad_button(ctx: &Context, box_top: u32, box_h: u32) {
     let slot_x = launchpad_slot_x(bottom_dock_rect(ctx.width, ctx.height));
     let x0 = slot_x + (taskbar_entry_w() - icon_size()) / 2;
     let y0 = box_top + (box_h - icon_size()) / 2;
     let cell = icon_size() / 3;
-    let dot = cell.saturating_sub(4 * ui_font::scale());
+    let r = cell.saturating_sub(4 * ui_font::scale()) / 2;
+    let mut fb = surface(ctx);
     for row in 0..3 {
         for col in 0..3 {
-            let x = x0 + col * cell + 2 * ui_font::scale();
-            let y = y0 + row * cell + 2 * ui_font::scale();
-            fill_rect(
-                ctx.backing_va,
-                ctx.stride,
-                ctx.width,
-                ctx.height,
-                x,
-                y,
-                dot,
-                dot,
-                LAUNCHPAD_DOT,
-            );
+            let cx = x0 + col * cell + cell / 2;
+            let cy = y0 + row * cell + cell / 2;
+            fb.circle(cx, cy, r, palette::ACCENT);
         }
     }
 }
 
+// The running indicator: a dot under the tile, accented when the app holds
+// focus and dimmed when it is merely open.
+fn running_dot(ctx: &Context, cx: u32, active: bool) {
+    let dock = bottom_dock_rect(ctx.width, ctx.height);
+    let cy = dock.y + dock.height - 6 * ui_font::scale();
+    let argb = if active { palette::ACCENT } else { palette::TEXT_DIM };
+    surface(ctx).circle(cx, cy, 2 * ui_font::scale(), argb);
+}
+
 pub fn paint_bottom_taskbar(ctx: &Context) {
     let dock = bottom_dock_rect(ctx.width, ctx.height);
-    let box_top = dock.y + 10 * ui_font::scale();
-    let box_h = dock.height - 20 * ui_font::scale();
-    let mut x = dock.x + 12 * ui_font::scale();
+    let box_top = dock.y + dock_box_inset();
+    let box_h = dock.height - 2 * dock_box_inset();
+    let mut x = dock.x + dock_pad();
     for (index, app) in LAUNCHER_APPS.iter().enumerate() {
         let open = ctx.taskbar.open[index];
         let active =
             ctx.taskbar.active != TASKBAR_NO_ACTIVE && ctx.taskbar.active as usize == index;
         let pulsing = ctx.taskbar.pulse_until_ms[index] > 0;
         let bg = if active {
-            0x2F66_7F92
+            palette::TILE_ACTIVE
         } else if pulsing {
-            0x2B5F_7468
+            palette::TILE_PULSE
         } else if open {
-            0x294C_5F70
+            palette::TILE_OPEN
         } else {
-            0x2241_5164
+            palette::TILE_IDLE
         };
-        fill_rect(
-            ctx.backing_va,
-            ctx.stride,
-            ctx.width,
-            ctx.height,
-            x,
-            box_top,
-            taskbar_entry_w(),
-            box_h,
-            bg,
-        );
+        let tile = Rect { x, y: box_top, width: taskbar_entry_w(), height: box_h };
+        super::panel::round_fill(ctx, tile, palette::R_TILE, bg);
         if open || active || pulsing {
-            let indicator = if active { 0xFF76_D98A } else { 0xFF76_C7D7 };
-            fill_rect(
-                ctx.backing_va,
-                ctx.stride,
-                ctx.width,
-                ctx.height,
-                x + 18 * ui_font::scale(),
-                box_top + box_h - 3 * ui_font::scale(),
-                taskbar_entry_w() - 36 * ui_font::scale(),
-                3 * ui_font::scale(),
-                indicator,
-            );
+            running_dot(ctx, x + taskbar_entry_w() / 2, active);
         }
         let icon_x = x + (taskbar_entry_w() - icon_size()) / 2;
         let icon_y = box_top + (box_h - icon_size()) / 2;
         draw_app_icon(ctx, icon_x, icon_y, app.icon, icon_size());
-        x += taskbar_entry_w() + 6 * ui_font::scale();
+        x += taskbar_entry_w() + dock_gap();
     }
     draw_launchpad_button(ctx, box_top, box_h);
 }

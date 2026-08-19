@@ -19,9 +19,10 @@ use crate::state::LAUNCHER_APPS;
 use super::ui_font;
 
 const UI_LINE_H_LOGICAL: u32 = 17;
-const TASKBAR_ENTRY_W_LOGICAL: u32 = 80;
-const DOCK_GAP_LOGICAL: u32 = 6;
+const TASKBAR_ENTRY_W_LOGICAL: u32 = 56;
+const DOCK_GAP_LOGICAL: u32 = 7;
 const DOCK_PAD_LOGICAL: u32 = 12;
+const DOCK_BOX_INSET_LOGICAL: u32 = 10;
 
 /// One `UI_PX` line box plus symmetric padding, so the type clears the tile border.
 pub fn menubar_tile_h() -> u32 {
@@ -45,6 +46,19 @@ pub fn bottom_dock_height() -> u32 {
 
 pub fn bottom_dock_bottom_inset() -> u32 {
     24 * ui_font::scale()
+}
+
+pub fn dock_gap() -> u32 {
+    DOCK_GAP_LOGICAL * ui_font::scale()
+}
+
+pub fn dock_pad() -> u32 {
+    DOCK_PAD_LOGICAL * ui_font::scale()
+}
+
+/// Vertical inset from the dock edge to the row of entry tiles.
+pub fn dock_box_inset() -> u32 {
+    DOCK_BOX_INSET_LOGICAL * ui_font::scale()
 }
 
 pub fn taskbar_entry_w() -> u32 {
