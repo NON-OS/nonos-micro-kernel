@@ -53,29 +53,26 @@ static STATE: Mutex<Option<State>> = Mutex::new(None);
 pub fn fill(out: &mut [u8]) -> bool {
     let mut guard = STATE.lock();
 
-    let needs_seed = match guard.as_ref() {
+    let reseed_due = match guard.as_ref() {
         None => true,
         Some(s) => s.since_reseed >= RESEED_AFTER,
     };
-    if needs_seed {
+    if reseed_due {
         let mut seed = [0u8; 32];
-        match super::client::get_random(&mut seed) {
-            Ok(n) if n == seed.len() => {
+        if let Ok(n) = super::client::get_random(&mut seed) {
+            if n == seed.len() {
                 *guard = Some(State { key: seed, counter: 0, since_reseed: 0 });
             }
-            // A failed reseed keeps serving on the ratcheted key rather than
-            // stalling every caller; a failed first seed reports back so the
-            // caller can fall to the hardware RNG.
-            _ => {
-                if guard.is_none() {
-                    return false;
-                }
-            }
         }
+        // A failed reseed keeps serving on the ratcheted key rather than
+        // stalling every caller. A failed first seed leaves no state, and the
+        // binding below reports that so the caller falls to the hardware RNG.
         seed.fill(0);
     }
 
-    let state = guard.as_mut().expect("seeded above or returned");
+    let Some(state) = guard.as_mut() else {
+        return false;
+    };
     let nonce = [0u8; 12];
     let mut block = [0u8; 64];
     let mut done = 0usize;
