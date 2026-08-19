@@ -14,29 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bottom_taskbar;
-mod cap_names;
-pub mod chrome;
-pub mod consent;
-pub mod desktop_icons;
-pub mod desktop_menu;
-pub mod fill;
-mod icons;
-pub mod launchpad;
-pub mod layout;
-pub mod measure_aa;
-pub mod menubar_menu;
-pub mod palette;
-pub mod panel;
-pub mod pkg_consent;
-pub mod surface;
-pub mod text_aa;
-pub mod toasts;
-pub mod topbar;
-pub mod ui_font;
+//! Top-left corner of an open drop-down, clamped so a title near the right
+//! edge still shows its whole panel.
 
-pub use bottom_taskbar::paint_bottom_taskbar;
-pub use chrome::paint_chrome;
-pub use icons::{draw_app_icon, draw_tool_icon};
-pub use layout::{menubar_rect, spotlight_rect};
-pub use toasts::sync_toast_layer;
+use super::metrics::{panel_w, title_x};
+use crate::render::layout::menubar_height;
+use crate::state::Context;
+
+pub(super) fn origin(ctx: &Context, index: usize) -> (u32, u32) {
+    let x = title_x(ctx, index).min(ctx.width.saturating_sub(panel_w(ctx, index)));
+    (x, menubar_height())
+}

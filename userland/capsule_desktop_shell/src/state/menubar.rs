@@ -14,29 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bottom_taskbar;
-mod cap_names;
-pub mod chrome;
-pub mod consent;
-pub mod desktop_icons;
-pub mod desktop_menu;
-pub mod fill;
-mod icons;
-pub mod launchpad;
-pub mod layout;
-pub mod measure_aa;
-pub mod menubar_menu;
-pub mod palette;
-pub mod panel;
-pub mod pkg_consent;
-pub mod surface;
-pub mod text_aa;
-pub mod toasts;
-pub mod topbar;
-pub mod ui_font;
+//! Which menu-bar title is open and which of its rows the pointer is over.
+//! Both are indices into the tables in `render::menubar_menu`, so the painter
+//! and the hit test agree without carrying geometry in state.
 
-pub use bottom_taskbar::paint_bottom_taskbar;
-pub use chrome::paint_chrome;
-pub use icons::{draw_app_icon, draw_tool_icon};
-pub use layout::{menubar_rect, spotlight_rect};
-pub use toasts::sync_toast_layer;
+pub struct MenubarState {
+    pub open: Option<usize>,
+    pub hover: Option<usize>,
+}
+
+pub fn new_menubar_state() -> MenubarState {
+    MenubarState { open: None, hover: None }
+}

@@ -29,5 +29,7 @@ mod notify_dot;
 mod paint;
 mod status;
 
+pub(crate) use metrics::brand_right;
+
 pub use brand_hit::brand_hit;
 pub use paint::paint;

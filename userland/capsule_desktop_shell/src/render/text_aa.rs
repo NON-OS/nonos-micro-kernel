@@ -54,7 +54,7 @@ pub fn text_aa_bold(ctx: &Context, x: u32, top_y: u32, text: &str, argb: u32, px
     let Some(face) = ttf::builtin_face(false, true) else {
         return text_aa(ctx, x, top_y, text, argb, px);
     };
-    let mut fb = super::surface::surface(ctx);
+    let fb = super::surface::surface(ctx);
     let stride_words = fb.stride_words as usize;
     let pen = ttf::draw_text_with(
         face,

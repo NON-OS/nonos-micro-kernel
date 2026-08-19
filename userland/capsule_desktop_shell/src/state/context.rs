@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NotifyLevel, PkgInstallPrompt, SpotlightState, TaskbarState, ToastQueue, TrayTable};
+use super::{
+    MenubarState, NotifyLevel, PkgInstallPrompt, SpotlightState, TaskbarState, ToastQueue,
+    TrayTable,
+};
 
 pub struct Context {
     pub compositor_port: u32,
@@ -56,6 +59,8 @@ pub struct Context {
     /// second click focuses that window instead of loading another copy. An
     /// entry is dropped once its pid stops accepting control frames.
     pub installed_pids: alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
+    /// Which menu-bar title is open, and the row under the pointer inside it.
+    pub menubar: MenubarState,
     /// Top-left corner of the desktop right-click menu, or None when hidden.
     pub desktop_menu: Option<(u32, u32)>,
     /// Which menu row the pointer is over, so it can be highlighted.

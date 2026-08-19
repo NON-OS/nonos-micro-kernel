@@ -53,7 +53,7 @@ pub(super) fn wordmark_x() -> u32 {
 
 /// Right edge of the clickable brand region (logo plus wordmark). Measured from
 /// the face that paints it, so the hit box tracks the drawn glyphs.
-pub(super) fn brand_right() -> u32 {
+pub(crate) fn brand_right() -> u32 {
     wordmark_x() + measure_aa_bold(WORDMARK_TEXT, TITLE_PX) + pad_x()
 }
 
