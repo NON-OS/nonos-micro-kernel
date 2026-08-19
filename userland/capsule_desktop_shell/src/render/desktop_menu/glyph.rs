@@ -19,10 +19,11 @@
 //! line-icon language of the dock.
 
 use crate::render::fill::fill_rect;
+use crate::render::palette;
 use crate::render::ui_font::scale;
 use crate::state::Context;
 
-const C: u32 = 0xFF66_E6FF;
+const C: u32 = palette::ACCENT;
 
 pub(super) fn glyph(ctx: &Context, x: u32, y: u32, is_folder: bool) {
     let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);

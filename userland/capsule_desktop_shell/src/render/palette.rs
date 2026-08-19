@@ -14,15 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-pub const GROUND: u32 = 0xFF06_0B10;
 pub const PANEL: u32 = 0xE610_1A22;
-pub const PANEL_SOLID: u32 = 0xFF10_1A22;
-pub const PANEL_HI: u32 = 0xFF16_242F;
 pub const BAR: u32 = 0xF20A_121A;
 
 pub const LINE: u32 = 0x2922_C3F0;
-pub const LINE_HARD: u32 = 0x5722_C3F0;
 
 pub const ACCENT: u32 = 0xFF22_C3F0;
 pub const ACCENT_DIM: u32 = 0x2122_C3F0;
@@ -30,11 +25,8 @@ pub const ACCENT_HOVER: u32 = 0x3822_C3F0;
 
 pub const TEXT: u32 = 0xFFE6_F1F6;
 pub const TEXT_DIM: u32 = 0xFF7A_8D99;
-pub const TEXT_FAINT: u32 = 0xFF4C_5D68;
 
-pub const POSITIVE: u32 = 0xFF35_D6A0;
 pub const NEGATIVE: u32 = 0xFFE4_574F;
-pub const WARNING: u32 = 0xFFE8_B75C;
 
 pub const PILL: u32 = 0xB2060B10;
 pub const PILL_EDIT: u32 = 0xF216_242F;
