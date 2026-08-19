@@ -16,7 +16,7 @@
 
 // The real VT-d capability decode and table encoding the kernel uses.
 #[allow(dead_code)]
-#[path = "../../../../src/arch/x86_64/iommu/regs/cap.rs"]
+#[path = "../../../../src/arch/x86_64/iommu/regs/cap/mod.rs"]
 pub mod cap;
 
 #[allow(dead_code)]
