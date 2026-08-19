@@ -29,7 +29,7 @@ pub fn menubar_tile_h() -> u32 {
 }
 
 pub fn menubar_height() -> u32 {
-    (UI_LINE_H_LOGICAL + 12) * ui_font::scale()
+    (UI_LINE_H_LOGICAL + 23) * ui_font::scale()
 }
 
 /// One slot per desktop app, plus a trailing slot for the Launchpad button.

@@ -19,11 +19,12 @@
 
 use super::battery_glyph::battery_glyph;
 use super::metrics::{
-    batt_glyph_w, dot, gap, net_glyph_w, pad_x, right_margin, tile_h, FG, TILE_BG, TILE_BORDER,
+    batt_glyph_w, dot, gap, net_glyph_w, pad_x, right_margin, tile_h, FG,
 };
 use super::net_glyph::net_glyph;
 use super::notify_dot::notify_dot;
-use crate::render::fill::fill_rect;
+use crate::render::layout::Rect;
+use crate::render::palette;
 use crate::render::layout::menubar_rect;
 use crate::render::measure_aa::measure_aa_bytes;
 use crate::render::text_aa::text_aa_bytes;
@@ -80,25 +81,12 @@ pub(super) fn status(ctx: &Context) {
     x = text_aa_bytes(ctx, x, text_y, btext, FG, UI_PX) + gap();
     net_glyph(ctx, x, glyph_y, online);
     x += net_glyph_w() + gap();
-    x = text_aa_bytes(ctx, x, text_y, time, FG, UI_PX) + gap();
+    x = text_aa_bytes(ctx, x, text_y, time, palette::TEXT, UI_PX) + gap();
     text_aa_bytes(ctx, x, text_y, date, FG, UI_PX);
 }
 
 // A rounded, bordered tile behind the cluster, matching the dock's entries.
 fn tile(ctx: &Context, x: u32, y: u32, w: u32) {
-    let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    let h = tile_h();
-    fill_rect(va, st, vw, vh, x, y, w, h, TILE_BG);
-    let bg = super::metrics::BAR_BG;
-    let edge = scale();
-    let corner = 2 * edge;
-    for &(cx, cy) in
-        &[(x, y), (x + w - corner, y), (x, y + h - corner), (x + w - corner, y + h - corner)]
-    {
-        fill_rect(va, st, vw, vh, cx, cy, corner, corner, bg);
-    }
-    fill_rect(va, st, vw, vh, x + corner, y, w - 2 * corner, edge, TILE_BORDER);
-    fill_rect(va, st, vw, vh, x + corner, y + h - edge, w - 2 * corner, edge, TILE_BORDER);
-    fill_rect(va, st, vw, vh, x, y + corner, edge, h - 2 * corner, TILE_BORDER);
-    fill_rect(va, st, vw, vh, x + w - edge, y + corner, edge, h - 2 * corner, TILE_BORDER);
+    let rect = Rect { x, y, width: w, height: tile_h() };
+    crate::render::panel::panel(ctx, rect, palette::R_TILE, palette::PANEL, palette::LINE);
 }

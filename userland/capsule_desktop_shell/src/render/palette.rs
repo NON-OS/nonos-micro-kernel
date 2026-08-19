@@ -14,19 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The real NØNOS logo and wordmark on the left. Clicking here opens the app
-//! launcher; see brand_hit.
 
-use super::metrics::{logo_size, logo_x, wordmark_x, WORDMARK, WORDMARK_TEXT};
-use crate::render::icons::draw_logo;
-use crate::render::text_aa::text_aa_bold;
-use crate::render::ui_font::{top_y_centered, TITLE_PX};
-use crate::state::Context;
+pub const GROUND: u32 = 0xFF06_0B10;
+pub const PANEL: u32 = 0xE610_1A22;
+pub const PANEL_SOLID: u32 = 0xFF10_1A22;
+pub const PANEL_HI: u32 = 0xFF16_242F;
+pub const BAR: u32 = 0xF20A_121A;
 
-pub(super) fn brand(ctx: &Context) {
-    let bar_h = crate::render::layout::menubar_height();
-    let logo_y = bar_h.saturating_sub(logo_size()) / 2;
-    draw_logo(ctx, logo_x(), logo_y, logo_size());
-    let text_y = top_y_centered(0, bar_h, TITLE_PX);
-    text_aa_bold(ctx, wordmark_x(), text_y, WORDMARK_TEXT, WORDMARK, TITLE_PX);
-}
+pub const LINE: u32 = 0x2922_C3F0;
+pub const LINE_HARD: u32 = 0x5722_C3F0;
+
+pub const ACCENT: u32 = 0xFF22_C3F0;
+pub const ACCENT_DIM: u32 = 0x2122_C3F0;
+pub const ACCENT_HOVER: u32 = 0x3822_C3F0;
+
+pub const TEXT: u32 = 0xFFE6_F1F6;
+pub const TEXT_DIM: u32 = 0xFF7A_8D99;
+pub const TEXT_FAINT: u32 = 0xFF4C_5D68;
+
+pub const POSITIVE: u32 = 0xFF35_D6A0;
+pub const NEGATIVE: u32 = 0xFFE4_574F;
+pub const WARNING: u32 = 0xFFE8_B75C;
+
+pub const R_TILE: u32 = 8;
+pub const R_CARD: u32 = 12;
+pub const R_PANEL: u32 = 16;

@@ -47,3 +47,26 @@ pub fn text_aa(ctx: &Context, x: u32, top_y: u32, text: &str, argb: u32, px: f32
 pub fn text_aa_bytes(ctx: &Context, x: u32, top_y: u32, bytes: &[u8], argb: u32, px: f32) -> u32 {
     text_aa(ctx, x, top_y, valid_str(bytes), argb, px)
 }
+
+/// Draw `text` in the bold face. This bypasses the glyph cache, so keep it to
+/// short, rarely-changing labels such as the wordmark.
+pub fn text_aa_bold(ctx: &Context, x: u32, top_y: u32, text: &str, argb: u32, px: f32) -> u32 {
+    let Some(face) = ttf::builtin_face(false, true) else {
+        return text_aa(ctx, x, top_y, text, argb, px);
+    };
+    let mut fb = super::surface::surface(ctx);
+    let stride_words = fb.stride_words as usize;
+    let pen = ttf::draw_text_with(
+        face,
+        fb.pixels,
+        stride_words,
+        ctx.width,
+        ctx.height,
+        x as i32,
+        top_y as i32,
+        text,
+        argb,
+        super::ui_font::scaled(px),
+    );
+    pen.max(0) as u32
+}
