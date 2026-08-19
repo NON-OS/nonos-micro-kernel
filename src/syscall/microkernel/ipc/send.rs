@@ -63,7 +63,12 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
         return ERRNO_FAULT;
     }
     let pid = current_pid().unwrap_or(0);
-    let (target, caller, redirect_token) = redirect_reply(pid, resolve_send_target(endpoint));
+    // An undeliverable reply reports success to the sender: from the server's
+    // side the reply was handed off, and there is nobody left to hand it to.
+    let Some((target, caller, redirect_token)) = redirect_reply(pid, resolve_send_target(endpoint))
+    else {
+        return 0;
+    };
     if !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
         return ERRNO_PERM;
     }
@@ -86,22 +91,31 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
 // When a service replies to its own fixed reply endpoint, hand the message to
 // the matching `mk_ipc_call` caller's private inbox instead, and surface that
 // caller's correlation token so the reply can be stamped with it. A non-reply
-// send, or a reply with no pending caller, is left as-is with no token.
-// The caller pid rides along because a kernel-owned reply inbox has no process
-// owner for the router to wake, so the blocked caller would otherwise sleep out
-// its whole `mk_ipc_call` timeout.
+// send is left as-is with no token. The caller pid rides along because a
+// kernel-owned reply inbox has no process owner for the router to wake, so the
+// blocked caller would otherwise sleep out its whole `mk_ipc_call` timeout.
+//
+// A reply with NO pending caller returns `None`: it is undeliverable. Since
+// endpoint adoption made a service own its reply endpoint, delivering it "as
+// addressed" routes it into the sender's own inbox, where the serve loop reads
+// it as a request and replies to the reply — a self-mail loop that pins a core
+// within seconds of one stray message. Dropping it is the only safe answer.
 fn redirect_reply(
     sender_pid: u32,
     target: alloc::string::String,
-) -> (alloc::string::String, Option<u32>, Option<u64>) {
+) -> Option<(alloc::string::String, Option<u32>, Option<u64>)> {
     let own_reply = crate::process::get_process(sender_pid).and_then(|p| p.reply_inbox());
     if own_reply == Some(target.as_str()) {
         if let Some((caller_pid, caller_inbox, token)) = super::pending_reply::pop(sender_pid) {
-            return (caller_inbox, Some(caller_pid), Some(token));
+            return Some((caller_inbox, Some(caller_pid), Some(token)));
         }
+        BOOMERANG.reject(&target, "reply with no caller, dropped", sender_pid);
+        return None;
     }
-    (target, None, None)
+    Some((target, None, None))
 }
+
+static BOOMERANG: crate::sys::diag::Site = crate::sys::diag::Site::new(b"ipc.reply");
 
 fn resolve_send_target(endpoint: u64) -> alloc::string::String {
     let numeric = alloc::format!("endpoint.{}", endpoint);
