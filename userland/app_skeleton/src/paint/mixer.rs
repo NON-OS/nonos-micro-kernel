@@ -15,27 +15,29 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-mod blend;
-mod blit;
-mod buffer;
-mod circle;
-mod clear;
-mod fill_rect;
-mod glyph_advance;
-mod gradient;
-mod line;
-mod line_aa;
-pub mod mixer;
-mod panel;
-pub mod radius;
-mod round_fill;
-mod round_stroke;
-mod shadow;
-mod sub;
-mod text;
-mod text_scaled;
-mod text_ttf;
+pub fn mix(dst: u32, src: u32, a: u32) -> u32 {
+    let ia = 255 - a;
+    let dr = (dst >> 16) & 0xFF;
+    let dg = (dst >> 8) & 0xFF;
+    let db = dst & 0xFF;
+    let sr = (src >> 16) & 0xFF;
+    let sg = (src >> 8) & 0xFF;
+    let sb = src & 0xFF;
+    let r = (sr * a + dr * ia + 127) / 255;
+    let g = (sg * a + dg * ia + 127) / 255;
+    let b = (sb * a + db * ia + 127) / 255;
+    (r << 16) | (g << 8) | b
+}
 
-pub use buffer::PaintBuffer;
-pub use glyph_advance::font_advance;
-pub use text_ttf::{measure_ttf, measure_ttf_mono};
+pub fn lerp_argb(from: u32, to: u32, t: u32) -> u32 {
+    let it = 255 - t;
+    let mut out = 0u32;
+    let mut shift = 0;
+    while shift < 32 {
+        let f = (from >> shift) & 0xFF;
+        let v = (to >> shift) & 0xFF;
+        out |= ((v * t + f * it + 127) / 255) << shift;
+        shift += 8;
+    }
+    out
+}
