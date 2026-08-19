@@ -19,18 +19,19 @@
 
 use super::cell_rect::cell_rect;
 use super::metrics::{caret_w, icon};
-use crate::render::fill::fill_rect;
+use crate::render::layout::Rect;
+use crate::render::palette;
 use crate::render::icons::draw_fs_icon;
 use crate::render::measure_aa::{measure_aa, truncate_to_width};
 use crate::render::text_aa::text_aa;
 use crate::render::ui_font::{line_h, scale, top_y_centered, UI_PX};
 use crate::state::Context;
 
-const LABEL_FG: u32 = 0xFFE4_EEF8;
-const PILL_BG: u32 = 0xFF0C_1119;
-const EDIT_BG: u32 = 0xFF1E_2C46;
+const LABEL_FG: u32 = palette::TEXT;
+const PILL_BG: u32 = palette::PILL;
+const EDIT_BG: u32 = palette::PILL_EDIT;
 const EDIT_FG: u32 = 0xFFFF_FFFF;
-const CARET: u32 = 0xFF66_E6FF;
+const CARET: u32 = palette::ACCENT;
 const PILL_PAD_LOGICAL: u32 = 6;
 const PILL_VPAD_LOGICAL: u32 = 2;
 
@@ -84,17 +85,8 @@ fn paint_rename(ctx: &Context, cx: u32, cw: u32, label_y: u32) {
     pill(ctx, pill_x, label_y, text_w + caret_w(), EDIT_BG);
     text_aa(ctx, pill_x + pill_pad(), text_top(label_y), shown, EDIT_FG, UI_PX);
     let caret_x = pill_x + pill_pad() + text_w;
-    fill_rect(
-        ctx.backing_va,
-        ctx.stride,
-        ctx.width,
-        ctx.height,
-        caret_x,
-        label_y,
-        caret_w(),
-        label_h(),
-        CARET,
-    );
+    let caret = Rect { x: caret_x, y: label_y, width: caret_w(), height: label_h() };
+    crate::render::panel::blend(ctx, caret, CARET);
 }
 
 // The longest suffix that fits, so the caret end of a long edit stays on screen.
@@ -122,15 +114,11 @@ fn text_top(label_y: u32) -> u32 {
 }
 
 fn pill(ctx: &Context, pill_x: u32, label_y: u32, text_w: u32, bg: u32) {
-    fill_rect(
-        ctx.backing_va,
-        ctx.stride,
-        ctx.width,
-        ctx.height,
-        pill_x,
-        label_y.saturating_sub(pill_vpad()),
-        text_w + pill_pad() * 2,
-        pill_h(),
-        bg,
-    );
+    let rect = Rect {
+        x: pill_x,
+        y: label_y.saturating_sub(pill_vpad()),
+        width: text_w + pill_pad() * 2,
+        height: pill_h(),
+    };
+    crate::render::panel::round_fill(ctx, rect, palette::R_TILE, bg);
 }

@@ -36,6 +36,9 @@ pub const POSITIVE: u32 = 0xFF35_D6A0;
 pub const NEGATIVE: u32 = 0xFFE4_574F;
 pub const WARNING: u32 = 0xFFE8_B75C;
 
+pub const PILL: u32 = 0xB2060B10;
+pub const PILL_EDIT: u32 = 0xF216_242F;
+
 pub const TILE_ACTIVE: u32 = 0x2E22_C3F0;
 pub const TILE_PULSE: u32 = 0x2EE8_B75C;
 pub const TILE_OPEN: u32 = 0x1A22_C3F0;
