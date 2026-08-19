@@ -20,9 +20,15 @@ use crate::constants::{
 };
 use crate::queue::{Direction, Queue};
 use crate::regs::Regs;
-use nonos_libc::{mk_irq_ack, mk_yield};
+use nonos_libc::{mk_irq_ack, mk_irq_wait};
 
-const MAX_YIELDS: u32 = 200_000;
+/// Per-wait slice and the whole-request budget. The budget is counted in
+/// slices actually spent, wait or not: a shared interrupt line that keeps
+/// advancing the sequence must consume budget on every pass, or a request the
+/// device never completes pins the server in this loop forever.
+const WAIT_SLICE_MS: u64 = 100;
+const MAX_SLICES: u32 = 50;
+const MAX_PASSES: u32 = 5000;
 
 pub fn submit(
     regs: Regs,
@@ -34,20 +40,38 @@ pub fn submit(
 ) -> Result<(), BlkError> {
     queue.post_request(dir, lba, nsectors);
     unsafe { regs.w16(LEG_QUEUE_NOTIFY, 0) }
-    let prev_seq = read_seq(irq_grant)?;
+    let mut seq = read_seq(irq_grant)?;
     let target = queue.last_used.wrapping_add(1);
-    let mut tries = 0u32;
+    // Block on the interrupt instead of yield-polling. The old loop spun up
+    // to 200k yields per request; every disk read then cycled the whole run
+    // queue for the request's full latency, and on one CPU the rest of the
+    // system paid for each sector. Sliced waits keep the same total budget
+    // and the used-ring check on every wake covers a completion whose
+    // interrupt was suppressed or already consumed.
+    // Two bounds, each safe alone. Timed-out waits count toward the time
+    // budget, so an idle device gets the full five seconds. Every pass counts
+    // toward the iteration guard, so a shared line whose sequence keeps
+    // advancing cannot hold the loop open forever, and a healthy request
+    // finishes thousands of iterations under it.
+    let mut timed_out_slices = 0u32;
+    let mut passes = 0u32;
     loop {
-        if queue.used_idx() == target || read_seq(irq_grant)? != prev_seq {
+        if queue.used_idx() == target {
             break;
         }
-        if tries >= MAX_YIELDS {
+        passes = passes.wrapping_add(1);
+        if passes > MAX_PASSES {
             return Err(BlkError::Timeout);
         }
-        if mk_yield() < 0 {
-            return Err(BlkError::Io);
+        let mut out_seq: u64 = 0;
+        if mk_irq_wait(irq_grant, seq, WAIT_SLICE_MS, &mut out_seq) >= 0 {
+            seq = out_seq;
+        } else {
+            timed_out_slices = timed_out_slices.wrapping_add(1);
+            if timed_out_slices > MAX_SLICES {
+                return Err(BlkError::Timeout);
+            }
         }
-        tries = tries.wrapping_add(1);
     }
     queue.last_used = target;
     let status = queue.status_byte();
