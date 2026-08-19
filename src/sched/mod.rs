@@ -47,7 +47,7 @@ pub use scheduler::runnable_process_count as get_runnable_count;
 pub use scheduler::{
     add_to_run_queue, clear_reschedule, enter, get, get_remaining_sleep, get_runnable_pids,
     get_scheduler_stats, init, is_in_run_queue, is_sleeping, need_reschedule,
-    remove_from_run_queue, run, runnable_process_count, sleep_until, spawn, tick, wake_process,
-    wakeup, yield_now, SchedulerStatsSnapshot,
+    remove_from_run_queue, run, runnable_process_count, sleep_until, sleep_until_unless_woken,
+    spawn, tick, wake_process, wake_token, wakeup, yield_now, SchedulerStatsSnapshot,
 };
 pub use task::{CpuAffinity, Priority, Task};

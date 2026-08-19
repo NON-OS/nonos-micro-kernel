@@ -33,7 +33,8 @@ pub use module_tasks::{
 pub use preemption::{clear_reschedule, need_reschedule, tick, yield_now};
 pub use process::{
     add_to_run_queue, get_remaining_sleep, get_runnable_pids, is_in_run_queue, is_sleeping,
-    remove_from_run_queue, runnable_process_count, sleep_until, wake_process, wakeup,
+    remove_from_run_queue, runnable_process_count, sleep_until, sleep_until_unless_woken,
+    wake_process, wake_token, wakeup,
 };
 pub use stats::get_scheduler_stats;
 pub use types::{ModuleTaskError, ModuleTaskResult, Scheduler, SchedulerStatsSnapshot};
