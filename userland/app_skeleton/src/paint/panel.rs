@@ -15,22 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-mod blend;
-mod blit;
-mod buffer;
-mod circle;
-mod clear;
-mod fill_rect;
-mod glyph_advance;
-pub mod mixer;
-mod panel;
-pub mod radius;
-mod round_fill;
-mod round_stroke;
-mod text;
-mod text_scaled;
-mod text_ttf;
+use super::PaintBuffer;
 
-pub use buffer::PaintBuffer;
-pub use glyph_advance::font_advance;
-pub use text_ttf::{measure_ttf, measure_ttf_mono};
+impl<'a> PaintBuffer<'a> {
+    pub fn panel(&mut self, x: u32, y: u32, w: u32, h: u32, r: u32, fill: u32, border: u32) {
+        self.fill_round(x, y, w, h, r, fill);
+        self.stroke_round(x, y, w, h, r, 1, border);
+    }
+}
