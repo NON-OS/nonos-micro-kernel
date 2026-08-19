@@ -14,27 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod bottom_taskbar;
-mod cap_names;
-pub mod chrome;
-pub mod consent;
-pub mod desktop_icons;
-pub mod desktop_menu;
-pub mod fill;
-mod icons;
-pub mod launchpad;
-pub mod layout;
-pub mod measure_aa;
-pub mod panel;
-pub mod pkg_consent;
-pub mod surface;
-pub mod text_aa;
-pub mod toasts;
-pub mod topbar;
-pub mod ui_font;
 
-pub use bottom_taskbar::paint_bottom_taskbar;
-pub use chrome::paint_chrome;
-pub use icons::{draw_app_icon, draw_tool_icon};
-pub use layout::{menubar_rect, spotlight_rect};
-pub use toasts::sync_toast_layer;
+use crate::state::Context;
+use nonos_toolkit::paint::PaintBuffer;
+
+/// A `PaintBuffer` over the shell's backing store, so chrome can draw with the
+/// shared primitives instead of raw writes. The buffer aliases the surface, so a
+/// caller must finish with one before taking another.
+pub fn surface(ctx: &Context) -> PaintBuffer<'_> {
+    let stride_words = (ctx.stride / 4) as usize;
+    let words = stride_words * ctx.height as usize;
+    let pixels = unsafe { core::slice::from_raw_parts_mut(ctx.backing_va as *mut u32, words) };
+    PaintBuffer { pixels, stride_words: stride_words as u32, width: ctx.width, height: ctx.height }
+}
