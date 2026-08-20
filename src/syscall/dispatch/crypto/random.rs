@@ -17,8 +17,6 @@
 extern crate alloc;
 
 use crate::capabilities::Capability;
-use crate::security::entropy_capsule::client as entropy_client;
-use crate::security::entropy_capsule::EntropyCapsuleError;
 use crate::syscall::dispatch::{errno, require_capability};
 use crate::syscall::SyscallResult;
 use crate::usercopy::copy_to_user;
@@ -55,26 +53,3 @@ fn deliver(buf: u64, buffer: &[u8], len: u64) -> SyscallResult {
     SyscallResult { value: len as i64, capability_consumed: false, audit_required: false }
 }
 
-fn is_caller_error(e: &EntropyCapsuleError) -> bool {
-    matches!(
-        e,
-        EntropyCapsuleError::AccessDenied
-            | EntropyCapsuleError::InvalidArgument
-            | EntropyCapsuleError::OversizedRequest
-            | EntropyCapsuleError::ProtocolMismatch
-    )
-}
-
-fn map_entropy_error(err: EntropyCapsuleError) -> SyscallResult {
-    match err {
-        EntropyCapsuleError::AccessDenied => errno(13),
-        EntropyCapsuleError::InvalidArgument => errno(22),
-        EntropyCapsuleError::OversizedRequest => errno(90),
-        EntropyCapsuleError::ProtocolMismatch => errno(71),
-        EntropyCapsuleError::Dead => errno(19),
-        EntropyCapsuleError::Stale => errno(116),
-        EntropyCapsuleError::SourceFailure
-        | EntropyCapsuleError::NoCallerPid
-        | EntropyCapsuleError::TransportFailure => errno(5),
-    }
-}
