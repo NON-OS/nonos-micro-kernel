@@ -23,11 +23,16 @@ use alloc::vec::Vec;
 use super::classify::classify;
 use super::constants::HDR_LEN;
 use super::entry::Entry;
+use super::under::{count_under, relative};
 use super::walk::walk;
 
 pub(super) fn children(prefix: &str, rx: &[u8], total: usize) -> Vec<Entry> {
+    let rels = walk(rx, HDR_LEN + 4, total, |raw| relative(prefix, raw));
     walk(rx, HDR_LEN + 4, total, |raw| classify(prefix, raw))
         .into_iter()
-        .map(|(name, is_dir)| Entry { name, is_dir })
+        .map(|(name, is_dir)| {
+            let children = if is_dir { count_under(&rels, &name) } else { 0 };
+            Entry { name, is_dir, children }
+        })
         .collect()
 }
