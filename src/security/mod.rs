@@ -16,12 +16,15 @@
 
 extern crate alloc;
 
+pub mod attest_doc;
+pub mod attest_registry;
 pub mod boot;
 pub mod boot_session;
 pub mod capsule_attest;
 pub mod capsule_manifest;
 pub mod crypto;
 pub mod crypto_capsule;
+pub mod dev_roots;
 pub mod entropy_capsule;
 pub mod hardening;
 #[cfg(feature = "nonos-stark-attest")]
@@ -36,6 +39,7 @@ pub mod observability;
 mod periodic;
 pub mod policy;
 pub mod quantum;
+pub mod tpm;
 pub(crate) mod zerostate;
 
 pub use boot::firmware;

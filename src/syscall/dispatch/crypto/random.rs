@@ -23,11 +23,14 @@ use crate::syscall::dispatch::{errno, require_capability};
 use crate::syscall::SyscallResult;
 use crate::usercopy::copy_to_user;
 
-// User-facing CryptoRandom. CAP_CRYPTO at the syscall gate, then
-// routed to the entropy capsule. When the capsule is unavailable
-// (dead/stale/transport/source failure) requests fall back to the
-// kernel hardware RNG so a missing capsule never starves a caller of
-// real entropy; caller and protocol errors are still surfaced.
+// User-facing CryptoRandom. CAP_CRYPTO at the syscall gate, then served from
+// the kernel's ChaCha generator, which the entropy capsule seeds and reseeds.
+// The capsule stays the root of the entropy story without sitting on the
+// per-call path: routing every request through its inbox as an IPC round trip
+// put millions of messages a minute onto one core, and the whole system,
+// networking first, queued behind the RNG. When no seed has ever been obtained
+// and the capsule cannot provide one, requests fall back to the kernel
+// hardware RNG so a missing capsule never starves a caller of real entropy.
 pub fn handle_crypto_random(buf: u64, len: u64) -> SyscallResult {
     if let Err(e) = require_capability(Capability::Crypto) {
         return e;
@@ -36,14 +39,12 @@ pub fn handle_crypto_random(buf: u64, len: u64) -> SyscallResult {
         return errno(22);
     }
     let mut buffer = alloc::vec![0u8; len as usize];
-    match entropy_client::get_random(&mut buffer) {
-        Ok(n) if n == len as usize => deliver(buf, &buffer, len),
-        Ok(_) => errno(5),
-        Err(e) if is_caller_error(&e) => map_entropy_error(e),
-        Err(_) => match crate::security::crypto::random::try_fill_random(&mut buffer) {
-            Ok(()) => deliver(buf, &buffer, len),
-            Err(_) => errno(5),
-        },
+    if crate::security::entropy_capsule::fast::fill(&mut buffer) {
+        return deliver(buf, &buffer, len);
+    }
+    match crate::security::crypto::random::try_fill_random(&mut buffer) {
+        Ok(()) => deliver(buf, &buffer, len),
+        Err(_) => errno(5),
     }
 }
 

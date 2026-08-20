@@ -24,7 +24,7 @@ use crate::kernel_core::process_spawn::{
     allocate_kernel_stack, allocate_user_stack, setup_initial_user_context,
 };
 use crate::process::core::{create_process_with_parent, ProcessState};
-use crate::services::registry::{register_endpoint, required_caps};
+use crate::services::registry::{adopt_endpoint, register_endpoint, required_caps};
 use alloc::format;
 
 pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
@@ -47,6 +47,12 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
     .map_err(|_| SpawnError::ProcessCreation)?;
     crate::process::with_process(pid, |pcb| pcb.set_reply_inbox(params.reply_inbox))
         .ok_or(SpawnError::ProcessCreation)?;
+    // The reply inbox was registered unowned above, because its name is needed
+    // before a pid exists. Claim it now. An unowned inbox with no entry
+    // requirement is one any capsule may write into, which is how a forged
+    // reply gets into somebody else's request and response flow.
+    adopt_endpoint(params.reply_inbox, pid, Capability::IPC.bit())
+        .map_err(|_| SpawnError::EndpointCollision)?;
     nonos_inbox::register_inbox(&format!("proc.{}", pid), pid)
         .map_err(|_| SpawnError::ProcessCreation)?;
     let entry = super::load_elf_into_pid::load_elf_into_pid(params.elf, pid, params.debug_tag)?;

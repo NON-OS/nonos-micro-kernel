@@ -16,6 +16,8 @@
 
 use super::args::Args;
 use crate::syscall::microkernel::attest::sys_attest_status;
+use crate::syscall::microkernel::attest_doc::sys_attest_doc;
+use crate::syscall::microkernel::enrol_dev_root::{sys_dev_root_confirm, sys_dev_root_request};
 use crate::syscall::microkernel::battery::sys_battery_status;
 use crate::syscall::microkernel::capsule_load::sys_capsule_load;
 use crate::syscall::microkernel::capsule_verify::sys_capsule_verify;
@@ -69,6 +71,9 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_STDOUT_WRITE => sys_stdout_write(a.a0, a.a1),
         SYS_STORE_WRITE => sys_store_write(a.a0, a.a1, a.a2),
         SYS_ATTEST_STATUS => sys_attest_status(a.a0),
+        SYS_ATTEST_DOC => sys_attest_doc(a.a0, a.a1, a.a2),
+        SYS_DEV_ROOT_REQUEST => sys_dev_root_request(a.a0),
+        SYS_DEV_ROOT_CONFIRM => sys_dev_root_confirm(a.a0),
         SYS_SPAWN_INSTANCE => sys_spawn_instance(a.a0, a.a1),
         SYS_TOOL_RUN => sys_tool_run(a.a0, a.a1, a.a2, a.a3),
         _ => return None,

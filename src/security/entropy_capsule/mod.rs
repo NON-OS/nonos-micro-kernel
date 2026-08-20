@@ -17,6 +17,7 @@
 mod capability;
 pub mod client;
 mod embed;
+pub mod fast;
 mod error;
 mod protocol;
 mod spawn;

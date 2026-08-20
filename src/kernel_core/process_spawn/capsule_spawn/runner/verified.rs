@@ -50,7 +50,7 @@ pub(crate) fn spawn_verified_as(
         }
     };
     crate::sys::bench::mark_named(b"capsule_preflight_ok", spec.name.as_bytes());
-    install(&InstallParams {
+    let pid = install(&InstallParams {
         name: spec.name,
         service_port: spec.service_port,
         reply_inbox: spec.reply_inbox,
@@ -59,5 +59,16 @@ pub(crate) fn spawn_verified_as(
         caps_bits: preflighted.install_caps,
         debug_tag: spec.debug_tag,
         on_behalf_of,
-    })
+    })?;
+    // First point at which a pid exists. What goes in is the measurement the
+    // proof was checked against, never one recomputed from the image.
+    if let Some(proved) = preflighted.proved {
+        crate::security::attest_registry::record_attested(
+            pid,
+            proved.measurement,
+            preflighted.install_caps,
+            proved.authority,
+        );
+    }
+    Ok(pid)
 }

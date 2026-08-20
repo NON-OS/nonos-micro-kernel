@@ -31,8 +31,10 @@ pub(super) fn check(
             Tier::Enrolled => rollout_verdict(),
         };
     }
+    // This path answers "would this verify", so the measurement is discarded.
+    // The registry is populated from the spawn path, which has a pid.
     match verify_capsule_attestation(trailer, elf, manifest.required_caps) {
-        Ok(()) => Ok(()),
+        Ok(_) => Ok(()),
         Err(_) => rollout_verdict(),
     }
 }
