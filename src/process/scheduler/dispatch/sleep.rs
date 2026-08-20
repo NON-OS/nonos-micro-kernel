@@ -34,13 +34,27 @@ static SLEEPING_PROCESSES: spin::RwLock<BTreeMap<u32, u64>> = spin::RwLock::new(
 // receiver then sleeps on a queue that has data. Sleeping through a wake it
 // has not observed is the lost-wakeup race; the counter is what lets a
 // sleeper refuse to.
-static WAKE_GENERATION: spin::RwLock<BTreeMap<u32, u64>> = spin::RwLock::new(BTreeMap::new());
+//
+// A fixed atomic table, not a map. wake_process runs from the timer sweep in
+// interrupt context, and a map entry insert can allocate; an allocation there
+// spins on a heap lock the interrupted code may hold, with interrupts off,
+// and the machine freezes whole. Two pids more than one generation apart
+// sharing a slot is harmless: a shared bump can only ever refuse a sleep one
+// loop iteration early, never permit sleeping through a wake.
+const WAKE_SLOTS: usize = 1024;
+#[allow(clippy::declare_interior_mutable_const)]
+const WAKE_SLOT_INIT: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
+static WAKE_GENERATION: [core::sync::atomic::AtomicU64; WAKE_SLOTS] =
+    [WAKE_SLOT_INIT; WAKE_SLOTS];
+
+fn wake_slot(pid: u32) -> &'static core::sync::atomic::AtomicU64 {
+    &WAKE_GENERATION[pid as usize % WAKE_SLOTS]
+}
 
 /// The wake counter as of now. Read before checking the condition the sleep
 /// waits on, then passed to `sleep_until_unless_woken`.
 pub fn wake_token(pid: u32) -> u64 {
-    let _irq = disable_interrupts_guard();
-    WAKE_GENERATION.read().get(&pid).copied().unwrap_or(0)
+    wake_slot(pid).load(Ordering::Acquire)
 }
 
 pub fn sleep_until(pid: u32, wake_time_ms: u64) {
@@ -60,7 +74,7 @@ pub fn sleep_until(pid: u32, wake_time_ms: u64) {
 pub fn sleep_until_unless_woken(pid: u32, wake_time_ms: u64, token: u64) {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
     let _irq = disable_interrupts_guard();
-    if WAKE_GENERATION.read().get(&pid).copied().unwrap_or(0) != token {
+    if wake_slot(pid).load(Ordering::Acquire) != token {
         return;
     }
     SLEEPING_PROCESSES.write().insert(pid, wake_time_ms);
@@ -73,11 +87,7 @@ pub fn sleep_until_unless_woken(pid: u32, wake_time_ms: u64, token: u64) {
 pub fn wake_process(pid: u32) {
     use crate::process::nonos_core::{ProcessState, PROCESS_TABLE};
     let _irq = disable_interrupts_guard();
-    {
-        let mut gen = WAKE_GENERATION.write();
-        let counter = gen.entry(pid).or_insert(0);
-        *counter = counter.wrapping_add(1);
-    }
+    wake_slot(pid).fetch_add(1, Ordering::AcqRel);
     let mut woke = false;
     if let Some(pcb) = PROCESS_TABLE.find_by_pid(pid) {
         let mut state = pcb.state.lock();
