@@ -131,6 +131,10 @@ pub(super) fn recv_from_inbox(
         // queue that has data, forever if the timeout is infinite.
         let token = crate::sched::wake_token(pid);
         if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
+            // The reply redirect pairs by this token, not by queue position:
+            // the entry popped for the server's next reply is the one whose
+            // token names the request it just picked up.
+            super::pending_reply::record_served(pid, msg.correlation);
             // Logged as sender -> receiver so a flooded inbox names its
             // flooder, not just itself.
             FIRST_DRAIN.note(&msg.from, pid as u64);
@@ -148,6 +152,7 @@ pub(super) fn recv_from_inbox(
         let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
         crate::sched::sleep_until_unless_woken(pid, deadline, token);
         if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
+            super::pending_reply::record_served(pid, msg.correlation);
             trace(b"dequeue", pid);
             let copy_len = msg.data.len().min(len);
             if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
