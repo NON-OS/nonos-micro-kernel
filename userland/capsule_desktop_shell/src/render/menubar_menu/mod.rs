@@ -13,8 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-pub struct CloseRect {
-    pub x: u32,
-    pub y: u32,
-    pub size: u32,
-}
+
+//! The menu-bar drop-downs: a row of titles that follows the focused app, and
+//! the floating panel one opens.
+
+mod hit;
+mod items;
+mod metrics;
+mod origin;
+mod paint;
+
+pub use hit::{row_hit, title_hit};
+pub use items::focused;
+pub use paint::{paint, paint_titles};

@@ -48,6 +48,7 @@ pub fn build_context(peers: &Peers, overlay: &Overlay) -> Context {
         pkg_files_loaded: false,
         installed_pids: alloc::collections::BTreeMap::new(),
         desktop_menu: None,
+        menubar: crate::state::new_menubar_state(),
         menu_hover: None,
         menu_target: None,
         rename: None,

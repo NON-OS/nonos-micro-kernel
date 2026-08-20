@@ -14,22 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::font::render::draw_text_scaled;
-
-use super::buffer::PaintBuffer;
-
-impl<'a> PaintBuffer<'a> {
-    pub fn text_scaled(&mut self, x: u32, y: u32, bytes: &[u8], argb: u32, scale: u32) {
-        draw_text_scaled(
-            self.pixels,
-            self.stride_words as usize,
-            self.width,
-            self.height,
-            x,
-            y,
-            bytes,
-            argb,
-            scale,
-        );
-    }
-}
+pub const FRAME_BG: u32 = 0xFF0B_121A;
+pub const FRAME_BORDER: u32 = 0xFF1E_2A35;
+pub const HAIRLINE: u32 = 0xFF16_202B;
+pub const SHADOW: u32 = 0xA000_0508;
+pub const TITLE_TEXT: u32 = 0xFFDF_E7F0;
+pub const LIGHT_CLOSE: u32 = 0xFFFF_5F57;
+pub const LIGHT_MINIMIZE: u32 = 0xFFFE_BC2E;
+pub const LIGHT_MAXIMIZE: u32 = 0xFF28_C840;
+pub const LIGHT_GLYPH: u32 = 0xCC00_0000;
+pub const TRANSPARENT: u32 = 0x0000_0000;

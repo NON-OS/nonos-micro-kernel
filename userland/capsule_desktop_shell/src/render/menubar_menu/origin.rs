@@ -13,22 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::decorations::metrics::{
-    BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING,
-};
 
-use super::types::CloseRect;
+//! Top-left corner of an open drop-down, clamped so a title near the right
+//! edge still shows its whole panel.
 
-pub fn maximize_button_rect(width: u32) -> CloseRect {
-    let size = CLOSE_BUTTON_SIZE;
-    let y = (TITLEBAR_HEIGHT - size) / 2;
-    let x = width.saturating_sub(TITLEBAR_PADDING + 2 * size + BUTTON_GAP);
-    CloseRect { x, y, size }
-}
+use super::metrics::{panel_w, title_x};
+use crate::render::layout::menubar_height;
+use crate::state::Context;
 
-pub fn minimize_button_rect(width: u32) -> CloseRect {
-    let size = CLOSE_BUTTON_SIZE;
-    let y = (TITLEBAR_HEIGHT - size) / 2;
-    let x = width.saturating_sub(TITLEBAR_PADDING + 3 * size + 2 * BUTTON_GAP);
-    CloseRect { x, y, size }
+pub(super) fn origin(ctx: &Context, index: usize) -> (u32, u32) {
+    let x = title_x(ctx, index).min(ctx.width.saturating_sub(panel_w(ctx, index)));
+    (x, menubar_height())
 }

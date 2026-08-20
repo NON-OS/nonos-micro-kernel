@@ -13,12 +13,25 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-pub fn plot(pixels: &mut [u32], stride_words: usize, width: u32, x: u32, y: u32, argb: u32) {
-    if x >= width {
-        return;
-    }
-    let idx = (y as usize) * stride_words + x as usize;
-    if idx < pixels.len() {
-        pixels[idx] = argb;
+
+//! Did that click land on the magnifier? Answered from the same box the
+//! painter drew into.
+
+use crate::state::indicators::battery;
+use crate::state::indicators::clock_stamp::{stamp, STAMP_LEN};
+use crate::state::Context;
+
+use super::search_box::search_box;
+
+pub fn search_hit(ctx: &Context, px: u32, py: u32) -> bool {
+    let mut bbuf = [0u8; 4];
+    let blen = battery::label(&mut bbuf);
+    let mut sbuf = [b'-'; STAMP_LEN];
+    let stamped = stamp(&mut sbuf, ctx.clock_24h);
+    let when: &[u8] = if stamped { &sbuf } else { b"--:--" };
+
+    match search_box(ctx, &bbuf[..blen], when) {
+        Some((x, y, w)) => px >= x && px < x + w && py >= y && py < y + w,
+        None => false,
     }
 }

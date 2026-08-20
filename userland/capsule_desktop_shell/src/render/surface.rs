@@ -14,18 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::font::atlas::FontAtlas;
 
-use super::buffer::PaintBuffer;
+use crate::state::Context;
+use nonos_toolkit::paint::PaintBuffer;
 
-impl<'a> PaintBuffer<'a> {
-    pub fn glyph_advance(&self) -> u32 {
-        let atlas = FontAtlas::default();
-        atlas.glyph_width as u32 + atlas.letter_spacing as u32
-    }
-}
-
-pub fn font_advance() -> u32 {
-    let atlas = FontAtlas::default();
-    atlas.glyph_width as u32 + atlas.letter_spacing as u32
+/// A `PaintBuffer` over the shell's backing store, so chrome can draw with the
+/// shared primitives instead of raw writes. The buffer aliases the surface, so a
+/// caller must finish with one before taking another.
+pub fn surface(ctx: &Context) -> PaintBuffer<'_> {
+    let stride_words = (ctx.stride / 4) as usize;
+    let words = stride_words * ctx.height as usize;
+    let pixels = unsafe { core::slice::from_raw_parts_mut(ctx.backing_va as *mut u32, words) };
+    PaintBuffer { pixels, stride_words: stride_words as u32, width: ctx.width, height: ctx.height }
 }

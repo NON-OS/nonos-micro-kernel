@@ -13,15 +13,23 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-mod close_button_rect;
-mod draw_close_button;
-mod draw_extra;
-mod extra_rects;
-mod fill_box;
-mod plot;
-mod types;
 
-pub use close_button_rect::close_button_rect;
-pub use draw_close_button::draw_close_button;
-pub use draw_extra::{draw_maximize_button, draw_minimize_button};
-pub use extra_rects::{maximize_button_rect, minimize_button_rect};
+use crate::font::render::draw_text_scaled;
+
+use super::buffer::PaintBuffer;
+
+impl<'a> PaintBuffer<'a> {
+    pub fn text_scaled(&mut self, x: u32, y: u32, bytes: &[u8], argb: u32, scale: u32) {
+        draw_text_scaled(
+            self.pixels,
+            self.stride_words as usize,
+            self.width,
+            self.height,
+            x,
+            y,
+            bytes,
+            argb,
+            scale,
+        );
+    }
+}

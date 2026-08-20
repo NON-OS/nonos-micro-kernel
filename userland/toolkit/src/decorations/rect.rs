@@ -14,21 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::font::render::draw_text;
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Rect {
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+}
 
-use super::buffer::PaintBuffer;
+impl Rect {
+    pub fn contains(&self, x: u32, y: u32) -> bool {
+        x >= self.x && y >= self.y && x < self.x + self.w && y < self.y + self.h
+    }
 
-impl<'a> PaintBuffer<'a> {
-    pub fn text(&mut self, x: u32, y: u32, bytes: &[u8], argb: u32) {
-        draw_text(
-            self.pixels,
-            self.stride_words as usize,
-            self.width,
-            self.height,
-            x,
-            y,
-            bytes,
-            argb,
-        );
+    pub fn inflate(&self, pad: u32) -> Rect {
+        Rect {
+            x: self.x.saturating_sub(pad),
+            y: self.y.saturating_sub(pad),
+            w: self.w + pad * 2,
+            h: self.h + pad * 2,
+        }
     }
 }

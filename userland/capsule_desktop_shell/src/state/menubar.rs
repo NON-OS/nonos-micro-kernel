@@ -13,14 +13,16 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::decorations::metrics::{CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING};
 
-use super::types::CloseRect;
+//! Which menu-bar title is open and which of its rows the pointer is over.
+//! Both are indices into the tables in `render::menubar_menu`, so the painter
+//! and the hit test agree without carrying geometry in state.
 
-pub fn close_button_rect(width: u32) -> CloseRect {
-    let pad = TITLEBAR_PADDING;
-    let size = CLOSE_BUTTON_SIZE;
-    let y = (TITLEBAR_HEIGHT - size) / 2;
-    let x = width.saturating_sub(pad + size);
-    CloseRect { x, y, size }
+pub struct MenubarState {
+    pub open: Option<usize>,
+    pub hover: Option<usize>,
+}
+
+pub fn new_menubar_state() -> MenubarState {
+    MenubarState { open: None, hover: None }
 }

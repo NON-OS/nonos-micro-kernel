@@ -23,4 +23,5 @@ use alloc::string::String;
 pub struct Entry {
     pub name: String,
     pub is_dir: bool,
+    pub children: u32,
 }

@@ -18,7 +18,7 @@ use crate::protocol::{read_i32, read_u16, read_u32};
 use crate::render::layout::{bottom_dock_rect, menubar_height};
 use crate::render::{desktop_icons, desktop_menu, topbar};
 use crate::server::desktop;
-use crate::server::handlers::{launcher_focus, launcher_request, launchpad};
+use crate::server::handlers::{launcher_focus, launcher_request, launchpad, menubar_click};
 use crate::server::refresh_taskbar::refresh_taskbar;
 use crate::state::{reveal_taskbar, Context, LAUNCHER_APPS};
 use nonos_libc::{
@@ -85,6 +85,14 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
             }
             return true;
         }
+        // A menu-bar drop-down tracks the pointer across its own titles and
+        // rows for as long as it is open.
+        if ctx.menubar.open.is_some() {
+            if menubar_click::motion(ctx, x as u32, y as u32) {
+                super::repaint::repaint(ctx);
+            }
+            return true;
+        }
         // With the menu open, track which row the pointer is over so it lights
         // up; otherwise fall through to the dock reveal behaviour.
         if ctx.desktop_menu.is_some() {
@@ -117,6 +125,12 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
         launchpad::click(ctx, px, py);
         return true;
     }
+    // A click on a menu-bar title, or anywhere while a drop-down is open,
+    // belongs to the menu bar.
+    if menubar_click::click(ctx, px, py) {
+        super::repaint::repaint(ctx);
+        return true;
+    }
     // While the right-click menu is open, the next click either picks an item
     // or dismisses it. Handle that before anything else consumes the click.
     if ctx.desktop_menu.is_some() {
@@ -143,10 +157,17 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
         let dock_top = bottom_dock_rect(ctx.width, ctx.height).y.saturating_sub(18);
         if py > menubar_height() && py < dock_top {
             ctx.menu_target = desktop_icons::hit(ctx, px, py);
+            ctx.menubar.open = None;
+            ctx.menubar.hover = None;
             ctx.desktop_menu = Some((px, py));
             ctx.menu_hover = None;
             super::repaint::repaint(ctx);
         }
+        return true;
+    }
+    // The magnifier on the menu bar is the same search the Spotlight request opens.
+    if topbar::search_hit(ctx, px, py) {
+        crate::server::handlers::spotlight_toggle::toggle(ctx);
         return true;
     }
     // Clicking the brand on the menu bar brings up the app dock.

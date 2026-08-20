@@ -32,6 +32,7 @@ mod path;
 mod remove;
 mod rename;
 mod store_status;
+mod under;
 mod walk;
 
 pub use create_file::create_file;

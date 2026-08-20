@@ -13,22 +13,27 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::fill_box::fill_box;
-use super::plot::plot;
-use super::types::CloseRect;
 
-pub fn draw_close_button(
-    pixels: &mut [u32],
-    stride_words: usize,
-    width: u32,
-    rect: &CloseRect,
-    fill_argb: u32,
-    glyph_argb: u32,
-) {
-    fill_box(pixels, stride_words, width, rect, fill_argb);
-    let n = rect.size;
-    for i in 2..n - 2 {
-        plot(pixels, stride_words, width, rect.x + i, rect.y + i, glyph_argb);
-        plot(pixels, stride_words, width, rect.x + (n - 1 - i), rect.y + i, glyph_argb);
+//! The magnifier in the status cluster: a ring and a stub handle, drawn on the
+//! shared paint layer so it scales with everything else.
+
+use crate::render::surface::surface;
+use crate::render::ui_font::scale;
+use crate::state::Context;
+
+use super::super::palette;
+
+const FG: u32 = palette::TEXT_DIM;
+
+pub(super) fn search_glyph(ctx: &Context, x: u32, y: u32) {
+    let s = scale();
+    let r = (5 * s) as i32;
+    let (cx, cy) = ((x + 5 * s) as i32, (y + 5 * s) as i32);
+    let reach = r * 7 / 10;
+    let mut fb = surface(ctx);
+
+    fb.ring(cx as u32, cy as u32, r as u32, s.max(1), FG);
+    for k in 0..s.max(1) as i32 {
+        fb.line_aa(cx + reach + k, cy + reach, cx + r + 4 * s as i32 + k, cy + r + 4 * s as i32, FG);
     }
 }

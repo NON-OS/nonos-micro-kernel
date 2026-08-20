@@ -14,19 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::{draw_maximize_button, maximize_button_rect};
+use crate::font::atlas::FontAtlas;
 
-const MAX_FILL_ARGB: u32 = 0xFF3F_B950;
-const MAX_HOVER_ARGB: u32 = 0xFF66_D478;
-const MAX_GLYPH_ARGB: u32 = 0xFF10_2010;
+use super::buffer::PaintBuffer;
 
-pub(super) fn paint_maximize_button(
-    pixels: &mut [u32],
-    stride_words: usize,
-    width: u32,
-    hovered: bool,
-) {
-    let rect = maximize_button_rect(width);
-    let fill = if hovered { MAX_HOVER_ARGB } else { MAX_FILL_ARGB };
-    draw_maximize_button(pixels, stride_words, width, &rect, fill, MAX_GLYPH_ARGB);
+impl<'a> PaintBuffer<'a> {
+    pub fn glyph_advance(&self) -> u32 {
+        let atlas = FontAtlas::default();
+        atlas.glyph_width as u32 + atlas.letter_spacing as u32
+    }
+}
+
+pub fn font_advance() -> u32 {
+    let atlas = FontAtlas::default();
+    atlas.glyph_width as u32 + atlas.letter_spacing as u32
 }

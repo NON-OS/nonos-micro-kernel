@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Draw the whole menu bar in one call: background, brand, then the live
-//! status cluster. Called on every chrome repaint, so the clock and battery
+//! Draw the whole menu bar in one call: background, brand, the menu titles,
+//! then the live status cluster. Called on every chrome repaint, so the clock and battery
 //! stay current.
 
 use crate::state::Context;
@@ -23,5 +23,6 @@ use crate::state::Context;
 pub fn paint(ctx: &Context) {
     super::background::background(ctx);
     super::brand::brand(ctx);
+    crate::render::menubar_menu::paint_titles(ctx);
     super::status::status(ctx);
 }

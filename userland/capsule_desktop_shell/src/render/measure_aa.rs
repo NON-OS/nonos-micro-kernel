@@ -27,6 +27,14 @@ pub fn measure_aa(text: &str, px: f32) -> u32 {
     ttf::measure(text, super::ui_font::scaled(px), false).max(0) as u32
 }
 
+/// Rendered width of `text` at `px` in the bold face.
+pub fn measure_aa_bold(text: &str, px: f32) -> u32 {
+    match ttf::builtin_face(false, true) {
+        Some(face) => ttf::measure_with(face, text, super::ui_font::scaled(px)).max(0) as u32,
+        None => measure_aa(text, px),
+    }
+}
+
 /// Rendered width of a byte-slice label at `px`.
 pub fn measure_aa_bytes(bytes: &[u8], px: f32) -> u32 {
     measure_aa(valid_str(bytes), px)

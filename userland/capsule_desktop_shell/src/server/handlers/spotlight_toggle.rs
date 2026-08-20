@@ -14,19 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::{close_button_rect, draw_close_button};
+//! Flip Spotlight and repaint. Shared by the IPC open request and the menu
+//! bar's magnifier so both leave the screen in the same state.
 
-const CLOSE_FILL_ARGB: u32 = 0xFFD0_4B4B;
-const CLOSE_HOVER_ARGB: u32 = 0xFFE8_7070;
-const CLOSE_GLYPH_ARGB: u32 = 0xFFFF_FFFF;
+use crate::compositor_client::push_damage_commit;
+use crate::render::{paint_chrome, spotlight_rect, sync_toast_layer};
+use crate::state::Context;
 
-pub(super) fn paint_close_button(
-    pixels: &mut [u32],
-    stride_words: usize,
-    width: u32,
-    hovered: bool,
-) {
-    let rect = close_button_rect(width);
-    let fill = if hovered { CLOSE_HOVER_ARGB } else { CLOSE_FILL_ARGB };
-    draw_close_button(pixels, stride_words, width, &rect, fill, CLOSE_GLYPH_ARGB);
+pub fn toggle(ctx: &mut Context) {
+    ctx.spotlight.visible = !ctx.spotlight.visible;
+    paint_chrome(ctx);
+    let r = spotlight_rect(ctx.width, ctx.height);
+    let rid = ctx.issue_request_id();
+    let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
+    sync_toast_layer(ctx);
 }

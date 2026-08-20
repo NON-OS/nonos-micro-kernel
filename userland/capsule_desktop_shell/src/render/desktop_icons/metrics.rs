@@ -18,10 +18,10 @@
 
 use crate::render::ui_font;
 
-const ICON_LOGICAL: u32 = 48;
-const CELL_W_LOGICAL: u32 = 104;
+const ICON_LOGICAL: u32 = 30;
+const CELL_W_LOGICAL: u32 = 102;
 const CELL_H_LOGICAL: u32 = 96;
-const LEFT_LOGICAL: u32 = 24;
+const LEFT_LOGICAL: u32 = 26;
 const CARET_W_LOGICAL: u32 = 2;
 const BOTTOM_RESERVE_LOGICAL: u32 = 120;
 

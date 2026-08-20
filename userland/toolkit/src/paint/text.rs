@@ -14,19 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::{draw_minimize_button, minimize_button_rect};
+use crate::font::render::draw_text;
 
-const MIN_FILL_ARGB: u32 = 0xFFD9_A441;
-const MIN_HOVER_ARGB: u32 = 0xFFEC_C06A;
-const MIN_GLYPH_ARGB: u32 = 0xFF1A_2030;
+use super::buffer::PaintBuffer;
 
-pub(super) fn paint_minimize_button(
-    pixels: &mut [u32],
-    stride_words: usize,
-    width: u32,
-    hovered: bool,
-) {
-    let rect = minimize_button_rect(width);
-    let fill = if hovered { MIN_HOVER_ARGB } else { MIN_FILL_ARGB };
-    draw_minimize_button(pixels, stride_words, width, &rect, fill, MIN_GLYPH_ARGB);
+impl<'a> PaintBuffer<'a> {
+    pub fn text(&mut self, x: u32, y: u32, bytes: &[u8], argb: u32) {
+        draw_text(
+            self.pixels,
+            self.stride_words as usize,
+            self.width,
+            self.height,
+            x,
+            y,
+            bytes,
+            argb,
+        );
+    }
 }
