@@ -67,7 +67,7 @@ pub fn call_on_cpu(target_cpu: usize, func: IpiFn, arg: usize) -> Result<(), &'s
         }
     }
 
-    send_ipi(cpu.apic_id, Ipi::CallFunction).map_err(|_| "IPI not deliverable")?;
+    send_ipi(cpu.get_apic_id(), Ipi::CallFunction).map_err(|_| "IPI not deliverable")?;
 
     Ok(())
 }

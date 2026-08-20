@@ -35,6 +35,9 @@ pub fn on_timer_interrupt() {
         crate::process::alarm::tick();
     }
 
+    #[cfg(all(target_arch = "x86_64", feature = "nonos-arch-iommu"))]
+    crate::arch::x86_64::iommu::unit::fault::poll_faults(state::get_ticks());
+
     hooks::invoke_hook();
 
     if crate::sched::scheduler::preemption::need_reschedule() {

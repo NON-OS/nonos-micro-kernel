@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod map_identity;
 mod map_range;
 mod unmap_range;
 mod validate_range;
 
+pub use map_identity::map_identity;
 pub use map_range::map_range;
 pub use unmap_range::unmap_range;

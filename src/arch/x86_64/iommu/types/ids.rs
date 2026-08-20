@@ -27,6 +27,7 @@ impl DomainId {
     }
 }
 
+/// A PCI requester id, bus in the high byte and device and function below it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SourceId(u16);
 
@@ -51,56 +52,3 @@ impl SourceId {
         (self.0 & 0x7) as u8
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct IoVirtAddr(u64);
-
-impl IoVirtAddr {
-    pub const fn new(addr: u64) -> Self {
-        Self(addr)
-    }
-
-    pub const fn as_u64(&self) -> u64 {
-        self.0
-    }
-
-    pub const fn is_page_aligned(&self) -> bool {
-        self.0 & (PAGE_SIZE_4K as u64 - 1) == 0
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct IommuPageFlags {
-    pub read: bool,
-    pub write: bool,
-    pub execute: bool,
-    pub user: bool,
-    pub snoop: bool,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum VtdError {
-    NotPresent,
-    /// Hardware was found but translation is never enabled, so nothing here
-    /// confines a device. Returned instead of success.
-    NotEnforcing,
-    DomainTableFull,
-    DomainAlreadyExists,
-    DomainNotFound,
-    DeviceAlreadyAttached,
-    DeviceNotAttached,
-    AddressMisaligned,
-    SizeMisaligned,
-    RangeOutOfBounds,
-    PageTableExhausted,
-    RangeAlreadyMapped,
-    RangeNotMapped,
-}
-
-pub const PAGE_SHIFT_4K: u32 = 12;
-pub const PAGE_SIZE_4K: usize = 1 << PAGE_SHIFT_4K;
-pub const PAGE_MASK_4K: u64 = !((PAGE_SIZE_4K as u64) - 1);
-
-pub const MAX_VTD_DOMAINS: usize = 256;
-pub const MAX_VTD_DEVICES: usize = 256;
-pub const MAX_VTD_MAPPINGS_PER_DOMAIN: usize = 4096;

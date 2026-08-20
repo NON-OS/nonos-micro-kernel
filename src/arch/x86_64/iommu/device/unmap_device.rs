@@ -14,21 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::globals::is_present;
+//! Taking a device back out of its domain.
+//!
+//! The context entry is cleared and the caches dropped before the binding is
+//! forgotten, so at no point does the kernel believe a device is detached
+//! while the hardware still translates for it. If the invalidation fails the
+//! binding is kept, because a device whose stale translations may still be
+//! live has not actually been detached.
+
+use super::super::globals::is_enforcing;
 use super::super::globals::state::STATE;
+use super::super::tables::root::clear_context;
 use super::super::types::VtdError;
+use super::super::unit::invalidate::invalidate_all;
+use super::super::unit::report::probed;
 use super::bdf_to_source_id::bdf_to_source_id;
 
 pub fn unmap_device(bus: u8, device: u8, function: u8) -> Result<(), VtdError> {
-    if !is_present() {
-        return Err(VtdError::NotPresent);
+    if !is_enforcing() {
+        return Err(VtdError::NotEnforcing);
     }
+    let info = probed().ok_or(VtdError::NotPresent)?;
     let source = bdf_to_source_id(bus, device, function);
+
     let mut state = STATE.lock();
-    let before = state.bindings.len();
-    state.bindings.retain(|binding| binding.source != source);
-    if state.bindings.len() == before {
+    if !state.bindings.iter().any(|binding| binding.source == source) {
         return Err(VtdError::DeviceNotAttached);
     }
+    clear_context(source)?;
+    invalidate_all(&info.unit, info.ecap)?;
+    state.bindings.retain(|binding| binding.source != source);
     Ok(())
 }

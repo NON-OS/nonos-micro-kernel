@@ -17,8 +17,8 @@
 use crate::smp::state::{
     BSP_APIC_ID, BSP_INITIALIZING, CPU_COUNT, CPU_DESCRIPTORS, SMP_INITIALIZED,
 };
+use crate::smp::CpuState;
 use crate::smp::{percpu, topology};
-use crate::smp::{CpuDescriptor, CpuState};
 use core::sync::atomic::Ordering;
 
 pub fn init_bsp() -> Result<(), &'static str> {
@@ -57,11 +57,8 @@ fn wait_until_ready() {
 
 fn configure_bsp_descriptor(apic_id: u32) {
     let bsp = &CPU_DESCRIPTORS[0];
-    unsafe {
-        let ptr = bsp as *const _ as *mut CpuDescriptor;
-        (*ptr).cpu_id = 0;
-        (*ptr).apic_id = apic_id;
-        (*ptr).numa_node = 0;
-    }
+    // numa_node is already zero from the const initialiser, so nothing here
+    // needs to write it.
+    bsp.set_identity(0, apic_id, 0);
     bsp.set_state(CpuState::Online);
 }
