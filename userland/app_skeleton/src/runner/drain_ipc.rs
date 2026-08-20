@@ -48,6 +48,7 @@ pub(super) fn drain<A: App>(
     wm_port: u32,
     window_id: u32,
     request_id: &mut u32,
+    maximized: bool,
 ) -> DrainResult {
     let mut repaint = false;
     let mut restore = false;
@@ -71,7 +72,7 @@ pub(super) fn drain<A: App>(
         let Some(event) = parse_delivery(&rx[..n as usize]) else { continue };
         let event = decorations::normalize(event);
         click_focus::handle(event, wm_port, window_id, request_id);
-        match decorations::handle(width, event) {
+        match decorations::handle(width, height, maximized, event) {
             Some(EventOutcome::Close) => {
                 return DrainResult {
                     repaint,
@@ -104,7 +105,7 @@ pub(super) fn drain<A: App>(
             }
             _ => {}
         }
-        match drag::handle(drag_state, width, height, win_x, win_y, &event) {
+        match drag::handle(drag_state, width, height, win_x, win_y, maximized, &event) {
             PointerAction::MoveTo(mx, my) => {
                 move_to = Some((mx, my));
                 continue;
@@ -119,7 +120,7 @@ pub(super) fn drain<A: App>(
             }
             PointerAction::None => {}
         }
-        match app.on_event(event) {
+        match app.on_event(decorations::to_content(width, height, maximized, event)) {
             EventOutcome::Idle | EventOutcome::Minimize | EventOutcome::Maximize => {}
             EventOutcome::Repaint => repaint = true,
             EventOutcome::Close => {

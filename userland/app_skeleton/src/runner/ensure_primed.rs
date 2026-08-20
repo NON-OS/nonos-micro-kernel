@@ -28,7 +28,13 @@ pub(super) fn ensure_primed<A: App>(
     if booted.primed {
         return true;
     }
-    booted.primed =
-        paint_once(&mut booted.app, &booted.manifest, &booted.binding, peers, request_id);
+    booted.primed = paint_once(
+        &mut booted.app,
+        &booted.manifest,
+        &booted.binding,
+        peers,
+        request_id,
+        booted.maximized,
+    );
     booted.primed
 }
