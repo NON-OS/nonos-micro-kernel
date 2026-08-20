@@ -15,10 +15,7 @@ $(QEMU_BLK_IMG):
 # re-pack on every mtime bump while still not ordering creation before packing.
 QEMU_BLK_STORE_STAMP := $(QEMU_BLK_IMG).store.stamp
 
-NONOS_MEDIA_DIR := media/samples
-NONOS_MEDIA_FILES := $(wildcard $(NONOS_MEDIA_DIR)/*)
-
-$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack $(NONOS_MEDIA_FILES) | $(QEMU_BLK_IMG)
+$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
 	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) --lba 256 \
 		--entry /capsules/std_proof.elf=$(std-proof_BIN) \
 		--entry /capsules/std_proof.nonos_id_cert.bin=$(std-proof_CERT) \
@@ -35,13 +32,7 @@ $(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_204
 		--entry /capsules/egui_proof.elf=$(egui_proof_BIN) \
 		--entry /capsules/egui_proof.nonos_id_cert.bin=$(egui_proof_CERT) \
 		--entry /capsules/egui_proof.manifest.bin=$(egui_proof_MANIFEST) \
-		--entry /capsules/egui_proof.zk_trailer.bin=$(egui_proof_ATTESTATION) \
-		--entry /Movies/big_buck_bunny.avi=$(NONOS_MEDIA_DIR)/big_buck_bunny.avi \
-		--entry /Movies/blender_reel_2013.mp4=$(NONOS_MEDIA_DIR)/blender_reel_2013.mp4 \
-		--entry /Movies/caminandes_llamigos.avi=$(NONOS_MEDIA_DIR)/caminandes_llamigos.avi \
-		--entry /Movies/elephants_dream.avi=$(NONOS_MEDIA_DIR)/elephants_dream.avi \
-		--entry /Movies/sintel.avi=$(NONOS_MEDIA_DIR)/sintel.avi \
-		--entry /Movies/tears_of_steel.avi=$(NONOS_MEDIA_DIR)/tears_of_steel.avi
+		--entry /capsules/egui_proof.zk_trailer.bin=$(egui_proof_ATTESTATION)
 	@touch $@
 
 # Declared in mk/20-build.mk; this only extends its prerequisites.
@@ -69,18 +60,22 @@ nonos-mk-dev-run:
 	@$(MAKE) --no-print-directory NONOS_DEV=1 \
 		NONOS_GOP_PREF=$(QEMU_XRES)x$(QEMU_YRES) nonos-mk-run
 
-nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-zerostate nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
+# The kernel link and the ESP resolve last, in that order. Everything before
+# them can refresh capsule ELFs and trailers the kernel embeds: the proof
+# chain re-signs, and the store-stamp builds more capsules and re-enrolls.
+# With the ESP packed earlier it shipped a kernel one generation behind the
+# tree, so capsule fixes appeared on disk but not in the boot, which cost
+# several debugging cycles before the ordering was caught.
+nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW) nonos-mk-zerostate nonos-mk-esp
 	@echo "Booting NONOS in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  TPM: swtpm CRB"
 	@echo "  Quit: Ctrl+A then X"
-	@rm -f "$(QEMU_QMP_SOCK)"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
 		-drive if=pflash,format=raw,unit=0,readonly=on,file="$(OVMF)" \
 		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) $(QEMU_TPM) $(QEMU_AUDIO) \
-		$(QEMU_QMP) \
 		-serial mon:stdio -vga none -display $(QEMU_DISPLAY) -no-reboot
 
 nonos-mk-run-net:
@@ -261,13 +256,6 @@ nonos-mk-boot-image-viewer:
 		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
 		exit $$rc
 
-.PHONY: nonos-mk-boot-video-player
-nonos-mk-boot-video-player:
-	@./tests/boot/video_player.sh; rc=$$?; \
-		echo "Restoring GUI video_player capsule (undo smoketest artifact)..."; \
-		$(MAKE) -B nonos-mk-video-player-sign >/dev/null 2>&1; \
-		exit $$rc
-
 .PHONY: nonos-mk-pack-install-test
 nonos-mk-pack-install-test: $(NONOS_PACK_BIN)
 	@./tests/boot/pack_install_boot.sh
@@ -291,6 +279,33 @@ nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) 
 # below agreeing, so this fails before anything is built or signed.
 nonos-mk-check-caps:
 	@$(NONOS_PYTHON) scripts/check_cap_parity.py
+# The kernel enforces the image ceiling at spawn, which is the right place and
+# the worst place to learn about it: the machine comes up missing a service.
+# This answers the same question before anything is built.
+	@$(NONOS_PYTHON) scripts/check_image_ceiling.py
+# A struct crossing the boundary with a field reordered or widened still
+# compiles on both sides. The caller writes one layout, the callee reads
+# another, and nothing errors.
+	@$(NONOS_PYTHON) scripts/check_wire_abi.py
+# libc against the kernel directly, so a wrong ABI file cannot make the pair
+# look consistent. Catches a wrapper over a syscall nobody serves.
+	@$(NONOS_PYTHON) scripts/check_libc_syscalls.py
+# The verifier runs elsewhere and carries its own copy of the capability
+# names. A ceiling printed with the wrong ones says the opposite of the truth.
+	@$(NONOS_PYTHON) scripts/check_verify_caps.py
+	@$(NONOS_PYTHON) scripts/check_market_caps.py
+	@$(NONOS_PYTHON) scripts/check_cap_reachability.py
+	@$(NONOS_PYTHON) scripts/check_trailer_formats.py
+# A publisher follows abi/manifest.toml. Four of its six fields did not exist.
+	@$(NONOS_PYTHON) scripts/check_manifest_abi.py
+	@$(NONOS_PYTHON) scripts/check_vm_abi.py
+# The host proofs repeat four pub(super) kernel functions. A drifted copy
+# makes them green while the kernel diverges.
+	@$(NONOS_PYTHON) scripts/check_proof_copies.py
+# Last: damage each invariant and require its checker to notice. A checker
+# that silently stops checking is the failure the checkers exist to prevent.
+	@$(NONOS_PYTHON) scripts/check_syscall_wiring.py
+	@$(NONOS_PYTHON) scripts/check_selftest.py
 
 nonos-mk-static: nonos-mk-check-caps
 	@./nonos-ci/run-static-checks.sh
