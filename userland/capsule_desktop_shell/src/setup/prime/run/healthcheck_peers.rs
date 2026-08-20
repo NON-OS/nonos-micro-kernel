@@ -20,8 +20,16 @@ use crate::wm_client;
 
 pub fn healthcheck_peers(peers: &Peers) -> Result<(), &'static str> {
     super::require_status::require_status(wm_client::healthcheck(peers.wm_port, 2))?;
+    // The market is optional at discovery, so it stays optional here. A store
+    // that is registered but not answering is the same desktop as no store,
+    // minus its icons; failing setup on it held the whole desktop hostage to
+    // the one peer nothing downstream depends on. The result is discarded on
+    // purpose.
     if peers.market_port != 0 {
-        super::require_status::require_status(market_client::healthcheck(peers.market_port, 4))?;
+        let _ = super::require_status::require_status(market_client::healthcheck(
+            peers.market_port,
+            4,
+        ));
     }
     Ok(())
 }
