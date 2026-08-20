@@ -45,8 +45,12 @@ pub fn verify_chain(body: &[u8], host: &[u8], now: u64) -> bool {
         let Some(parent_spki) = super::cert_spki::cert_spki(parent) else {
             return false;
         };
+        // Every issuer must be a CA. Signature checks alone accept a chain in
+        // which an attacker's own leaf certificate signs a forgery. Shared
+        // with nonos_tls rather than reimplemented.
         if !super::verify_link::verify_link(child, parent_spki)
             || !super::cert_valid_now::cert_valid_now(parent, now)
+            || !nonos_tls::cert_is_ca(parent)
         {
             return false;
         }
