@@ -25,16 +25,33 @@ mod queue;
 mod regs;
 mod server;
 mod setup;
-use nonos_libc::{heap_init, mk_exit, mk_yield};
+use nonos_libc::{heap_init, mk_debug, mk_exit, mk_yield};
 #[no_mangle]
 pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
+    let mut last: &'static str = "";
+    let mut rounds: u32 = 0;
     let mut driver = loop {
         match setup::run() {
             Ok(d) => break d,
-            Err(_) => {
+            Err(step) => {
+                // A silent retry here reads as a store that never comes up,
+                // and everything above it, vfs and the desktop listing, reads
+                // as its own timeout. Say what failed, once per change and
+                // then every 64 rounds.
+                if step != last || rounds % 64 == 0 {
+                    let mut line = [0u8; 96];
+                    let tag = b"[BLK] setup stuck: ";
+                    let n = tag.len();
+                    line[..n].copy_from_slice(tag);
+                    let m = step.len().min(line.len() - n);
+                    line[n..n + m].copy_from_slice(&step.as_bytes()[..m]);
+                    let _ = mk_debug(line.as_ptr(), n + m);
+                    last = step;
+                }
+                rounds = rounds.wrapping_add(1);
                 for _ in 0..64 {
                     mk_yield();
                 }
