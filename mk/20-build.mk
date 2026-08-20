@@ -1131,9 +1131,16 @@ nonos-mk-boot-zk-sidecar: $(ZK_BOOT_SIDECAR)
 nonos-mk-esp: \
 		$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi \
 		$(TARGET_DIR)/kernel_attested.bin
-	@# Re-drive the attested kernel at pack time: recursive sub-makes relink
-	@# the kernel after this target's prerequisites were resolved, and an ESP
-	@# packed from the earlier stat ships a stale kernel.
+	@# Re-drive the whole attested-kernel chain at pack time. Recursive
+	@# sub-makes relink the kernel after this target's prerequisites were
+	@# resolved. If the ELF moved after its self-attestation was enrolled, the
+	@# embedded trailer measures a kernel that no longer exists and the kernel
+	@# refuses to boot. Deleting the enrollment forces it to bind the final
+	@# ELF, then the sign and embed follow; re-statting here cannot be raced by
+	@# an earlier resolution.
+ifeq ($(NONOS_STARK_KERNEL_ATTEST_ON),1)
+	@rm -f $(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
+endif
 	@$(MAKE) --no-print-directory $(TARGET_DIR)/kernel_attested.bin
 	@echo "Packaging EFI System Partition..."
 	@mkdir -p $(ESP_DIR)/EFI/Boot $(ESP_DIR)/EFI/nonos

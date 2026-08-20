@@ -27,12 +27,11 @@ use crate::crypto::stark::air::{
 };
 use crate::crypto::stark::field::Fp;
 use alloc::vec::Vec;
+// One definition, in crate::crypto::stark. Prover and verifier must
+// agree exactly; a drift downward in queries or grinding still verifies.
+use crate::crypto::stark::attest_params::{GRIND_BITS, LOG_ROUNDS, N_QUERIES, EXTRA_BLOWUP_BITS as EXTRA_BLOWUP};
 
 const MAGIC: &[u8; 8] = b"NZKSTRK1";
-const LOG_ROUNDS: u32 = 3;
-const N_QUERIES: usize = 32;
-const GRIND_BITS: u32 = 16;
-const EXTRA_BLOWUP: u32 = 3;
 
 /// Read four little-endian words into a rate-width Poseidon digest.
 fn to_rate(bytes: &[u8]) -> [Fp; RATE] {
