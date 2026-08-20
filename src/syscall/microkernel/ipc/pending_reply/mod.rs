@@ -21,6 +21,7 @@ mod remove;
 mod state;
 
 pub(crate) use clear_pid::clear_pid;
+pub(in crate::syscall::microkernel::ipc) use state::record_served;
 pub(super) use pop::pop;
 pub(super) use push::push;
 pub(super) use remove::{remove, remove_latest};
