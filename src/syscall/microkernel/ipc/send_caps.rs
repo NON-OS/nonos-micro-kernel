@@ -18,16 +18,29 @@ use crate::capabilities::caps_to_bits;
 use crate::services::registry::{lookup_port, lookup_service};
 use crate::syscall::caps::current_caps_or_default;
 
-// A service may register an endpoint with required capability bits. The send
-// path must refuse a caller that does not hold them; an endpoint with no
-// requirement (caps_required == 0) is open to any IPC sender.
+/// Whether this caller may send to `endpoint`.
+///
+/// An endpoint with no stated requirement is refused, not admitted. Every
+/// registration path sets one: service endpoints take at least `IPC` from
+/// `required_caps`, and a reply inbox is claimed with `IPC` the moment its
+/// owner exists. A requirement of zero therefore means an endpoint that was
+/// never finished being set up, and the safe reading of that is no.
+///
+/// This used to return true, which made an unfinished endpoint reachable by
+/// anyone and turned every capability on it into a suggestion.
+///
+/// An unknown name is refused for the same reason. Falling back to a permitted
+/// send would let a caller reach an endpoint simply by naming one that does
+/// not exist yet, and win the race when it appears.
 pub(super) fn caller_satisfies_endpoint(endpoint: u64, target: &str) -> bool {
-    let required = lookup_service(target)
+    let Some(required) = lookup_service(target)
         .or_else(|| lookup_port(endpoint as u32))
         .map(|ep| ep.caps_required)
-        .unwrap_or(0);
+    else {
+        return false;
+    };
     if required == 0 {
-        return true;
+        return false;
     }
     caps_to_bits(&current_caps_or_default().permissions) & required == required
 }

@@ -63,4 +63,24 @@ pub enum Capability {
     // cannot kill unrelated capsules.
     ProcessControl,
     StoreWrite,
+    // Authority to enrol a signing root, so capsules built on this machine can
+    // run on it. Its own bit rather than folded into `Admin`: enrolling a root
+    // changes what the machine will execute for the rest of the session, and
+    // nothing that merely needs administrative reach should acquire that by
+    // side effect.
+    EnrolDevRoot,
+    // Authority to reach the keyring capsule, which stores and derives key
+    // material. Not folded into `Crypto`: `Crypto` is permission to perform an
+    // operation with a key the caller already holds, this is permission to
+    // reach the store the keys live in. A capsule that encrypts its own data
+    // needs the first and must not acquire the second with it.
+    Keyring,
+    // Authority to draw from the entropy capsule. Separate from `Crypto` for
+    // the same reason, and separate from `Admin`, which the reseed path
+    // requires: drawing randomness and replacing the source of it are not the
+    // same authority.
+    Entropy,
+    // Authority to reach the marketplace and install a capsule. Held by the
+    // installer, not by every capsule that happens to draw a window.
+    AppInstall,
 }

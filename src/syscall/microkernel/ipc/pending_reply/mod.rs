@@ -23,4 +23,4 @@ mod state;
 pub(crate) use clear_pid::clear_pid;
 pub(super) use pop::pop;
 pub(super) use push::push;
-pub(super) use remove::remove;
+pub(super) use remove::{remove, remove_latest};

@@ -15,7 +15,7 @@ set_option maxRecDepth 2048
 namespace nonos_caps
 
 /-- [nonos_caps::capabilities::types::defs::Capability]
-    Source: 'src/capabilities/../../../../../src/capabilities/types/defs.rs', lines 18:0-66:1
+    Source: 'src/capabilities/../../../../../src/capabilities/types/defs.rs', lines 18:0-86:1
     Visibility: public -/
 @[discriminant isize]
 inductive capabilities.types.defs.Capability where
@@ -46,9 +46,13 @@ inductive capabilities.types.defs.Capability where
 | SpawnWindow : capabilities.types.defs.Capability
 | ProcessControl : capabilities.types.defs.Capability
 | StoreWrite : capabilities.types.defs.Capability
+| EnrolDevRoot : capabilities.types.defs.Capability
+| Keyring : capabilities.types.defs.Capability
+| Entropy : capabilities.types.defs.Capability
+| AppInstall : capabilities.types.defs.Capability
 
 /-- [nonos_caps::capabilities::types::bit::{nonos_caps::capabilities::types::defs::Capability}::bit]:
-    Source: 'src/capabilities/../../../../../src/capabilities/types/bit.rs', lines 21:4-51:5 -/
+    Source: 'src/capabilities/../../../../../src/capabilities/types/bit.rs', lines 21:4-55:5 -/
 def capabilities.types.bit.Capability.bit
   (self : capabilities.types.defs.Capability) : Result Std.U64 := do
   match self with
@@ -79,6 +83,10 @@ def capabilities.types.bit.Capability.bit
   | capabilities.types.defs.Capability.SpawnWindow => ok 16777216#u64
   | capabilities.types.defs.Capability.ProcessControl => ok 33554432#u64
   | capabilities.types.defs.Capability.StoreWrite => ok 67108864#u64
+  | capabilities.types.defs.Capability.EnrolDevRoot => ok 134217728#u64
+  | capabilities.types.defs.Capability.Keyring => ok 268435456#u64
+  | capabilities.types.defs.Capability.Entropy => ok 536870912#u64
+  | capabilities.types.defs.Capability.AppInstall => ok 1073741824#u64
 
 /-- [nonos_caps::capabilities::bits::has_capability]:
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 34:0-36:1

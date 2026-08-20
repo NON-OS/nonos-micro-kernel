@@ -14,21 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Service support kept in the kernel.
-//
-// This module is limited to capability bits, capsule liveness state,
-// and the endpoint registry used by kernel-side IPC clients. Service
-// implementations run as userland capsules; the old in-kernel client,
-// server, protocol, and *_engine framework has been removed.
+mod entry;
+mod idle;
 
-pub mod caps;
-pub mod lifecycle;
-pub mod registry;
-
-pub use caps::{check_service_cap, has_capability, verify_caller_cap, CapError, ServiceCap};
-pub use caps::{
-    CAP_ADMIN, CAP_APPS, CAP_CRYPTO, CAP_DISPLAY, CAP_DRIVER, CAP_INPUT, CAP_NET, CAP_VFS,
-};
-pub use registry::{
-    lookup_port, lookup_service, register_endpoint, required_caps, RegError, ServiceEndpoint,
-};
+pub use entry::ap_entry;

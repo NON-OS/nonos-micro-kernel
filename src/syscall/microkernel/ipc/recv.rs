@@ -76,6 +76,10 @@ pub(super) fn recv_reply_correlated(
     }
     let start = crate::time::timestamp_millis();
     loop {
+        // Token before the drain, for the same lost-wakeup reason as
+        // `recv_from_inbox`: a reply landing between an empty drain and the
+        // transition to Sleeping has already spent its wake.
+        let token = crate::sched::wake_token(pid);
         // Drain everything queued; deliver the matching reply, drop the rest
         // (forged, stale, or a duplicate from a previous call).
         while let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
@@ -92,10 +96,15 @@ pub(super) fn recv_reply_correlated(
             return ERRNO_TIMEDOUT;
         }
         let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
-        crate::sched::sleep_until(pid, deadline);
+        crate::sched::sleep_until_unless_woken(pid, deadline, token);
         crate::sched::yield_now();
     }
 }
+
+static NO_INBOX: crate::sys::diag::Site = crate::sys::diag::Site::new(b"ipc.recv");
+// The first 64 dequeues systemwide, then sampled: enough to show which inboxes
+// actually drain during bring-up without narrating every message after.
+static FIRST_DRAIN: crate::sys::diag::Site = crate::sys::diag::Site::new(b"ipc.drain");
 
 pub(super) fn recv_from_inbox(
     pid: u32,
@@ -105,12 +114,26 @@ pub(super) fn recv_from_inbox(
     timeout_ms: u64,
 ) -> i64 {
     if !nonos_inbox::exists(&inbox_name) {
-        trace(b"missing inbox", pid);
+        // A server receiving on an inbox that does not exist is unreachable
+        // forever and every caller reads as starvation. Loud, not trace-gated.
+        NO_INBOX.reject(inbox_name, "missing inbox", pid);
         return ERRNO_NOENT;
     }
     let start = crate::time::timestamp_millis();
     loop {
+        // The wake token is read before the queue check. A delivery bumps the
+        // token and then enqueues under the same route, so a wake landing
+        // after this read blocks the sleep below, and one landing before it
+        // left its message where the very next check finds it. Without the
+        // token there is a gap between the empty check and the transition to
+        // Sleeping, and a message arriving in that gap has spent its only
+        // wake on a still-Running process: the receiver then sleeps on a
+        // queue that has data, forever if the timeout is infinite.
+        let token = crate::sched::wake_token(pid);
         if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
+            // Logged as sender -> receiver so a flooded inbox names its
+            // flooder, not just itself.
+            FIRST_DRAIN.note(&msg.from, pid as u64);
             trace(b"dequeue", pid);
             let copy_len = msg.data.len().min(len);
             if crate::usercopy::copy_to_user(buf, &msg.data[..copy_len]).is_err() {
@@ -123,7 +146,7 @@ pub(super) fn recv_from_inbox(
             return ERRNO_TIMEDOUT;
         }
         let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
-        crate::sched::sleep_until(pid, deadline);
+        crate::sched::sleep_until_unless_woken(pid, deadline, token);
         if let Some(msg) = nonos_inbox::try_dequeue_existing(&inbox_name) {
             trace(b"dequeue", pid);
             let copy_len = msg.data.len().min(len);
