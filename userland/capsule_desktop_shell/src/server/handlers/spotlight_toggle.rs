@@ -14,26 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The menu bar across the top of the desktop: the real NØNOS logo and wordmark
-//! on the left, and a live status cluster on the right holding the battery,
-//! network, clock and last-notification state. Styled to match the dock so the
-//! two bars read as one system.
+//! Flip Spotlight and repaint. Shared by the IPC open request and the menu
+//! bar's magnifier so both leave the screen in the same state.
 
-mod background;
-mod battery_glyph;
-mod brand;
-mod brand_hit;
-mod metrics;
-mod net_glyph;
-mod notify_dot;
-mod paint;
-mod search_box;
-mod search_glyph;
-mod search_hit;
-mod status;
+use crate::compositor_client::push_damage_commit;
+use crate::render::{paint_chrome, spotlight_rect, sync_toast_layer};
+use crate::state::Context;
 
-pub(crate) use metrics::brand_right;
-
-pub use brand_hit::brand_hit;
-pub use paint::paint;
-pub use search_hit::search_hit;
+pub fn toggle(ctx: &mut Context) {
+    ctx.spotlight.visible = !ctx.spotlight.visible;
+    paint_chrome(ctx);
+    let r = spotlight_rect(ctx.width, ctx.height);
+    let rid = ctx.issue_request_id();
+    let _ = push_damage_commit(ctx.compositor_port, rid, r.x, r.y, r.width, r.height);
+    sync_toast_layer(ctx);
+}

@@ -27,6 +27,7 @@ pub mod open_with;
 pub mod pkg_consent;
 pub mod pkg_install;
 pub mod spotlight_open;
+pub mod spotlight_toggle;
 pub mod take_open_arg;
 pub mod tray_register;
 pub mod tray_remove;

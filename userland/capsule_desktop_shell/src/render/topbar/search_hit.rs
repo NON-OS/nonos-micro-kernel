@@ -14,26 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The menu bar across the top of the desktop: the real NØNOS logo and wordmark
-//! on the left, and a live status cluster on the right holding the battery,
-//! network, clock and last-notification state. Styled to match the dock so the
-//! two bars read as one system.
+//! Did that click land on the magnifier? Answered from the same box the
+//! painter drew into.
 
-mod background;
-mod battery_glyph;
-mod brand;
-mod brand_hit;
-mod metrics;
-mod net_glyph;
-mod notify_dot;
-mod paint;
-mod search_box;
-mod search_glyph;
-mod search_hit;
-mod status;
+use crate::state::indicators::battery;
+use crate::state::indicators::clock_stamp::{stamp, STAMP_LEN};
+use crate::state::Context;
 
-pub(crate) use metrics::brand_right;
+use super::search_box::search_box;
 
-pub use brand_hit::brand_hit;
-pub use paint::paint;
-pub use search_hit::search_hit;
+pub fn search_hit(ctx: &Context, px: u32, py: u32) -> bool {
+    let mut bbuf = [0u8; 4];
+    let blen = battery::label(&mut bbuf);
+    let mut sbuf = [b'-'; STAMP_LEN];
+    let stamped = stamp(&mut sbuf, ctx.clock_24h);
+    let when: &[u8] = if stamped { &sbuf } else { b"--:--" };
+
+    match search_box(ctx, &bbuf[..blen], when) {
+        Some((x, y, w)) => px >= x && px < x + w && py >= y && py < y + w,
+        None => false,
+    }
+}

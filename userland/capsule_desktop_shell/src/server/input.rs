@@ -165,6 +165,11 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
         }
         return true;
     }
+    // The magnifier on the menu bar is the same search the Spotlight request opens.
+    if topbar::search_hit(ctx, px, py) {
+        crate::server::handlers::spotlight_toggle::toggle(ctx);
+        return true;
+    }
     // Clicking the brand on the menu bar brings up the app dock.
     if topbar::brand_hit(px, py) {
         if !ctx.taskbar.visible {

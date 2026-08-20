@@ -14,26 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The menu bar across the top of the desktop: the real NØNOS logo and wordmark
-//! on the left, and a live status cluster on the right holding the battery,
-//! network, clock and last-notification state. Styled to match the dock so the
-//! two bars read as one system.
+//! The magnifier in the status cluster: a ring and a stub handle, drawn on the
+//! shared paint layer so it scales with everything else.
 
-mod background;
-mod battery_glyph;
-mod brand;
-mod brand_hit;
-mod metrics;
-mod net_glyph;
-mod notify_dot;
-mod paint;
-mod search_box;
-mod search_glyph;
-mod search_hit;
-mod status;
+use crate::render::surface::surface;
+use crate::render::ui_font::scale;
+use crate::state::Context;
 
-pub(crate) use metrics::brand_right;
+use super::super::palette;
 
-pub use brand_hit::brand_hit;
-pub use paint::paint;
-pub use search_hit::search_hit;
+const FG: u32 = palette::TEXT_DIM;
+
+pub(super) fn search_glyph(ctx: &Context, x: u32, y: u32) {
+    let s = scale();
+    let r = (5 * s) as i32;
+    let (cx, cy) = ((x + 5 * s) as i32, (y + 5 * s) as i32);
+    let reach = r * 7 / 10;
+    let mut fb = surface(ctx);
+
+    fb.ring(cx as u32, cy as u32, r as u32, s.max(1), FG);
+    for k in 0..s.max(1) as i32 {
+        fb.line_aa(cx + reach + k, cy + reach, cx + r + 4 * s as i32 + k, cy + r + 4 * s as i32, FG);
+    }
+}
