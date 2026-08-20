@@ -432,6 +432,7 @@ include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
 include userland/capsule_image_viewer/Capsule.mk
+include userland/capsule_video_player/Capsule.mk
 include userland/capsule_clipboard/Capsule.mk
 include userland/capsule_login/Capsule.mk
 include userland/toolkit/Capsule.mk
@@ -493,7 +494,6 @@ include userland/capsule_socks5/Capsule.mk
 include userland/capsule_wallpaper/Capsule.mk
 include userland/capsule_attest/Capsule.mk
 include userland/capsule_power/Capsule.mk
-include userland/capsule_script/Capsule.mk
 
 # Orchestration helper: union of every verified capsule's artifact
 # triple. Smoke and test targets that need proof_io plus another
@@ -877,6 +877,12 @@ nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
 	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
 	$(call nonos_kernel_build,microkernel-image-viewer-smoketest,microkernel-image-viewer-smoketest)
 
+nonos-mk-video-player-test: $(proof-io_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building video_player capsule (nonos-video-player-smoketest)..."
+	@$(MAKE) -B video-player_CARGO_FEATURES=nonos-video-player-smoketest nonos-mk-video-player-sign
+	$(call nonos_kernel_build,microkernel-video-player-smoketest,microkernel-video-player-smoketest)
+
 nonos-mk-driver-hda-smoketest-test: $(proof-io_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	@echo "Building kernel (microkernel-driver-hda-smoketest)..."
@@ -1125,11 +1131,9 @@ nonos-mk-boot-zk-sidecar: $(ZK_BOOT_SIDECAR)
 nonos-mk-esp: \
 		$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi \
 		$(TARGET_DIR)/kernel_attested.bin
-	@# Re-drive the attested kernel at pack time. Recursive sub-makes in the
-	@# proof and capsule chains relink the kernel after this target's
-	@# prerequisites were resolved, and an ESP packed from that earlier stat
-	@# shipped a kernel one generation behind the tree for several debugging
-	@# cycles. A re-stat here, inside the recipe, cannot be raced that way.
+	@# Re-drive the attested kernel at pack time: recursive sub-makes relink
+	@# the kernel after this target's prerequisites were resolved, and an ESP
+	@# packed from the earlier stat ships a stale kernel.
 	@$(MAKE) --no-print-directory $(TARGET_DIR)/kernel_attested.bin
 	@echo "Packaging EFI System Partition..."
 	@mkdir -p $(ESP_DIR)/EFI/Boot $(ESP_DIR)/EFI/nonos
