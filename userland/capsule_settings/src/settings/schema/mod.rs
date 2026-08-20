@@ -15,9 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod all_fields;
+pub mod blocks;
+pub mod blocks_for;
+pub mod coverage;
 pub mod read_only;
-pub mod visible_for;
+pub mod rows;
+pub mod section_fields;
 
 pub use all_fields::ALL_FIELDS;
+pub use blocks_for::blocks_for;
 pub use read_only::read_only;
-pub use visible_for::visible_for;
+pub use section_fields::{field_at, field_count};

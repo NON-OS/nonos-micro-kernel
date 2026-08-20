@@ -16,7 +16,7 @@
 
 use crate::app::EventOutcome;
 use crate::input::{InputEvent, InputKind};
-use nonos_toolkit::decorations::{content_rect, hit_test, DecorationHit};
+use nonos_toolkit::decorations::{accessory_rect, content_rect, hit_test, DecorationHit};
 
 pub(super) fn normalize(mut event: InputEvent) -> InputEvent {
     if event.kind == InputKind::Touch {
@@ -40,6 +40,25 @@ pub(super) fn handle(
         DecorationHit::MaximizeButton => Some(EventOutcome::Maximize),
         _ => None,
     }
+}
+
+pub(super) fn to_accessory(
+    width: u32,
+    height: u32,
+    maximized: bool,
+    accessory_w: u32,
+    mut event: InputEvent,
+) -> Option<InputEvent> {
+    if !event.is_pointer() || event.x < 0 || event.y < 0 {
+        return None;
+    }
+    let a = accessory_rect(width, height, maximized, accessory_w)?;
+    if !a.contains(event.x as u32, event.y as u32) {
+        return None;
+    }
+    event.x -= a.x as i32;
+    event.y -= a.y as i32;
+    Some(event)
 }
 
 pub(super) fn to_content(

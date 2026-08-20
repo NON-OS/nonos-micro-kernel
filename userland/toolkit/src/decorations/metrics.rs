@@ -24,3 +24,5 @@ pub const LIGHT_D: u32 = 12;
 pub const LIGHT_GAP: u32 = 8;
 pub const LIGHT_INSET: u32 = 16;
 pub const LIGHT_HIT_PAD: u32 = 4;
+pub const ACCESSORY_INSET: u32 = 12;
+pub const ACCESSORY_PAD_Y: u32 = 7;

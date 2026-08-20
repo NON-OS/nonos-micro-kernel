@@ -16,12 +16,14 @@
 
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
-use super::event::on_event;
+use super::event::{on_accessory, on_event};
 use super::ipc::{hydrate, lookup_policy_port};
 use super::manifest::manifest;
 use super::paint::paint;
+use super::section::Section;
 use super::state::refresh_wifi::refresh_wifi_status;
 use super::state::{state_new, State};
+use super::ui::search_field;
 
 pub struct Settings {
     state: State,
@@ -64,6 +66,18 @@ impl App for Settings {
         on_event(&mut self.state, event)
     }
 
+    fn titlebar_accessory_w(&self) -> u32 {
+        search_field::WIDTH
+    }
+
+    fn paint_accessory(&mut self, fb: &mut PaintBuffer) {
+        search_field::paint(fb, &self.state);
+    }
+
+    fn on_accessory_event(&mut self, event: InputEvent) -> EventOutcome {
+        on_accessory(&mut self.state, event)
+    }
+
     fn paint(&mut self, fb: &mut PaintBuffer) {
         self.ensure_ready();
         // The window resizes, so record what is actually being painted into.
@@ -77,7 +91,7 @@ impl App for Settings {
     // binds a few seconds after connecting shows its address without the user
     // having to trigger another scan.
     fn on_tick(&mut self) -> bool {
-        if self.state.wifi_active {
+        if self.state.section == Section::Wifi {
             refresh_wifi_status(&mut self.state);
             return true;
         }

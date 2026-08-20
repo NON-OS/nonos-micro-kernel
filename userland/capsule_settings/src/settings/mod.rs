@@ -20,7 +20,9 @@ mod ipc;
 mod manifest;
 mod paint;
 mod schema;
+mod section;
+mod section_text;
 mod state;
-mod theme;
+mod ui;
 
 pub use app::Settings;

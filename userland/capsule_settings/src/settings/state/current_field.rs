@@ -16,12 +16,10 @@
 
 use nonos_policy_proto::Field;
 
-use crate::settings::schema::visible_for;
+use crate::settings::schema::field_at;
 
 use super::state::State;
 
 pub fn current_field(state: &State) -> Option<Field> {
-    let fields = visible_for(state.category);
-    let idx = state.cursor[state.category as usize];
-    fields.get(idx).copied()
+    field_at(state.section, state.cursor[state.section.index()])
 }

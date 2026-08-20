@@ -22,8 +22,7 @@ use nonos_app_skeleton::{
 use crate::settings::state::{cursor_down, cursor_end, cursor_home, cursor_page, cursor_up, State};
 
 use super::adjust::adjust;
-use super::next_category::next_category;
-use super::prev_category::prev_category;
+use super::next_section::{next_section, prev_section};
 use super::toggle_or_inc::toggle_or_inc;
 
 const KEY_SPACE: u32 = 0x20;
@@ -31,7 +30,7 @@ const KEY_SPACE: u32 = 0x20;
 pub(super) fn on_event_browsing(state: &mut State, code: u32) -> EventOutcome {
     match code {
         KEY_ESC => EventOutcome::Close,
-        KEY_TAB => repaint_after(state, next_category),
+        KEY_TAB => repaint_after(state, next_section),
         KEY_UP => repaint_after(state, cursor_up),
         KEY_DOWN => repaint_after(state, cursor_down),
         KEY_HOME => repaint_after(state, cursor_home),
@@ -41,8 +40,8 @@ pub(super) fn on_event_browsing(state: &mut State, code: u32) -> EventOutcome {
         KEY_LEFT => repaint_delta(state, -1),
         KEY_RIGHT => repaint_delta(state, 1),
         KEY_SPACE | KEY_ENTER => repaint_after(state, toggle_or_inc),
-        c if c == b'[' as u32 => repaint_after(state, prev_category),
-        c if c == b']' as u32 => repaint_after(state, next_category),
+        c if c == b'[' as u32 => repaint_after(state, prev_section),
+        c if c == b']' as u32 => repaint_after(state, next_section),
         _ => EventOutcome::Idle,
     }
 }

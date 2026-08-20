@@ -28,7 +28,10 @@ pub fn kind_of(field: Field) -> u8 {
         | Field::FontSize
         | Field::AutoLockTimeout
         | Field::CursorSize
-        | Field::Wallpaper => KIND_U8,
+        | Field::Wallpaper
+        | Field::ProxyMode
+        | Field::Volume
+        | Field::AudioBalance => KIND_U8,
         Field::Timezone => KIND_I8,
         Field::Hostname | Field::DomainName => KIND_STR,
         _ => KIND_BOOL,
