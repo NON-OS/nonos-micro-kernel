@@ -36,12 +36,24 @@ const BROWSER: &[u8] = include_bytes!("../../assets/app_icons/browser.rgba");
 const IMAGE_VIEWER: &[u8] = include_bytes!("../../assets/app_icons/image_viewer.rgba");
 const AUDIO_PLAYER: &[u8] = include_bytes!("../../assets/app_icons/audio_player.rgba");
 const VIDEO_PLAYER: &[u8] = include_bytes!("../../assets/app_icons/video_player.rgba");
+const FS_FOLDER: &[u8] = include_bytes!("../../assets/app_icons/fs_folder.rgba");
+const FS_FILE: &[u8] = include_bytes!("../../assets/app_icons/fs_file.rgba");
 
 // One brand accent for every app: NØNOS cyan on near-black tiles. No rainbow.
-const CYAN: u32 = 0xFF66E6FF;
+const CYAN: u32 = crate::render::palette::ACCENT;
 
 pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u32) {
-    let glyph: &[u8] = match icon {
+    badge::badge(ctx, x, y, size, icon_bytes(icon), CYAN);
+}
+
+/// The same app mark with no tile behind it, for callers that paint their own
+/// cell (the dock).
+pub fn draw_app_glyph(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u32) {
+    badge::glyph(ctx, x, y, size, icon_bytes(icon), CYAN);
+}
+
+fn icon_bytes(icon: LauncherIcon) -> &'static [u8] {
+    match icon {
         LauncherIcon::Terminal => TERMINAL,
         LauncherIcon::FileManager => FILES,
         LauncherIcon::TextEditor => EDITOR,
@@ -56,18 +68,17 @@ pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u3
         LauncherIcon::ImageViewer => IMAGE_VIEWER,
         LauncherIcon::AudioPlayer => AUDIO_PLAYER,
         LauncherIcon::VideoPlayer => VIDEO_PLAYER,
-    };
-    badge::badge(ctx, x, y, size, glyph, CYAN);
+    }
 }
 
-/// A file/folder tile for the desktop: the files glyph for directories, the
-/// document (editor) glyph for regular files. Same cyan tile language as apps.
+/// A file/folder mark for the desktop: the folder glyph for directories, the
+/// document glyph for regular files. Untiled, so the wallpaper shows through.
 pub fn draw_fs_icon(ctx: &Context, x: u32, y: u32, size: u32, is_dir: bool) {
-    let glyph: &[u8] = if is_dir { FILES } else { EDITOR };
-    badge::badge(ctx, x, y, size, glyph, CYAN);
+    let glyph: &[u8] = if is_dir { FS_FOLDER } else { FS_FILE };
+    badge::art(ctx, x, y, size, glyph, CYAN);
 }
 
-/// An installed-tool tile from its own 48x48 glyph mask, in the same badge
+/// An installed-tool tile from its own 96x96 glyph mask, in the same badge
 /// and cyan tile language as the desktop apps.
 pub fn draw_tool_icon(ctx: &Context, x: u32, y: u32, size: u32, glyph: &'static [u8]) {
     badge::badge(ctx, x, y, size, glyph, CYAN);
