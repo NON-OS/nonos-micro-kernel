@@ -29,6 +29,9 @@ pub enum EnrolError {
     /// purpose: telling a caller which it was would say whether somebody
     /// else's enrolment is in flight.
     NotConfirmed,
+    /// The entropy source would not answer, so no confirmation code was armed.
+    /// A fallback constant would be a code the caller could guess.
+    EntropyUnavailable,
 }
 
 impl EnrolError {
@@ -39,6 +42,7 @@ impl EnrolError {
             Self::EmptyRoot => "developer root is all zero",
             Self::NoSlots => "no developer root slots remain",
             Self::NotConfirmed => "no pending enrolment, or wrong code",
+            Self::EntropyUnavailable => "no entropy for a confirmation code",
         }
     }
 
@@ -52,6 +56,7 @@ impl EnrolError {
             Self::EmptyRoot => -22,
             Self::NoSlots => -28,
             Self::NotConfirmed => -1,
+            Self::EntropyUnavailable => -5,
         }
     }
 }

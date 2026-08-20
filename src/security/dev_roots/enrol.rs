@@ -44,8 +44,17 @@ pub fn request_dev_root(caller_caps: u64, root: [u8; 32]) -> Result<(), EnrolErr
     if TABLE.lock().is_full() {
         return Err(EnrolError::NoSlots);
     }
-    consent::arm_challenge(root);
+    consent::arm_challenge(root).ok_or(EnrolError::EntropyUnavailable)?;
     Ok(())
+}
+
+/// Enrol this machine's own build root.
+///
+/// The caller does not supply it. A capsule that chose the root could enrol
+/// somebody else's tree and then run anything its holder signed.
+pub fn request_local_build_root(caller_caps: u64) -> Result<(), EnrolError> {
+    let root = crate::security::local_build::root().ok_or(EnrolError::EmptyRoot)?;
+    request_dev_root(caller_caps, root)
 }
 
 /// Complete the pending enrolment.
