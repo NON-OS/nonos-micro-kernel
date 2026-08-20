@@ -27,9 +27,11 @@ pub mod crypto_capsule;
 pub mod dev_roots;
 pub mod entropy_capsule;
 pub mod hardening;
+pub mod image_ceiling;
 #[cfg(feature = "nonos-stark-attest")]
 pub mod kernel_attest;
 pub mod keyring_capsule;
+pub mod local_build;
 pub mod market_capsule;
 pub mod module_db;
 pub mod monitoring;
