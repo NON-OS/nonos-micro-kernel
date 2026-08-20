@@ -32,8 +32,11 @@ const CHALLENGE_MODULUS: u32 = 1_000_000;
 /// Weaker designs put the decision in a window drawn by userspace. That only
 /// moves the trust into whichever process draws the window, and a compromised
 /// shell then approves silently on the user's behalf.
-pub(super) fn arm_challenge(root: [u8; 32]) -> u32 {
-    let challenge = crate::crypto::random::secure_random_u32() % CHALLENGE_MODULUS;
+/// `None` when the entropy source will not answer. A fallback constant would
+/// be a code the caller can guess, and the caller is the one asking to be
+/// approved.
+pub(super) fn arm_challenge(root: [u8; 32]) -> Option<u32> {
+    let challenge = crate::crypto::rng::random_u32_secure().ok()? % CHALLENGE_MODULUS;
     PENDING.lock().arm(root, challenge);
 
     crate::sys::serial::println(b"");
@@ -45,7 +48,7 @@ pub(super) fn arm_challenge(root: [u8; 32]) -> u32 {
     crate::sys::serial::println(b"");
     crate::sys::serial::println(b"  Type this code to approve. Ignore it if you did not ask.");
     crate::sys::serial::println(b"");
-    challenge
+    Some(challenge)
 }
 
 /// Complete an enrolment if `answer` matches the displayed code.
