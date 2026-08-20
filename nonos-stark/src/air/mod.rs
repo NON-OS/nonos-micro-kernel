@@ -23,6 +23,9 @@
 //! verifier is proven against forgeries, not assumed sound.
 
 mod accumulator;
+mod aggregate;
+mod aggregate_build;
+mod aggregate_verify;
 mod attest;
 mod attest_build;
 mod attest_trailer;
@@ -62,6 +65,7 @@ mod query_openings;
 mod range_check;
 mod serialize;
 mod serialize_ext;
+mod shared_root;
 mod spec;
 mod squaring;
 mod trace_fold;
@@ -80,8 +84,13 @@ mod wired_ext;
 mod wired_multi_ext;
 
 pub use accumulator::Accumulator;
+pub use aggregate::{table_context, Entry, AGGREGATE_MAGIC};
+pub use aggregate_build::build_aggregate;
+pub use aggregate_verify::{enrolled_caps, verify_aggregate};
 pub use attest::verify_membership_attestation;
-pub use attest_build::build_attestation_trailer;
+pub use attest_build::{
+    build_attestation_trailer, build_attestation_trailer_from_set, MeasuredSet,
+};
 pub use attest_trailer::verify_attestation_trailer;
 pub use attest_verify::verify_membership_trailer;
 pub use compose_check::{ComposeBoundary, ComposeCheck};

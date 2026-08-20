@@ -28,15 +28,16 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
 use nonos_stark::air::{
-    build_attestation_trailer, deserialize_proof_ext, stark_verify_ext_blown_bound,
-    MerkleMembership, Poseidon, RATE,
+    build_attestation_trailer_from_set, deserialize_proof_ext, stark_verify_ext_blown_bound,
+    MeasuredSet, MerkleMembership, Poseidon, RATE,
 };
 use nonos_stark::field::Fp;
+// One definition, in nonos_stark. Prover and verifier must
+// agree exactly; a drift downward in queries or grinding still verifies.
+use nonos_stark::attest_params::{
+    EXTRA_BLOWUP_BITS as EXTRA_BLOWUP, GRIND_BITS, LOG_ROUNDS, N_QUERIES,
+};
 
-const LOG_ROUNDS: u32 = 3;
-const N_QUERIES: usize = 32;
-const GRIND_BITS: u32 = 16;
-const EXTRA_BLOWUP: u32 = 3;
 const POLICY_EPOCH: u64 = 1;
 const BOOT_EPOCH: u64 = 1;
 const POLICY_TREE_DEPTH: usize = 8;
@@ -111,8 +112,7 @@ fn gate_verify(root_bytes: &[u8; 32], trailer: &[u8], context: &[u8]) -> bool {
         siblings.push(to_rate(&trailer[9 + i * 32..9 + i * 32 + 32]));
     }
     let dirs = &trailer[sib_end..sib_end + dir_bytes];
-    let directions: Vec<bool> =
-        (0..depth).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
+    let directions: Vec<bool> = (0..depth).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
     let Some(proof) = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]) else {
         return false;
     };
@@ -134,15 +134,14 @@ fn enroll(images: &[&[u8]], contexts: &[Vec<u8>]) -> ([u8; 32], Vec<Vec<u8>>) {
     assert_eq!(images.len(), contexts.len(), "one context per image");
     let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
     let padded = padded_images(images);
-    let root = root_to_bytes(nonos_stark::air::enroll_policy_root(&hasher, &padded));
+    // Measure and commit once. Every trailer opens this same tree, so measuring
+    // per capsule would hash the whole image set once per capsule.
+    let set = MeasuredSet::commit(&hasher, &padded);
+    let root = root_to_bytes(set.root());
 
     let n = contexts.len();
     let counter = AtomicUsize::new(0);
-    let workers = thread::available_parallelism()
-        .map(|v| v.get())
-        .unwrap_or(1)
-        .min(n)
-        .max(1);
+    let workers = thread::available_parallelism().map(|v| v.get()).unwrap_or(1).min(n).max(1);
     let collected: Vec<Vec<(usize, Vec<u8>)>> = thread::scope(|scope| {
         let handles: Vec<_> = (0..workers)
             .map(|_| {
@@ -154,8 +153,15 @@ fn enroll(images: &[&[u8]], contexts: &[Vec<u8>]) -> ([u8; 32], Vec<Vec<u8>>) {
                             break;
                         }
                         let ctx = &contexts[i];
-                        let trailer = build_attestation_trailer(
-                            &hasher, LOG_ROUNDS, &padded, i, ctx, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP,
+                        let trailer = build_attestation_trailer_from_set(
+                            &hasher,
+                            LOG_ROUNDS,
+                            &set,
+                            i,
+                            ctx,
+                            N_QUERIES,
+                            GRIND_BITS,
+                            EXTRA_BLOWUP,
                         );
                         if !gate_verify(&root, &trailer, ctx) {
                             eprintln!("enroll: trailer {i} failed the gate self-check");
@@ -246,8 +252,8 @@ fn enroll_capsules(root_out: &str, specs: &[String]) {
             eprintln!("bad spec {spec}, want CAPS:image:trailer-out");
             exit(1);
         }
-        let caps = u64::from_str_radix(parts[0].trim_start_matches("0x"), 16)
-            .unwrap_or_else(|_| {
+        let caps =
+            u64::from_str_radix(parts[0].trim_start_matches("0x"), 16).unwrap_or_else(|_| {
                 eprintln!("bad capability mask {}", parts[0]);
                 exit(1)
             });

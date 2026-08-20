@@ -24,6 +24,7 @@
 
 use super::super::field::{Felt, Fp, Fp2};
 use super::poseidon::{Poseidon, RATE, WIDTH};
+use super::shared_root;
 use super::spec::{Air, AirExt};
 use alloc::vec::Vec;
 
@@ -41,6 +42,9 @@ pub struct MultiMembership {
     depth: usize,
     openings: Vec<Opening>,
     witness_path: bool,
+    shared_root: bool,
+    /// The one root the checkpoint enforces, in the shared-root form.
+    root: [Fp; RATE],
 }
 
 impl MultiMembership {
@@ -48,8 +52,23 @@ impl MultiMembership {
     /// siblings, directions, and the roots ride the periodic columns and boundaries:
     /// instance-specific structure, fine for a per-proof AIR.
     pub fn new(hasher: Poseidon, log_rounds: u32, openings: Vec<Opening>) -> MultiMembership {
-        let depth = openings.first().map(|o| o.siblings.len()).unwrap_or(0);
-        MultiMembership { hasher, log_rounds, depth, openings, witness_path: false }
+        Self::build(hasher, log_rounds, openings, false, false, [Fp::ZERO; RATE])
+    }
+
+    /// Openings that all authenticate against one root, as a capsule set does.
+    /// `new` pins each opening's root as its own boundary, so cost grows with the
+    /// square of the batch; here one periodic checkpoint constraint enforces the
+    /// shared root at a cost independent of it.
+    ///
+    /// `root` is the public statement and the only root enforced, so a caller
+    /// cannot quietly prove a batch against a root the verifier is not checking.
+    pub fn new_shared_root(
+        hasher: Poseidon,
+        log_rounds: u32,
+        root: [Fp; RATE],
+        openings: Vec<Opening>,
+    ) -> MultiMembership {
+        Self::build(hasher, log_rounds, openings, false, true, root)
     }
 
     /// The production form: the sibling and direction of each compression ride the
@@ -64,8 +83,19 @@ impl MultiMembership {
         log_rounds: u32,
         openings: Vec<Opening>,
     ) -> MultiMembership {
+        Self::build(hasher, log_rounds, openings, true, false, [Fp::ZERO; RATE])
+    }
+
+    fn build(
+        hasher: Poseidon,
+        log_rounds: u32,
+        openings: Vec<Opening>,
+        witness_path: bool,
+        shared_root: bool,
+        root: [Fp; RATE],
+    ) -> MultiMembership {
         let depth = openings.first().map(|o| o.siblings.len()).unwrap_or(0);
-        MultiMembership { hasher, log_rounds, depth, openings, witness_path: true }
+        MultiMembership { hasher, log_rounds, depth, openings, witness_path, shared_root, root }
     }
 
     fn rounds(&self) -> usize {
@@ -221,6 +251,9 @@ impl MultiMembership {
         if self.witness_path {
             out.push(dir * (one - dir));
         }
+        if self.shared_root {
+            out.extend(shared_root::constraints(window, periodic));
+        }
         out
     }
 }
@@ -255,6 +288,8 @@ impl Air for MultiMembership {
     fn num_transition(&self) -> usize {
         if self.witness_path {
             WIDTH + 1
+        } else if self.shared_root {
+            WIDTH + RATE
         } else {
             WIDTH
         }
@@ -269,7 +304,14 @@ impl Air for MultiMembership {
 
         // Per-proof: rc[WIDTH], slot_bnd, op_bnd, dir, sib[RATE], reset[WIDTH].
         // Production: rc[WIDTH], slot_bnd, op_bnd, reset[WIDTH] (dir and sib are trace).
-        let cols_len = if self.witness_path { WIDTH + 2 + WIDTH } else { WIDTH + 3 + RATE + WIDTH };
+        let cols_len = if self.witness_path {
+            WIDTH + 2 + WIDTH
+        } else if self.shared_root {
+            shared_root::COLS
+        } else {
+            WIDTH + 3 + RATE + WIDTH
+        };
+        let shared = self.root;
         let mut cols: Vec<Vec<Fp>> = (0..cols_len).map(|_| Vec::with_capacity(n)).collect();
 
         for r in 0..n {
@@ -317,6 +359,11 @@ impl Air for MultiMembership {
                 for (c, v) in reset.iter().enumerate() {
                     cols[WIDTH + 3 + RATE + c].push(*v);
                 }
+                if self.shared_root {
+                    // The row where this opening's path has folded to the root.
+                    let at_ckpt = within == depth * l && opening < count;
+                    shared_root::push_row(&mut cols, &shared, at_ckpt);
+                }
             }
         }
         cols
@@ -343,6 +390,11 @@ impl Air for MultiMembership {
         let first = self.initial_state(&self.openings[0]);
         for (j, v) in first.iter().enumerate() {
             b.push((j, 0, *v));
+        }
+        // With one shared root the checkpoint constraint enforces it on every
+        // opening, so there is nothing left to pin per opening.
+        if self.shared_root {
+            return b;
         }
         // Every opening's root sits at its checkpoint.
         for (o, opening) in self.openings.iter().enumerate() {
