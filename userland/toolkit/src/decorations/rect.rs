@@ -13,22 +13,26 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::decorations::metrics::{
-    BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING,
-};
 
-use super::types::CloseRect;
-
-pub fn maximize_button_rect(width: u32) -> CloseRect {
-    let size = CLOSE_BUTTON_SIZE;
-    let y = (TITLEBAR_HEIGHT - size) / 2;
-    let x = width.saturating_sub(TITLEBAR_PADDING + 2 * size + BUTTON_GAP);
-    CloseRect { x, y, size }
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Rect {
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
 }
 
-pub fn minimize_button_rect(width: u32) -> CloseRect {
-    let size = CLOSE_BUTTON_SIZE;
-    let y = (TITLEBAR_HEIGHT - size) / 2;
-    let x = width.saturating_sub(TITLEBAR_PADDING + 3 * size + 2 * BUTTON_GAP);
-    CloseRect { x, y, size }
+impl Rect {
+    pub fn contains(&self, x: u32, y: u32) -> bool {
+        x >= self.x && y >= self.y && x < self.x + self.w && y < self.y + self.h
+    }
+
+    pub fn inflate(&self, pad: u32) -> Rect {
+        Rect {
+            x: self.x.saturating_sub(pad),
+            y: self.y.saturating_sub(pad),
+            w: self.w + pad * 2,
+            h: self.h + pad * 2,
+        }
+    }
 }

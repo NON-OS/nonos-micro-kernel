@@ -14,19 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod border;
-mod close_button;
+mod frame_rect;
 mod hit_test;
 mod metrics;
+mod palette;
+mod rect;
 mod titlebar;
+mod traffic_lights;
 
-pub use border::draw_border;
-pub use close_button::{
-    close_button_rect, draw_close_button, draw_maximize_button, draw_minimize_button,
-    maximize_button_rect, minimize_button_rect,
-};
+pub use frame_rect::{content_rect, frame_rect, light_rect, margin, radius, titlebar_rect};
 pub use hit_test::{hit_test, DecorationHit};
 pub use metrics::{
-    BORDER_PX, BUTTON_GAP, CLOSE_BUTTON_SIZE, TITLEBAR_HEIGHT, TITLEBAR_PADDING, TITLE_TEXT_Y,
+    BORDER_PX, FRAME_RADIUS, HAIRLINE_PX, LIGHT_D, LIGHT_GAP, LIGHT_HIT_PAD, LIGHT_INSET,
+    SHADOW_MARGIN, TITLEBAR_H, TITLE_PX,
 };
-pub use titlebar::draw_titlebar;
+pub use palette::{
+    FRAME_BG, FRAME_BORDER, HAIRLINE, LIGHT_CLOSE, LIGHT_GLYPH, LIGHT_MAXIMIZE, LIGHT_MINIMIZE,
+    SHADOW, TITLE_TEXT, TRANSPARENT,
+};
+pub use rect::Rect;
+pub use titlebar::draw_frame;
+pub use traffic_lights::draw_traffic_lights;

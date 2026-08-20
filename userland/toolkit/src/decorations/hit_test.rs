@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::close_button::{close_button_rect, maximize_button_rect, minimize_button_rect};
-use super::metrics::TITLEBAR_HEIGHT;
+use super::frame_rect::{frame_rect, light_rect, titlebar_rect};
+use super::metrics::LIGHT_HIT_PAD;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum DecorationHit {
@@ -26,21 +26,20 @@ pub enum DecorationHit {
     MaximizeButton,
 }
 
-pub fn hit_test(width: u32, x: u32, y: u32) -> DecorationHit {
-    if y >= TITLEBAR_HEIGHT {
+const LIGHT_HITS: [DecorationHit; 3] =
+    [DecorationHit::CloseButton, DecorationHit::MinimizeButton, DecorationHit::MaximizeButton];
+
+pub fn hit_test(w: u32, h: u32, maximized: bool, x: u32, y: u32) -> DecorationHit {
+    if !frame_rect(w, h, maximized).contains(x, y) {
         return DecorationHit::None;
     }
-    let c = close_button_rect(width);
-    if x >= c.x && x < c.x + c.size && y >= c.y && y < c.y + c.size {
-        return DecorationHit::CloseButton;
+    if !titlebar_rect(w, h, maximized).contains(x, y) {
+        return DecorationHit::None;
     }
-    let m = maximize_button_rect(width);
-    if x >= m.x && x < m.x + m.size && y >= m.y && y < m.y + m.size {
-        return DecorationHit::MaximizeButton;
-    }
-    let n = minimize_button_rect(width);
-    if x >= n.x && x < n.x + n.size && y >= n.y && y < n.y + n.size {
-        return DecorationHit::MinimizeButton;
+    for (i, hit) in LIGHT_HITS.iter().enumerate() {
+        if light_rect(i as u32, w, h, maximized).inflate(LIGHT_HIT_PAD).contains(x, y) {
+            return *hit;
+        }
     }
     DecorationHit::Titlebar
 }
