@@ -20,8 +20,8 @@ use crate::constants::{
     MOD_DEVICE_FEATURE_SELECT, MOD_DEVICE_STATUS, MOD_DRIVER_FEATURE, MOD_DRIVER_FEATURE_SELECT,
     MOD_QUEUE_DESC, MOD_QUEUE_DEVICE, MOD_QUEUE_DRIVER, MOD_QUEUE_ENABLE, MOD_QUEUE_NOTIFY_OFF,
     MOD_QUEUE_SELECT, MOD_QUEUE_SIZE, STATUS_ACKNOWLEDGE, STATUS_DRIVER, STATUS_DRIVER_OK,
-    STATUS_FAILED, STATUS_FEATURES_OK, VIRTIO_F_VERSION_1_HIGH, VIRTIO_GPU_F_EDID, VQ_AVAIL_OFFSET,
-    VQ_DESC_OFFSET, VQ_MAX_SIZE, VQ_USED_OFFSET,
+    STATUS_FAILED, STATUS_FEATURES_OK, VIRTIO_F_VERSION_1_HIGH, VQ_AVAIL_OFFSET, VQ_DESC_OFFSET,
+    VQ_MAX_SIZE, VQ_USED_OFFSET,
 };
 use crate::regs::Regs;
 
@@ -38,11 +38,10 @@ pub fn bring_up_modern(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static 
             return Err("virtio-gpu: modern feature missing");
         }
         // Accept the 3D command set when the host offers it (virtio-vga-gl
-        // with a virglrenderer backend) and EDID when it is on offer;
-        // everything else in the low page is declined as before.
+        // with a virglrenderer backend); everything else in the low page is
+        // declined as before.
         regs.w32(MOD_DRIVER_FEATURE_SELECT, FEATURE_PAGE_LOW);
-        let low = host & (crate::constants::VIRTIO_GPU_F_VIRGL | VIRTIO_GPU_F_EDID);
-        regs.w32(MOD_DRIVER_FEATURE, low);
+        regs.w32(MOD_DRIVER_FEATURE, host & crate::constants::VIRTIO_GPU_F_VIRGL);
         regs.w32(MOD_DRIVER_FEATURE_SELECT, FEATURE_PAGE_HIGH);
         regs.w32(MOD_DRIVER_FEATURE, VIRTIO_F_VERSION_1_HIGH);
         regs.w8(MOD_DEVICE_STATUS, regs.r8(MOD_DEVICE_STATUS) | STATUS_FEATURES_OK);
@@ -68,7 +67,6 @@ pub fn bring_up_modern(regs: Regs, queue_phys: u64) -> Result<InitOut, &'static 
             queue_size: qsize,
             host_features: host,
             virgl: host & crate::constants::VIRTIO_GPU_F_VIRGL != 0,
-            edid: low & VIRTIO_GPU_F_EDID != 0,
             regs,
         })
     }

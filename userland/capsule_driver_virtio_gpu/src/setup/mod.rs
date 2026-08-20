@@ -16,7 +16,6 @@
 mod claim;
 mod create_primary;
 mod dma;
-mod edid;
 mod irq;
 mod mmio;
 mod modern_caps;
