@@ -56,6 +56,10 @@ TOOLCHAIN := nightly-2026-01-16
 CARGO     := $(HOME)/.cargo/bin/cargo
 RUSTUP    := $(HOME)/.cargo/bin/rustup
 NONOS_PYTHON ?= /usr/bin/python3
+# Compares a capsule's `.nonos.caps` section against the capability set its
+# manifest is about to be signed for. Runs before every manifest signature, so
+# a manifest granting powers the source never declared is never signed.
+NONOS_CAPS_CHECK ?= $(NONOS_PYTHON) scripts/check_declared_caps.py
 NONOS_BENCH_OUT ?=
 NONOS_BENCH_BUILD_CMD ?= make nonos-mk-verify-fast
 NONOS_BENCH_SKIP_BUILD ?= 0

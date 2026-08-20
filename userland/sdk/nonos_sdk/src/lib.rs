@@ -16,9 +16,8 @@
 
 #![no_std]
 
-mod caps;
+pub mod caps;
 mod macros;
 pub mod prelude;
 
-pub use caps::SDK_CAPS;
 pub use nonos_runtime::run as __run;
