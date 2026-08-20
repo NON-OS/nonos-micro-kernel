@@ -19,12 +19,12 @@
 //! was drawn under.
 
 use super::items::{rows, title, TITLE_COUNT};
-use crate::render::measure_aa::measure_aa;
+use crate::render::measure_aa::{measure_aa, measure_aa_bold};
 use crate::render::topbar::brand_right;
-use crate::render::ui_font::{line_h, scale, UI_PX};
+use crate::render::ui_font::{line_h, scale, MENU_PX, UI_PX};
 use crate::state::Context;
 
-const PAD_X_LOGICAL: u32 = 12;
+const PAD_X_LOGICAL: u32 = 10;
 const ROW_PAD_X_LOGICAL: u32 = 16;
 const PAD_Y_LOGICAL: u32 = 8;
 const ROW_LEAD_LOGICAL: u32 = 12;
@@ -51,8 +51,12 @@ pub(super) fn row_h() -> u32 {
     line_h(UI_PX) + ROW_LEAD_LOGICAL * scale()
 }
 
+/// The focused app's title is set in the bold face, so it has to be measured
+/// with that face or the hit box drifts off the glyphs.
 pub(super) fn title_w(ctx: &Context, index: usize) -> u32 {
-    measure_aa(title(ctx, index), UI_PX) + pad_x() * 2
+    let label = title(ctx, index);
+    let w = if index == 0 { measure_aa_bold(label, MENU_PX) } else { measure_aa(label, MENU_PX) };
+    w + pad_x() * 2
 }
 
 pub(super) fn title_x(ctx: &Context, index: usize) -> u32 {

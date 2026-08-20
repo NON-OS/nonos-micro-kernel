@@ -33,8 +33,8 @@ pub fn paint_chrome(ctx: &Context) {
         super::panel::shadow_panel(
             ctx,
             bottom_dock_rect(ctx.width, ctx.height),
-            super::palette::R_PANEL,
-            super::palette::PANEL,
+            super::palette::R_DOCK,
+            super::palette::DOCK,
             super::palette::LINE,
         );
         paint_bottom_taskbar(ctx);

@@ -20,5 +20,5 @@ use crate::render::layout::menubar_height;
 use crate::render::ui_font;
 
 pub(super) fn top() -> u32 {
-    menubar_height() + 20 * ui_font::scale()
+    menubar_height() + 24 * ui_font::scale()
 }

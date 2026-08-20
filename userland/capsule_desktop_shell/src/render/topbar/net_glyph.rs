@@ -14,23 +14,49 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Three ascending signal bars: cyan when the DHCP lease is bound, dim when the
-//! network is down.
+//! Three concentric signal arcs over a dot, dimmer still when the DHCP lease
+//! is not bound.
 
-use crate::render::fill::fill_rect;
+use crate::render::palette;
+use crate::render::surface::surface;
 use crate::render::ui_font::scale;
 use crate::state::Context;
+use nonos_toolkit::paint::PaintBuffer;
 
-const ON: u32 = 0xFF66_E6FF;
-const OFF: u32 = 0xFF44_505F;
+const ON: u32 = palette::TEXT_DIM;
+const OFF: u32 = palette::TEXT_MUTED;
 
 pub(super) fn net_glyph(ctx: &Context, x: u32, y: u32, online: bool) {
-    let (va, st, w, h) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    let color = if online { ON } else { OFF };
     let s = scale();
-    let bottom = y + 11 * s;
-    for (i, bh) in [4u32, 7, 10].iter().enumerate() {
-        let bx = x + i as u32 * 5 * s;
-        fill_rect(va, st, w, h, bx, bottom - bh * s, 3 * s, *bh * s, color);
+    let color = if online { ON } else { OFF };
+    let (cx, cy) = ((x + 8 * s) as i32, (y + 11 * s) as i32);
+    let mut fb = surface(ctx);
+
+    for r in [10 * s, 7 * s, 3 * s] {
+        arc(&mut fb, cx, cy, r as i32, s.max(1) as i32, color);
     }
+    fb.circle(cx as u32, cy.max(0) as u32, s, color);
+}
+
+// The upper 90 degrees of a circle, walked by x so the span stays gap-free at
+// the shallow end where these arcs live.
+fn arc(fb: &mut PaintBuffer<'_>, cx: i32, cy: i32, r: i32, t: i32, argb: u32) {
+    let span = r * 7 / 10;
+    for dx in -span..=span {
+        let dy = isqrt((r * r - dx * dx) as u32) as i32;
+        for k in 0..t.max(1) {
+            let (px, py) = (cx + dx, cy - dy + k);
+            if px >= 0 && py >= 0 {
+                fb.blend_px(px as u32, py as u32, argb);
+            }
+        }
+    }
+}
+
+fn isqrt(v: u32) -> u32 {
+    let mut r = 0u32;
+    while (r + 1) * (r + 1) <= v {
+        r += 1;
+    }
+    r
 }

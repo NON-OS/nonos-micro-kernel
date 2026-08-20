@@ -18,25 +18,23 @@ use crate::state::spotlight::{SPOTLIGHT_HEIGHT, SPOTLIGHT_WIDTH};
 use crate::state::LAUNCHER_APPS;
 use super::ui_font;
 
-const UI_LINE_H_LOGICAL: u32 = 17;
-const TASKBAR_ENTRY_W_LOGICAL: u32 = 56;
+const TASKBAR_ENTRY_W_LOGICAL: u32 = 46;
 const DOCK_GAP_LOGICAL: u32 = 7;
 const DOCK_PAD_LOGICAL: u32 = 12;
-const DOCK_BOX_INSET_LOGICAL: u32 = 10;
-
-/// One `UI_PX` line box plus symmetric padding, so the type clears the tile border.
-pub fn menubar_tile_h() -> u32 {
-    (UI_LINE_H_LOGICAL + 6) * ui_font::scale()
-}
+const DOCK_BOX_INSET_LOGICAL: u32 = 9;
+const DOCK_DIVIDER_LOGICAL: u32 = 11;
+const MENUBAR_H_LOGICAL: u32 = 46;
 
 pub fn menubar_height() -> u32 {
-    (UI_LINE_H_LOGICAL + 23) * ui_font::scale()
+    MENUBAR_H_LOGICAL * ui_font::scale()
 }
 
 /// One slot per desktop app, plus a trailing slot for the Launchpad button.
 pub fn bottom_dock_width() -> u32 {
     let slots = LAUNCHER_APPS.len() as u32 + 1;
-    (slots * (TASKBAR_ENTRY_W_LOGICAL + DOCK_GAP_LOGICAL) - DOCK_GAP_LOGICAL + 24)
+    (slots * (TASKBAR_ENTRY_W_LOGICAL + DOCK_GAP_LOGICAL) - DOCK_GAP_LOGICAL
+        + DOCK_DIVIDER_LOGICAL
+        + 2 * DOCK_PAD_LOGICAL)
         * ui_font::scale()
 }
 
@@ -45,7 +43,13 @@ pub fn bottom_dock_height() -> u32 {
 }
 
 pub fn bottom_dock_bottom_inset() -> u32 {
-    24 * ui_font::scale()
+    16 * ui_font::scale()
+}
+
+/// Width of the rule that separates the app run from the Launchpad slot,
+/// margins included.
+pub fn dock_divider_w() -> u32 {
+    DOCK_DIVIDER_LOGICAL * ui_font::scale()
 }
 
 pub fn dock_gap() -> u32 {
@@ -68,7 +72,10 @@ pub fn taskbar_entry_w() -> u32 {
 /// Left edge of the Launchpad button: the slot just past the last app.
 pub fn launchpad_slot_x(dock: Rect) -> u32 {
     let stride = (TASKBAR_ENTRY_W_LOGICAL + DOCK_GAP_LOGICAL) * ui_font::scale();
-    dock.x + DOCK_PAD_LOGICAL * ui_font::scale() + LAUNCHER_APPS.len() as u32 * stride
+    dock.x
+        + DOCK_PAD_LOGICAL * ui_font::scale()
+        + LAUNCHER_APPS.len() as u32 * stride
+        + dock_divider_w()
 }
 
 #[derive(Clone, Copy, Default)]

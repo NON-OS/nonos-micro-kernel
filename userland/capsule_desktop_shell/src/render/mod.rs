@@ -37,6 +37,6 @@ pub mod ui_font;
 
 pub use bottom_taskbar::paint_bottom_taskbar;
 pub use chrome::paint_chrome;
-pub use icons::{draw_app_icon, draw_tool_icon};
+pub use icons::{draw_app_glyph, draw_app_icon, draw_tool_icon};
 pub use layout::{menubar_rect, spotlight_rect};
 pub use toasts::sync_toast_layer;

@@ -23,8 +23,8 @@ use super::origin::origin;
 use crate::render::layout::{menubar_height, Rect};
 use crate::render::palette;
 use crate::render::panel::{round_fill, shadow_panel};
-use crate::render::text_aa::text_aa;
-use crate::render::ui_font::{top_y_centered, UI_PX};
+use crate::render::text_aa::{text_aa, text_aa_bold};
+use crate::render::ui_font::{top_y_centered, MENU_PX, UI_PX};
 use crate::state::Context;
 
 pub fn paint_titles(ctx: &Context) {
@@ -41,9 +41,14 @@ pub fn paint_titles(ctx: &Context) {
             let r = Rect { x, y: inset(), width: w, height: box_h };
             round_fill(ctx, r, palette::R_TILE, palette::ACCENT_DIM);
         }
-        let fg = if open { palette::TEXT } else { palette::TEXT_DIM };
-        let top = top_y_centered(0, bar_h, UI_PX);
-        text_aa(ctx, x + pad_x(), top, title(ctx, i), fg, UI_PX);
+        let lit = open || i == 0;
+        let fg = if lit { palette::TEXT } else { palette::TEXT_DIM };
+        let top = top_y_centered(0, bar_h, MENU_PX);
+        if i == 0 {
+            text_aa_bold(ctx, x + pad_x(), top, title(ctx, i), fg, MENU_PX);
+        } else {
+            text_aa(ctx, x + pad_x(), top, title(ctx, i), fg, MENU_PX);
+        }
     }
 }
 

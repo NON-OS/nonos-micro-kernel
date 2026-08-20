@@ -14,28 +14,41 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::draw_app_icon;
+use super::draw_app_glyph;
 use super::layout::{
-    bottom_dock_rect, dock_box_inset, dock_gap, dock_pad, launchpad_slot_x, taskbar_entry_w, Rect,
+    bottom_dock_rect, dock_box_inset, dock_divider_w, dock_gap, dock_pad, launchpad_slot_x,
+    taskbar_entry_w, Rect,
 };
 use super::surface::surface;
 use super::{palette, ui_font};
 use crate::state::{Context, LAUNCHER_APPS, TASKBAR_NO_ACTIVE};
 
-const ICON_SIZE_LOGICAL: u32 = 40;
+const TILE_RADIUS_LOGICAL: u32 = 10;
+const LAUNCHPAD_DOT_PITCH_LOGICAL: u32 = 6;
+const LAUNCHPAD_DOT_LOGICAL: u32 = 3;
 
 fn icon_size() -> u32 {
-    ICON_SIZE_LOGICAL * ui_font::scale()
+    taskbar_entry_w()
+}
+
+// The rule between the app run and the Launchpad slot.
+fn draw_divider(ctx: &Context, box_top: u32, box_h: u32) {
+    let slot_x = launchpad_slot_x(bottom_dock_rect(ctx.width, ctx.height));
+    let sc = ui_font::scale();
+    let h = box_h.saturating_sub(12 * sc);
+    let x = slot_x.saturating_sub(dock_divider_w() / 2);
+    surface(ctx).fill_rect(x, box_top + (box_h - h) / 2, sc, h, palette::LINE);
 }
 
 // The Launchpad button: the familiar 3x3 grid, sitting in the dock slot just
 // past the last app.
 fn draw_launchpad_button(ctx: &Context, box_top: u32, box_h: u32) {
     let slot_x = launchpad_slot_x(bottom_dock_rect(ctx.width, ctx.height));
-    let x0 = slot_x + (taskbar_entry_w() - icon_size()) / 2;
-    let y0 = box_top + (box_h - icon_size()) / 2;
-    let cell = icon_size() / 3;
-    let r = cell.saturating_sub(4 * ui_font::scale()) / 2;
+    let sc = ui_font::scale();
+    let cell = LAUNCHPAD_DOT_PITCH_LOGICAL * sc;
+    let r = LAUNCHPAD_DOT_LOGICAL * sc / 2;
+    let x0 = slot_x + (taskbar_entry_w() - 3 * cell) / 2;
+    let y0 = box_top + (box_h - 3 * cell) / 2;
     let mut fb = surface(ctx);
     for row in 0..3 {
         for col in 0..3 {
@@ -50,8 +63,8 @@ fn draw_launchpad_button(ctx: &Context, box_top: u32, box_h: u32) {
 // focus and dimmed when it is merely open.
 fn running_dot(ctx: &Context, cx: u32, active: bool) {
     let dock = bottom_dock_rect(ctx.width, ctx.height);
-    let cy = dock.y + dock.height - 6 * ui_font::scale();
-    let argb = if active { palette::ACCENT } else { palette::TEXT_DIM };
+    let cy = dock.y + dock.height - 2 * ui_font::scale();
+    let argb = if active { palette::ACCENT } else { palette::ACCENT_DIM };
     surface(ctx).circle(cx, cy, 2 * ui_font::scale(), argb);
 }
 
@@ -72,17 +85,17 @@ pub fn paint_bottom_taskbar(ctx: &Context) {
         } else if open {
             palette::TILE_OPEN
         } else {
-            palette::TILE_IDLE
+            palette::TILE_FILL
         };
         let tile = Rect { x, y: box_top, width: taskbar_entry_w(), height: box_h };
-        super::panel::round_fill(ctx, tile, palette::R_TILE, bg);
+        let edge = if active || pulsing { palette::LINE_HARD } else { palette::LINE_SOFT };
+        super::panel::panel(ctx, tile, TILE_RADIUS_LOGICAL, bg, edge);
         if open || active || pulsing {
             running_dot(ctx, x + taskbar_entry_w() / 2, active);
         }
-        let icon_x = x + (taskbar_entry_w() - icon_size()) / 2;
-        let icon_y = box_top + (box_h - icon_size()) / 2;
-        draw_app_icon(ctx, icon_x, icon_y, app.icon, icon_size());
+        draw_app_glyph(ctx, x, box_top, app.icon, icon_size());
         x += taskbar_entry_w() + dock_gap();
     }
+    draw_divider(ctx, box_top, box_h);
     draw_launchpad_button(ctx, box_top, box_h);
 }

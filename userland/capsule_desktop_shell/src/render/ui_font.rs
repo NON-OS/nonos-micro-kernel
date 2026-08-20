@@ -43,8 +43,23 @@ pub fn scaled(px: f32) -> f32 {
 /// Body text: menu bar, status cluster, labels, dialogs.
 pub const UI_PX: f32 = ttf::MIN_UI_PX;
 
-/// Headings: the brand wordmark and the launcher title.
+/// Headings: the launcher title.
 pub const TITLE_PX: f32 = 20.0;
+
+/// The brand wordmark, set in the bold face.
+pub const BRAND_PX: f32 = 14.0;
+
+/// Menu bar titles.
+pub const MENU_PX: f32 = 13.5;
+
+/// The right-hand status cluster and its clock.
+pub const STATUS_PX: f32 = 13.0;
+
+/// Desktop icon names.
+pub const LABEL_PX: f32 = 12.5;
+
+/// Captions: the second, dimmer line under a desktop icon name.
+pub const META_PX: f32 = 11.0;
 
 /// Height of one line box at `px`.
 pub fn line_h(px: f32) -> u32 {
