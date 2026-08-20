@@ -16,10 +16,3 @@
 use super::tag::tag4;
 
 pub(crate) const N_GFX_DISPLAY_DIMENSIONS: i64 = tag4(b"GDIM");
-pub(crate) const N_GFX_SURFACE_CREATE: i64 = tag4(b"GSCR");
-pub(crate) const N_GFX_SURFACE_DESTROY: i64 = tag4(b"GSDS");
-pub(crate) const N_GFX_SURFACE_MAP: i64 = tag4(b"GSMP");
-pub(crate) const N_GFX_SURFACE_PRESENT_FULL: i64 = tag4(b"GPRF");
-pub(crate) const N_GFX_SURFACE_PRESENT_RECT: i64 = tag4(b"GPRR");
-pub(crate) const N_GFX_DISPLAY_LIST: i64 = tag4(b"GDLS");
-pub(crate) const N_GFX_CURSOR_PRESENT: i64 = tag4(b"GCUR");
