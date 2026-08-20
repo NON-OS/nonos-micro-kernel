@@ -24,7 +24,7 @@
 
 mod against_root;
 mod error;
-mod layout;
+pub(crate) mod layout;
 mod policy_root;
 mod proved;
 #[cfg(feature = "nonos-stark-attest")]
