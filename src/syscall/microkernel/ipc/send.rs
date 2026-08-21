@@ -121,27 +121,12 @@ fn redirect_reply(
         if let Some((caller_pid, caller_inbox, token)) = super::pending_reply::pop(sender_pid) {
             return Some((caller_inbox, Some(caller_pid), Some(token)));
         }
-        if !is_kernel_reply_inbox(&target)
-            && lookup_service(&target).map(|e| e.pid) == Some(sender_pid)
-        {
+        if lookup_service(&target).map(|e| e.pid) == Some(sender_pid) {
             BOOMERANG.reject(&target, "reply with no caller, dropped", sender_pid);
             return None;
         }
     }
     Some((target, None, None))
-}
-
-// A kernel round-trip drains its reply from a fixed inbox named `endpoint.<N>`
-// with N at or above 1<<32, well past any port a capsule endpoint uses. The
-// capsule that owns that inbox never serves requests on it, so redelivering a
-// reply there cannot self-mail; it must go through even when the capsule also
-// adopted the endpoint as a service. Dropping these stalled the block and
-// entropy round-trips and left the scheduler spinning on the retries.
-fn is_kernel_reply_inbox(target: &str) -> bool {
-    target
-        .strip_prefix("endpoint.")
-        .and_then(|n| n.parse::<u64>().ok())
-        .is_some_and(|n| n >= 1 << 32)
 }
 
 static BOOMERANG: crate::sys::diag::Site = crate::sys::diag::Site::new(b"ipc.reply");
