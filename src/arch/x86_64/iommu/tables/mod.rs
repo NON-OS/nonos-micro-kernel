@@ -15,4 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod context;
+pub mod frame;
+pub mod root;
 pub mod sl_pte;
+pub mod walk;

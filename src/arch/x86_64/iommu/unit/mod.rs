@@ -15,5 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod access;
+pub mod bringup;
+pub mod enable;
+pub mod fault;
+pub mod invalidate;
 pub mod probe;
 pub mod report;

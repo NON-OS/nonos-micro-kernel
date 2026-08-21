@@ -23,7 +23,7 @@ use core::sync::atomic::Ordering;
 pub fn send_reschedule_ipi(cpu_id: usize) {
     if let Some(cpu) = get_cpu(cpu_id) {
         if cpu.is_online() {
-            let _ = send_ipi(cpu.apic_id, Ipi::Reschedule);
+            let _ = send_ipi(cpu.get_apic_id(), Ipi::Reschedule);
         }
     }
 }
@@ -44,7 +44,7 @@ pub fn wake_idle_cpu() {
         }
         let Some(cpu) = get_cpu(id) else { continue };
         if cpu.is_online() && cpu.idle.load(Ordering::Acquire) {
-            let _ = send_ipi(cpu.apic_id, Ipi::Reschedule);
+            let _ = send_ipi(cpu.get_apic_id(), Ipi::Reschedule);
             return;
         }
     }

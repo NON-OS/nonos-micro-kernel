@@ -29,7 +29,7 @@ pub fn cpu_id() -> usize {
 
 pub fn apic_to_cpu_id(apic_id: u32) -> Option<usize> {
     for i in 0..CPU_COUNT.load(Ordering::Acquire) {
-        if CPU_DESCRIPTORS[i].apic_id == apic_id {
+        if CPU_DESCRIPTORS[i].get_apic_id() == apic_id {
             return Some(i);
         }
     }

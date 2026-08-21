@@ -26,6 +26,7 @@ mod regs;
 mod server;
 mod setup;
 mod state;
+mod virgl;
 use nonos_libc::{heap_init, mk_exit, mk_service_register, mk_time_millis, mk_yield};
 
 const SERVICE_NAME: &[u8] = b"driver.virtio_gpu0";

@@ -16,6 +16,7 @@
 
 use super::super::globals::is_present;
 use super::super::globals::state::STATE;
+use super::super::tables::frame::allocate_table;
 use super::super::types::{DomainId, VtdError, MAX_VTD_DOMAINS};
 
 pub fn create_domain(id: DomainId) -> Result<(), VtdError> {
@@ -31,6 +32,9 @@ pub fn create_domain(id: DomainId) -> Result<(), VtdError> {
     if slot.used {
         return Err(VtdError::DomainAlreadyExists);
     }
+    // Allocated before the slot is marked used, so a failure here leaves
+    // the domain absent rather than present with nowhere to map into.
+    slot.root = allocate_table()?;
     slot.used = true;
     Ok(())
 }
