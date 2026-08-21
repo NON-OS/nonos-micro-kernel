@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! What the Updates screen reports about this build. The values come from the
-//! tree the capsule was compiled from, so the screen states a fact rather than a
-//! placeholder.
+//! tree the capsule was compiled from, so the screen states what actually
+//! shipped.
 
 pub const VERSION: &str = include_str!("../../../../../VERSION");
 pub const GIT_SHA: &str = env!("SETTINGS_GIT_SHA");
