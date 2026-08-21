@@ -55,4 +55,13 @@ pub const ALL_FIELDS: &[Field] = &[
     Field::KernelSeccomp,
     Field::Hostname,
     Field::DomainName,
+    Field::PreferIpv6,
+    Field::MeteredConnection,
+    Field::ProxyMode,
+    Field::WifiRadio,
+    Field::WifiAskToJoin,
+    Field::Volume,
+    Field::AudioBalance,
+    Field::AlertSounds,
+    Field::StartupChime,
 ];

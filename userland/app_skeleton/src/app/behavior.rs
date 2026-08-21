@@ -40,4 +40,22 @@ pub trait App {
     fn busy(&self) -> bool {
         false
     }
+
+    /// Width in pixels of an app-owned widget hosted in the titlebar, right
+    /// aligned inside it. Zero, the default, means the app owns no titlebar
+    /// widget and the frame keeps the whole bar. A non-zero width moves the
+    /// centred title clear of the widget, hands `paint_accessory` a sub-buffer
+    /// over it, and routes pointer events landing inside it to
+    /// `on_accessory_event` instead of starting a window drag. Keyboard events
+    /// are unaffected and keep arriving through `on_event`, so an accessory
+    /// that takes text tracks its own focus.
+    fn titlebar_accessory_w(&self) -> u32 {
+        0
+    }
+
+    fn paint_accessory(&mut self, _fb: &mut PaintBuffer) {}
+
+    fn on_accessory_event(&mut self, _event: InputEvent) -> EventOutcome {
+        EventOutcome::Idle
+    }
 }

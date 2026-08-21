@@ -14,13 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const THEME_LABELS: &[&[u8]] = &[
-    b"Aurora",
-    b"Slate",
-    b"Nord",
-    b"Dracula",
-    b"Solar",
-    b"Mono",
-    b"Forest",
-    b"Sunset",
-];
+pub const THEME_LABELS: &[&[u8]] =
+    &[b"Aurora", b"Slate", b"Nord", b"Dracula", b"Solar", b"Mono", b"Forest", b"Sunset"];

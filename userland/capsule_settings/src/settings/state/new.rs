@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_policy_proto::Category;
-
 use crate::wifi::{NetStatus, ScanNetwork, ScanStats, WifiInterface};
 
 use super::cache::FieldValue;
 use super::edit_buffer::EditBuffer;
+use crate::settings::section::{Section, SECTION_COUNT};
+
 use super::state::{State, WifiConnect, WifiScan, FIELD_SLOTS, WIFI_MAX, WIFI_NET_MAX};
 use super::status::Status;
 
@@ -27,14 +27,17 @@ pub fn new() -> State {
     State {
         policy_port: 0,
         policy_ready: false,
-        category: Category::User,
-        cursor: [0, 0, 0],
-        scroll_top: [0, 0, 0],
+        section: Section::General,
+        cursor: [0; SECTION_COUNT],
+        scroll_px: [0; SECTION_COUNT],
+        search: EditBuffer::empty(),
+        search_focused: false,
+        search_cursor: 0,
+        search_scroll: 0,
         values: [FieldValue::Unknown; FIELD_SLOTS],
         editing: false,
         edit: EditBuffer::empty(),
         status: Status::idle(),
-        wifi_active: false,
         wifi_adapters: [WifiInterface::default(); WIFI_MAX],
         wifi_adapter_count: 0,
         wifi_cursor: 0,

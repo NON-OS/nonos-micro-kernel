@@ -17,23 +17,24 @@
 //! Jumping the cursor a page or the whole list at a time. Arrow keys alone
 //! meant eighteen presses to cross the Security tab.
 
-use crate::settings::paint::visible_rows::visible_rows;
+use crate::settings::ui::metrics::ROW_H;
 
 use super::focused_count::focused_count;
 use super::state::State;
 use super::track_scroll::track_scroll;
+use super::view_h::view_h;
 
 /// Move the cursor to the first row.
 pub fn cursor_home(state: &mut State) {
-    let i = state.category as usize;
+    let i = state.section.index();
     state.cursor[i] = 0;
     track_scroll(state);
 }
 
 /// Move the cursor to the last row.
 pub fn cursor_end(state: &mut State) {
-    let i = state.category as usize;
-    let n = focused_count(state.category);
+    let i = state.section.index();
+    let n = focused_count(state.section);
     state.cursor[i] = n.saturating_sub(1);
     track_scroll(state);
 }
@@ -42,12 +43,12 @@ pub fn cursor_end(state: &mut State) {
 /// which is what the arrows do, because a page jump that wrapped would lose
 /// the user's place in a long list.
 pub fn cursor_page(state: &mut State, down: bool) {
-    let i = state.category as usize;
-    let n = focused_count(state.category);
+    let i = state.section.index();
+    let n = focused_count(state.section);
     if n == 0 {
         return;
     }
-    let page = visible_rows(state.win_h).max(1);
+    let page = (view_h(state) / ROW_H).max(1) as usize;
     let cursor = state.cursor[i];
     state.cursor[i] = if down {
         core::cmp::min(cursor.saturating_add(page), n - 1)

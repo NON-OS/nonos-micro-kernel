@@ -19,8 +19,7 @@ use nonos_app_skeleton::{EventOutcome, KEY_DOWN, KEY_ENTER, KEY_ESC, KEY_TAB, KE
 use crate::settings::state::refresh_wifi::{connect_selected, run_wifi_scan};
 use crate::settings::state::State;
 
-use super::next_category::next_category;
-use super::prev_category::prev_category;
+use super::next_section::{next_section, prev_section};
 
 const KEY_SPACE: u32 = 0x20;
 const KEY_BACKSPACE: u32 = 0x08;
@@ -38,9 +37,9 @@ pub(super) fn on_event_wifi(state: &mut State, code: u32) -> EventOutcome {
     }
     match code {
         KEY_ESC => EventOutcome::Close,
-        KEY_TAB => repaint_after(state, next_category),
-        c if c == b']' as u32 => repaint_after(state, next_category),
-        c if c == b'[' as u32 => repaint_after(state, prev_category),
+        KEY_TAB => repaint_after(state, next_section),
+        c if c == b']' as u32 => repaint_after(state, next_section),
+        c if c == b'[' as u32 => repaint_after(state, prev_section),
         KEY_UP => {
             state.wifi_cursor = state.wifi_cursor.saturating_sub(1);
             EventOutcome::Repaint

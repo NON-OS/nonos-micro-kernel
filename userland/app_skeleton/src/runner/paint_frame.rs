@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::{content_rect, draw_frame, DecorationHit};
+use nonos_toolkit::decorations::{accessory_rect, content_rect, draw_frame, DecorationHit};
 
 use crate::app::{App, AppManifest};
 use crate::clients::toolkit;
@@ -49,7 +49,11 @@ pub(super) fn paint<A: App>(
         height: binding.height,
     };
     let lit = hover != DecorationHit::None && hover != DecorationHit::Titlebar;
-    draw_frame(&mut fb, maximized, manifest.title, lit);
+    let accessory_w = app.titlebar_accessory_w();
+    draw_frame(&mut fb, maximized, manifest.title, lit, accessory_w);
+    if let Some(a) = accessory_rect(binding.width, binding.height, maximized, accessory_w) {
+        app.paint_accessory(&mut fb.sub(a.x, a.y, a.w, a.h));
+    }
     let c = content_rect(binding.width, binding.height, maximized);
     app.paint(&mut fb.sub(c.x, c.y, c.w, c.h));
     finish(&mut fb, maximized);
