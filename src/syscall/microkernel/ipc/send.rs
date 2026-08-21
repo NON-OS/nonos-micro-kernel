@@ -95,11 +95,23 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
 // kernel-owned reply inbox has no process owner for the router to wake, so the
 // blocked caller would otherwise sleep out its whole `mk_ipc_call` timeout.
 //
-// A reply with NO pending caller returns `None`: it is undeliverable. Since
-// endpoint adoption made a service own its reply endpoint, delivering it "as
-// addressed" routes it into the sender's own inbox, where the serve loop reads
-// it as a request and replies to the reply — a self-mail loop that pins a core
-// within seconds of one stray message. Dropping it is the only safe answer.
+// A reply with no pending caller is not automatically undeliverable. Two
+// senders reach this branch and they need opposite handling.
+//
+// A kernel-mediated round trip (crypto_pool, entropy, the block device) sends
+// its request straight to the server's process inbox and pushes no pending
+// entry; the kernel then drains the reply from this reply inbox itself. That
+// reply must be delivered as addressed so the drain finds it. Dropping it here
+// was the regression that stranded every X25519 handshake and starved the
+// block and entropy paths: the server replied, the kernel waited, and the
+// bytes were thrown away in between.
+//
+// The other sender is a service that adopted its reply endpoint as one it also
+// serves on. Delivering a stray reply there lands it back on the serve loop,
+// which reads it as a request and replies to the reply, a self-mail loop that
+// pins a core. Only this case is dropped, told apart by whether the sender owns
+// `target` as a registered service. A kernel reply inbox is a plain inbox, not
+// a service, so it is delivered.
 fn redirect_reply(
     sender_pid: u32,
     target: alloc::string::String,
@@ -109,8 +121,10 @@ fn redirect_reply(
         if let Some((caller_pid, caller_inbox, token)) = super::pending_reply::pop(sender_pid) {
             return Some((caller_inbox, Some(caller_pid), Some(token)));
         }
-        BOOMERANG.reject(&target, "reply with no caller, dropped", sender_pid);
-        return None;
+        if lookup_service(&target).map(|e| e.pid) == Some(sender_pid) {
+            BOOMERANG.reject(&target, "reply with no caller, dropped", sender_pid);
+            return None;
+        }
     }
     Some((target, None, None))
 }
