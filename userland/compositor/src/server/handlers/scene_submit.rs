@@ -46,13 +46,14 @@ pub fn handle(
     let Some(z) = super::u32_at(body, 24) else {
         return respond::status(sender_pid, req, E_INVAL, tx);
     };
-    if width == 0
-        || height == 0
-        || x.saturating_add(width) > ctx.width
-        || y.saturating_add(height) > ctx.height
-    {
+    // Clip a window that runs past the display edge rather than refusing it.
+    // The WM's display size can differ from the compositor's by an edge pixel,
+    // and a hard reject there left a window's first submit refused and blank.
+    if width == 0 || height == 0 || x >= ctx.width || y >= ctx.height {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
+    let width = width.min(ctx.width - x);
+    let height = height.min(ctx.height - y);
     // A window that reopened its surface (a resize, for one) re-submits with a
     // new handle for the same owner. The old handle's backing is gone, so drop
     // it from the attach cache now instead of letting it linger until the
