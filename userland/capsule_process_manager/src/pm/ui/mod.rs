@@ -15,7 +15,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
+pub mod card;
+pub mod chrome;
 pub mod icon_table;
 pub mod metrics;
 pub mod nav_geom;
+pub mod paint;
+pub mod risk_strip;
+pub mod sidebar;
+pub mod spark;
+pub mod status_bar;
+pub mod table_geom;
 pub mod text;
