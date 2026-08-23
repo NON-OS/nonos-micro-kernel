@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use nonos_libc::{ProcStatEntry, ProcStatHeader, PROC_NAME_LEN};
 
 use super::super::security::{Alert, Monitor};
-use super::Screen;
+use super::{Filter, History, Screen};
 
 // Ceiling on processes read in one pass. Well above a full desktop; the whole
 // live set fits in a single syscall so the view is never truncated in practice.
@@ -104,10 +104,17 @@ pub struct State {
     // (pid, run_ticks) from the previous sample, so cpu percent is a real delta
     // per process rather than a cumulative total.
     pub(super) prev: Vec<(u32, u64)>,
+    // Sampled cpu/memory history behind every sparkline, and the narrowing the
+    // filter chips apply on top of the sort order.
+    pub history: History,
+    pub filter: Filter,
     // Which screen is shown, and the live security view over the same rows.
     pub screen: Screen,
     pub monitor: Monitor,
     pub alerts: Vec<Alert>,
+    // Pids the monitor named this refresh, so the Flagged filter and anything
+    // else that marks a row read from one list rather than re-deriving it.
+    pub flagged: Vec<u32>,
     // Selection and scroll within the security panel's findings list;
     // `alert_visible` is how many findings fit, set by the panel painter.
     pub alert_sel: usize,
