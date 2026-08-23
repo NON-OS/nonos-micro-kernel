@@ -15,12 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::PaintBuffer;
+use nonos_toolkit::icons::{draw, IconId};
 
 use crate::settings::state::State;
 
 use super::bytes::as_str;
-use super::icon_glyph::draw_glyph;
-use super::icon_search::SEARCH;
 use super::metrics::BODY_PX;
 use super::text;
 use super::theme::{ACCENT, SEARCH_BG, SEARCH_BORDER, SEARCH_FG, SEARCH_PLACEHOLDER};
@@ -39,7 +38,7 @@ pub fn paint(fb: &mut PaintBuffer, state: &State) {
     fb.fill_round(0, 0, w, h, r, SEARCH_BG);
     let border = if state.search_focused { ACCENT } else { SEARCH_BORDER };
     fb.stroke_round(0, 0, w, h, r, 1, border);
-    draw_glyph(fb, &SEARCH, PAD_X, (h - ICON) / 2, ICON, SEARCH_PLACEHOLDER);
+    draw(fb, IconId::SettingsSearch, PAD_X, (h - ICON) / 2, ICON, SEARCH_PLACEHOLDER);
     let x = PAD_X + ICON + GAP;
     let top = text::centred_top(0, h, BODY_PX);
     let query = as_str(state.search.as_slice());

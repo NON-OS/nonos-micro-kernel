@@ -16,21 +16,19 @@
 
 use crate::settings::section::Section;
 
-use super::icon_glyph::Glyph;
-use super::icons_a::{APPEARANCE, GENERAL, NETWORK, SECURITY, WIFI};
-use super::icons_b::{DEVELOPER, PRIVACY, SOUND, STORAGE, UPDATES};
+use nonos_toolkit::icons::IconId;
 
-pub fn glyph(section: Section) -> &'static Glyph {
+pub fn icon(section: Section) -> IconId {
     match section {
-        Section::General => &GENERAL,
-        Section::Network => &NETWORK,
-        Section::Wifi => &WIFI,
-        Section::Security => &SECURITY,
-        Section::Appearance => &APPEARANCE,
-        Section::Privacy => &PRIVACY,
-        Section::Sound => &SOUND,
-        Section::Storage => &STORAGE,
-        Section::Updates => &UPDATES,
-        Section::Developer => &DEVELOPER,
+        Section::General => IconId::SettingsGeneral,
+        Section::Network => IconId::SettingsNetwork,
+        Section::Wifi => IconId::SettingsWifi,
+        Section::Security => IconId::SettingsSecurity,
+        Section::Appearance => IconId::SettingsAppearance,
+        Section::Privacy => IconId::SettingsPrivacy,
+        Section::Sound => IconId::SettingsSound,
+        Section::Storage => IconId::SettingsStorage,
+        Section::Updates => IconId::SettingsUpdates,
+        Section::Developer => IconId::SettingsDeveloper,
     }
 }
