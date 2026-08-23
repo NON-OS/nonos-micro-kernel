@@ -14,29 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub fn source_span(index: u32, src: u32, dst: u32) -> (u64, u64) {
+    let lo = ((index as u64 * src as u64) << 16) / dst as u64;
+    let hi = (((index as u64 + 1) * src as u64) << 16) / dst as u64;
+    (lo, core::cmp::max(hi, lo + 1))
+}
 
-mod blend;
-mod blit;
-mod buffer;
-mod circle;
-mod clear;
-mod fill_rect;
-mod glyph_advance;
-mod gradient;
-mod line;
-mod line_aa;
-pub mod mixer;
-mod panel;
-pub mod radius;
-pub mod resample;
-mod round_fill;
-mod round_stroke;
-mod shadow;
-mod sub;
-mod text;
-mod text_scaled;
-mod text_ttf;
-
-pub use buffer::PaintBuffer;
-pub use glyph_advance::font_advance;
-pub use text_ttf::{measure_ttf, measure_ttf_mono};
+pub fn cover(lo: u64, hi: u64, cell: u64) -> u64 {
+    let c0 = cell << 16;
+    let c1 = c0 + (1 << 16);
+    let a = if lo > c0 { lo } else { c0 };
+    let b = if hi < c1 { hi } else { c1 };
+    if b > a {
+        b - a
+    } else {
+        0
+    }
+}

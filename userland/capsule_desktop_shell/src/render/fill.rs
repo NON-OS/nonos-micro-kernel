@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_toolkit::paint::resample::source_span;
+
 pub fn fill_rect(
     base_va: u64,
     stride_bytes: u32,
@@ -121,12 +123,6 @@ pub fn blit_rgba8_scaled(
             unsafe { core::ptr::write_volatile(cell, 0xFF00_0000 | out) };
         }
     }
-}
-
-fn source_span(index: u32, src: u32, dst: u32) -> (u64, u64) {
-    let lo = ((index as u64 * src as u64) << 16) / dst as u64;
-    let hi = (((index as u64 + 1) * src as u64) << 16) / dst as u64;
-    (lo, core::cmp::max(hi, lo + 1))
 }
 
 /// Like `blit_rgba8_scaled` but recolors the source: it uses only the source
