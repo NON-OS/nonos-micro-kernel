@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Sort, State, View, FIRST_ROW_Y, ROW_H};
+use super::{Screen, Sort, State, FIRST_ROW_Y, ROW_H};
 
 impl State {
     pub(super) fn selected_index(&self) -> Option<usize> {
@@ -60,14 +60,21 @@ impl State {
         self.scroll = (self.scroll as i32 + delta).clamp(0, max.max(0)) as usize;
     }
 
-    // Flip between the process table and the security panel. Any armed kill is
-    // cancelled so a confirmation never survives a context switch.
-    pub fn toggle_view(&mut self) {
+    // Any armed kill is cancelled so a confirmation never survives a screen
+    // change.
+    pub fn set_screen(&mut self, screen: Screen) {
         self.disarm();
-        self.view = match self.view {
-            View::Processes => View::Security,
-            View::Security => View::Processes,
+        self.screen = screen;
+    }
+
+    // S keeps its old meaning: jump to Security, and back to the table from
+    // there, so the shortcut that existed before the sidebar still works.
+    pub fn toggle_security(&mut self) {
+        let next = match self.screen {
+            Screen::Security => Screen::Processes,
+            _ => Screen::Security,
         };
+        self.set_screen(next);
     }
 
     pub fn set_sort(&mut self, sort: Sort) {

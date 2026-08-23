@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::layout::{SEC_LIST_TOP, SEC_ROW_H};
-use super::{State, View};
+use super::{Screen, State};
 
 impl State {
     // Move the highlighted finding, keeping it inside the visible window.
@@ -83,7 +83,7 @@ impl State {
         }
         if self.rows.iter().any(|r| r.pid == pid) {
             self.selected_pid = pid;
-            self.view = View::Processes;
+            self.screen = Screen::Processes;
             if let Some(idx) = self.selected_index() {
                 self.ensure_visible(idx);
             }

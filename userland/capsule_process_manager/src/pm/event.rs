@@ -20,17 +20,19 @@ use nonos_app_skeleton::{
 };
 
 use super::layout::{sort_at_x, HEADER_H};
-use super::state::{Sort, State, View, SIGKILL, SIGTERM};
+use super::state::{Screen, Sort, State, SIGKILL, SIGTERM};
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     // S toggles panels from anywhere.
     if event.is_key_down() && matches!(event.code, 0x53 | 0x73) {
-        state.toggle_view();
+        state.toggle_security();
         return EventOutcome::Repaint;
     }
-    match state.view {
-        View::Processes => process_event(state, event),
-        View::Security => security_event(state, event),
+    match state.screen {
+        Screen::Overview | Screen::Processes => process_event(state, event),
+        Screen::Cpu | Screen::Memory | Screen::Authority | Screen::Security => {
+            security_event(state, event)
+        }
     }
 }
 
@@ -92,7 +94,7 @@ fn security_event(state: &mut State, event: InputEvent) -> EventOutcome {
     let big = state.alert_visible.max(1) as i32;
     match event.code {
         // Esc leaves the panel back to the process table.
-        KEY_ESC => state.toggle_view(),
+        KEY_ESC => state.toggle_security(),
         KEY_UP => state.alert_move(-1),
         KEY_DOWN => state.alert_move(1),
         KEY_PAGE_UP => state.alert_move(-big),

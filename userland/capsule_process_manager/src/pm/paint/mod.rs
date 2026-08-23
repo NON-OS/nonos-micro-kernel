@@ -24,7 +24,7 @@ mod table;
 use nonos_app_skeleton::PaintBuffer;
 
 use super::security::Level;
-use super::state::{State, View};
+use super::state::{Screen, State};
 use super::theme::{AMBER, BACKGROUND, DANGER, OK};
 
 pub(super) use super::layout::HEADER_H;
@@ -66,8 +66,10 @@ pub(super) fn badge(fb: &mut PaintBuffer, state: &State) {
 
 pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
     fb.clear(BACKGROUND);
-    match state.view {
-        View::Processes => table::paint(state, fb),
-        View::Security => security::paint(state, fb),
+    match state.screen {
+        Screen::Overview | Screen::Processes => table::paint(state, fb),
+        Screen::Cpu | Screen::Memory | Screen::Authority | Screen::Security => {
+            security::paint(state, fb)
+        }
     }
 }

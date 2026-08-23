@@ -19,6 +19,7 @@ use alloc::vec::Vec;
 use nonos_libc::{ProcStatEntry, ProcStatHeader, PROC_NAME_LEN};
 
 use super::super::security::{Alert, Monitor};
+use super::Screen;
 
 // Ceiling on processes read in one pass. Well above a full desktop; the whole
 // live set fits in a single syscall so the view is never truncated in practice.
@@ -35,13 +36,6 @@ pub const SIGKILL: u64 = 9;
 
 pub(super) const HEADER_LEN: usize = core::mem::size_of::<ProcStatHeader>();
 pub(super) const ENTRY_LEN: usize = core::mem::size_of::<ProcStatEntry>();
-
-// Which panel the window is showing.
-#[derive(Clone, Copy, PartialEq)]
-pub enum View {
-    Processes,
-    Security,
-}
 
 // Column the table is ordered by.
 #[derive(Clone, Copy, PartialEq)]
@@ -110,8 +104,8 @@ pub struct State {
     // (pid, run_ticks) from the previous sample, so cpu percent is a real delta
     // per process rather than a cumulative total.
     pub(super) prev: Vec<(u32, u64)>,
-    // Which panel is shown, and the live security view over the same rows.
-    pub view: View,
+    // Which screen is shown, and the live security view over the same rows.
+    pub screen: Screen,
     pub monitor: Monitor,
     pub alerts: Vec<Alert>,
     // Selection and scroll within the security panel's findings list;

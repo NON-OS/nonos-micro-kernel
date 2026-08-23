@@ -18,7 +18,9 @@ mod kill;
 mod lifecycle;
 mod navigate;
 mod refresh;
+mod screen;
 mod secnav;
 mod types;
 
-pub use types::{Row, Sort, State, View, FIRST_ROW_Y, ROW_H, SIGKILL, SIGTERM};
+pub use screen::{Screen, SCREENS};
+pub use types::{Row, Sort, State, FIRST_ROW_Y, ROW_H, SIGKILL, SIGTERM};
