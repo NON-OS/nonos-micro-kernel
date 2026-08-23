@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use nonos_libc::{ProcStatEntry, ProcStatHeader, PROC_NAME_LEN};
 
 use super::super::security::{Alert, Monitor};
-use super::{Filter, History, Query, Screen};
+use super::{Filter, History, Query, Screen, Sort};
 
 // Ceiling on processes read in one pass. Well above a full desktop; the whole
 // live set fits in a single syscall so the view is never truncated in practice.
@@ -36,26 +36,6 @@ pub const SIGKILL: u64 = 9;
 
 pub(super) const HEADER_LEN: usize = core::mem::size_of::<ProcStatHeader>();
 pub(super) const ENTRY_LEN: usize = core::mem::size_of::<ProcStatEntry>();
-
-// Column the table is ordered by.
-#[derive(Clone, Copy, PartialEq)]
-pub enum Sort {
-    Cpu,
-    Mem,
-    Name,
-    Pid,
-}
-
-impl Sort {
-    pub fn label(self) -> &'static [u8] {
-        match self {
-            Sort::Cpu => b"cpu",
-            Sort::Mem => b"memory",
-            Sort::Name => b"name",
-            Sort::Pid => b"pid",
-        }
-    }
-}
 
 // One process, as the kernel reports it: identity, scheduler state, granted
 // authority, resident memory, and the cpu share computed from tick deltas.

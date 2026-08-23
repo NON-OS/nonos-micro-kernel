@@ -14,24 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod filter;
-mod history;
-mod kill;
-mod lifecycle;
-mod navigate;
-mod refresh;
-mod samples;
-mod screen;
-mod search;
-mod secnav;
-mod select;
-mod sort;
-mod types;
+// Column the table is ordered by.
+#[derive(Clone, Copy, PartialEq)]
+pub enum Sort {
+    Cpu,
+    Mem,
+    Name,
+    Pid,
+}
 
-pub use filter::{Filter, FILTERS};
-pub use history::History;
-pub use samples::{Ring, SAMPLES};
-pub use screen::{Screen, SCREENS};
-pub use search::Query;
-pub use sort::Sort;
-pub use types::{Row, State, FIRST_ROW_Y, ROW_H, SIGKILL, SIGTERM};
+impl Sort {
+    pub fn label(self) -> &'static [u8] {
+        match self {
+            Sort::Cpu => b"cpu",
+            Sort::Mem => b"memory",
+            Sort::Name => b"name",
+            Sort::Pid => b"pid",
+        }
+    }
+}
