@@ -20,7 +20,7 @@ use super::id::IconId;
 /// One 8-bit coverage mask per icon, ordered to match `IconId`. The host test
 /// compares every entry against the file `IconId::name` points at, so the
 /// ordinal indexing below is proven rather than assumed.
-const MASKS: [&[u8]; 27] = [
+const MASKS: [&[u8]; 32] = [
     include_bytes!("../../../assets/icons/about.a8"),
     include_bytes!("../../../assets/icons/audio_player.a8"),
     include_bytes!("../../../assets/icons/browser.a8"),
@@ -48,6 +48,11 @@ const MASKS: [&[u8]; 27] = [
     include_bytes!("../../../assets/icons/settings_storage.a8"),
     include_bytes!("../../../assets/icons/settings_updates.a8"),
     include_bytes!("../../../assets/icons/settings_wifi.a8"),
+    include_bytes!("../../../assets/icons/pm_overview.a8"),
+    include_bytes!("../../../assets/icons/pm_cpu.a8"),
+    include_bytes!("../../../assets/icons/pm_memory.a8"),
+    include_bytes!("../../../assets/icons/pm_authority.a8"),
+    include_bytes!("../../../assets/icons/pm_security.a8"),
 ];
 
 pub fn mask(id: IconId) -> &'static [u8] {

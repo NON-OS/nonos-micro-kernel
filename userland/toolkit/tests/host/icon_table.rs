@@ -13,8 +13,8 @@ use table::{dim, mask};
 fn main() {
     let all = IconId::ALL;
     let mut fail = 0usize;
-    if all.len() != 27 {
-        println!("expected 27 icons, got {}", all.len());
+    if all.len() != 32 {
+        println!("expected 32 icons, got {}", all.len());
         fail += 1;
     }
     for (i, a) in all.iter().enumerate() {
