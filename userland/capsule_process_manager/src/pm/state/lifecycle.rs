@@ -32,6 +32,8 @@ impl State {
             sort: Sort::Cpu,
             scroll: 0,
             visible: 1,
+            fb_w: 0,
+            fb_h: 0,
             total_mem_kb: 0,
             total_cpu: 0,
             last_total_ticks: 0,

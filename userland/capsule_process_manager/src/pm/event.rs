@@ -14,97 +14,58 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{
-    EventOutcome, InputEvent, InputKind, KEY_DOWN, KEY_END, KEY_ENTER, KEY_ESC, KEY_HOME,
-    KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_UP,
-};
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
-use super::layout::{sort_at_x, HEADER_H};
-use super::state::{Screen, Sort, State, SIGKILL, SIGTERM};
+use super::state::{Screen, State, SIGKILL, SIGTERM};
+use super::ui::hit::{self, Target};
+use super::ui::table_geom;
+
+#[path = "event_key.rs"]
+mod event_key;
+#[path = "event_scroll.rs"]
+mod event_scroll;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
-    // S toggles panels from anywhere.
-    if event.is_key_down() && matches!(event.code, 0x53 | 0x73) {
-        state.toggle_security();
+    if event.kind == InputKind::ButtonDown {
+        return click(state, event.x, event.y);
+    }
+    if event.kind == InputKind::Wheel {
+        let delta = if event.delta_y > 0 { -3 } else { 3 };
+        if state.screen == Screen::Security {
+            state.alert_scroll_by(delta);
+        } else {
+            state.scroll_by(delta);
+        }
         return EventOutcome::Repaint;
     }
-    match state.screen {
-        Screen::Overview | Screen::Processes => process_event(state, event),
-        Screen::Cpu | Screen::Memory | Screen::Authority | Screen::Security => {
-            security_event(state, event)
-        }
+    if !event.is_key_down() {
+        return EventOutcome::Idle;
     }
+    event_key::key(state, event.code)
 }
 
-fn process_event(state: &mut State, event: InputEvent) -> EventOutcome {
-    if event.kind == InputKind::ButtonDown {
-        // A click on the header row sorts by that column; below it selects.
-        if event.y < HEADER_H as i32 {
-            if let Some(sort) = sort_at_x(event.x) {
+// The whole click path: ask the shared hit test what the frame drew under the
+// pointer, then act on the answer. Not one coordinate is derived here, which is
+// the only reason a click cannot land on something other than what was painted.
+fn click(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    let (w, h) = (state.fb_w, state.fb_h);
+    let Some(target) = hit::at(state, w, h, x, y) else {
+        return EventOutcome::Idle;
+    };
+    match target {
+        Target::Nav(screen) => state.set_screen(screen),
+        Target::Sort(col) => {
+            if let Some(sort) = table_geom::sort_for(col) {
                 state.set_sort(sort);
             }
-        } else {
-            state.select_at(event.y);
         }
-        return EventOutcome::Repaint;
-    }
-    if event.kind == InputKind::Wheel {
-        state.scroll_by(if event.delta_y > 0 { -3 } else { 3 });
-        return EventOutcome::Repaint;
-    }
-    if !event.is_key_down() {
-        return EventOutcome::Idle;
-    }
-    let big = state.visible.max(1) as i32;
-    match event.code {
-        KEY_ESC => return EventOutcome::Close,
-        KEY_UP => state.move_selection(-1),
-        KEY_DOWN => state.move_selection(1),
-        KEY_PAGE_UP => state.move_selection(-big),
-        KEY_PAGE_DOWN => state.move_selection(big),
-        KEY_HOME => state.move_selection(-(state.rows.len() as i32)),
-        KEY_END => state.move_selection(state.rows.len() as i32),
-        // K ends, F force-kills the selection.
-        0x4B | 0x6B => state.kill_selected(SIGTERM),
-        0x46 | 0x66 => state.kill_selected(SIGKILL),
-        // Sort by cpu, memory, name or pid.
-        0x43 | 0x63 => state.set_sort(Sort::Cpu),
-        0x4D | 0x6D => state.set_sort(Sort::Mem),
-        0x4E | 0x6E => state.set_sort(Sort::Name),
-        0x50 | 0x70 => state.set_sort(Sort::Pid),
-        // R re-reads the table immediately.
-        0x52 | 0x72 => state.refresh(),
-        _ => return EventOutcome::Idle,
-    }
-    EventOutcome::Repaint
-}
-
-fn security_event(state: &mut State, event: InputEvent) -> EventOutcome {
-    if event.kind == InputKind::ButtonDown {
-        state.alert_select_at(event.y);
-        return EventOutcome::Repaint;
-    }
-    if event.kind == InputKind::Wheel {
-        state.alert_scroll_by(if event.delta_y > 0 { -3 } else { 3 });
-        return EventOutcome::Repaint;
-    }
-    if !event.is_key_down() {
-        return EventOutcome::Idle;
-    }
-    let big = state.alert_visible.max(1) as i32;
-    match event.code {
-        // Esc leaves the panel back to the process table.
-        KEY_ESC => state.toggle_security(),
-        KEY_UP => state.alert_move(-1),
-        KEY_DOWN => state.alert_move(1),
-        KEY_PAGE_UP => state.alert_move(-big),
-        KEY_PAGE_DOWN => state.alert_move(big),
-        KEY_HOME => state.alert_move(-(state.alerts.len() as i32)),
-        KEY_END => state.alert_move(state.alerts.len() as i32),
-        // Enter jumps to the process the finding names.
-        KEY_ENTER => state.jump_to_alert(),
-        0x52 | 0x72 => state.refresh(),
-        _ => return EventOutcome::Idle,
+        Target::Row(index) | Target::Matrix(index) => state.select_visible(index),
+        Target::Finding(index) => {
+            state.alert_sel = index;
+            state.jump_to_alert();
+        }
+        Target::EndProcess => state.kill_selected(SIGTERM),
+        Target::ForceQuit => state.kill_selected(SIGKILL),
     }
     EventOutcome::Repaint
 }

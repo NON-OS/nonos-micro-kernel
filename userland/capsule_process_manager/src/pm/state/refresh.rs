@@ -95,7 +95,7 @@ impl State {
         } else {
             self.selected_pid = 0;
         }
-        let max = self.rows.len().saturating_sub(self.visible);
+        let max = self.filtered().len().saturating_sub(self.visible);
         if self.scroll > max {
             self.scroll = max;
         }

@@ -97,6 +97,10 @@ pub struct State {
     // reads it to page and to keep the selection on screen.
     pub scroll: usize,
     pub visible: usize,
+    // Frame size the last paint measured against. An input event carries no
+    // dimensions, and the hit test must ask the geometry the same ones.
+    pub fb_w: u32,
+    pub fb_h: u32,
     // Live totals across the whole table, recomputed each refresh.
     pub total_mem_kb: u64,
     pub total_cpu: u32,

@@ -17,6 +17,7 @@
 pub mod bars;
 pub mod card;
 pub mod chrome;
+pub mod hit;
 pub mod icon_table;
 pub mod insp_actions;
 pub mod insp_chips;

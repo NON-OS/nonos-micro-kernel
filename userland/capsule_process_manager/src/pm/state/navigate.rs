@@ -18,7 +18,7 @@ use super::{Screen, Sort, State, FIRST_ROW_Y, ROW_H};
 
 impl State {
     pub(super) fn selected_index(&self) -> Option<usize> {
-        self.rows.iter().position(|r| r.pid == self.selected_pid)
+        self.filtered().iter().position(|r| r.pid == self.selected_pid)
     }
 
     // Keep row `idx` inside the visible window.
@@ -44,19 +44,19 @@ impl State {
 
     // Move the selection by `delta` rows, scrolling to follow it.
     pub fn move_selection(&mut self, delta: i32) {
-        if self.rows.is_empty() {
+        let total = self.filtered().len();
+        if total == 0 {
             return;
         }
-        self.disarm();
         let cur = self.selected_index().map(|i| i as i32).unwrap_or(-1);
-        let next = (cur + delta).clamp(0, self.rows.len() as i32 - 1) as usize;
-        self.selected_pid = self.rows[next].pid;
+        let next = (cur + delta).clamp(0, total as i32 - 1) as usize;
+        self.select_visible(next);
         self.ensure_visible(next);
     }
 
     // Scroll the window without moving the selection (wheel / page keys).
     pub fn scroll_by(&mut self, delta: i32) {
-        let max = self.rows.len().saturating_sub(self.visible) as i32;
+        let max = self.filtered().len().saturating_sub(self.visible) as i32;
         self.scroll = (self.scroll as i32 + delta).clamp(0, max.max(0)) as usize;
     }
 
@@ -65,6 +65,7 @@ impl State {
     pub fn set_screen(&mut self, screen: Screen) {
         self.disarm();
         self.screen = screen;
+        self.scroll = 0;
     }
 
     // S keeps its old meaning: jump to Security, and back to the table from

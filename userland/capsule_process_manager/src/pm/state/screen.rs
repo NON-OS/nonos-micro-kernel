@@ -52,4 +52,11 @@ impl Screen {
     pub fn has_inspector(self) -> bool {
         matches!(self, Screen::Overview | Screen::Processes)
     }
+
+    // The next screen down the sidebar, wrapping at the end, so TAB walks the
+    // same order the nav rows are drawn in.
+    pub fn next(self) -> Screen {
+        let at = SCREENS.iter().position(|s| *s == self).unwrap_or(0);
+        SCREENS[(at + 1) % SCREENS.len()]
+    }
 }

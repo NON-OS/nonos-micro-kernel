@@ -14,20 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod filter;
-mod history;
-mod kill;
-mod lifecycle;
-mod navigate;
-mod refresh;
-mod samples;
-mod screen;
-mod secnav;
-mod select;
-mod types;
+use super::State;
 
-pub use filter::{Filter, FILTERS};
-pub use history::History;
-pub use samples::{Ring, SAMPLES};
-pub use screen::{Screen, SCREENS};
-pub use types::{Row, Sort, State, FIRST_ROW_Y, ROW_H, SIGKILL, SIGTERM};
+impl State {
+    // A click hands back an index into `filtered()`, which reorders and shrinks
+    // under sort and filter. Resolve it to a pid at click time: the pid is the
+    // only handle that still names the same process one refresh later.
+    pub fn select_visible(&mut self, index: usize) {
+        let Some(pid) = self.filtered().get(index).map(|r| r.pid) else {
+            return;
+        };
+        self.disarm();
+        self.selected_pid = pid;
+    }
+}

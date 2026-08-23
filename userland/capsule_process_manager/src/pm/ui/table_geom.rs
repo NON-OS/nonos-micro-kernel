@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::super::state::Sort;
-use super::metrics::{COL_AUTH_W, COL_CPU_W, COL_MEM_W, COL_PID_W, COL_STATE_W, COL_UPTIME_W};
+use super::metrics::{
+    COL_AUTH_W, COL_CPU_W, COL_MEM_W, COL_PID_W, COL_STATE_W, COL_UPTIME_W, TBL_HEAD_H,
+};
 
 // Everything measured from these columns (widths, offsets, the row band and the
 // click inversions) is a child module, so each file stays inside the 75-line cap
@@ -64,4 +66,10 @@ pub fn sort_for(col: Col) -> Option<Sort> {
         Col::Mem => Some(Sort::Mem),
         _ => None,
     }
+}
+
+// The header band, in table-local coordinates. `index_at` rejects the same y,
+// so the sort test and the row test share one edge rather than two.
+pub fn in_head(y: i32) -> bool {
+    y >= 0 && y < TBL_HEAD_H as i32
 }
