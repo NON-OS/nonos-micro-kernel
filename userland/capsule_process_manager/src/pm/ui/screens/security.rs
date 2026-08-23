@@ -15,21 +15,42 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::PaintBuffer;
+use nonos_toolkit::icons::IconId;
 
+use crate::pm::format::u32_decimal;
 use crate::pm::state::State;
-use crate::pm::theme::{CARD_BG, CARD_BORDER, MUTED};
 
+use super::super::card;
 use super::super::chrome::Rect;
-use super::super::metrics::{BODY_PX, PANEL_RADIUS};
-use super::super::text;
+use super::super::metrics::CARD_GAP;
+use super::sec_alerts;
 
-// Placeholder pane. Phase 3 replaces this body with the real screen; the empty
-// card keeps the chrome verifiable on its own terms until then.
+// The same tally and the same findings the old panel drew, on the shared
+// primitives: the posture as stat cards, then the monitor's findings as rows.
+// Nothing here is computed differently, only painted differently.
 pub fn paint(state: &State, fb: &mut PaintBuffer, r: &Rect) {
-    fb.fill_round(r.x, r.y, r.w, r.h, PANEL_RADIUS, CARD_BG);
-    fb.stroke_round(r.x, r.y, r.w, r.h, PANEL_RADIUS, 1, CARD_BORDER);
-    let label = state.screen.nav_label();
-    let top = text::centred_top(r.y, r.h, BODY_PX);
-    let x = r.x + r.w.saturating_sub(text::width(fb, label, BODY_PX)) / 2;
-    text::left(fb, x, top, label, MUTED, BODY_PX);
+    posture(state, fb, r);
+    sec_alerts::paint(state, fb, r);
+}
+
+// One card per sensitive class the posture counts. DMA keeps a card of its own
+// because it is the one authority that bypasses the page tables outright.
+fn posture(state: &State, fb: &mut PaintBuffer, r: &Rect) {
+    let p = &state.monitor.posture;
+    let cells: [(IconId, &[u8], &[u8], u32); 6] = [
+        (IconId::Processes, b"PROCESSES", b"live", p.total),
+        (IconId::SettingsSecurity, b"ADMIN", b"blanket", p.admin),
+        (IconId::SettingsDeveloper, b"RAW HW", b"device", p.raw_hw),
+        (IconId::SettingsStorage, b"DMA", b"bypass", p.dma),
+        (IconId::SettingsGeneral, b"SPAWN", b"reach", p.spawn),
+        (IconId::SettingsPrivacy, b"DEBUG", b"inspect", p.debug),
+    ];
+    let n = cells.len() as u32;
+    let w = r.w.saturating_sub(CARD_GAP * (n - 1)) / n;
+    for (i, (icon, caption, sub, value)) in cells.iter().enumerate() {
+        let mut buf = [0u8; 12];
+        let len = u32_decimal(*value, &mut buf);
+        let x = r.x + i as u32 * (w + CARD_GAP);
+        card::paint(fb, x, r.y, w, *icon, caption, &buf[..len], b"", sub);
+    }
 }

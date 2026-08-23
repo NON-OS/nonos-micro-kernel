@@ -17,19 +17,24 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::pm::state::State;
-use crate::pm::theme::{CARD_BG, CARD_BORDER, MUTED};
 
 use super::super::chrome::Rect;
-use super::super::metrics::{BODY_PX, PANEL_RADIUS};
-use super::super::text;
+use super::super::metrics::{CARD_GAP, CARD_H};
+use super::super::table;
+use super::super::table_geom::COLS_OVERVIEW;
+use super::{ovw_cards, ovw_counts};
 
-// Placeholder pane. Phase 3 replaces this body with the real screen; the empty
-// card keeps the chrome verifiable on its own terms until then.
+// Four stat cards across the top, then the five-column table taking the rest.
+// The card width is divided out of r.w rather than fixed, because this screen
+// docks the inspector and the pane narrows with it.
 pub fn paint(state: &State, fb: &mut PaintBuffer, r: &Rect) {
-    fb.fill_round(r.x, r.y, r.w, r.h, PANEL_RADIUS, CARD_BG);
-    fb.stroke_round(r.x, r.y, r.w, r.h, PANEL_RADIUS, 1, CARD_BORDER);
-    let label = state.screen.nav_label();
-    let top = text::centred_top(r.y, r.h, BODY_PX);
-    let x = r.x + r.w.saturating_sub(text::width(fb, label, BODY_PX)) / 2;
-    text::left(fb, x, top, label, MUTED, BODY_PX);
+    let w = r.w.saturating_sub(CARD_GAP * 3) / 4;
+    let step = w + CARD_GAP;
+    ovw_cards::cpu(state, fb, r.x, r.y, w);
+    ovw_cards::memory(state, fb, r.x + step, r.y, w);
+    ovw_counts::processes(state, fb, r.x + step * 2, r.y, w);
+    ovw_counts::authority(state, fb, r.x + step * 3, r.y, w);
+    let below = CARD_H + CARD_GAP;
+    let rect = Rect { x: r.x, y: r.y + below, w: r.w, h: r.h.saturating_sub(below) };
+    table::paint(state, fb, &rect, &COLS_OVERVIEW);
 }

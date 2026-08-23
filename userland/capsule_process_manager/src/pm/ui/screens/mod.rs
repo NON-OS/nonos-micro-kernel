@@ -14,9 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod auth_cells;
+pub mod auth_legend;
+pub mod auth_row;
 pub mod authority;
 pub mod cpu;
+pub mod cpu_bands;
+pub mod cpu_chart;
+pub mod mem_consumers;
+pub mod mem_trend;
 pub mod memory;
 pub mod overview;
+pub mod ovw_cards;
+pub mod ovw_counts;
 pub mod processes;
+pub mod sec_alerts;
+pub mod sec_geom;
+pub mod sec_row;
 pub mod security;

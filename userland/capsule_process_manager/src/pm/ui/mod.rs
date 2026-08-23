@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod bars;
 pub mod card;
 pub mod chrome;
 pub mod icon_table;
@@ -23,6 +24,7 @@ pub mod insp_fields;
 pub mod insp_geom;
 pub mod insp_spark;
 pub mod inspector;
+pub mod matrix_geom;
 pub mod metrics;
 pub mod nav_geom;
 pub mod paint;
