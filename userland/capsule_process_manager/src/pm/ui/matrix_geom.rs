@@ -57,17 +57,18 @@ pub fn visible_rows(table_h: u32) -> usize {
     (table_h.saturating_sub(HEAD_H + LEGEND_H) / ROW_H) as usize
 }
 
-pub fn row_at(y: i32, scroll: usize, total: usize) -> Option<usize> {
+pub fn row_at(y: i32, table_h: u32, scroll: usize, total: usize) -> Option<usize> {
     let offset = u32::try_from(y - HEAD_H as i32).ok()?;
-    let index = scroll + (offset / ROW_H) as usize;
-    (index < total).then_some(index)
+    let slot = (offset / ROW_H) as usize;
+    let index = scroll + slot;
+    (slot < visible_rows(table_h) && index < total).then_some(index)
 }
 
-// Table-local coordinates, matching table_geom. The caller bounds y by
-// visible_rows first: the legend strip under the grid is not part of the matrix
-// and this signature carries no height with which to reject it.
-pub fn cell_at(table_w: u32, x: i32, y: i32, scroll: usize, total: usize) -> Option<Cell> {
-    let row = row_at(y, scroll, total)?;
+// Table-local coordinates, matching table_geom. Bounding on visible_rows is what
+// keeps the legend strip under the grid out of the matrix: it is drawn in the same
+// pane but is not a row, and an unbounded slot would resolve it as one.
+pub fn cell_at(table_w: u32, x: i32, y: i32, h: u32, scroll: usize, total: usize) -> Option<Cell> {
+    let row = row_at(y, h, scroll, total)?;
     let span = (x.max(0) as u32).checked_sub(PAD_X + NAME_W)?;
     let col = (span / cell_w(table_w).max(1)) as usize;
     (col < MATRIX.len()).then_some((row, col))

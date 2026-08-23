@@ -41,17 +41,14 @@ pub fn table(state: &State, r: &Rect, cols: &[Col], x: i32, y: i32) -> Option<Ta
     table_geom::index_at(y, state.scroll, total, r.h).map(Target::Row)
 }
 
-// `cell_at` takes no pane height, so it cannot see the legend strip under the
-// grid. The last drawn row's bottom edge is `row_y(visible_rows(h))`, and
-// bounding against it here is what stops a legend click selecting a phantom row.
+// A click left of the first capability column lands on the process name, which
+// selects the row without naming a capability. Both branches take the pane height
+// so the legend strip under the grid can never resolve as a row.
 pub fn matrix(state: &State, r: &Rect, x: i32, y: i32) -> Option<Target> {
-    if y >= matrix_geom::row_y(matrix_geom::visible_rows(r.h)) as i32 {
-        return None;
-    }
     let total = state.filtered().len();
-    match matrix_geom::cell_at(r.w, x, y, state.scroll, total) {
+    match matrix_geom::cell_at(r.w, x, y, r.h, state.scroll, total) {
         Some((row, _)) => Some(Target::Matrix(row)),
-        None => matrix_geom::row_at(y, state.scroll, total).map(Target::Row),
+        None => matrix_geom::row_at(y, r.h, state.scroll, total).map(Target::Row),
     }
 }
 
