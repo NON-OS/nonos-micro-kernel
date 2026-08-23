@@ -33,25 +33,15 @@ pub enum IconId {
     Terminal,
     VideoPlayer,
     Wallet,
-}
-
-impl IconId {
-    pub const ALL: [IconId; 16] = [
-        IconId::About,
-        IconId::AudioPlayer,
-        IconId::Browser,
-        IconId::Calc,
-        IconId::Clock,
-        IconId::Editor,
-        IconId::Files,
-        IconId::FsFile,
-        IconId::FsFolder,
-        IconId::ImageViewer,
-        IconId::Processes,
-        IconId::Settings,
-        IconId::Snake,
-        IconId::Terminal,
-        IconId::VideoPlayer,
-        IconId::Wallet,
-    ];
+    SettingsAppearance,
+    SettingsDeveloper,
+    SettingsGeneral,
+    SettingsNetwork,
+    SettingsPrivacy,
+    SettingsSearch,
+    SettingsSecurity,
+    SettingsSound,
+    SettingsStorage,
+    SettingsUpdates,
+    SettingsWifi,
 }

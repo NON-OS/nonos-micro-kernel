@@ -17,43 +17,41 @@
 
 use super::id::IconId;
 
-const ABOUT: &[u8] = include_bytes!("../../../assets/icons/about.a8");
-const AUDIO_PLAYER: &[u8] = include_bytes!("../../../assets/icons/audio_player.a8");
-const BROWSER: &[u8] = include_bytes!("../../../assets/icons/browser.a8");
-const CALC: &[u8] = include_bytes!("../../../assets/icons/calc.a8");
-const CLOCK: &[u8] = include_bytes!("../../../assets/icons/clock.a8");
-const EDITOR: &[u8] = include_bytes!("../../../assets/icons/editor.a8");
-const FILES: &[u8] = include_bytes!("../../../assets/icons/files.a8");
-const FS_FILE: &[u8] = include_bytes!("../../../assets/icons/fs_file.a8");
-const FS_FOLDER: &[u8] = include_bytes!("../../../assets/icons/fs_folder.a8");
-const IMAGE_VIEWER: &[u8] = include_bytes!("../../../assets/icons/image_viewer.a8");
-const PROCESSES: &[u8] = include_bytes!("../../../assets/icons/processes.a8");
-const SETTINGS: &[u8] = include_bytes!("../../../assets/icons/settings.a8");
-const SNAKE: &[u8] = include_bytes!("../../../assets/icons/snake.a8");
-const TERMINAL: &[u8] = include_bytes!("../../../assets/icons/terminal.a8");
-const VIDEO_PLAYER: &[u8] = include_bytes!("../../../assets/icons/video_player.a8");
-const WALLET: &[u8] = include_bytes!("../../../assets/icons/wallet.a8");
+/// One 8-bit coverage mask per icon, ordered to match `IconId`. The host test
+/// compares every entry against the file `IconId::name` points at, so the
+/// ordinal indexing below is proven rather than assumed.
+const MASKS: [&[u8]; 27] = [
+    include_bytes!("../../../assets/icons/about.a8"),
+    include_bytes!("../../../assets/icons/audio_player.a8"),
+    include_bytes!("../../../assets/icons/browser.a8"),
+    include_bytes!("../../../assets/icons/calc.a8"),
+    include_bytes!("../../../assets/icons/clock.a8"),
+    include_bytes!("../../../assets/icons/editor.a8"),
+    include_bytes!("../../../assets/icons/files.a8"),
+    include_bytes!("../../../assets/icons/fs_file.a8"),
+    include_bytes!("../../../assets/icons/fs_folder.a8"),
+    include_bytes!("../../../assets/icons/image_viewer.a8"),
+    include_bytes!("../../../assets/icons/processes.a8"),
+    include_bytes!("../../../assets/icons/settings.a8"),
+    include_bytes!("../../../assets/icons/snake.a8"),
+    include_bytes!("../../../assets/icons/terminal.a8"),
+    include_bytes!("../../../assets/icons/video_player.a8"),
+    include_bytes!("../../../assets/icons/wallet.a8"),
+    include_bytes!("../../../assets/icons/settings_appearance.a8"),
+    include_bytes!("../../../assets/icons/settings_developer.a8"),
+    include_bytes!("../../../assets/icons/settings_general.a8"),
+    include_bytes!("../../../assets/icons/settings_network.a8"),
+    include_bytes!("../../../assets/icons/settings_privacy.a8"),
+    include_bytes!("../../../assets/icons/settings_search.a8"),
+    include_bytes!("../../../assets/icons/settings_security.a8"),
+    include_bytes!("../../../assets/icons/settings_sound.a8"),
+    include_bytes!("../../../assets/icons/settings_storage.a8"),
+    include_bytes!("../../../assets/icons/settings_updates.a8"),
+    include_bytes!("../../../assets/icons/settings_wifi.a8"),
+];
 
-/// The 8-bit coverage mask for `id`, square and row-major.
 pub fn mask(id: IconId) -> &'static [u8] {
-    match id {
-        IconId::About => ABOUT,
-        IconId::AudioPlayer => AUDIO_PLAYER,
-        IconId::Browser => BROWSER,
-        IconId::Calc => CALC,
-        IconId::Clock => CLOCK,
-        IconId::Editor => EDITOR,
-        IconId::Files => FILES,
-        IconId::FsFile => FS_FILE,
-        IconId::FsFolder => FS_FOLDER,
-        IconId::ImageViewer => IMAGE_VIEWER,
-        IconId::Processes => PROCESSES,
-        IconId::Settings => SETTINGS,
-        IconId::Snake => SNAKE,
-        IconId::Terminal => TERMINAL,
-        IconId::VideoPlayer => VIDEO_PLAYER,
-        IconId::Wallet => WALLET,
-    }
+    MASKS[id as usize]
 }
 
 /// Side length of `mask(id)`, recovered from its length rather than stored, so

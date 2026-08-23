@@ -1,15 +1,20 @@
 #[path = "../../src/icons/id.rs"]
 mod id;
+#[path = "../../src/icons/all.rs"]
+mod all;
 #[path = "../../src/icons/name.rs"]
 mod name;
+#[path = "../../src/icons/table.rs"]
+mod table;
 
 use id::IconId;
+use table::{dim, mask};
 
 fn main() {
     let all = IconId::ALL;
     let mut fail = 0usize;
-    if all.len() != 16 {
-        println!("expected 16 icons, got {}", all.len());
+    if all.len() != 27 {
+        println!("expected 27 icons, got {}", all.len());
         fail += 1;
     }
     for (i, a) in all.iter().enumerate() {
@@ -20,9 +25,21 @@ fn main() {
             }
         }
         let path = format!("../assets/icons/{}.a8", a.name());
-        if std::fs::metadata(&path).is_err() {
-            println!("{} has no mask at {}", a.name(), path);
-            fail += 1;
+        match std::fs::read(&path) {
+            Err(e) => {
+                println!("{}: {}", path, e);
+                fail += 1;
+            }
+            Ok(bytes) => {
+                if bytes != mask(*a) {
+                    println!("{} is wired to the wrong mask", a.name());
+                    fail += 1;
+                }
+                if dim(*a) * dim(*a) != bytes.len() as u32 {
+                    println!("{} mask is not square", a.name());
+                    fail += 1;
+                }
+            }
         }
     }
     if fail == 0 {

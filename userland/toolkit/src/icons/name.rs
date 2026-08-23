@@ -36,6 +36,17 @@ impl IconId {
             IconId::Terminal => "terminal",
             IconId::VideoPlayer => "video_player",
             IconId::Wallet => "wallet",
+            IconId::SettingsAppearance => "settings_appearance",
+            IconId::SettingsDeveloper => "settings_developer",
+            IconId::SettingsGeneral => "settings_general",
+            IconId::SettingsNetwork => "settings_network",
+            IconId::SettingsPrivacy => "settings_privacy",
+            IconId::SettingsSearch => "settings_search",
+            IconId::SettingsSecurity => "settings_security",
+            IconId::SettingsSound => "settings_sound",
+            IconId::SettingsStorage => "settings_storage",
+            IconId::SettingsUpdates => "settings_updates",
+            IconId::SettingsWifi => "settings_wifi",
         }
     }
 }
