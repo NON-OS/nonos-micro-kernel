@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 use crate::pm::state::{Screen, SCREENS};
 
 use super::metrics::{NAV_GAP, NAV_H, NAV_PAD_X, NAV_TOP, SIDEBAR_W};

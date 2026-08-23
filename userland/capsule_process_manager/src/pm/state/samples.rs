@@ -56,11 +56,19 @@ impl Ring {
     }
 
     pub fn cpu_at(&self, i: usize) -> u8 {
-        if i >= self.len { 0 } else { self.cpu[self.slot(i)] }
+        if i >= self.len {
+            0
+        } else {
+            self.cpu[self.slot(i)]
+        }
     }
 
     pub fn mem_at(&self, i: usize) -> u32 {
-        if i >= self.len { 0 } else { self.mem_kb[self.slot(i)] }
+        if i >= self.len {
+            0
+        } else {
+            self.mem_kb[self.slot(i)]
+        }
     }
 
     pub fn oldest_mem(&self) -> u32 {

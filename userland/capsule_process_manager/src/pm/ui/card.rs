@@ -21,8 +21,7 @@ use nonos_toolkit::icons::{draw, IconId};
 use crate::pm::theme::{CARD_BG, CARD_BORDER, MUTED, TITLE, WARNING};
 
 use super::metrics::{
-    BODY_PX, CARD_H, CARD_ICON, CARD_LABEL_GAP, CARD_LINE_GAP, CARD_PAD, CARD_RADIUS,
-    CARD_VALUE_PX,
+    BODY_PX, CARD_H, CARD_ICON, CARD_LABEL_GAP, CARD_LINE_GAP, CARD_PAD, CARD_RADIUS, CARD_VALUE_PX,
 };
 use super::text;
 
