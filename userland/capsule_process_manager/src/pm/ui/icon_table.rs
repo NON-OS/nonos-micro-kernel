@@ -14,16 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod critical;
-mod event;
-mod format;
-mod layout;
-mod manifest;
-mod paint;
-mod security;
-mod state;
-mod theme;
-mod ui;
 
-pub use app::ProcessManager;
+use nonos_toolkit::icons::IconId;
+
+use crate::pm::state::Screen;
+
+// The sidebar draws from the shared icon source, so a screen's mark is the same
+// art the dock and the shell already use rather than a private copy.
+pub fn icon(screen: Screen) -> IconId {
+    match screen {
+        Screen::Overview => IconId::PmOverview,
+        Screen::Processes => IconId::Processes,
+        Screen::Cpu => IconId::PmCpu,
+        Screen::Memory => IconId::PmMemory,
+        Screen::Authority => IconId::PmAuthority,
+        Screen::Security => IconId::PmSecurity,
+    }
+}

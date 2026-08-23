@@ -14,16 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod app;
-mod critical;
-mod event;
-mod format;
-mod layout;
-mod manifest;
-mod paint;
-mod security;
-mod state;
-mod theme;
-mod ui;
 
-pub use app::ProcessManager;
+pub mod icon_table;
+pub mod metrics;
+pub mod nav_geom;
+pub mod text;
