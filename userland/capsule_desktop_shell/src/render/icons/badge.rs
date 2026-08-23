@@ -15,7 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-use crate::render::fill::blit_rgba8_tinted;
 use crate::render::palette;
 use crate::render::surface::surface;
 use crate::state::Context;
@@ -41,9 +40,8 @@ pub fn glyph(ctx: &Context, x: u32, y: u32, size: u32, icon: &[u8], accent: u32)
 // The art alone, at exactly the size asked for, for callers that already own the
 // spacing around it.
 pub fn art(ctx: &Context, x: u32, y: u32, size: u32, icon: &[u8], accent: u32) {
-    let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    let src = ((icon.len() / 4) as u32).isqrt();
-    blit_rgba8_tinted(va, st, vw, vh, x, y, size, size, icon, src, src, accent);
+    let mut buf = surface(ctx);
+    nonos_toolkit::icons::draw_mask(&mut buf, icon, x, y, size, accent);
 }
 
 const GLYPH_PCT: u32 = 46;

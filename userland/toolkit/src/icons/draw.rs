@@ -16,7 +16,7 @@
 
 
 use super::id::IconId;
-use super::table::{dim, mask};
+use super::table::mask;
 use crate::paint::resample::{cover, source_span};
 use crate::paint::PaintBuffer;
 
@@ -24,8 +24,14 @@ use crate::paint::PaintBuffer;
 /// colour from `tint`. The mask carries coverage only, so one asset serves
 /// every accent the caller wants.
 pub fn draw(buf: &mut PaintBuffer, id: IconId, x: u32, y: u32, size: u32, tint: u32) {
-    let src = mask(id);
-    let sd = dim(id);
+    draw_mask(buf, mask(id), x, y, size, tint);
+}
+
+/// The same blend for a mask the caller already holds, for icons that are not
+/// part of the shared set. `src` must be square; its side is recovered from the
+/// length exactly as `dim` does.
+pub fn draw_mask(buf: &mut PaintBuffer, src: &[u8], x: u32, y: u32, size: u32, tint: u32) {
+    let sd = (src.len() as u32).isqrt();
     if size == 0 || sd == 0 {
         return;
     }

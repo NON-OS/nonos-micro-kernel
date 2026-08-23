@@ -11,14 +11,14 @@ use super::gen_icon;
 use crate::render::draw_tool_icon;
 use crate::state::Context;
 
-const GREX: &[u8] = include_bytes!("../../../assets/app_icons/tools/grex.rgba");
-const DOTENV_LINTER: &[u8] = include_bytes!("../../../assets/app_icons/tools/dotenv_linter.rgba");
-const PASTEL: &[u8] = include_bytes!("../../../assets/app_icons/tools/pastel.rgba");
-const JSONXF: &[u8] = include_bytes!("../../../assets/app_icons/tools/jsonxf.rgba");
-const CHOOSE: &[u8] = include_bytes!("../../../assets/app_icons/tools/choose.rgba");
-const TOKEI: &[u8] = include_bytes!("../../../assets/app_icons/tools/tokei.rgba");
-const HUNIQ: &[u8] = include_bytes!("../../../assets/app_icons/tools/huniq.rgba");
-const CSVIEW: &[u8] = include_bytes!("../../../assets/app_icons/tools/csview.rgba");
+const GREX: &[u8] = include_bytes!("../../../../assets/icons/tools/grex.a8");
+const DOTENV_LINTER: &[u8] = include_bytes!("../../../../assets/icons/tools/dotenv_linter.a8");
+const PASTEL: &[u8] = include_bytes!("../../../../assets/icons/tools/pastel.a8");
+const JSONXF: &[u8] = include_bytes!("../../../../assets/icons/tools/jsonxf.a8");
+const CHOOSE: &[u8] = include_bytes!("../../../../assets/icons/tools/choose.a8");
+const TOKEI: &[u8] = include_bytes!("../../../../assets/icons/tools/tokei.a8");
+const HUNIQ: &[u8] = include_bytes!("../../../../assets/icons/tools/huniq.a8");
+const CSVIEW: &[u8] = include_bytes!("../../../../assets/icons/tools/csview.a8");
 
 fn glyph_for(label: &[u8]) -> Option<&'static [u8]> {
     match label {

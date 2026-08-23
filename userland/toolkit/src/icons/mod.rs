@@ -20,6 +20,6 @@ mod id;
 mod name;
 mod table;
 
-pub use draw::draw;
+pub use draw::{draw, draw_mask};
 pub use id::IconId;
 pub use table::{dim, mask};
