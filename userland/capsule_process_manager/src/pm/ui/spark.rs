@@ -52,7 +52,7 @@ fn plot(
         return;
     }
     let n = n.min(SAMPLES);
-    let fill = (tint & 0x00FF_FFFF) | 0x3800_0000;
+    let fill = (tint & 0x00FFFFFF) | 0x38000000;
     let mut pts = [(0i32, 0i32); SAMPLES];
     for i in 0..n {
         let px = col(x, w, i, n);
