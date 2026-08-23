@@ -46,8 +46,8 @@ pub const STORAGE: Glyph = Glyph {
 
 pub const UPDATES: Glyph = Glyph {
     strokes: &[],
-    arcs: &[Arc { cx: 10, cy: 10, rx: 7, ry: 7, from: 20, sweep: 44 }],
-    wedges: &[Arc { cx: 17, cy: 7, rx: 4, ry: 4, from: 43, sweep: 10 }],
+    arcs: &[Arc { cx: 10, cy: 10, rx: 7, ry: 7, from: 22, sweep: 36 }],
+    wedges: &[Arc { cx: 14, cy: 16, rx: 5, ry: 5, from: 7, sweep: 7 }],
     dots: &[],
 };
 

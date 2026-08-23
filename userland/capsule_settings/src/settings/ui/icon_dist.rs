@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const SUB: i32 = 4;
+pub const SUB: i32 = 8;
 pub const STEP: f32 = 1.0 / SUB as f32;
 
 pub fn span(a: f32, b: f32, half: f32, dim: u32) -> (u32, u32) {
