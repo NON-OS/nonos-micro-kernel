@@ -18,10 +18,10 @@ use crate::state::Context;
 
 use super::super::fill::blit_rgba8_scaled;
 
-// Real brand mark, rasterized from nonos-icon-teal.svg at 128x139 RGBA and
+// Real brand mark, from the shared icon source at 128x139 RGBA and
 // alpha-blitted so the dock icon stays crisp at any size. `color` is ignored:
 // the asset already carries the brand teal.
-const ICON: &[u8] = include_bytes!("../../../assets/nonos_icon_128x139.rgba");
+const ICON: &[u8] = include_bytes!("../../../../assets/icons/nonos_logo.rgba");
 const ICON_W: u32 = 128;
 const ICON_H: u32 = 139;
 

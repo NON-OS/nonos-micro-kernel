@@ -15,12 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::PaintBuffer;
+use nonos_toolkit::icons::draw;
 
 use crate::settings::section::{Section, SECTIONS};
 use crate::settings::section_text::nav;
 
-use super::icon_glyph::draw_glyph;
-use super::icon_table::glyph;
+use super::icon_table::icon;
 use super::metrics::{BODY_PX, NAV_H, NAV_ICON, NAV_LABEL_GAP, NAV_PAD_X, NAV_RADIUS, SIDEBAR_W};
 use super::nav_geom::{row_w, row_x, row_y};
 use super::text;
@@ -45,7 +45,7 @@ fn paint_row(fb: &mut PaintBuffer, section: Section, y: u32, active: bool) {
     let fg = if active { NAV_FG_ACTIVE } else { NAV_FG };
     let icon_x = x + NAV_PAD_X;
     let icon_y = y + (NAV_H - NAV_ICON) / 2;
-    draw_glyph(fb, glyph(section), icon_x, icon_y, NAV_ICON, fg);
+    draw(fb, icon(section), icon_x, icon_y, NAV_ICON, fg);
     let top = text::centred_top(y, NAV_H, BODY_PX);
     text::left(fb, icon_x + NAV_ICON + NAV_LABEL_GAP, top, nav(section), fg, BODY_PX);
 }

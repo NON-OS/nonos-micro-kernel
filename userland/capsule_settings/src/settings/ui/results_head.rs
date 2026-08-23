@@ -16,9 +16,8 @@
 
 use nonos_app_skeleton::PaintBuffer;
 use nonos_toolkit::font::ttf::line_height;
+use nonos_toolkit::icons::{draw, IconId};
 
-use super::icon_glyph::draw_glyph;
-use super::icon_search::SEARCH;
 use super::metrics::{HEAD_ICON, PANE_PAD_X, SUBTITLE_PX, TITLE_PX};
 use super::text;
 use super::theme::{ACCENT, SUBTITLE_FG, TITLE_FG};
@@ -27,7 +26,7 @@ use super::valbuf::ValBuf;
 pub fn paint(fb: &mut PaintBuffer, query: &str, n: usize, top: i32) {
     let x = PANE_PAD_X;
     if top >= 0 {
-        draw_glyph(fb, &SEARCH, x, top as u32, HEAD_ICON, ACCENT);
+        draw(fb, IconId::SettingsSearch, x, top as u32, HEAD_ICON, ACCENT);
     }
     let text_x = x + HEAD_ICON + 14;
     text::left(fb, text_x, top, "Search", TITLE_FG, TITLE_PX);

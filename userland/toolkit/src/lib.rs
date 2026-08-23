@@ -24,6 +24,7 @@ pub mod components;
 pub mod decorations;
 pub mod design;
 pub mod font;
+pub mod icons;
 pub mod image;
 pub mod paint;
 pub mod protocol;

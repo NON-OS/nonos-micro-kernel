@@ -28,6 +28,7 @@ mod line_aa;
 pub mod mixer;
 mod panel;
 pub mod radius;
+pub mod resample;
 mod round_fill;
 mod round_stroke;
 mod shadow;
