@@ -71,35 +71,38 @@ pub fn blit_rgba8_scaled(
         if py >= surface_height {
             break;
         }
-        let sy0 = row * sh / dh;
-        let sy1 = core::cmp::max(sy0 + 1, (row + 1) * sh / dh).min(sh);
+        let (y0f, y1f) = source_span(row, sh, dh);
+        let sy_last = core::cmp::min((y1f - 1) >> 16, sh as u64 - 1);
         for col in 0..dw {
             let px = dx + col;
             if px >= surface_width {
                 break;
             }
-            let sx0 = col * sw / dw;
-            let sx1 = core::cmp::max(sx0 + 1, (col + 1) * sw / dw).min(sw);
-            let (mut sr, mut sg, mut sb, mut sa, mut cnt) = (0u32, 0u32, 0u32, 0u32, 0u32);
-            for syy in sy0..sy1 {
+            let (x0f, x1f) = source_span(col, sw, dw);
+            let sx_last = core::cmp::min((x1f - 1) >> 16, sw as u64 - 1);
+            let (mut sr, mut sg, mut sb, mut sa, mut wsum) = (0u64, 0u64, 0u64, 0u64, 0u64);
+            for syy in (y0f >> 16)..=sy_last {
+                let wy = core::cmp::min(y1f, (syy + 1) << 16) - core::cmp::max(y0f, syy << 16);
                 let bse = (syy as usize * sw as usize) * 4;
-                for sxx in sx0..sx1 {
+                for sxx in (x0f >> 16)..=sx_last {
+                    let wx = core::cmp::min(x1f, (sxx + 1) << 16) - core::cmp::max(x0f, sxx << 16);
+                    let w = wx * wy;
                     let i = bse + sxx as usize * 4;
-                    let a = rgba[i + 3] as u32;
-                    sr += rgba[i] as u32 * a;
-                    sg += rgba[i + 1] as u32 * a;
-                    sb += rgba[i + 2] as u32 * a;
-                    sa += a;
-                    cnt += 1;
+                    let a = rgba[i + 3] as u64;
+                    sr += rgba[i] as u64 * a * w;
+                    sg += rgba[i + 1] as u64 * a * w;
+                    sb += rgba[i + 2] as u64 * a * w;
+                    sa += a * w;
+                    wsum += w;
                 }
             }
-            if cnt == 0 || sa == 0 {
+            if wsum == 0 || sa == 0 {
                 continue;
             }
-            let a = sa / cnt;
-            let r = (sr / sa).min(255);
-            let g = (sg / sa).min(255);
-            let b = (sb / sa).min(255);
+            let a = (sa / wsum) as u32;
+            let r = ((sr / sa) as u32).min(255);
+            let g = ((sg / sa) as u32).min(255);
+            let b = ((sb / sa) as u32).min(255);
             let cell = (base_va as usize + py as usize * stride + px as usize * 4) as *mut u32;
             let out = if a >= 255 {
                 (r << 16) | (g << 8) | b
@@ -118,6 +121,12 @@ pub fn blit_rgba8_scaled(
             unsafe { core::ptr::write_volatile(cell, 0xFF00_0000 | out) };
         }
     }
+}
+
+fn source_span(index: u32, src: u32, dst: u32) -> (u64, u64) {
+    let lo = ((index as u64 * src as u64) << 16) / dst as u64;
+    let hi = (((index as u64 + 1) * src as u64) << 16) / dst as u64;
+    (lo, core::cmp::max(hi, lo + 1))
 }
 
 /// Like `blit_rgba8_scaled` but recolors the source: it uses only the source
@@ -153,27 +162,30 @@ pub fn blit_rgba8_tinted(
         if py >= surface_height {
             break;
         }
-        let sy0 = row * sh / dh;
-        let sy1 = core::cmp::max(sy0 + 1, (row + 1) * sh / dh).min(sh);
+        let (y0f, y1f) = source_span(row, sh, dh);
+        let sy_last = core::cmp::min((y1f - 1) >> 16, sh as u64 - 1);
         for col in 0..dw {
             let px = dx + col;
             if px >= surface_width {
                 break;
             }
-            let sx0 = col * sw / dw;
-            let sx1 = core::cmp::max(sx0 + 1, (col + 1) * sw / dw).min(sw);
-            let (mut sa, mut cnt) = (0u32, 0u32);
-            for syy in sy0..sy1 {
+            let (x0f, x1f) = source_span(col, sw, dw);
+            let sx_last = core::cmp::min((x1f - 1) >> 16, sw as u64 - 1);
+            let (mut sa, mut wsum) = (0u64, 0u64);
+            for syy in (y0f >> 16)..=sy_last {
+                let wy = core::cmp::min(y1f, (syy + 1) << 16) - core::cmp::max(y0f, syy << 16);
                 let bse = (syy as usize * sw as usize) * 4;
-                for sxx in sx0..sx1 {
-                    sa += rgba[bse + sxx as usize * 4 + 3] as u32;
-                    cnt += 1;
+                for sxx in (x0f >> 16)..=sx_last {
+                    let wx = core::cmp::min(x1f, (sxx + 1) << 16) - core::cmp::max(x0f, sxx << 16);
+                    let w = wx * wy;
+                    sa += rgba[bse + sxx as usize * 4 + 3] as u64 * w;
+                    wsum += w;
                 }
             }
-            if cnt == 0 || sa == 0 {
+            if wsum == 0 || sa == 0 {
                 continue;
             }
-            let a = sa / cnt;
+            let a = (sa / wsum) as u32;
             let cell = (base_va as usize + py as usize * stride + px as usize * 4) as *mut u32;
             let out = if a >= 255 {
                 (tr << 16) | (tg << 8) | tb

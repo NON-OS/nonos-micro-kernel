@@ -4,11 +4,11 @@
 # only the coverage channel of the output matters.
 set -e
 cd "$(dirname "$0")"
-SIZE=96
+SIZE=192
 emit() {
   name=$1; vb=$2; body=$3
-  printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="%s" fill="none">%s</svg>' "$vb" "$body" > /tmp/_ico.svg
-  magick -background none /tmp/_ico.svg -resize ${SIZE}x${SIZE} -depth 8 -define quantum:format=unsigned "RGBA:$name.rgba"
+  printf '<svg xmlns="http://www.w3.org/2000/svg" width="%s" height="%s" viewBox="%s" fill="none">%s</svg>' "$SIZE" "$SIZE" "$vb" "$body" > /tmp/_ico.svg
+  magick -background none /tmp/_ico.svg -depth 8 -define quantum:format=unsigned "RGBA:$name.rgba"
 }
 S='stroke="#22C3F0" stroke-width="1.5"'
 R='stroke-linecap="round"'
