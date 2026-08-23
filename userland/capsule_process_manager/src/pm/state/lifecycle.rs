@@ -17,7 +17,7 @@
 use alloc::vec::Vec;
 
 use super::super::security::Monitor;
-use super::{Filter, History, Screen, Sort, State};
+use super::{Filter, History, Query, Screen, Sort, State};
 
 impl State {
     pub fn new() -> Self {
@@ -40,6 +40,7 @@ impl State {
             prev: Vec::new(),
             history: History::new(),
             filter: Filter::All,
+            query: Query::new(),
             screen: Screen::Overview,
             monitor: Monitor::new(),
             alerts: Vec::new(),

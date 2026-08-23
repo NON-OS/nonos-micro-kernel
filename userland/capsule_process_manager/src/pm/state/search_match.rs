@@ -14,31 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod bars;
-pub mod card;
-pub mod chrome;
-pub mod hit;
-pub mod icon_table;
-pub mod insp_actions;
-pub mod insp_chips;
-pub mod insp_fields;
-pub mod insp_geom;
-pub mod insp_spark;
-pub mod inspector;
-pub mod matrix_geom;
-pub mod metrics;
-pub mod nav_geom;
-pub mod paint;
-pub mod risk_strip;
-pub mod screens;
-pub mod search;
-pub mod sidebar;
-pub mod spark;
-pub mod status_bar;
-pub mod table;
-pub mod table_cell;
-pub mod table_geom;
-pub mod table_head;
-pub mod table_row;
-pub mod text;
-pub mod tint;
+use super::State;
+
+fn fold(byte: u8) -> u8 {
+    if byte.is_ascii_uppercase() {
+        byte + 32
+    } else {
+        byte
+    }
+}
+
+impl State {
+    // Case-insensitive substring, true on an empty query so `filtered` can join
+    // it to the chip predicate unconditionally rather than branching per row.
+    pub fn query_matches(&self, name: &[u8]) -> bool {
+        let q = self.query();
+        if q.is_empty() {
+            return true;
+        }
+        if name.len() < q.len() {
+            return false;
+        }
+        (0..=name.len() - q.len())
+            .any(|i| name[i..].iter().zip(q).all(|(a, b)| fold(*a) == fold(*b)))
+    }
+}

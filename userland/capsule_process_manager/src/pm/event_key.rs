@@ -14,12 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, KEY_ESC, KEY_TAB};
+use nonos_app_skeleton::{EventOutcome, KEY_BACKSPACE, KEY_ESC, KEY_TAB};
 
 use super::super::state::{Screen, Sort, State, SCREENS, SIGKILL, SIGTERM};
 use super::event_scroll::scroll_key;
 
 pub fn key(state: &mut State, code: u32) -> EventOutcome {
+    if state.query_focused() {
+        if let Some(outcome) = typing(state, code) {
+            return outcome;
+        }
+    }
     if let Some(screen) = ordinal(code) {
         state.set_screen(screen);
         return EventOutcome::Repaint;
@@ -41,6 +46,23 @@ pub fn key(state: &mut State, code: u32) -> EventOutcome {
         _ => return EventOutcome::Idle,
     }
     EventOutcome::Repaint
+}
+
+// While the field owns the keyboard, printable ASCII edits the query instead of
+// firing a letter shortcut, and Escape empties the field rather than the window.
+// Every navigation code is >= 0x1201 and so falls through untouched, which is
+// what lets the arrows keep driving the selection while the user types.
+fn typing(state: &mut State, code: u32) -> Option<EventOutcome> {
+    match code {
+        KEY_ESC => {
+            state.clear_query();
+            state.focus_search(false);
+        }
+        KEY_BACKSPACE => state.pop_char(),
+        0x20..=0x7E => state.push_char(code as u8),
+        _ => return None,
+    }
+    Some(EventOutcome::Repaint)
 }
 
 // The digit row selects a screen by the position its nav row is drawn at.

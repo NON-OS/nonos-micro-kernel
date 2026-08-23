@@ -52,7 +52,9 @@ fn click(state: &mut State, x: i32, y: i32) -> EventOutcome {
     let Some(target) = hit::at(state, w, h, x, y) else {
         return EventOutcome::Idle;
     };
+    state.focus_search(matches!(&target, Target::Search));
     match target {
+        Target::Search => {}
         Target::Nav(screen) => state.set_screen(screen),
         Target::Sort(col) => {
             if let Some(sort) = table_geom::sort_for(col) {

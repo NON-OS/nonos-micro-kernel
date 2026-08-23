@@ -17,7 +17,7 @@
 use crate::pm::state::{Screen, State};
 
 use super::table_geom::{Col, COLS_FULL, COLS_OVERVIEW};
-use super::{chrome, insp_geom, nav_geom};
+use super::{chrome, insp_geom, nav_geom, search};
 
 #[path = "hit_pane.rs"]
 mod hit_pane;
@@ -35,14 +35,21 @@ pub enum Target {
     Finding(usize),
     EndProcess,
     ForceQuit,
+    Search,
 }
 
 // The one routing surface. The sidebar and the inspector are window-global and
 // are tested first; everything else is pane-local, so the pane origin comes off
-// the coordinate exactly once before any screen geometry sees it.
+// the coordinate exactly once before any screen geometry sees it. The search
+// field sits in the head band inside the inspector's column, so it has to be
+// asked before the inspector claims that whole x-range.
 pub fn at(state: &State, w: u32, h: u32, x: i32, y: i32) -> Option<Target> {
     if let Some(screen) = nav_geom::at(x, y) {
         return Some(Target::Nav(screen));
+    }
+    let (sx, sy, sw, sh) = search::rect(w);
+    if x >= sx as i32 && x < (sx + sw) as i32 && y >= sy as i32 && y < (sy + sh) as i32 {
+        return Some(Target::Search);
     }
     let inspector = state.screen.has_inspector();
     if inspector && x >= insp_geom::pane_x(w) as i32 {

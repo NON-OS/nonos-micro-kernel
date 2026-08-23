@@ -16,12 +16,14 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::pm::state::Screen;
+use crate::pm::state::State;
 use crate::pm::theme::{MUTED, TITLE};
 
 use super::metrics::{
-    BODY_PX, HEAD_H, INSPECTOR_W, PANE_PAD_TOP, PANE_PAD_X, SIDEBAR_W, STATUS_H, TITLE_PX,
+    BODY_PX, HEAD_H, INSPECTOR_W, PANE_PAD_TOP, PANE_PAD_X, SEARCH_META_GAP, SIDEBAR_W, STATUS_H,
+    TITLE_PX,
 };
+use super::search;
 use super::text;
 
 pub use super::status_bar::paint as status_bar;
@@ -46,13 +48,15 @@ pub fn pane_rect(fb_w: u32, fb_h: u32, inspector: bool) -> Rect {
     }
 }
 
-// The screen name holds the left of the head band and the meta line is placed
-// from the right edge by measurement, so a wider count never shifts the title.
-pub fn page_head(fb: &mut PaintBuffer, screen: Screen, meta: &[u8]) {
+// The screen name holds the left of the head band, the search field the far
+// right, and the meta line is measured back from the field's left edge, so a
+// wider count shifts neither of them.
+pub fn page_head(fb: &mut PaintBuffer, state: &State, meta: &[u8]) {
     let title_top = text::centred_top(PANE_PAD_TOP, HEAD_H, TITLE_PX);
-    let label = screen.nav_label();
+    let label = state.screen.nav_label();
     text::left(fb, SIDEBAR_W + PANE_PAD_X, title_top, label, TITLE, TITLE_PX);
     let meta_top = text::centred_top(PANE_PAD_TOP, HEAD_H, BODY_PX);
-    let right_x = fb.width.saturating_sub(PANE_PAD_X);
+    let right_x = search::rect(fb.width).0.saturating_sub(SEARCH_META_GAP);
     text::right(fb, right_x, meta_top, meta, MUTED, BODY_PX);
+    search::paint(fb, state);
 }

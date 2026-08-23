@@ -54,11 +54,14 @@ impl Filter {
 
 impl State {
     // The rows the user can currently see: the sort order from refresh(),
-    // narrowed by the active filter. Painters and the hit test both index into
-    // this, never into `rows`, or a click lands on a hidden process. The search
-    // query joins the predicate here once Task 19 lands `query_matches`.
+    // narrowed by the active filter and the search query. Painters and the hit
+    // test both index into this, never into `rows`, or a click lands on a
+    // hidden process.
     pub fn filtered(&self) -> Vec<&Row> {
-        self.rows.iter().filter(|r| self.filter.keep(r, &self.flagged)).collect()
+        self.rows
+            .iter()
+            .filter(|r| self.filter.keep(r, &self.flagged) && self.query_matches(r.name()))
+            .collect()
     }
 
     // Resolved by pid, not index: the sort order changes under the selection on

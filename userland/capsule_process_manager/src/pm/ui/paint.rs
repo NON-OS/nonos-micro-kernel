@@ -36,7 +36,7 @@ pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
     let rect = chrome::pane_rect(w, h, state.screen.has_inspector());
     let mut buf = [0u8; 24];
     let n = meta(state, &mut buf);
-    chrome::page_head(fb, state.screen, &buf[..n]);
+    chrome::page_head(fb, state, &buf[..n]);
     state.fb_w = w;
     state.fb_h = h;
     state.visible = hit::rows_visible(state.screen, rect.h);

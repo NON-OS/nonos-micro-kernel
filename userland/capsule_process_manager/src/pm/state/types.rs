@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 use nonos_libc::{ProcStatEntry, ProcStatHeader, PROC_NAME_LEN};
 
 use super::super::security::{Alert, Monitor};
-use super::{Filter, History, Screen};
+use super::{Filter, History, Query, Screen};
 
 // Ceiling on processes read in one pass. Well above a full desktop; the whole
 // live set fits in a single syscall so the view is never truncated in practice.
@@ -112,6 +112,9 @@ pub struct State {
     // filter chips apply on top of the sort order.
     pub history: History,
     pub filter: Filter,
+    // The head-band search field. It narrows `filtered()` alongside the chips
+    // and, while focused, takes the keyboard off the letter shortcuts.
+    pub(super) query: Query,
     // Which screen is shown, and the live security view over the same rows.
     pub screen: Screen,
     pub monitor: Monitor,
