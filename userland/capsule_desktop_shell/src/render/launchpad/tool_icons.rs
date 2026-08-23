@@ -2,10 +2,10 @@
 // Copyright (C) 2026 NONOS Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Real artwork for installed tools. Each shipped tool has a 48x48 glyph mask
-//! under assets/app_icons/tools, drawn in the same cyan line-art language as
-//! the desktop apps. A tool installed without artwork falls back to the
-//! generated tile, so a missing icon never blocks an install.
+//! Real artwork for installed tools. Each shipped tool has a coverage mask in
+//! the shared icon source under assets/icons/tools, drawn in the same cyan
+//! line-art language as the desktop apps. A tool installed without artwork
+//! falls back to the generated tile, so a missing icon never blocks an install.
 
 use super::gen_icon;
 use crate::render::draw_tool_icon;

@@ -10,3 +10,8 @@ for svg in *.svg; do
   magick -background none "$svg" -resize ${SIZE}x${SIZE} -depth 8 \
     -alpha extract -colorspace gray "GRAY:$name.a8"
 done
+
+# The brand mark is the one icon drawn in its own colour rather than tinted, so
+# it keeps its full RGBA and its own aspect.
+magick -background none ../wallet_logos/nonos-icon-teal.svg -resize 128x139! \
+  -depth 8 "RGBA:nonos_logo.rgba"
