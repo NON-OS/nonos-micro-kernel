@@ -14,24 +14,46 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// A calm, professional dark palette in the NONOS family, so the monitor reads
-// as a serious system tool rather than a toy.
-pub const BACKGROUND: u32 = 0xFF14161B;
-pub const HEADER_BG: u32 = 0xFF1B1E25;
-pub const FOREGROUND: u32 = 0xFFCBD3DE;
-pub const TITLE: u32 = 0xFFE6EDF5;
-// Column headers and hints.
-pub const WARNING: u32 = 0xFF8FA3B8;
-pub const MUTED: u32 = 0xFF6B7686;
+// The house palette the Settings restyle established, so the monitor reads as
+// one system tool alongside it rather than a second visual language.
+// Grounds: the window, the sidebar, the cards and the table body.
+pub const BACKGROUND: u32 = 0xFF0B1319;
+pub const SIDEBAR_BG: u32 = 0xFF0A1218;
+pub const SIDEBAR_LINE: u32 = 0xFF16262F;
+pub const CARD_BG: u32 = 0xFF101C24;
+pub const CARD_BORDER: u32 = 0xFF16262F;
+pub const TABLE_BG: u32 = 0xFF0D171E;
+pub const HEADER_BG: u32 = 0xFF0F1A21;
 // Hairlines and zebra banding.
-pub const RULE: u32 = 0xFF262A33;
-pub const BAND: u32 = 0xFF181B21;
-// Brand teal: cpu bars, running state, the selected accent.
-pub const ACCENT: u32 = 0xFF5FB0C9;
-// Selected-row wash.
-pub const SELECT_BG: u32 = 0xFF223440;
-// Armed-kill warning.
+pub const RULE: u32 = 0xFF16262F;
+pub const RULE_SOFT: u32 = 0xFF122029;
+pub const BAND: u32 = 0xFF101A21;
+// Text, brightest to dimmest.
+pub const TITLE: u32 = 0xFFEAF4F8;
+pub const FOREGROUND: u32 = 0xFFCDDDE5;
+pub const LABEL: u32 = 0xFFDBE8EE;
+pub const WARNING: u32 = 0xFF93A7B2;
+pub const MUTED: u32 = 0xFF6D818C;
+// Brand teal and the sidebar states derived from it.
+pub const ACCENT: u32 = 0xFF35C4E2;
+pub const NAV_FG: u32 = 0xFF93A7B2;
+pub const NAV_FG_ACTIVE: u32 = 0xFFA8E7F6;
+pub const NAV_BG_ACTIVE: u32 = 0x2035C4E2;
+pub const NAV_BORDER_ACTIVE: u32 = 0x5935C4E2;
+// Row washes. These carry alpha: draw them with blend_rect / fill_round only.
+pub const SELECT_BG: u32 = 0x1C35C4E2;
+pub const ROW_HOVER_BG: u32 = 0x14FFFFFF;
+// Chips, meter tracks and the search field.
+pub const PILL_BG: u32 = 0xFF14232C;
+pub const PILL_BORDER: u32 = 0xFF1D323D;
+pub const TRACK_BG: u32 = 0xFF25373F;
+pub const SEARCH_BG: u32 = 0xFF16232B;
+pub const SEARCH_BORDER: u32 = 0xFF24363F;
+// Status hues and their translucent fills.
+pub const OK: u32 = 0xFF33CF7D;
+pub const AMBER: u32 = 0xFFE0A44A;
 pub const DANGER: u32 = 0xFFE06C75;
-// Security status: all-clear green and a caution amber for warnings.
-pub const OK: u32 = 0xFF7FB98B;
-pub const AMBER: u32 = 0xFFD8A657;
+pub const OK_TINT: u32 = 0x2033CF7D;
+pub const AMBER_TINT: u32 = 0x22E0A44A;
+pub const DANGER_TINT: u32 = 0x22E06C75;
+pub const ACCENT_TINT: u32 = 0x2035C4E2;
