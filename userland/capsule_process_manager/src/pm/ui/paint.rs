@@ -18,12 +18,12 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::pm::format::u32_decimal;
 use crate::pm::state::{Screen, State};
-use crate::pm::theme::{BACKGROUND, CARD_BG, CARD_BORDER, MUTED};
+use crate::pm::theme::BACKGROUND;
 
 use super::chrome::{self, Rect};
-use super::metrics::{BODY_PX, PANEL_RADIUS};
+use super::inspector;
+use super::screens;
 use super::sidebar;
-use super::text;
 
 // The single frame funnel: ground, sidebar, page head, the active screen's pane,
 // then the status strip over the full width. Order is load-bearing, since the
@@ -36,7 +36,10 @@ pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
     let mut buf = [0u8; 24];
     let n = meta(state, &mut buf);
     chrome::page_head(fb, state.screen, &buf[..n]);
-    pane(fb, &rect, state.screen);
+    screen(state, fb, &rect);
+    if state.screen.has_inspector() {
+        inspector::paint(state, fb);
+    }
     chrome::status_bar(fb, state);
 }
 
@@ -48,14 +51,15 @@ fn meta(state: &State, out: &mut [u8]) -> usize {
     end
 }
 
-// Phase 3 replaces this with one painter per screen. Until then every screen
-// draws its own empty pane, so the chrome is verifiable on its own terms and no
-// screen silently borrows another's layout.
-fn pane(fb: &mut PaintBuffer, rect: &Rect, screen: Screen) {
-    fb.fill_round(rect.x, rect.y, rect.w, rect.h, PANEL_RADIUS, CARD_BG);
-    fb.stroke_round(rect.x, rect.y, rect.w, rect.h, PANEL_RADIUS, 1, CARD_BORDER);
-    let label = screen.nav_label();
-    let top = text::centred_top(rect.y, rect.h, BODY_PX);
-    let x = rect.x + rect.w.saturating_sub(text::width(fb, label, BODY_PX)) / 2;
-    text::left(fb, x, top, label, MUTED, BODY_PX);
+// The pane is the only region a screen owns. The inspector, sidebar and status
+// strip are the frame's, so a screen painter can never reach them.
+fn screen(state: &State, fb: &mut PaintBuffer, rect: &Rect) {
+    match state.screen {
+        Screen::Overview => screens::overview::paint(state, fb, rect),
+        Screen::Processes => screens::processes::paint(state, fb, rect),
+        Screen::Cpu => screens::cpu::paint(state, fb, rect),
+        Screen::Memory => screens::memory::paint(state, fb, rect),
+        Screen::Authority => screens::authority::paint(state, fb, rect),
+        Screen::Security => screens::security::paint(state, fb, rect),
+    }
 }

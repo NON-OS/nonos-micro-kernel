@@ -14,27 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod card;
-pub mod chrome;
-pub mod icon_table;
-pub mod insp_actions;
-pub mod insp_chips;
-pub mod insp_fields;
-pub mod insp_geom;
-pub mod insp_spark;
-pub mod inspector;
-pub mod metrics;
-pub mod nav_geom;
-pub mod paint;
-pub mod risk_strip;
-pub mod screens;
-pub mod sidebar;
-pub mod spark;
-pub mod status_bar;
-pub mod table;
-pub mod table_cell;
-pub mod table_geom;
-pub mod table_head;
-pub mod table_row;
-pub mod text;
-pub mod tint;
+use nonos_app_skeleton::PaintBuffer;
+
+use crate::pm::state::State;
+
+use super::super::chrome::Rect;
+use super::super::table;
+use super::super::table_geom::COLS_FULL;
+
+// The full seven-column table over the whole pane. Everything this screen shows
+// lives in the table itself, so it adds no chrome of its own.
+pub fn paint(state: &State, fb: &mut PaintBuffer, r: &Rect) {
+    table::paint(state, fb, r, &COLS_FULL);
+}
