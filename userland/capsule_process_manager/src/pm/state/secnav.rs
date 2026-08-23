@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::layout::{SEC_LIST_TOP, SEC_ROW_H};
 use super::{Screen, State};
 
 impl State {
@@ -39,17 +38,6 @@ impl State {
     pub fn alert_scroll_by(&mut self, delta: i32) {
         let max = self.alerts.len().saturating_sub(self.alert_visible) as i32;
         self.alert_scroll = (self.alert_scroll as i32 + delta).clamp(0, max.max(0)) as usize;
-    }
-
-    // Highlight the finding the click landed on, accounting for scroll.
-    pub fn alert_select_at(&mut self, y: i32) {
-        if self.alerts.is_empty() || y < SEC_LIST_TOP as i32 {
-            return;
-        }
-        let idx = self.alert_scroll + ((y - SEC_LIST_TOP as i32) / SEC_ROW_H as i32) as usize;
-        if idx < self.alerts.len() {
-            self.alert_sel = idx;
-        }
     }
 
     // Keep the finding selection and scroll valid after the list changes under

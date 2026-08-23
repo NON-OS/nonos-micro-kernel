@@ -34,4 +34,4 @@ pub use samples::{Ring, SAMPLES};
 pub use screen::{Screen, SCREENS};
 pub use search::Query;
 pub use sort::Sort;
-pub use types::{Row, State, FIRST_ROW_Y, ROW_H, SIGKILL, SIGTERM};
+pub use types::{Row, State, SIGKILL, SIGTERM};

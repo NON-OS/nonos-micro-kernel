@@ -25,10 +25,6 @@ use super::{Filter, History, Query, Screen, Sort};
 // live set fits in a single syscall so the view is never truncated in practice.
 pub(super) const MAX_PROCS: usize = 256;
 
-// Row layout, shared with paint so a click maps to the same row it drew.
-pub const FIRST_ROW_Y: i32 = 50;
-pub const ROW_H: i32 = 23;
-
 // Signals the monitor can send. SIGTERM asks nicely, SIGKILL forces it; both
 // go through the kernel teardown that zeroizes the process.
 pub const SIGTERM: u64 = 15;

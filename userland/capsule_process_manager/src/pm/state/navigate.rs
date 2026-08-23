@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Screen, Sort, State, FIRST_ROW_Y, ROW_H};
+use super::{Screen, Sort, State};
 
 impl State {
     pub(super) fn selected_index(&self) -> Option<usize> {
@@ -27,18 +27,6 @@ impl State {
             self.scroll = idx;
         } else if self.visible > 0 && idx >= self.scroll + self.visible {
             self.scroll = idx + 1 - self.visible;
-        }
-    }
-
-    // Select the process whose row the click landed on, accounting for scroll.
-    pub fn select_at(&mut self, y: i32) {
-        if y < FIRST_ROW_Y {
-            return;
-        }
-        let idx = self.scroll + ((y - FIRST_ROW_Y) / ROW_H) as usize;
-        if let Some(pid) = self.rows.get(idx).map(|r| r.pid) {
-            self.disarm();
-            self.selected_pid = pid;
         }
     }
 

@@ -35,7 +35,7 @@ pub fn key(state: &mut State, code: u32) -> EventOutcome {
     match code {
         KEY_ESC => return EventOutcome::Close,
         KEY_TAB => state.set_screen(state.screen.next()),
-        0x53 | 0x73 => state.set_screen(Screen::Security),
+        0x53 | 0x73 => state.toggle_security(),
         0x4B | 0x6B => state.kill_selected(SIGTERM),
         0x46 | 0x66 => state.kill_selected(SIGKILL),
         0x43 | 0x63 => state.set_sort(Sort::Cpu),
