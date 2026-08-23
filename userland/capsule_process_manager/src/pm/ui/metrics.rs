@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 // Every layout size the restyle uses, in real pixels at 1x. Nothing here is
 // sized below ttf::MIN_UI_PX (17.0), which clamps both draw and measure.
 
@@ -40,6 +39,12 @@ pub const STATUS_GAP: u32 = 8;
 pub const STATUS_GROUP_GAP: u32 = 22;
 pub const INSPECTOR_W: u32 = 280;
 pub const INSPECTOR_PAD: u32 = 15;
+pub const INSP_FIELD_H: u32 = 25;
+pub const INSP_SECTION_GAP: u32 = 14;
+pub const INSP_BTN_H: u32 = 34;
+pub const INSP_BTN_GAP: u32 = 9;
+pub const INSP_BTN_BOTTOM: u32 = 40;
+pub const INSP_BTN_RADIUS: u32 = 9;
 pub const CARD_H: u32 = 108;
 pub const CARD_GAP: u32 = 12;
 pub const CARD_RADIUS: u32 = 11;
@@ -57,6 +62,16 @@ pub const TBL_RADIUS: u32 = 11;
 pub const TBL_HEAD_H: u32 = 30;
 pub const ROW_H: u32 = 28;
 pub const CELL_PAD_X: u32 = 12;
+pub const SEL_BAR_W: u32 = 3;
+pub const ROW_ICON: u32 = 13;
+pub const ROW_ICON_GAP: u32 = 6;
+pub const SORT_MARK_W: u32 = 8;
+pub const SORT_MARK_H: u32 = 4;
+pub const SORT_MARK_GAP: u32 = 6;
+pub const SCROLL_W: u32 = 4;
+pub const SCROLL_PAD: u32 = 5;
+pub const SCROLL_MIN_H: u32 = 18;
+pub const CHIP_RADIUS: u32 = 8;
 
 pub const PANEL_RADIUS: u32 = 11;
 pub const PANEL_PAD: u32 = 15;
