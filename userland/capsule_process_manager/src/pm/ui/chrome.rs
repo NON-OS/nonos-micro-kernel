@@ -16,9 +16,10 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::pm::state::State;
+use crate::pm::state::{Screen, State};
 use crate::pm::theme::{MUTED, TITLE};
 
+use super::chips;
 use super::metrics::{
     BODY_PX, HEAD_H, INSPECTOR_W, PANE_PAD_TOP, PANE_PAD_X, SEARCH_META_GAP, SIDEBAR_W, STATUS_H,
     TITLE_PX,
@@ -57,6 +58,18 @@ pub fn page_head(fb: &mut PaintBuffer, state: &State, meta: &[u8]) {
     text::left(fb, SIDEBAR_W + PANE_PAD_X, title_top, label, TITLE, TITLE_PX);
     let meta_top = text::centred_top(PANE_PAD_TOP, HEAD_H, BODY_PX);
     let right_x = search::rect(fb.width).0.saturating_sub(SEARCH_META_GAP);
-    text::right(fb, right_x, meta_top, meta, MUTED, BODY_PX);
+    if meta_fits(state.screen, right_x, text::width(fb, meta, BODY_PX)) {
+        text::right(fb, right_x, meta_top, meta, MUTED, BODY_PX);
+    }
+    chips::paint(fb, state);
     search::paint(fb, state);
+}
+
+// The chip row and the meta line share the middle of the band. The chips carry
+// state the user can act on, so the count is the one that yields on a collision.
+fn meta_fits(screen: Screen, right_x: u32, meta_w: u32) -> bool {
+    match chips::origin(screen) {
+        None => true,
+        Some(x) => x + chips::width() + SEARCH_META_GAP <= right_x.saturating_sub(meta_w),
+    }
 }

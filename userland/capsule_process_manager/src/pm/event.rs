@@ -66,6 +66,7 @@ fn click(state: &mut State, x: i32, y: i32) -> EventOutcome {
             state.alert_sel = index;
             state.jump_to_alert();
         }
+        Target::Filter(filter) => state.set_filter(filter),
         Target::EndProcess => state.kill_selected(SIGTERM),
         Target::ForceQuit => state.kill_selected(SIGKILL),
     }

@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::pm::state::{Screen, State};
+use crate::pm::state::{Filter, Screen, State};
 
 use super::table_geom::{Col, COLS_FULL, COLS_OVERVIEW};
-use super::{chrome, insp_geom, nav_geom, search};
+use super::{chips, chrome, insp_geom, nav_geom, search};
 
 #[path = "hit_pane.rs"]
 mod hit_pane;
@@ -36,6 +36,7 @@ pub enum Target {
     EndProcess,
     ForceQuit,
     Search,
+    Filter(Filter),
 }
 
 // The one routing surface. The sidebar and the inspector are window-global and
@@ -50,6 +51,9 @@ pub fn at(state: &State, w: u32, h: u32, x: i32, y: i32) -> Option<Target> {
     let (sx, sy, sw, sh) = search::rect(w);
     if x >= sx as i32 && x < (sx + sw) as i32 && y >= sy as i32 && y < (sy + sh) as i32 {
         return Some(Target::Search);
+    }
+    if let Some(filter) = chips::at(state.screen, x, y) {
+        return Some(Target::Filter(filter));
     }
     let inspector = state.screen.has_inspector();
     if inspector && x >= insp_geom::pane_x(w) as i32 {

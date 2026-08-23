@@ -64,6 +64,13 @@ impl State {
             .collect()
     }
 
+    // Rewinds the scroll for the same reason a query edit does: the predicate
+    // reshapes `filtered()` under a viewport offset measured against the old one.
+    pub fn set_filter(&mut self, filter: Filter) {
+        self.filter = filter;
+        self.scroll = 0;
+    }
+
     // Resolved by pid, not index: the sort order changes under the selection on
     // every refresh, which is why `State` stores `selected_pid` at all.
     pub fn selected_row(&self) -> Option<&Row> {

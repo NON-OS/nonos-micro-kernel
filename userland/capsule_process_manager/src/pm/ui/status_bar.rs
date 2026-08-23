@@ -34,7 +34,15 @@ pub fn paint(fb: &mut PaintBuffer, state: &State) {
     fb.fill_rect(0, y, fb.width, 1, RULE);
     let top = text::centred_top(y, STATUS_H, BODY_PX);
     let mut buf = [0u8; 24];
-    let n = u32_decimal(state.rows.len() as u32, &mut buf);
+    let total = state.rows.len() as u32;
+    let visible = state.filtered().len() as u32;
+    let mut n = u32_decimal(total, &mut buf);
+    if visible != total {
+        n = u32_decimal(visible, &mut buf);
+        buf[n] = b'/';
+        n += 1;
+        n += u32_decimal(total, &mut buf[n..]);
+    }
     let mut x = pair(fb, PANE_PAD_X, top, b"PROCS", &buf[..n]);
     let n = u32_decimal(state.total_cpu, &mut buf);
     x = pair(fb, x, top, b"CPU", &buf[..n]);

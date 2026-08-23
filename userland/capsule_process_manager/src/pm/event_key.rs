@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::{EventOutcome, KEY_BACKSPACE, KEY_ESC, KEY_TAB};
 
-use super::super::state::{Screen, Sort, State, SCREENS, SIGKILL, SIGTERM};
+use super::super::state::{Filter, Screen, Sort, State, SCREENS, SIGKILL, SIGTERM};
 use super::event_scroll::scroll_key;
 
 pub fn key(state: &mut State, code: u32) -> EventOutcome {
@@ -43,6 +43,11 @@ pub fn key(state: &mut State, code: u32) -> EventOutcome {
         0x4E | 0x6E => state.set_sort(Sort::Name),
         0x50 | 0x70 => state.set_sort(Sort::Pid),
         0x52 | 0x72 => state.refresh(),
+        0x41 | 0x61 => state.set_filter(Filter::All),
+        0x45 | 0x65 => state.set_filter(Filter::Elevated),
+        0x54 | 0x74 => state.set_filter(Filter::Protected),
+        0x47 | 0x67 => state.set_filter(Filter::Flagged),
+        0x2F => state.focus_search(true),
         _ => return EventOutcome::Idle,
     }
     EventOutcome::Repaint

@@ -16,6 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 use nonos_toolkit::font::ttf::line_height;
+use nonos_toolkit::paint::measure_ttf;
 
 fn valid(bytes: &[u8]) -> &str {
     core::str::from_utf8(bytes).unwrap_or("")
@@ -31,6 +32,12 @@ pub fn mono(fb: &mut PaintBuffer, x: u32, top: u32, bytes: &[u8], argb: u32, px:
 
 pub fn width(fb: &PaintBuffer, bytes: &[u8], px: f32) -> u32 {
     fb.measure_ttf(valid(bytes), px).max(0) as u32
+}
+
+// The same advance sum without a surface. The click path has no PaintBuffer, so
+// any geometry a painter and a hit test share has to be measurable from here.
+pub fn width_of(bytes: &[u8], px: f32) -> u32 {
+    measure_ttf(valid(bytes), px).max(0) as u32
 }
 
 pub fn mono_width(fb: &PaintBuffer, bytes: &[u8], px: f32) -> u32 {
