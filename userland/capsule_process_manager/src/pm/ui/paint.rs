@@ -36,6 +36,7 @@ pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
     let mut buf = [0u8; 24];
     let n = meta(state, &mut buf);
     chrome::page_head(fb, state.screen, &buf[..n]);
+    state.alert_visible = screens::sec_geom::visible(rect.h);
     screen(state, fb, &rect);
     if state.screen.has_inspector() {
         inspector::paint(state, fb);
@@ -51,6 +52,9 @@ fn meta(state: &State, out: &mut [u8]) -> usize {
     end
 }
 
+// The Security screen's keyboard scroll clamps against state.alert_visible, and a
+// screen painter only holds &State. The row count is pure geometry, so the funnel
+// derives it from the same function the painter and the hit test read.
 // The pane is the only region a screen owns. The inspector, sidebar and status
 // strip are the frame's, so a screen painter can never reach them.
 fn screen(state: &State, fb: &mut PaintBuffer, rect: &Rect) {
