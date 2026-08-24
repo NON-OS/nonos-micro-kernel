@@ -31,3 +31,25 @@ pub(super) static PENDING: Mutex<BTreeMap<u32, VecDeque<(u32, String, u64)>>> =
     Mutex::new(BTreeMap::new());
 
 pub(super) const MAX_PER_SERVICE: usize = 64;
+
+// The correlation of the request each server dequeued last, recorded by the
+// receive path and consumed by the reply redirect. Position in the queue
+// cannot pair a reply with its caller: kernel-side senders push no pending
+// entry but their requests still occupy the server's inbox, so every one of
+// them shifted the FIFO and handed some capsule caller's reply to the wrong
+// call. The token names the request outright. Lock-free fixed table because
+// this is touched on every dequeue, including under held IPC locks.
+const SERVED_SLOTS: usize = 1024;
+#[allow(clippy::declare_interior_mutable_const)]
+const SERVED_SLOT_INIT: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
+static LAST_SERVED: [core::sync::atomic::AtomicU64; SERVED_SLOTS] =
+    [SERVED_SLOT_INIT; SERVED_SLOTS];
+
+pub(crate) fn record_served(server_pid: u32, correlation: u64) {
+    LAST_SERVED[server_pid as usize % SERVED_SLOTS]
+        .store(correlation, core::sync::atomic::Ordering::Release);
+}
+
+pub(super) fn last_served(server_pid: u32) -> u64 {
+    LAST_SERVED[server_pid as usize % SERVED_SLOTS].load(core::sync::atomic::Ordering::Acquire)
+}

@@ -14,14 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod clear_pid;
-mod pop;
-mod push;
-mod remove;
-mod state;
+mod entry;
+mod idle;
 
-pub(crate) use clear_pid::clear_pid;
-pub(in crate::syscall::microkernel::ipc) use state::record_served;
-pub(super) use pop::pop;
-pub(super) use push::push;
-pub(super) use remove::{remove, remove_latest};
+pub use entry::ap_entry;
