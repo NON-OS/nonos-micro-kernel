@@ -14,11 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(all(target_arch = "x86_64", feature = "nonos-arch-iommu"))]
-#[path = "backend_x86_64/mod.rs"]
-mod inner;
-#[cfg(not(all(target_arch = "x86_64", feature = "nonos-arch-iommu")))]
-#[path = "backend_unsupported.rs"]
-mod inner;
+//! What the probe found, held for the bring-up that runs after it.
 
-pub(super) use inner::{allocate_domain, attach_device, detach_device, free_domain, map, unmap};
+use spin::Once;
+
+use super::super::probe::UnitInfo;
+
+static PROBED: Once<UnitInfo> = Once::new();
+
+/// What the first remapping unit reported, or `None` if the probe never
+/// reached one. Bring-up treats `None` as "there is nothing to program".
+pub fn probed() -> Option<&'static UnitInfo> {
+    PROBED.get()
+}
+
+/// Latch the probe result. Called once, from `init`, and only on the path
+/// where the unit answered; a failed probe leaves this empty on purpose.
+pub(super) fn record(info: UnitInfo) {
+    PROBED.call_once(|| info);
+}

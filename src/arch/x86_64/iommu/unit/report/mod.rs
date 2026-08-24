@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(all(target_arch = "x86_64", feature = "nonos-arch-iommu"))]
-#[path = "backend_x86_64/mod.rs"]
-mod inner;
-#[cfg(not(all(target_arch = "x86_64", feature = "nonos-arch-iommu")))]
-#[path = "backend_unsupported.rs"]
-mod inner;
+mod describe;
+mod failure;
+mod init;
+mod state;
 
-pub(super) use inner::{allocate_domain, attach_device, detach_device, free_domain, map, unmap};
+pub use init::init;
+pub use state::probed;

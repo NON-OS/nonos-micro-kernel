@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[cfg(all(target_arch = "x86_64", feature = "nonos-arch-iommu"))]
-#[path = "backend_x86_64/mod.rs"]
-mod inner;
-#[cfg(not(all(target_arch = "x86_64", feature = "nonos-arch-iommu")))]
-#[path = "backend_unsupported.rs"]
-mod inner;
+//! Why a probe did not reach a unit, in the words the console uses.
 
-pub(super) use inner::{allocate_domain, attach_device, detach_device, free_domain, map, unmap};
+use super::super::probe::ProbeError;
+
+pub(super) fn reason(e: ProbeError) -> &'static [u8] {
+    match e {
+        ProbeError::NoUnits => b"no units",
+        ProbeError::MapFailed => b"register window not mappable",
+        ProbeError::NoUsableAgaw => b"no supported paging depth",
+    }
+}
