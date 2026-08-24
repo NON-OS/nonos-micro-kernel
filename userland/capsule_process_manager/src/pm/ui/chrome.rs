@@ -57,7 +57,7 @@ pub fn page_head(fb: &mut PaintBuffer, state: &State, meta: &[u8]) {
     let label = state.screen.nav_label();
     text::left(fb, SIDEBAR_W + PANE_PAD_X, title_top, label, TITLE, TITLE_PX);
     let meta_top = text::centred_top(PANE_PAD_TOP, HEAD_H, BODY_PX);
-    let right_x = search::rect(fb.width).0.saturating_sub(SEARCH_META_GAP);
+    let right_x = search::rect(fb.width, state.screen).0.saturating_sub(SEARCH_META_GAP);
     if meta_fits(state.screen, right_x, text::width(fb, meta, BODY_PX)) {
         text::right(fb, right_x, meta_top, meta, MUTED, BODY_PX);
     }

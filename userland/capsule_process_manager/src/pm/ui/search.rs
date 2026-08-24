@@ -17,12 +17,12 @@
 use nonos_app_skeleton::PaintBuffer;
 use nonos_toolkit::icons::{draw, IconId};
 
-use crate::pm::state::State;
+use crate::pm::state::{Screen, State};
 use crate::pm::theme::{ACCENT, FOREGROUND, MUTED, SEARCH_BG, SEARCH_BORDER};
 
 use super::metrics::{
-    BODY_PX, HEAD_H, PANE_PAD_TOP, PANE_PAD_X, SEARCH_CARET_INSET, SEARCH_CARET_W, SEARCH_H,
-    SEARCH_ICON, SEARCH_ICON_GAP, SEARCH_PAD_X, SEARCH_RADIUS, SEARCH_W,
+    BODY_PX, HEAD_H, INSPECTOR_W, PANE_PAD_TOP, PANE_PAD_X, SEARCH_CARET_INSET, SEARCH_CARET_W,
+    SEARCH_H, SEARCH_ICON, SEARCH_ICON_GAP, SEARCH_PAD_X, SEARCH_RADIUS, SEARCH_W,
 };
 use super::text;
 
@@ -31,8 +31,9 @@ const PLACEHOLDER: &[u8] = b"Filter processes";
 // The one geometry the painter and the hit test both read. The field takes the
 // far right of the head band, centred in it, so the meta line can be measured
 // back from its left edge instead of the two fighting over the same pixels.
-pub fn rect(fb_w: u32) -> (u32, u32, u32, u32) {
-    let x = fb_w.saturating_sub(PANE_PAD_X + SEARCH_W);
+pub fn rect(fb_w: u32, screen: Screen) -> (u32, u32, u32, u32) {
+    let right = if screen.has_inspector() { fb_w.saturating_sub(INSPECTOR_W) } else { fb_w };
+    let x = right.saturating_sub(PANE_PAD_X + SEARCH_W);
     let y = PANE_PAD_TOP + HEAD_H.saturating_sub(SEARCH_H) / 2;
     (x, y, SEARCH_W, SEARCH_H)
 }
@@ -40,7 +41,7 @@ pub fn rect(fb_w: u32) -> (u32, u32, u32, u32) {
 // Everything here lands over paint the frame already laid down, so the fill,
 // the border and the caret all go through blending primitives.
 pub fn paint(fb: &mut PaintBuffer, state: &State) {
-    let (x, y, w, h) = rect(fb.width);
+    let (x, y, w, h) = rect(fb.width, state.screen);
     let focused = state.query_focused();
     let border = if focused { ACCENT } else { SEARCH_BORDER };
     fb.fill_round(x, y, w, h, SEARCH_RADIUS, SEARCH_BG);

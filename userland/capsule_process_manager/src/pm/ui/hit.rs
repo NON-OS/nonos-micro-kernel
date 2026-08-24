@@ -42,13 +42,13 @@ pub enum Target {
 // The one routing surface. The sidebar and the inspector are window-global and
 // are tested first; everything else is pane-local, so the pane origin comes off
 // the coordinate exactly once before any screen geometry sees it. The search
-// field sits in the head band inside the inspector's column, so it has to be
-// asked before the inspector claims that whole x-range.
+// field and the filter chips live in the head band, above every pane, so both
+// are asked before the pane-local tests.
 pub fn at(state: &State, w: u32, h: u32, x: i32, y: i32) -> Option<Target> {
     if let Some(screen) = nav_geom::at(x, y) {
         return Some(Target::Nav(screen));
     }
-    let (sx, sy, sw, sh) = search::rect(w);
+    let (sx, sy, sw, sh) = search::rect(w, state.screen);
     if x >= sx as i32 && x < (sx + sw) as i32 && y >= sy as i32 && y < (sy + sh) as i32 {
         return Some(Target::Search);
     }
