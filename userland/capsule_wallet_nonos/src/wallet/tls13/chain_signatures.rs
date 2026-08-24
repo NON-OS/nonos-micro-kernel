@@ -21,6 +21,9 @@ pub fn chain_signatures(body: &[u8]) -> bool {
     let Some(leaf) = super::cert_at::cert_at(body, 0) else { return false };
     let Some(we1) = super::cert_at::cert_at(body, 1) else { return false };
     let Some(gts_r4) = super::cert_at::cert_at(body, 2) else { return false };
-    super::verify_leaf::verify_leaf(leaf, we1)
+    // Pinning the root is not enough on its own: any certificate that root
+    // issued would otherwise serve as an intermediate and sign a forged leaf.
+    nonos_tls::cert_is_ca(we1)
+        && super::verify_leaf::verify_leaf(leaf, we1)
         && super::verify_intermediate::verify_intermediate(we1, gts_r4)
 }
