@@ -14,16 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod diagnostics_silenced;
-mod fatal;
-mod init_arch_firmware;
-mod init_arch_framebuffer;
-mod init_arch_memory_and_framebuffer;
-mod init_core_services;
-mod init_runtime;
-mod init_vm_and_protection;
-mod microkernel_init;
-mod microkernel_main;
+// The register modules speak x86_64 instructions and are only declared where
+// those assemble. `apply` carries the per-architecture split and reports the
+// architectural properties directly on the targets that have no CR4.
+mod apply;
+#[cfg(target_arch = "x86_64")]
+mod cpuid;
+#[cfg(target_arch = "x86_64")]
+mod cr0;
+#[cfg(target_arch = "x86_64")]
+mod cr4;
+#[cfg(target_arch = "x86_64")]
+mod efer;
+mod report;
 
-pub use microkernel_init::microkernel_init;
-pub use microkernel_main::microkernel_main;
+pub(super) use apply::apply;
+pub use report::report;

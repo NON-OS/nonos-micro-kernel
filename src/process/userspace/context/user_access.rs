@@ -14,16 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod diagnostics_silenced;
-mod fatal;
-mod init_arch_firmware;
-mod init_arch_framebuffer;
-mod init_arch_memory_and_framebuffer;
-mod init_core_services;
-mod init_runtime;
-mod init_vm_and_protection;
-mod microkernel_init;
-mod microkernel_main;
+//! Kept under the name the usercopy paths already call. The window itself,
+//! and the guard that closes it on every path out, belong to the arch
+//! boundary, which is where both architectures state what they mean by it.
 
-pub use microkernel_init::microkernel_init;
-pub use microkernel_main::microkernel_main;
+#[inline(always)]
+pub fn with_user_access<F, R>(f: F) -> R
+where
+    F: FnOnce() -> R,
+{
+    crate::arch::user_access::with_user_access(f)
+}

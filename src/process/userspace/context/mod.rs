@@ -14,16 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod diagnostics_silenced;
-mod fatal;
-mod init_arch_firmware;
-mod init_arch_framebuffer;
-mod init_arch_memory_and_framebuffer;
-mod init_core_services;
-mod init_runtime;
-mod init_vm_and_protection;
-mod microkernel_init;
-mod microkernel_main;
+// CR4 and the AC flag are deliberately absent. SMEP, SMAP and UMIP go on once
+// at boot from `memory::mmu`, which reads back what the part accepted, and the
+// AC window belongs to `arch::user_access`, which is the only code that knows
+// when it is legitimately open. Bare `stac`/`clac` used to be exported here
+// with no caller, which is an invitation to open that window without the
+// guard that closes it.
+mod segment_base;
+mod start;
+mod switch;
+mod user_access;
 
-pub use microkernel_init::microkernel_init;
-pub use microkernel_main::microkernel_main;
+pub use segment_base::{read_fs_base, write_fs_base, write_gs_base, write_kernel_gs_base};
+pub use start::switch_to_new_thread;
+pub use switch::switch_context;
+pub use user_access::with_user_access;
