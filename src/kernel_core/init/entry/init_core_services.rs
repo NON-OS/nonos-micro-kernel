@@ -23,6 +23,13 @@ use crate::boot::handoff::KernelHandoff;
 use crate::sys::clock;
 
 pub(super) fn init_core_services(handoff: &KernelHandoff) {
+    // First, and deliberately: the barriers and MSR settings below protect the
+    // code that runs after them, so anything ordered ahead of this runs
+    // unmitigated. On aarch64 the arch boot path has already done it, and the
+    // call is idempotent, so the ordering stays honest either way.
+    if let Err(e) = crate::security::hardening::speculation::init() {
+        fatal("security: speculation mitigations failed", e);
+    }
     crate::sys::policy::hostname_init();
     if crate::crypto::util::rng::init_rng().is_err() {
         fatal("crypto: init_rng failed", "entropy unavailable");
