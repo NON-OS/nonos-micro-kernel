@@ -25,6 +25,7 @@ mod ops_init;
 mod ops_stack;
 pub mod percpu;
 mod percpu_load;
+mod percpu_stacks;
 mod percpu_struct;
 pub mod segments;
 mod state;
