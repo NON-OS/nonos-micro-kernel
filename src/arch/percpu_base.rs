@@ -21,6 +21,10 @@
 //! read from somewhere. x86_64 uses `GS_BASE`, with the shadow copy in
 //! `KERNEL_GS_BASE` that `swapgs` exchanges on a privilege change; aarch64 uses
 //! `TPIDR_EL1`, which EL0 cannot see and so needs no shadow.
+//!
+//! Reading the number back out is `percpu_id`, next door.
+
+pub(crate) use super::percpu_id::{cpu_id, installed};
 
 /// Point this CPU's per-CPU register at `base`.
 ///
@@ -50,4 +54,8 @@ pub(crate) unsafe fn set(base: u64) {
     }
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
     let _ = base;
+
+    // Published after the register is live, so `percpu_id::cpu_id` is never
+    // sent to a block before the register points at one.
+    super::percpu_id::mark_installed();
 }

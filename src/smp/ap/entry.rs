@@ -34,6 +34,14 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     unsafe { crate::arch::x86_64::interrupt::apic::init_ap_lapic() };
     let apic_id = crate::arch::interrupt_controller::local_id();
 
+    // Before anything else that could ask which CPU it is running on. The
+    // answer comes out of this block through the per-CPU register, and that
+    // register is installed here; until it is, this AP would be answered with
+    // the boot CPU's number and would read and write the boot CPU's state.
+    // `cpu_id` is the index the BSP wrote into this AP's boot context, so it
+    // is known without having to look it up.
+    crate::smp::percpu::init_ap(cpu_id as usize);
+
     // SAFETY: eK@nonos.systems - GDT and TSS must be loaded before anything
     // that can fault. `cpu_id` indexes this AP's own per-CPU structures, which
     // the BSP allocated before releasing it.
@@ -46,8 +54,6 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     unsafe {
         crate::arch::x86_64::idt::load_on_ap();
     }
-
-    crate::smp::percpu::init_ap(cpu_id as usize);
 
     // The BSP registered the IRQ-0 handler; each AP arms its own LAPIC timer.
     crate::arch::x86_64::interrupt::apic::preemption::install_on_ap();
