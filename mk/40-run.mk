@@ -291,9 +291,14 @@ nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) 
 
 # Capability parity runs first and on its own. A capsule that declares a bit
 # the kernel means differently is granted the wrong permission with every layer
-# below agreeing, so this fails before anything is built or signed.
+# below agreeing, so this fails before anything is built or signed. The
+# attestation parameters are the same class of invariant: a prover and a
+# verifier reading different round or query counts agree on nothing, and the
+# only symptom is a kernel that refuses its own boot, so the guard that pins
+# those constants to one file runs in the same lane.
 nonos-mk-check-caps:
 	@$(NONOS_PYTHON) scripts/check_cap_parity.py
+	@$(NONOS_PYTHON) scripts/check_attest_params.py
 
 nonos-mk-static: nonos-mk-check-caps
 	@./nonos-ci/run-static-checks.sh
