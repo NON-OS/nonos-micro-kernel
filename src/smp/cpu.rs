@@ -18,29 +18,10 @@ use super::state::{BSP_APIC_ID, CPU_COUNT, CPU_DESCRIPTORS};
 use super::types::CpuDescriptor;
 use core::sync::atomic::Ordering;
 
-/// Which CPU is running this code.
-///
-/// Read from this CPU's own per-CPU block, not searched for. The previous
-/// version scanned the descriptor table for a matching APIC id and fell back
-/// to 0 when it found none, which is the one answer that must never be
-/// guessed: the current process is tracked per CPU and every capability check
-/// in the syscall layer is keyed on it, so a second CPU quietly claiming to
-/// be CPU 0 would read and write another CPU's current process and be granted
-/// its authority.
-#[inline]
-pub fn cpu_id() -> usize {
-    if !crate::arch::percpu_ready() {
-        // Only the boot CPU runs before its block is installed, and it is 0.
-        return 0;
-    }
-    // SAFETY: ek@nonos.systems - the check above is exactly this call's
-    // precondition: the per-CPU register has been pointed at a block.
-    unsafe { crate::arch::percpu_cpu_id() as usize }
-}
+pub(super) use super::cpu_id::cpu_id;
 
 /// Descriptor index for an APIC id, for callers that hold an id rather than
-/// being the CPU in question — IPI targeting and topology reporting. Linear
-/// over the online CPUs, and `None` when the id is not one of them.
+/// being the CPU in question, such as IPI targeting and topology reporting.
 pub fn apic_to_cpu_id(apic_id: u32) -> Option<usize> {
     (0..CPU_COUNT.load(Ordering::Acquire)).find(|&i| CPU_DESCRIPTORS[i].get_apic_id() == apic_id)
 }
