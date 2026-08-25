@@ -14,7 +14,7 @@ mod surface;
 mod vignette;
 
 use nonos_libc::{
-    heap_init, mk_attest_status, mk_exit, mk_ipc_recv_from, mk_surface_release, mk_time_millis,
+    heap_init, mk_attest_status, mk_exit, mk_ipc_recv_from, mk_surface_release, mk_uptime_ms,
     mk_yield, AttestStatus, INPUT_KIND_KEY_DOWN,
 };
 
@@ -92,10 +92,17 @@ fn interact(comp: u32, base: u64, w: u32, h: u32, stride: u32, att: &AttestStatu
     let mut show_detail = false;
     let mut iters: u32 = 0;
     let mut frame: u32 = u32::MAX;
-    let mut start = mk_time_millis();
+    // Elapsed time for the dwell and settle gates comes from the monotonic
+    // uptime, not the wall clock. mk_time_millis returns -61 until the wall
+    // clock has an epoch anchor, and a boot that has not synced one yet would
+    // pin now at a negative value: the settle and MAX_DWELL gates could then
+    // never fire and the splash would sit on "initializing kernel gui" until
+    // MAX_ITERS, which is effectively never. Uptime is always valid from the
+    // first read, so the handoff happens whether or not the epoch is known.
+    let mut start = mk_uptime_ms();
     let mut desktop_up_at: i64 = -1;
     loop {
-        let now = mk_time_millis();
+        let now = mk_uptime_ms();
         if start < 0 {
             start = now;
         }
