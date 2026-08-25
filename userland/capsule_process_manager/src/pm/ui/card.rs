@@ -26,8 +26,8 @@ use super::metrics::{
 use super::text;
 
 // A stat card: icon and caption on the first line, the number in mono with its
-// unit and a subcaption on the second, right-aligned but cut to whatever the
-// unit leaves it, and whatever height is left
+// unit on the second, the subcaption alone on the third so a wide value cannot
+// squeeze it to a fragment, and whatever height is left
 // as a band at the bottom. The band's y is returned rather than assumed, so a
 // caller drawing a sparkline into it never re-derives this stack.
 pub fn paint(
@@ -52,12 +52,9 @@ pub fn paint(
     let value_h = line_height(CARD_VALUE_PX).max(1) as u32;
     let after = text::mono(fb, left, value_top, value, TITLE, CARD_VALUE_PX).max(0) as u32;
     let base = value_top + value_h.saturating_sub(body_h);
-    let unit_x = after + CARD_LABEL_GAP;
-    text::left(fb, unit_x, base, unit, WARNING, BODY_PX);
-    let sub_right = x + w - CARD_PAD;
-    let unit_end = unit_x + text::width(fb, unit, BODY_PX);
-    let room = sub_right.saturating_sub(unit_end + CARD_LABEL_GAP);
-    let sub = text::fit(fb, sub, BODY_PX, room);
-    text::right(fb, sub_right, base, sub, MUTED, BODY_PX);
-    value_top + value_h + CARD_LINE_GAP
+    text::left(fb, after + CARD_LABEL_GAP, base, unit, WARNING, BODY_PX);
+    let sub_top = value_top + value_h + CARD_LINE_GAP;
+    let sub = text::fit(fb, sub, BODY_PX, w.saturating_sub(CARD_PAD * 2));
+    text::left(fb, left, sub_top, sub, MUTED, BODY_PX);
+    sub_top + body_h + CARD_LINE_GAP
 }

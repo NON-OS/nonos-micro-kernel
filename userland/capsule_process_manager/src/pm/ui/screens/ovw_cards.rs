@@ -58,7 +58,7 @@ pub(super) fn cpu(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
     let n = pct_1dp(pct as u8, &mut buf);
     let mut sub = [0u8; 24];
     let s = sub_n(&mut sub, b"peak ", state.history.total.peak_cpu() as u32, b"%");
-    let band = card::paint(fb, x, y, w, IconId::PmCpu, b"CPU LOAD", &buf[..n], b"%", &sub[..s]);
+    let band = card::paint(fb, x, y, w, IconId::PmCpu, b"CPU LOAD", &buf[..n], b"", &sub[..s]);
     meter(fb, (x, y, w), band, pct as u64, 100, load_tint(pct));
 }
 
