@@ -38,7 +38,11 @@ pub fn server_complete(
         let len = u16::from_be_bytes([bytes[pos + 3], bytes[pos + 4]]) as usize;
         let end = pos + 5 + len;
         if end > bytes.len() {
-            return None;
+            // A record header whose body has not fully arrived. Records are
+            // self-delimiting, so every complete record before this one is
+            // valid; stop here and let the scan run on what did arrive rather
+            // than discarding a whole handshake for a trailing fragment.
+            break;
         }
         if bytes[pos] == 23 {
             let plain = super::record_open::open(
