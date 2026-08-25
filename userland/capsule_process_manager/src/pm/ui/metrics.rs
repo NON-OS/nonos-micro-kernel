@@ -38,6 +38,7 @@ pub const STATUS_H: u32 = 26;
 pub const STATUS_GAP: u32 = 8;
 pub const STATUS_GROUP_GAP: u32 = 22;
 pub const SEARCH_W: u32 = 240;
+pub const SEARCH_MIN_W: u32 = 168;
 pub const SEARCH_H: u32 = 30;
 pub const SEARCH_RADIUS: u32 = 8;
 pub const SEARCH_PAD_X: u32 = 10;

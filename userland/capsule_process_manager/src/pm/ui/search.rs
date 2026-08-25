@@ -20,9 +20,11 @@ use nonos_toolkit::icons::{draw, IconId};
 use crate::pm::state::{Screen, State};
 use crate::pm::theme::{ACCENT, FOREGROUND, MUTED, SEARCH_BG, SEARCH_BORDER};
 
+use super::chips;
 use super::metrics::{
     BODY_PX, HEAD_H, INSPECTOR_W, PANE_PAD_TOP, PANE_PAD_X, SEARCH_CARET_INSET, SEARCH_CARET_W,
-    SEARCH_H, SEARCH_ICON, SEARCH_ICON_GAP, SEARCH_PAD_X, SEARCH_RADIUS, SEARCH_W,
+    SEARCH_H, SEARCH_ICON, SEARCH_ICON_GAP, SEARCH_META_GAP, SEARCH_MIN_W, SEARCH_PAD_X,
+    SEARCH_RADIUS, SEARCH_W,
 };
 use super::text;
 
@@ -31,11 +33,15 @@ const PLACEHOLDER: &[u8] = b"Filter processes";
 // The one geometry the painter and the hit test both read. The field takes the
 // far right of the head band, centred in it, so the meta line can be measured
 // back from its left edge instead of the two fighting over the same pixels.
+// The chip strip is measured text and cannot shrink, so the field is what gives
+// way when the band is tight, down to SEARCH_MIN_W and no further.
 pub fn rect(fb_w: u32, screen: Screen) -> (u32, u32, u32, u32) {
     let right = if screen.has_inspector() { fb_w.saturating_sub(INSPECTOR_W) } else { fb_w };
-    let x = right.saturating_sub(PANE_PAD_X + SEARCH_W);
+    let limit = right.saturating_sub(PANE_PAD_X);
+    let chips_end = chips::origin(screen).map_or(0, |o| o + chips::width() + SEARCH_META_GAP);
+    let w = limit.saturating_sub(chips_end).clamp(SEARCH_MIN_W, SEARCH_W);
     let y = PANE_PAD_TOP + HEAD_H.saturating_sub(SEARCH_H) / 2;
-    (x, y, SEARCH_W, SEARCH_H)
+    (limit.saturating_sub(w), y, w, SEARCH_H)
 }
 
 // Everything here lands over paint the frame already laid down, so the fill,
