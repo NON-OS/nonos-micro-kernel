@@ -43,4 +43,28 @@ pub(super) fn init_vm_and_protection() {
         Ok(flags) => mmu::report_protection(flags),
         Err(_) => fatal("memory: protection flags unreadable", "mmu not initialised"),
     }
+    arm_stack_guards();
 }
+
+/// Take the guard page under each of the boot CPU's fault stacks out of the
+/// address space. Not fatal on a short count: the machine has been running on
+/// these stacks unguarded since GDT setup, so failing to arm leaves it exactly
+/// where it already was, and saying so is worth more than halting.
+#[cfg(target_arch = "x86_64")]
+fn arm_stack_guards() {
+    use crate::arch::x86_64::gdt;
+    let armed = gdt::arm_bsp_guards();
+    let want = gdt::guards_per_cpu();
+    crate::sys::serial::print(b"[STACK-GUARD] bsp armed ");
+    crate::sys::serial::print_dec(armed as u64);
+    crate::sys::serial::print(b"/");
+    crate::sys::serial::print_dec(want as u64);
+    if armed == want {
+        crate::sys::serial::println(b"");
+    } else {
+        crate::sys::serial::println(b" WARNING overflow can still reach the next stack");
+    }
+}
+
+#[cfg(not(target_arch = "x86_64"))]
+fn arm_stack_guards() {}

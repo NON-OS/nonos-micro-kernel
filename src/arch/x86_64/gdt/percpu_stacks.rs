@@ -14,45 +14,38 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The fault and kernel stacks, held apart from the descriptors that point at
-//! them.
+//! Every stack one CPU can be switched onto by a fault, in one block.
 //!
-//! These used to be inline arrays inside `PerCpuGdt`. A GDT has non-zero
-//! descriptor words, so the whole struct was a non-zero initialiser and the
-//! linker put it in `.data` — stacks included. At eight 16 KiB stacks per CPU
-//! and 256 CPUs that is 32 MiB of zeros carried inside the kernel image, hashed
-//! by the attestation on every boot and copied off the ESP before anything
-//! runs. Split out, the stacks are an all-zero initialiser and land in `.bss`,
-//! which occupies no bytes in the image at all.
-//!
-//! Keeping them in one place per CPU also means the guard pages these have
-//! never had can be installed around a known, page-aligned span rather than
-//! around fields embedded in a descriptor table.
+//! Held apart from `PerCpuGdt`, whose non-zero descriptor words would drag
+//! every stack byte into `.data` with them: 32 MiB of zeros inside the kernel
+//! image, hashed by the attestation on every boot. All-zero here, so `.bss`.
 
-use super::constants::{DEFAULT_STACK_SIZE, MAX_CPUS};
+use super::constants::MAX_CPUS;
+use super::guarded_stack::GuardedStack;
 
 /// Interrupt stacks a TSS can name. The seventh is spare; the IDT gates that
 /// use the other six are listed beside the `IST_*` indices.
-pub const IST_STACKS: usize = 7;
+pub(super) const IST_STACKS: usize = 7;
 
 #[repr(C, align(4096))]
 pub struct CpuStacks {
-    pub ist: [[u8; DEFAULT_STACK_SIZE]; IST_STACKS],
-    pub kernel: [u8; DEFAULT_STACK_SIZE],
+    pub ist: [GuardedStack; IST_STACKS],
+    pub kernel: GuardedStack,
 }
 
 impl CpuStacks {
     pub const fn new() -> Self {
-        Self { ist: [[0; DEFAULT_STACK_SIZE]; IST_STACKS], kernel: [0; DEFAULT_STACK_SIZE] }
+        const G: GuardedStack = GuardedStack::new();
+        Self { ist: [G; IST_STACKS], kernel: G }
     }
 
     /// Top of IST stack `index`, counted from one to match `TSS.IST[n]`.
     pub fn ist_top(&self, index: usize) -> u64 {
-        self.ist[index - 1].as_ptr() as u64 + DEFAULT_STACK_SIZE as u64
+        self.ist[index - 1].top()
     }
 
     pub fn kernel_top(&self) -> u64 {
-        self.kernel.as_ptr() as u64 + DEFAULT_STACK_SIZE as u64
+        self.kernel.top()
     }
 }
 

@@ -20,10 +20,13 @@ mod entry_base;
 mod entry_presets;
 pub mod error;
 pub mod fs_gs;
+mod guard_api;
+mod guarded_stack;
 pub mod ops;
 mod ops_init;
 mod ops_stack;
 pub mod percpu;
+mod percpu_guards;
 mod percpu_load;
 mod percpu_stacks;
 mod percpu_struct;
@@ -43,6 +46,7 @@ pub use fs_gs::{
     get_fs_base, get_gs_base, get_kernel_gs_base, set_fs_base, set_gs_base, set_kernel_gs_base,
     swapgs,
 };
+pub use guard_api::{arm_ap_guards, arm_bsp_guards, guards_per_cpu};
 pub use ops::{
     get_ist, get_kernel_stack, init, init_ap, is_initialized, set_ist, set_kernel_stack,
 };

@@ -49,12 +49,13 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
         let _ = crate::arch::x86_64::cpu::init_ap(cpu_id as u16, apic_id);
     }
 
-    // The IDT the BSP actually runs on, built by `interrupts::init_idt` and
-    // loaded from `init_core_systems`. This used to point at the second IDT
-    // under `arch::x86_64::idt`, whose `init` has no caller anywhere, so an AP
-    // loaded a table that was never filled in and triple-faulted on its first
-    // timer tick. `load` only writes IDTR; the table is the BSP's and is
-    // already complete by the time any AP is released.
+    // Its own block: the slot was handed to this CPU and is never reused.
+    let _ = crate::arch::x86_64::gdt::arm_ap_guards(cpu_id);
+
+    // The IDT the BSP runs on, built by `interrupts::init_idt`. This pointed
+    // at the second IDT under `arch::x86_64::idt`, whose `init` has no caller,
+    // so an AP loaded a table nothing filled in and triple-faulted on its
+    // first timer tick. `load` only writes IDTR against the BSP.s table.
     crate::interrupts::idt::load_idt();
 
     // The BSP registered the IRQ-0 handler; each AP arms its own LAPIC timer.
