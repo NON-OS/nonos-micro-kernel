@@ -61,7 +61,7 @@ userland/
 │   └── src/
 │       ├── broker/                MkDevice* / MkMmio* / MkIrq* / MkDma*
 │       ├── crypto/                crypto_random, crypto_encrypt, crypto_decrypt
-│       ├── graphics/              nonos_display_dimensions, nonos_surface_*
+│       ├── graphics/              nonos_display_dimensions
 │       ├── heap/                  heap_init + global allocator (mmap-backed)
 │       ├── ipc/                   mk_ipc_send, mk_ipc_recv, mk_ipc_call
 │       ├── mem/                   mmap
@@ -127,7 +127,7 @@ The kernel's own target is `x86_64-nonos.json`. The userland target is distinct 
 | Heap | `heap` | `init` (alias `heap_init`), `HeapError` |
 | IPC | `ipc` | `mk_ipc_send`, `mk_ipc_recv`, `mk_ipc_call` |
 | Crypto | `crypto` | `crypto_random`, `crypto_encrypt`, `crypto_decrypt` |
-| Graphics | `graphics` | `nonos_display_dimensions`, `nonos_surface_create/destroy/map/present_full`, `NONOS_PIXEL_FMT_ARGB8888` |
+| Graphics | `graphics` | `nonos_display_dimensions`. Surfaces go through `surface_registry` (`mk_surface_*`) |
 | Signal trampoline | `signal` | `__nonos_rt_sigreturn` |
 | Panic | `panic` | `_exit(134)` (private) |
 
