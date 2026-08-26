@@ -16,8 +16,8 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 1080;
-pub const HEIGHT: u32 = 720;
+pub const WIDTH: u32 = 1240;
+pub const HEIGHT: u32 = 780;
 
 // Keys drive the table; buttons sort/select by click, the wheel scrolls, and the
 // absolute pointer keeps the button coordinates current.
@@ -28,11 +28,11 @@ const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
 
 pub fn manifest() -> AppManifest {
     AppManifest {
-        title: b"Process Manager",
+        title: "NØNOS Processes".as_bytes(),
         window_id: 0x504D_4752,
         kind: WindowKind::Normal,
-        initial_x: 744,
-        initial_y: 456,
+        initial_x: 340,
+        initial_y: 210,
         width: WIDTH,
         height: HEIGHT,
         input_kind_mask: INPUT_KEY_DOWN_BIT

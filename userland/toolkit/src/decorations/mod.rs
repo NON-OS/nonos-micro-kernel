@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod accessory;
 mod frame_rect;
 mod hit_test;
 mod metrics;
@@ -22,11 +23,12 @@ mod rect;
 mod titlebar;
 mod traffic_lights;
 
+pub use accessory::accessory_rect;
 pub use frame_rect::{content_rect, frame_rect, light_rect, margin, radius, titlebar_rect};
 pub use hit_test::{hit_test, DecorationHit};
 pub use metrics::{
-    BORDER_PX, FRAME_RADIUS, HAIRLINE_PX, LIGHT_D, LIGHT_GAP, LIGHT_HIT_PAD, LIGHT_INSET,
-    SHADOW_MARGIN, TITLEBAR_H, TITLE_PX,
+    ACCESSORY_INSET, ACCESSORY_PAD_Y, BORDER_PX, FRAME_RADIUS, HAIRLINE_PX, LIGHT_D, LIGHT_GAP,
+    LIGHT_HIT_PAD, LIGHT_INSET, SHADOW_MARGIN, TITLEBAR_H, TITLE_PX,
 };
 pub use palette::{
     FRAME_BG, FRAME_BORDER, HAIRLINE, LIGHT_CLOSE, LIGHT_GLYPH, LIGHT_MAXIMIZE, LIGHT_MINIMIZE,

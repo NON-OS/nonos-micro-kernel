@@ -19,11 +19,11 @@ use super::state::State;
 use super::track_scroll::track_scroll;
 
 pub fn cursor_up(state: &mut State) {
-    let n = focused_count(state.category);
+    let n = focused_count(state.section);
     if n == 0 {
         return;
     }
-    let i = state.category as usize;
+    let i = state.section.index();
     state.cursor[i] = if state.cursor[i] == 0 { n - 1 } else { state.cursor[i] - 1 };
     track_scroll(state);
 }

@@ -18,11 +18,10 @@ mod app;
 mod critical;
 mod event;
 mod format;
-mod layout;
 mod manifest;
-mod paint;
 mod security;
 mod state;
 mod theme;
+mod ui;
 
 pub use app::ProcessManager;
