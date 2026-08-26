@@ -22,6 +22,11 @@ use super::directory_tick::{BACKOFF, MAX_BACKOFF, SKIP};
 use crate::directory_sync::Step;
 use crate::trace;
 
+/// Idle ticks to wait before re-syncing when a directory arrived with gateways
+/// but no exit. Long enough not to hammer the API, short enough that the
+/// mixnet becomes usable within moments of the boot-time pressure clearing.
+const RESYNC_FOR_EXIT: usize = 64;
+
 /// Record a step, and hold off after one that did not arrive.
 pub fn record(step: Step) {
     match step {
@@ -31,10 +36,18 @@ pub fn record(step: Step) {
         }
         Step::Done(count) => {
             trace::say_num(b"directory synced, nodes", count as u64);
-            BACKOFF.store(1, Ordering::Relaxed);
             // The gateway in hand was dialled before there was a directory,
             // so it is probably not in the one that just arrived.
             super::rebind::rebind_if_unknown();
+            BACKOFF.store(1, Ordering::Relaxed);
+            // A sync that landed no exit is not usable: the tick will run again
+            // because the exit count is still zero, but re-fetching the whole
+            // list every tick would hammer the directory. Sit out a fixed
+            // stretch first, long enough for the boot-time crypto pressure that
+            // failed the exit handshake to clear, without giving up on it.
+            if crate::state::directory_exit_count() == 0 {
+                SKIP.store(RESYNC_FOR_EXIT, Ordering::Relaxed);
+            }
         }
         Step::Failed(code) => {
             trace::say_num(b"directory sync failed, code", code as u64);

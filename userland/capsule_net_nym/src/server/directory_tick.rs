@@ -19,7 +19,7 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 use super::directory_outcome::record;
 use crate::directory_sync::sync_step;
 use crate::setup;
-use crate::state::directory_gateway_count;
+use crate::state::directory_exit_count;
 use crate::trace;
 
 /// Idle ticks to sit out before trying again, doubling on each failure.
@@ -45,8 +45,14 @@ pub(super) const MAX_BACKOFF: usize = 256;
 /// and a capsule that stops answering while it waits is indistinguishable
 /// from one that died.
 pub fn directory_tick() {
-    // One good fetch is enough to unblock everything that needs a directory.
-    if directory_gateway_count() > 0 {
+    // Not done until the directory carries an exit. The exit list is the third
+    // and last TLS fetch of a sync and the one that most often loses its
+    // certificate hash to a busy crypto pool early in boot, so a first sync can
+    // land gateways but no exit. Stopping on gateways alone left that state
+    // permanent: a route home could be built but no exit was ever found, and
+    // every connection was refused. Keep syncing until an exit is present, by
+    // which point the boot storm has passed and the fetch succeeds.
+    if directory_exit_count() > 0 {
         return;
     }
     let skip = SKIP.load(Ordering::Relaxed);
