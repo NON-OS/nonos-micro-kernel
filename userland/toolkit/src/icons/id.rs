@@ -44,4 +44,9 @@ pub enum IconId {
     SettingsStorage,
     SettingsUpdates,
     SettingsWifi,
+    PmOverview,
+    PmCpu,
+    PmMemory,
+    PmAuthority,
+    PmSecurity,
 }

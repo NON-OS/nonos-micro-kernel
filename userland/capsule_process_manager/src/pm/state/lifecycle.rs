@@ -17,7 +17,7 @@
 use alloc::vec::Vec;
 
 use super::super::security::Monitor;
-use super::{Sort, State, View};
+use super::{Filter, History, Query, Screen, Sort, State};
 
 impl State {
     pub fn new() -> Self {
@@ -32,13 +32,19 @@ impl State {
             sort: Sort::Cpu,
             scroll: 0,
             visible: 1,
+            fb_w: 0,
+            fb_h: 0,
             total_mem_kb: 0,
             total_cpu: 0,
             last_total_ticks: 0,
             prev: Vec::new(),
-            view: View::Processes,
+            history: History::new(),
+            filter: Filter::All,
+            query: Query::new(),
+            screen: Screen::Overview,
             monitor: Monitor::new(),
             alerts: Vec::new(),
+            flagged: Vec::new(),
             alert_sel: 0,
             alert_scroll: 0,
             alert_visible: 1,

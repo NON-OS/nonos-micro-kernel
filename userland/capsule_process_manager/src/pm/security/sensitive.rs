@@ -38,3 +38,7 @@ pub const RAW_HW: u64 = DRIVER | MMIO | IRQ | DMA | PIO;
 
 // Authority over other processes: spawn them or end them.
 pub const SPAWN: u64 = SPAWN_BROKER | SPAWN_WINDOW | PROC_CTL;
+
+// Any sensitive authority at all. This is the union the Elevated filter selects
+// on, so "elevated" means exactly the set the posture panel already counts.
+pub const ANY: u64 = ADMIN | DEBUG | RAW_HW | SPAWN;

@@ -47,6 +47,11 @@ impl IconId {
             IconId::SettingsStorage => "settings_storage",
             IconId::SettingsUpdates => "settings_updates",
             IconId::SettingsWifi => "settings_wifi",
+            IconId::PmOverview => "pm_overview",
+            IconId::PmCpu => "pm_cpu",
+            IconId::PmMemory => "pm_memory",
+            IconId::PmAuthority => "pm_authority",
+            IconId::PmSecurity => "pm_security",
         }
     }
 }
