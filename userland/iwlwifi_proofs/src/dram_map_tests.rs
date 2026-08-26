@@ -69,7 +69,7 @@ fn stage_places_each_chunk_on_its_own_page_and_copies_it() {
     assert_eq!(&region[off..off + first.data.len()], first.data);
 
     // The second chunk is one page on (the 1656-byte header rounds up to 4096).
-    assert_eq!(p.umac.is_empty(), false);
+    assert!(!p.umac.is_empty());
     assert!(p.staged_bytes > 1_600_000, "the whole ~1.6 MB image was staged");
 }
 
