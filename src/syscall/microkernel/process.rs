@@ -80,6 +80,27 @@ pub fn sys_yield() -> i64 {
     0
 }
 
+// Deschedule the caller for `ms` milliseconds. Unlike yield, which leaves
+// the task runnable and so keeps a busy backoff loop pinning the CPU, this
+// parks the task until its wake deadline so the core can idle. Service
+// capsules that poll for a dependency to come up use this instead of a tight
+// yield loop, which is what used to peg the host core and starve the desktop.
+pub fn sys_sleep_ms(ms: u64) -> i64 {
+    let Some(pid) = current_pid() else {
+        return ERRNO_PERM;
+    };
+    if ms == 0 {
+        crate::sched::yield_now();
+        return 0;
+    }
+    let deadline = crate::time::timestamp_millis().saturating_add(ms);
+    while crate::time::timestamp_millis() < deadline {
+        crate::sched::sleep_until(pid, deadline);
+        crate::sched::yield_now();
+    }
+    0
+}
+
 pub fn sys_getpid() -> i64 {
     match current_pid() {
         Some(pid) => pid as i64,

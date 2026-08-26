@@ -24,6 +24,7 @@ pub mod capsule_load;
 pub mod capsule_verify;
 pub mod crypto;
 pub mod debug;
+pub mod fuzz;
 pub mod graphics;
 #[cfg(feature = "heap")]
 pub mod heap;
@@ -87,4 +88,4 @@ pub use surface_registry::{
 };
 pub use syscall::call_raw as mk_syscall_raw;
 pub use time::{mk_time_adjust, mk_time_millis, mk_time_rtc, mk_uptime_ms, Deadline, RtcTime};
-pub use unistd::{mk_exit, mk_yield};
+pub use unistd::{mk_exit, mk_sleep_ms, mk_yield};

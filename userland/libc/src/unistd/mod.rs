@@ -18,4 +18,4 @@ mod exit;
 mod sched;
 
 pub use exit::mk_exit;
-pub use sched::mk_yield;
+pub use sched::{mk_sleep_ms, mk_yield};

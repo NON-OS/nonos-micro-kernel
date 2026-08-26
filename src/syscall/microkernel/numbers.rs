@@ -43,6 +43,7 @@ pub const SYS_SET_TLS: u64 = tag4(b"MSTB");
 pub const SYS_YIELD: u64 = tag4(b"MYLD");
 pub const SYS_FUTEX_WAIT: u64 = tag4(b"MFTW");
 pub const SYS_FUTEX_WAKE: u64 = tag4(b"MFTK");
+pub const SYS_SLEEP_MS: u64 = tag4(b"MSLP");
 pub const SYS_TIME_MILLIS: u64 = tag4(b"MTMS");
 pub const SYS_TIME_MONOTONIC: u64 = tag4(b"MMON");
 pub const SYS_TIME_RTC: u64 = tag4(b"MTRT");

@@ -24,6 +24,7 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkYield
         | SyscallNumber::MkFutexWait
         | SyscallNumber::MkFutexWake
+        | SyscallNumber::MkSleepMs
         | SyscallNumber::MkTimeMillis
         | SyscallNumber::MkTimeMonotonic
         | SyscallNumber::MkTimeRtc

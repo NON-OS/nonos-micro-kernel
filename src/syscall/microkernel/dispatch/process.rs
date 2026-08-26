@@ -28,7 +28,8 @@ use crate::syscall::microkernel::numbers::*;
 use crate::syscall::microkernel::proc_output::sys_proc_output;
 use crate::syscall::microkernel::proc_stdin::{sys_proc_input, sys_stdin_read};
 use crate::syscall::microkernel::process::{
-    sys_args, sys_exit, sys_getpid, sys_pid_alive, sys_set_tls, sys_spawn, sys_thread_spawn,
+    sys_args, sys_exit, sys_getpid, sys_pid_alive, sys_set_tls, sys_sleep_ms, sys_spawn,
+    sys_thread_spawn,
     sys_yield,
 };
 use crate::syscall::microkernel::procstat::sys_proc_stat;
@@ -59,6 +60,7 @@ pub(super) fn handle(nr: u64, a: Args) -> Option<i64> {
         SYS_YIELD => sys_yield(),
         SYS_FUTEX_WAIT => sys_futex_wait(a.a0, a.a1 as u32, a.a2),
         SYS_FUTEX_WAKE => sys_futex_wake(a.a0, a.a1),
+        SYS_SLEEP_MS => sys_sleep_ms(a.a0),
         SYS_TIME_MILLIS => sys_time_millis(),
         SYS_TIME_MONOTONIC => sys_time_monotonic(),
         SYS_TIME_RTC => sys_time_rtc(a.a0),

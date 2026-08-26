@@ -17,6 +17,10 @@ const N_MK_EXIT: i64 = tag4(b"MEXT");
 const N_MK_GETPID: i64 = tag4(b"MGPD");
 
 pub fn getcwd() -> io::Result<PathBuf> {
+    // NONOS capsules run with a fixed root working directory. Returning "/"
+    // rather than an error lets unmodified crates.io tools that query the CWD
+    // at startup (ripgrep among them) initialize instead of bailing out with
+    // "failed to get current working directory".
     Ok(PathBuf::from("/"))
 }
 
