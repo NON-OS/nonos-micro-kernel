@@ -6,10 +6,12 @@
 //! opened from the dock. Drawing and hit-testing live here; the click action
 //! that launches a tile and dismisses the overlay lives in the server layer.
 
+mod dots;
 mod gen_icon;
 mod grid;
 mod hit;
 mod paint;
+mod search;
 mod tile;
 mod tool_icons;
 mod view;
