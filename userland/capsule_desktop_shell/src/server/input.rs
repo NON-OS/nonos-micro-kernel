@@ -43,10 +43,12 @@ pub fn handle(ctx: &mut Context, buf: &[u8]) -> bool {
     // A key press while an inline rename is active edits the name; keys carry no
     // pointer position, so this is handled before the x/y checks below.
     if kind == INPUT_KIND_KEY_DOWN {
+        let code = read_u32(buf, 12).unwrap_or(0);
         if ctx.rename.is_some() {
-            let code = read_u32(buf, 12).unwrap_or(0);
             desktop::rename_key(ctx, code);
             super::repaint::repaint(ctx);
+        } else if ctx.launchpad {
+            super::handlers::launchpad_key::key(ctx, code);
         }
         return true;
     }

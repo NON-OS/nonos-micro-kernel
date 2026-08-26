@@ -21,6 +21,13 @@ pub(super) fn rect(ctx: &Context) -> (u32, u32, u32, u32) {
     (x, search_y(), w, search_h())
 }
 
+/// Whether a point falls inside the search pill, so a click there is absorbed
+/// by the field rather than dismissing the overlay.
+pub(crate) fn hit(ctx: &Context, px: u32, py: u32) -> bool {
+    let (x, y, w, h) = rect(ctx);
+    px >= x && px < x + w && py >= y && py < y + h
+}
+
 pub(super) fn paint(ctx: &Context) {
     let (x, y, w, h) = rect(ctx);
     let border = if ctx.launchpad_query.is_empty() {

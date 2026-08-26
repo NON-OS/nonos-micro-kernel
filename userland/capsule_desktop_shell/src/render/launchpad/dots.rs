@@ -41,7 +41,7 @@ pub(super) fn paint(ctx: &Context) {
     }
 }
 
-pub(super) fn hit(ctx: &Context, px: u32, py: u32) -> Option<usize> {
+pub(crate) fn hit(ctx: &Context, px: u32, py: u32) -> Option<usize> {
     let (x0, y, step, n) = layout(ctx);
     if n < 2 {
         return None;

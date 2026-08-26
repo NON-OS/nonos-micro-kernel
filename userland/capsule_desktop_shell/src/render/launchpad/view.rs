@@ -40,7 +40,7 @@ pub(crate) fn label_of(ctx: &Context, t: Target) -> &[u8] {
     }
 }
 
-pub(super) fn rebuild(ctx: &mut Context) {
+pub(crate) fn rebuild(ctx: &mut Context) {
     let installed = ctx.installed_apps.len();
     let packages = ctx.pkg_files.len();
     let total = LAUNCHER_APPS.len() + TOOL_APPS.len() + installed + packages;
@@ -63,7 +63,7 @@ pub(super) fn pages(ctx: &Context) -> usize {
     ctx.launchpad_view.len().div_ceil(cap).max(1)
 }
 
-pub(super) fn page_slice(ctx: &Context) -> &[Target] {
+pub(crate) fn page_slice(ctx: &Context) -> &[Target] {
     let cap = per_page(ctx.width, ctx.height).max(1);
     let start = ctx.launchpad_page * cap;
     let end = (start + cap).min(ctx.launchpad_view.len());

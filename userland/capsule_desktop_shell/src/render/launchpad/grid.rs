@@ -6,12 +6,10 @@
 //! desktop app, then every installed tool, then every capsule-store app.
 
 use crate::render::ui_font;
-use crate::state::{LAUNCHER_APPS, TOOL_APPS};
 
 const TILE_LOGICAL: u32 = 72;
 const CELL_W_LOGICAL: u32 = 120;
 const CELL_H_LOGICAL: u32 = 108;
-const TOP_PAD_LOGICAL: u32 = 110;
 const TITLE_Y_LOGICAL: u32 = 56;
 const SEARCH_Y_LOGICAL: u32 = 96;
 const SEARCH_W_LOGICAL: u32 = 360;
@@ -30,10 +28,6 @@ pub(super) fn cell_w() -> u32 {
 
 pub(super) fn cell_h() -> u32 {
     CELL_H_LOGICAL * ui_font::scale()
-}
-
-pub(super) fn top_pad() -> u32 {
-    TOP_PAD_LOGICAL * ui_font::scale()
 }
 
 pub(super) fn title_y() -> u32 {
@@ -67,13 +61,6 @@ pub(super) fn rows(height: u32) -> u32 {
 
 pub(super) fn per_page(width: u32, height: u32) -> usize {
     (cols(width) * rows(height)) as usize
-}
-
-/// Total tiles: the built-in apps, then the command-line tools, then the
-/// `installed` capsule-store apps the installer reported this boot, then the
-/// `packages` installable files waiting in /pkgs.
-pub(super) fn count(installed: usize, packages: usize) -> usize {
-    LAUNCHER_APPS.len() + TOOL_APPS.len() + installed + packages
 }
 
 /// Columns that fit the display, kept within a sensible range so the grid stays
