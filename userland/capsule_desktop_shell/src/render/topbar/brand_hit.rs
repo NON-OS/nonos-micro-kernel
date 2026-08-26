@@ -16,9 +16,9 @@
 
 //! Hit test for the brand region, so a click on the logo opens the launcher.
 
-use super::metrics::BRAND_RIGHT;
-use crate::render::layout::MENUBAR_HEIGHT;
+use super::metrics::brand_right;
+use crate::render::layout::menubar_height;
 
 pub fn brand_hit(px: u32, py: u32) -> bool {
-    py < MENUBAR_HEIGHT && px < BRAND_RIGHT
+    py < menubar_height() && px < brand_right()
 }

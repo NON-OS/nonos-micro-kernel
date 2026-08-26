@@ -15,8 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub const BORDER_PX: u32 = 1;
-pub const TITLEBAR_HEIGHT: u32 = 26;
-pub const TITLEBAR_PADDING: u32 = 10;
-pub const TITLE_TEXT_Y: u32 = 9;
-pub const CLOSE_BUTTON_SIZE: u32 = 18;
-pub const BUTTON_GAP: u32 = 6;
+pub const HAIRLINE_PX: u32 = 1;
+pub const SHADOW_MARGIN: u32 = 10;
+pub const FRAME_RADIUS: u32 = 12;
+pub const TITLEBAR_H: u32 = 40;
+pub const TITLE_PX: f32 = 17.0;
+pub const LIGHT_D: u32 = 12;
+pub const LIGHT_GAP: u32 = 8;
+pub const LIGHT_INSET: u32 = 16;
+pub const LIGHT_HIT_PAD: u32 = 4;
+pub const ACCESSORY_INSET: u32 = 12;
+pub const ACCESSORY_PAD_Y: u32 = 7;

@@ -10,7 +10,7 @@
 use alloc::vec::Vec;
 
 use super::consent::{
-    border, button, fill, line, wrap_at, APPROVE_BG, BORDER, CANCEL_BG, DIM, FG, MARGIN, PANEL,
+    border, button, fill, line, margin, wrap_at, APPROVE_BG, BORDER, CANCEL_BG, DIM, FG, PANEL,
 };
 use crate::render::ui_font::{line_h, valid_str, TITLE_PX, UI_PX};
 use crate::server::handlers::pkg_consent::{approve_rect, cancel_rect, panel_rect};
@@ -33,9 +33,9 @@ pub fn paint_pkg_consent(ctx: &Context) {
     caps.extend_from_slice(b"Caps: ");
     super::cap_names::append(s.caps, &mut caps);
     let approve = approve_rect(ctx.width, ctx.height);
-    let x = p.x + MARGIN;
-    let max_w = p.width.saturating_sub(MARGIN * 2);
-    let mut y = p.y + MARGIN;
+    let x = p.x + margin();
+    let max_w = p.width.saturating_sub(margin() * 2);
+    let mut y = p.y + margin();
     line(ctx, x, y, TITLE, FG, TITLE_PX, max_w);
     y += line_h(TITLE_PX);
     line(ctx, x, y, valid_str(&s.slug), FG, UI_PX, max_w);

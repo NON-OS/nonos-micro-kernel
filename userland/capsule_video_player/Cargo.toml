@@ -1,0 +1,43 @@
+# NONOS userland: capsule_video_player
+# eK@nonos.systems
+#
+# Motion-JPEG AVI playback. Streams frames from the VFS through a
+# bounded window, decodes with `zune-jpeg`, letterboxes to the surface.
+# Real production capsule built on `nonos_app_skeleton`.
+
+[package]
+name = "nonos_video_player"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS video player capsule"
+
+[[bin]]
+name = "video_player"
+path = "src/main.rs"
+
+[features]
+# Self-test build: parse the baked MJPEG AVI, decode every frame and
+# letterbox-scale the last one (no IPC, no vfs), then emit a graded
+# [VIDEO] serial marker for the boot harness.
+nonos-video-player-smoketest = []
+
+[dependencies]
+nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_app_skeleton = { path = "../app_skeleton" }
+nonos_avi = { path = "../nonos_avi" }
+zune-jpeg = { version = "0.4", default-features = false }
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+lto = false
+debug = false
+strip = true
+
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

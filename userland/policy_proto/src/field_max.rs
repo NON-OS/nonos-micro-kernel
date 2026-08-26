@@ -26,6 +26,8 @@ pub fn max_of(field: Field) -> u8 {
         Field::MouseSensitivity => 4,
         Field::ScreenTimeout => 240,
         Field::AutoLockTimeout => 240,
+        Field::Volume => 100,
+        Field::AudioBalance => 100,
         _ => 0,
     }
 }

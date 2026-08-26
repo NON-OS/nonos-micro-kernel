@@ -14,21 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::{draw_border, draw_titlebar, DecorationHit};
+use nonos_toolkit::decorations::{accessory_rect, content_rect, draw_frame, DecorationHit};
 
 use crate::app::{App, AppManifest};
 use crate::clients::toolkit;
 use crate::paint::PaintBuffer;
 use crate::setup::WindowBinding;
 
-use super::paint_close_button::paint_close_button;
-use super::paint_maximize_button::paint_maximize_button;
-use super::paint_minimize_button::paint_minimize_button;
-
-const TITLEBAR_FILL_H: u32 = 28;
-const TITLEBAR_FILL_ARGB: u32 = 0xFF1A_2030;
-const TITLE_TEXT_ARGB: u32 = 0xFFD8_DEE8;
-const BORDER_ARGB: u32 = 0xFF55_6677;
+use super::frame_finish::finish;
 
 pub(super) fn paint<A: App>(
     app: &mut A,
@@ -37,6 +30,7 @@ pub(super) fn paint<A: App>(
     toolkit_port: u32,
     request_id: u32,
     hover: DecorationHit,
+    maximized: bool,
 ) {
     let _ = toolkit::ui_frame(
         toolkit_port,
@@ -48,28 +42,19 @@ pub(super) fn paint<A: App>(
     let words = (binding.byte_len / 4) as usize;
     let pixels: &mut [u32] =
         unsafe { core::slice::from_raw_parts_mut(binding.backing_va as *mut u32, words) };
-    {
-        let mut fb = PaintBuffer {
-            pixels,
-            stride_words: binding.stride_words,
-            width: binding.width,
-            height: binding.height,
-        };
-        app.paint(&mut fb);
-        fb.fill_rect(0, 0, binding.width, TITLEBAR_FILL_H, TITLEBAR_FILL_ARGB);
-    }
-    let stride = binding.stride_words as usize;
-    draw_titlebar(
+    let mut fb = PaintBuffer {
         pixels,
-        stride,
-        binding.width,
-        binding.height,
-        TITLEBAR_FILL_ARGB,
-        TITLE_TEXT_ARGB,
-        manifest.title,
-    );
-    paint_close_button(pixels, stride, binding.width, hover == DecorationHit::CloseButton);
-    paint_minimize_button(pixels, stride, binding.width, hover == DecorationHit::MinimizeButton);
-    paint_maximize_button(pixels, stride, binding.width, hover == DecorationHit::MaximizeButton);
-    draw_border(pixels, stride, binding.width, binding.height, BORDER_ARGB);
+        stride_words: binding.stride_words,
+        width: binding.width,
+        height: binding.height,
+    };
+    let lit = hover != DecorationHit::None && hover != DecorationHit::Titlebar;
+    let accessory_w = app.titlebar_accessory_w();
+    draw_frame(&mut fb, maximized, manifest.title, lit, accessory_w);
+    if let Some(a) = accessory_rect(binding.width, binding.height, maximized, accessory_w) {
+        app.paint_accessory(&mut fb.sub(a.x, a.y, a.w, a.h));
+    }
+    let c = content_rect(binding.width, binding.height, maximized);
+    app.paint(&mut fb.sub(c.x, c.y, c.w, c.h));
+    finish(&mut fb, maximized);
 }

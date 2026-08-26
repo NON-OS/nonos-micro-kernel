@@ -36,6 +36,39 @@ pub fn u32_decimal(mut value: u32, out: &mut [u8]) -> usize {
     n
 }
 
+// Widen a count the kernel reports as 64-bit. Delegates below 2^32 so every
+// number in the UI comes out of one code path.
+pub fn u64_decimal(value: u64, out: &mut [u8]) -> usize {
+    if value <= u32::MAX as u64 {
+        return u32_decimal(value as u32, out);
+    }
+    let mut buf = [0u8; 20];
+    let mut i = buf.len();
+    let mut v = value;
+    while v > 0 {
+        i -= 1;
+        buf[i] = b'0' + (v % 10) as u8;
+        v /= 10;
+    }
+    let n = (buf.len() - i).min(out.len());
+    out[..n].copy_from_slice(&buf[i..i + n]);
+    n
+}
+
+// One decimal place, e.g. "11.0%". cpu_pct is a whole percent from the kernel,
+// so the tenth is always 0 today; the width is what keeps a column of numbers
+// aligned when a future sample carries one.
+pub fn pct_1dp(pct: u8, out: &mut [u8]) -> usize {
+    let mut n = u32_decimal(pct as u32, out);
+    if n + 3 <= out.len() {
+        out[n] = b'.';
+        out[n + 1] = b'0';
+        out[n + 2] = b'%';
+        n += 3;
+    }
+    n
+}
+
 // Scheduler state names, indexed by the kernel state code. A capsule blocked on
 // IPC is parked by the scheduler; it is alive and answers the instant a message
 // arrives, so "idle" reads truer than "sleeping" or "waiting".

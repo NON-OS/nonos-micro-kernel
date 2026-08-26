@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{NotifyLevel, PkgInstallPrompt, SpotlightState, TaskbarState, ToastQueue, TrayTable};
+use super::{
+    MenubarState, NotifyLevel, PkgInstallPrompt, SpotlightState, TaskbarState, ToastQueue,
+    TrayTable,
+};
 
 pub struct Context {
     pub compositor_port: u32,
@@ -25,6 +28,7 @@ pub struct Context {
     pub wm_notify_ready: bool,
     pub width: u32,
     pub height: u32,
+    pub scale: u32,
     pub stride: u32,
     pub backing_va: u64,
     pub tray: TrayTable,
@@ -32,6 +36,9 @@ pub struct Context {
     pub spotlight: SpotlightState,
     /// Whether the full-screen Launchpad overlay is open.
     pub launchpad: bool,
+    pub launchpad_query: alloc::string::String,
+    pub launchpad_page: usize,
+    pub launchpad_view: alloc::vec::Vec<crate::render::launchpad::Target>,
     pub last_notify_level: Option<NotifyLevel>,
     pub toasts: ToastQueue,
     pub toast_layer_live: bool,
@@ -55,6 +62,8 @@ pub struct Context {
     /// second click focuses that window instead of loading another copy. An
     /// entry is dropped once its pid stops accepting control frames.
     pub installed_pids: alloc::collections::BTreeMap<alloc::vec::Vec<u8>, u32>,
+    /// Which menu-bar title is open, and the row under the pointer inside it.
+    pub menubar: MenubarState,
     /// Top-left corner of the desktop right-click menu, or None when hidden.
     pub desktop_menu: Option<(u32, u32)>,
     /// Which menu row the pointer is over, so it can be highlighted.

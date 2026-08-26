@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod constants;
+mod disable_market;
 mod lookup_port;
 mod require_compositor;
 mod require_input_router;
@@ -23,6 +24,7 @@ mod require_wallpaper;
 mod require_wm;
 mod try_market;
 
+pub use disable_market::disable_market;
 pub use require_compositor::require_compositor;
 pub use require_input_router::require_input_router;
 pub use require_wallpaper::require_wallpaper;

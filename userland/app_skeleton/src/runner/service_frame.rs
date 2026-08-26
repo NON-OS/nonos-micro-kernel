@@ -51,6 +51,7 @@ pub(super) fn service_frame<A: App>(
         peers.wm,
         booted.manifest.window_id,
         request_id,
+        booted.maximized,
     );
     if let Some((rw, rh)) = result.resize_to {
         super::resize_window::apply_resize(booted, peers, request_id, rw, rh);

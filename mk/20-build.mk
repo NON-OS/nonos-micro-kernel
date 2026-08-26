@@ -432,6 +432,7 @@ include userland/capsule_wm/Capsule.mk
 include userland/capsule_desktop_shell/Capsule.mk
 include userland/capsule_image_codec/Capsule.mk
 include userland/capsule_image_viewer/Capsule.mk
+include userland/capsule_video_player/Capsule.mk
 include userland/capsule_clipboard/Capsule.mk
 include userland/capsule_login/Capsule.mk
 include userland/toolkit/Capsule.mk
@@ -875,6 +876,12 @@ nonos-mk-image-viewer-test: $(proof-io_ARTIFACTS) \
 	@echo "Building image_viewer capsule (nonos-image-viewer-smoketest)..."
 	@$(MAKE) -B image-viewer_CARGO_FEATURES=nonos-image-viewer-smoketest nonos-mk-image-viewer-sign
 	$(call nonos_kernel_build,microkernel-image-viewer-smoketest,microkernel-image-viewer-smoketest)
+
+nonos-mk-video-player-test: $(proof-io_ARTIFACTS) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@echo "Building video_player capsule (nonos-video-player-smoketest)..."
+	@$(MAKE) -B video-player_CARGO_FEATURES=nonos-video-player-smoketest nonos-mk-video-player-sign
+	$(call nonos_kernel_build,microkernel-video-player-smoketest,microkernel-video-player-smoketest)
 
 nonos-mk-driver-hda-smoketest-test: $(proof-io_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key

@@ -39,6 +39,17 @@ pub fn cap_bit(name: &str) -> Option<u64> {
         "Pio" => 1048576,
         "InputSource" => 2097152,
         "TimeSet" => 4194304,
+        // The table stopped here, so a manifest naming any of the following was
+        // rejected as an unknown capability and had to state a raw hex mask
+        // instead. Values are the kernel's; see `Capability::bit`.
+        "SpawnBroker" => 8388608,
+        "SpawnWindow" => 16777216,
+        "ProcessControl" => 33554432,
+        "StoreWrite" => 67108864,
+        "EnrolDevRoot" => 134217728,
+        "Keyring" => 268435456,
+        "Entropy" => 536870912,
+        "AppInstall" => 1073741824,
         _ => return None,
     };
     Some(bit)

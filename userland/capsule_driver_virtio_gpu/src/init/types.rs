@@ -22,5 +22,8 @@ pub struct InitOut {
     // True when the 3D (VirGL) feature was offered and accepted. Only the
     // modern transport can carry it; the legacy path always reports false.
     pub virgl: bool,
+    // True when the EDID feature was offered and acked. Both transports can
+    // carry it, so a legacy virtio-vga still reports a real panel size.
+    pub edid: bool,
     pub regs: Regs,
 }

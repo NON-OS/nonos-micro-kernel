@@ -17,24 +17,71 @@
 //! Colours and measurements for the menu bar. The panel and border colours are
 //! the dock's, so the two bars share one look.
 
-pub(super) const BAR_BG: u32 = 0xFF1B_2030;
-pub(super) const BAR_BORDER: u32 = 0xFF2A_3446;
-pub(super) const TILE_BG: u32 = 0xFF23_2C3C;
-pub(super) const TILE_BORDER: u32 = 0xFF2E_3A4C;
-pub(super) const FG: u32 = 0xFFCF_E6E9;
-pub(super) const WORDMARK: u32 = 0xFFE6_F0FA;
+use crate::render::measure_aa::measure_aa_bold;
+use crate::render::palette;
+use crate::render::ui_font::{self, BRAND_PX};
 
-pub(super) const LOGO_X: u32 = 12;
-pub(super) const LOGO_SIZE: u32 = 20;
-pub(super) const WORDMARK_X: u32 = 40;
-/// Right edge of the clickable brand region (logo plus wordmark).
-pub(super) const BRAND_RIGHT: u32 = 118;
+pub(super) const BAR_BG: u32 = palette::BAR;
+pub(super) const BAR_BORDER: u32 = palette::LINE_SOFT;
+pub(super) const FG: u32 = palette::TEXT_DIM;
+pub(super) const WORDMARK: u32 = palette::TEXT;
+pub(super) const WORDMARK_TEXT: &str = "NØNOS";
 
-pub(super) const RIGHT_MARGIN: u32 = 12;
-pub(super) const TILE_H: u32 = crate::render::layout::MENUBAR_TILE_H;
-pub(super) const PAD_X: u32 = 12;
-pub(super) const GAP: u32 = 10;
+const LOGO_X_LOGICAL: u32 = 18;
+const LOGO_SIZE_LOGICAL: u32 = 17;
+const WORDMARK_X_LOGICAL: u32 = 44;
 
-pub(super) const BATT_GLYPH_W: u32 = 24;
-pub(super) const NET_GLYPH_W: u32 = 14;
-pub(super) const DOT: u32 = 8;
+const RIGHT_MARGIN_LOGICAL: u32 = 18;
+const PAD_X_LOGICAL: u32 = 12;
+const GAP_LOGICAL: u32 = 16;
+
+const BATT_GLYPH_W_LOGICAL: u32 = 26;
+const NET_GLYPH_W_LOGICAL: u32 = 16;
+const SEARCH_GLYPH_W_LOGICAL: u32 = 15;
+const DOT_LOGICAL: u32 = 8;
+
+pub(super) fn logo_x() -> u32 {
+    LOGO_X_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn logo_size() -> u32 {
+    LOGO_SIZE_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn wordmark_x() -> u32 {
+    WORDMARK_X_LOGICAL * ui_font::scale()
+}
+
+/// Right edge of the clickable brand region (logo plus wordmark). Measured from
+/// the face that paints it, so the hit box tracks the drawn glyphs.
+pub(crate) fn brand_right() -> u32 {
+    wordmark_x() + measure_aa_bold(WORDMARK_TEXT, BRAND_PX) + pad_x()
+}
+
+pub(super) fn right_margin() -> u32 {
+    RIGHT_MARGIN_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn pad_x() -> u32 {
+    PAD_X_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn gap() -> u32 {
+    GAP_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn batt_glyph_w() -> u32 {
+    BATT_GLYPH_W_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn net_glyph_w() -> u32 {
+    NET_GLYPH_W_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn search_glyph_w() -> u32 {
+    SEARCH_GLYPH_W_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn dot() -> u32 {
+    DOT_LOGICAL * ui_font::scale()
+}

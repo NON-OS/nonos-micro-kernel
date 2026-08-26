@@ -24,6 +24,7 @@ pub fn run() -> Result<Context, &'static str> {
     super::apply_wallpaper_policy::apply_wallpaper_policy(peers.wallpaper_port)?;
     let overlay = overlay::allocate(peers.compositor_port, 1)?;
     let mut ctx = super::build_context::build_context(&peers, &overlay);
+    crate::render::ui_font::set_scale(ctx.scale);
     paint_chrome(&ctx);
     super::register_overlay::register_overlay(&mut ctx, &overlay)?;
     super::commit_overlay::commit_overlay(&mut ctx)?;

@@ -16,12 +16,12 @@
 
 //! Screen rectangle a desktop cell occupies, for drawing and hit-testing.
 
-use super::metrics::{CELL_H, CELL_W, LEFT};
+use super::metrics::{cell_h, cell_w, left};
 use super::slot::slot;
 use super::top::top;
 use crate::state::Context;
 
 pub(super) fn cell_rect(ctx: &Context, index: usize) -> (u32, u32, u32, u32) {
     let (col, row) = slot(ctx, index);
-    (LEFT + col * CELL_W, top() + row * CELL_H, CELL_W, CELL_H)
+    (left() + col * cell_w(), top() + row * cell_h(), cell_w(), cell_h())
 }

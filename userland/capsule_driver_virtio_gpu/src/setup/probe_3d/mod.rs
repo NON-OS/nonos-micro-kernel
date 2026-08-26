@@ -22,3 +22,6 @@ mod teardown;
 mod verify;
 
 pub use run::probe;
+// The EDID probe writes the same style of serial line and shares these buffer
+// helpers rather than duplicating them.
+pub(crate) use log::{push, push_dec};

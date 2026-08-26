@@ -34,7 +34,7 @@ const KNOWN_CAPSULES: &[(&[u8], u64)] = &[
     (b"about", 0x1819),
     (b"calculator", 0x1819),
     (b"terminal", 0x1819),
-    (b"driver.virtio_gpu0", 0x1F9019),
+    (b"driver.virtio_gpu0", 0x1F9119),
 ];
 
 pub fn run(out: &mut [u8], req: &Request) -> usize {

@@ -19,6 +19,7 @@ use super::field::Field;
 use super::font_size_labels::FONT_SIZE_LABELS;
 use super::keyboard_layout_labels::KEYBOARD_LAYOUT_LABELS;
 use super::language_labels::LANGUAGE_LABELS;
+use super::proxy_mode_labels::PROXY_MODE_LABELS;
 use super::theme_labels::THEME_LABELS;
 use super::wallpaper_labels::WALLPAPER_LABELS;
 
@@ -30,6 +31,7 @@ pub fn enum_table(field: Field) -> Option<&'static [&'static [u8]]> {
         Field::Language => LANGUAGE_LABELS,
         Field::FontSize => FONT_SIZE_LABELS,
         Field::CursorSize => CURSOR_SIZE_LABELS,
+        Field::ProxyMode => PROXY_MODE_LABELS,
         _ => return None,
     })
 }

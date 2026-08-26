@@ -14,24 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::settings::paint::visible_rows::visible_rows;
+use crate::settings::ui::scroll::ensure_visible;
 
 use super::state::State;
+use super::view_h::view_h;
 
 pub fn track_scroll(state: &mut State) {
-    let i = state.category as usize;
-    let cursor = state.cursor[i];
-    let top = state.scroll_top[i];
-    let rows = visible_rows(state.win_h);
-    if rows == 0 {
-        state.scroll_top[i] = cursor;
-        return;
-    }
-    if cursor < top {
-        state.scroll_top[i] = cursor;
-        return;
-    }
-    if cursor >= top + rows {
-        state.scroll_top[i] = cursor + 1 - rows;
-    }
+    let i = state.section.index();
+    state.scroll_px[i] = ensure_visible(state, state.scroll_px[i], view_h(state));
 }

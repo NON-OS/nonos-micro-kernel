@@ -27,8 +27,7 @@ pub mod registry;
 
 pub use caps::{check_service_cap, has_capability, verify_caller_cap, CapError, ServiceCap};
 pub use caps::{
-    CAP_ADMIN, CAP_AGENTS, CAP_APPS, CAP_AUDIO, CAP_CRYPTO, CAP_DISPLAY, CAP_DRIVER, CAP_GPU,
-    CAP_INPUT, CAP_NET, CAP_SHELL, CAP_VFS, CAP_ZK,
+    CAP_ADMIN, CAP_APPS, CAP_CRYPTO, CAP_DISPLAY, CAP_DRIVER, CAP_INPUT, CAP_NET, CAP_VFS,
 };
 pub use registry::{
     lookup_port, lookup_service, register_endpoint, required_caps, RegError, ServiceEndpoint,
