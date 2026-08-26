@@ -16,5 +16,5 @@ mod tile;
 mod tool_icons;
 mod view;
 
-pub use hit::{hit, target, Target};
+pub use hit::{hit, Target};
 pub use paint::paint_launchpad;
