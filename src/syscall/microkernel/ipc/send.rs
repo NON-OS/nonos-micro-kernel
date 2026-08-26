@@ -76,12 +76,26 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
                 return ERRNO_PERM;
             }
             trace(pid, endpoint, &caller_inbox, len);
-            match kernel_route_ipc_corr(pid, &caller_inbox, &data, token) {
-                Ok(()) => {
-                    crate::sched::wake_process(caller_pid);
-                    0
+            // Enqueue straight into the caller's reply inbox, the exact inbox its
+            // blocked mk_ipc_call is draining, stamped with the token that call
+            // filters on. Going back through the service resolver would look the
+            // reply inbox up as a service and re-resolve it to the caller's proc
+            // inbox (the caller adopted this endpoint), where the caller's serve
+            // loop eats the reply and the call times out. That is why every
+            // userland call into a kernel-reply service (crypto, the block
+            // device, vfs) hung: the answer was delivered to the wrong inbox.
+            match IpcMessage::new(&alloc::format!("proc.{}", pid), &caller_inbox, &data) {
+                Ok(mut msg) => {
+                    msg.correlation = token;
+                    match nonos_inbox::try_enqueue_strict(&caller_inbox, msg) {
+                        Ok(()) => {
+                            crate::sched::wake_process(caller_pid);
+                            0
+                        }
+                        Err(_) => ERRNO_FAULT,
+                    }
                 }
-                Err(e) => e as i64,
+                Err(_) => ERRNO_FAULT,
             }
         }
         // A capsule replying to a kernel-mediated round trip (crypto_pool,
