@@ -36,6 +36,9 @@ pub struct Context {
     pub spotlight: SpotlightState,
     /// Whether the full-screen Launchpad overlay is open.
     pub launchpad: bool,
+    pub launchpad_query: alloc::string::String,
+    pub launchpad_page: usize,
+    pub launchpad_view: alloc::vec::Vec<crate::render::launchpad::Target>,
     pub last_notify_level: Option<NotifyLevel>,
     pub toasts: ToastQueue,
     pub toast_layer_live: bool,

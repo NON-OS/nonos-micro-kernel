@@ -38,7 +38,7 @@ pub struct LauncherApp {
     pub service: &'static [u8],
 }
 
-pub const LAUNCHER_APPS: [LauncherApp; 11] = [
+pub const LAUNCHER_APPS: [LauncherApp; 12] = [
     LauncherApp { icon: LauncherIcon::Terminal, label: b"Terminal", service: b"app.terminal" },
     LauncherApp { icon: LauncherIcon::FileManager, label: b"Files", service: b"app.file_manager" },
     LauncherApp { icon: LauncherIcon::TextEditor, label: b"Editor", service: b"app.text_editor" },
@@ -65,5 +65,10 @@ pub const LAUNCHER_APPS: [LauncherApp; 11] = [
         icon: LauncherIcon::VideoPlayer,
         label: b"Video",
         service: b"app.video_player",
+    },
+    LauncherApp {
+        icon: LauncherIcon::Snake,
+        label: b"Snake",
+        service: b"app.snake",
     },
 ];

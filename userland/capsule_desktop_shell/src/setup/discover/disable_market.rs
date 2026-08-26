@@ -14,19 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod constants;
-mod disable_market;
-mod lookup_port;
-mod require_compositor;
-mod require_input_router;
-mod require_port;
-mod require_wallpaper;
-mod require_wm;
-mod try_market;
+//! Marks the capsule market unavailable for the rest of this boot. Discovery
+//! already does this when the service is absent; a service that registers but
+//! never answers is the same thing from the shell's side, so the startup
+//! healthcheck routes here instead of failing the whole desktop.
 
-pub use disable_market::disable_market;
-pub use require_compositor::require_compositor;
-pub use require_input_router::require_input_router;
-pub use require_wallpaper::require_wallpaper;
-pub use require_wm::require_wm;
-pub use try_market::try_market;
+use core::sync::atomic::Ordering;
+
+pub fn disable_market() {
+    super::constants::MARKET_DISABLED.store(true, Ordering::Relaxed);
+}
