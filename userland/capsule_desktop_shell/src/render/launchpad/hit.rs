@@ -11,6 +11,7 @@ use crate::state::{LAUNCHER_APPS, TOOL_APPS};
 /// index into the tool table, a capsule-store app by index into the
 /// installed-app list the installer reported, or a not-yet-installed package
 /// by index into the /pkgs scan.
+#[derive(Clone, Copy)]
 pub enum Target {
     App(usize),
     Tool(usize),
