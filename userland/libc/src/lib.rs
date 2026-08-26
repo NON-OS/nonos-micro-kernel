@@ -24,7 +24,6 @@ pub mod capsule_load;
 pub mod capsule_verify;
 pub mod crypto;
 pub mod debug;
-pub mod fuzz;
 pub mod graphics;
 #[cfg(feature = "heap")]
 pub mod heap;
