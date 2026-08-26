@@ -15,12 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-use crate::render::fill::blit_rgba8_tinted;
 use crate::render::palette;
 use crate::render::surface::surface;
 use crate::state::Context;
-
-pub const SRC: u32 = 96;
 
 // A real, anti-aliased line-icon (rasterized from SVG) tinted in the app's
 // accent, over a translucent rounded tile. One cohesive icon language.
@@ -43,8 +40,8 @@ pub fn glyph(ctx: &Context, x: u32, y: u32, size: u32, icon: &[u8], accent: u32)
 // The art alone, at exactly the size asked for, for callers that already own the
 // spacing around it.
 pub fn art(ctx: &Context, x: u32, y: u32, size: u32, icon: &[u8], accent: u32) {
-    let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    blit_rgba8_tinted(va, st, vw, vh, x, y, size, size, icon, SRC, SRC, accent);
+    let mut buf = surface(ctx);
+    nonos_toolkit::icons::draw_mask(&mut buf, icon, x, y, size, accent);
 }
 
 const GLYPH_PCT: u32 = 46;

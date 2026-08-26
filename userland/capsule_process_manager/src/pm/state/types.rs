@@ -19,14 +19,11 @@ use alloc::vec::Vec;
 use nonos_libc::{ProcStatEntry, ProcStatHeader, PROC_NAME_LEN};
 
 use super::super::security::{Alert, Monitor};
+use super::{Filter, History, Query, Screen, Sort};
 
 // Ceiling on processes read in one pass. Well above a full desktop; the whole
 // live set fits in a single syscall so the view is never truncated in practice.
 pub(super) const MAX_PROCS: usize = 256;
-
-// Row layout, shared with paint so a click maps to the same row it drew.
-pub const FIRST_ROW_Y: i32 = 50;
-pub const ROW_H: i32 = 23;
 
 // Signals the monitor can send. SIGTERM asks nicely, SIGKILL forces it; both
 // go through the kernel teardown that zeroizes the process.
@@ -35,33 +32,6 @@ pub const SIGKILL: u64 = 9;
 
 pub(super) const HEADER_LEN: usize = core::mem::size_of::<ProcStatHeader>();
 pub(super) const ENTRY_LEN: usize = core::mem::size_of::<ProcStatEntry>();
-
-// Which panel the window is showing.
-#[derive(Clone, Copy, PartialEq)]
-pub enum View {
-    Processes,
-    Security,
-}
-
-// Column the table is ordered by.
-#[derive(Clone, Copy, PartialEq)]
-pub enum Sort {
-    Cpu,
-    Mem,
-    Name,
-    Pid,
-}
-
-impl Sort {
-    pub fn label(self) -> &'static [u8] {
-        match self {
-            Sort::Cpu => b"cpu",
-            Sort::Mem => b"memory",
-            Sort::Name => b"name",
-            Sort::Pid => b"pid",
-        }
-    }
-}
 
 // One process, as the kernel reports it: identity, scheduler state, granted
 // authority, resident memory, and the cpu share computed from tick deltas.
@@ -103,6 +73,10 @@ pub struct State {
     // reads it to page and to keep the selection on screen.
     pub scroll: usize,
     pub visible: usize,
+    // Frame size the last paint measured against. An input event carries no
+    // dimensions, and the hit test must ask the geometry the same ones.
+    pub fb_w: u32,
+    pub fb_h: u32,
     // Live totals across the whole table, recomputed each refresh.
     pub total_mem_kb: u64,
     pub total_cpu: u32,
@@ -110,10 +84,20 @@ pub struct State {
     // (pid, run_ticks) from the previous sample, so cpu percent is a real delta
     // per process rather than a cumulative total.
     pub(super) prev: Vec<(u32, u64)>,
-    // Which panel is shown, and the live security view over the same rows.
-    pub view: View,
+    // Sampled cpu/memory history behind every sparkline, and the narrowing the
+    // filter chips apply on top of the sort order.
+    pub history: History,
+    pub filter: Filter,
+    // The head-band search field. It narrows `filtered()` alongside the chips
+    // and, while focused, takes the keyboard off the letter shortcuts.
+    pub(super) query: Query,
+    // Which screen is shown, and the live security view over the same rows.
+    pub screen: Screen,
     pub monitor: Monitor,
     pub alerts: Vec<Alert>,
+    // Pids the monitor named this refresh, so the Flagged filter and anything
+    // else that marks a row read from one list rather than re-deriving it.
+    pub flagged: Vec<u32>,
     // Selection and scroll within the security panel's findings list;
     // `alert_visible` is how many findings fit, set by the panel painter.
     pub alert_sel: usize,

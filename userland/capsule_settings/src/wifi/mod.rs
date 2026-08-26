@@ -32,7 +32,7 @@ mod wire;
 pub use adapters::scan_adapters;
 pub use datapath::{driver_datapath, DataPath};
 pub use interface::WifiInterface;
-pub use lease::NetStatus;
+pub use lease::{Lease, NetStatus};
 pub use net_status::net_status;
 pub use network::ScanNetwork;
 pub use scan_client::{

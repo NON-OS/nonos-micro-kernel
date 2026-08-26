@@ -105,6 +105,14 @@ pub(super) fn drain<A: App>(
             }
             _ => {}
         }
+        if let Some(local) =
+            decorations::to_accessory(width, height, maximized, app.titlebar_accessory_w(), event)
+        {
+            if app.on_accessory_event(local) == EventOutcome::Repaint {
+                repaint = true;
+            }
+            continue;
+        }
         match drag::handle(drag_state, width, height, win_x, win_y, maximized, &event) {
             PointerAction::MoveTo(mx, my) => {
                 move_to = Some((mx, my));

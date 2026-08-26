@@ -20,6 +20,7 @@ pub mod installed_launch;
 pub mod launcher_focus;
 pub mod launcher_request;
 pub mod launchpad;
+pub mod launchpad_key;
 pub mod menubar_action;
 pub mod menubar_click;
 pub mod notify;

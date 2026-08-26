@@ -18,11 +18,6 @@ use alloc::string::String;
 
 use super::state::PENDING;
 
-// A server replying with a token that matches no pending caller: the reply
-// stream desynced from the request stream. Distinct from the token-0 kernel
-// case, which is expected and silent.
-static DESYNC: crate::sys::diag::Site = crate::sys::diag::Site::new(b"ipc.reply");
-
 pub(in crate::syscall::microkernel::ipc) fn pop(server_pid: u32) -> Option<(u32, String, u64)> {
     // Pop the entry whose token matches the request this server dequeued
     // last, never the positional front. Kernel-side senders push no entry but
@@ -36,16 +31,7 @@ pub(in crate::syscall::microkernel::ipc) fn pop(server_pid: u32) -> Option<(u32,
     }
     let mut map = PENDING.lock();
     let queue = map.get_mut(&server_pid)?;
-    let Some(pos) = queue.iter().position(|(_, _, token)| *token == want) else {
-        // The server replied stamped with a request token that no caller is
-        // waiting on. That is a genuine correlation desync, not the benign
-        // kernel-request case (which carries token 0 and returns above): the
-        // reply is about to be sent as addressed to a reply endpoint nobody is
-        // draining, and its caller will time out. Loud, because it names the
-        // exact server whose reply stream slipped.
-        DESYNC.note("reply token had no waiting caller", server_pid as u64);
-        return None;
-    };
+    let pos = queue.iter().position(|(_, _, token)| *token == want)?;
     let entry = queue.remove(pos);
     if queue.is_empty() {
         map.remove(&server_pid);

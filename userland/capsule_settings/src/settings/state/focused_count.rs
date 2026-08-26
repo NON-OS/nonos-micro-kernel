@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_policy_proto::Category;
+use crate::settings::schema::field_count;
+use crate::settings::section::Section;
 
-use crate::settings::schema::visible_for;
-
-pub fn focused_count(category: Category) -> usize {
-    visible_for(category).len()
+pub fn focused_count(section: Section) -> usize {
+    field_count(section)
 }

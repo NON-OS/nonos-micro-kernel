@@ -9,7 +9,7 @@
 
 use super::gen_icon;
 use super::grid::{cell_h, cell_origin, cell_w, tile};
-use super::hit::{target, Target};
+use super::hit::Target;
 use super::tool_icons;
 use crate::render::draw_app_icon;
 use crate::render::measure_aa::{measure_aa, truncate_to_width};
@@ -25,10 +25,10 @@ fn label_gap() -> u32 {
     LABEL_GAP_LOGICAL * ui_font::scale()
 }
 
-pub(super) fn paint(ctx: &Context, index: usize) {
-    let (cx, cy) = cell_origin(ctx.width, index);
+pub(super) fn paint(ctx: &Context, cell: usize, t: Target) {
+    let (cx, cy) = cell_origin(ctx.width, cell);
     let icon_x = cx + (cell_w() - tile()) / 2;
-    let label: &[u8] = match target(index, ctx.installed_apps.len(), ctx.pkg_files.len()) {
+    let label: &[u8] = match t {
         Target::App(a) => {
             let app = &LAUNCHER_APPS[a];
             draw_app_icon(ctx, icon_x, cy, app.icon, tile());

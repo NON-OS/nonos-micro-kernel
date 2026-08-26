@@ -554,6 +554,7 @@ microkernel-desktop-base = [
   "nonos-capsule-driver-hda",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
+  "nonos-capsule-snake",
   "nonos-capsule-browser",
   "nonos-capsule-audio-player",
   "nonos-capsule-video-player",

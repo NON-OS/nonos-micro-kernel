@@ -1,10 +1,13 @@
+#[path = "../../src/decorations/accessory.rs"]
+mod accessory;
+#[path = "../../src/decorations/frame_rect.rs"]
+mod frame_rect;
 #[path = "../../src/decorations/metrics.rs"]
 mod metrics;
 #[path = "../../src/decorations/rect.rs"]
 mod rect;
-#[path = "../../src/decorations/frame_rect.rs"]
-mod frame_rect;
 
+use accessory::*;
 use frame_rect::*;
 use metrics::*;
 
@@ -32,7 +35,9 @@ fn main() {
     let cm = content_rect(w, h, true);
     assert_eq!((cm.x, cm.y, cm.w, cm.h), (1, 40, w - 2, h - 41), "maximized content");
 
-    for (tw, th) in [(0u32, 0u32), (1, 1), (20, 20), (21, 41), (2 * SHADOW_MARGIN, 2 * SHADOW_MARGIN)] {
+    for (tw, th) in
+        [(0u32, 0u32), (1, 1), (20, 20), (21, 41), (2 * SHADOW_MARGIN, 2 * SHADOW_MARGIN)]
+    {
         let c = content_rect(tw, th, false);
         assert!(c.x + c.w <= tw.max(c.x), "content escapes surface at {}x{}", tw, th);
         let f = frame_rect(tw, th, false);
@@ -49,6 +54,18 @@ fn main() {
     assert!(l0.x + l0.w <= l1.x, "inflated light targets overlap");
 
     assert!(TITLEBAR_H >= TITLE_PX as u32 + LIGHT_D, "titlebar too short for its contents");
+
+    assert!(accessory_rect(w, h, false, 0).is_none(), "zero width must claim no titlebar");
+    let a = accessory_rect(w, h, false, 236).expect("accessory fits a 560px window");
+    assert_eq!((a.x, a.y, a.w, a.h), (302, 17, 236, 26), "accessory_rect");
+    assert!(
+        t.contains(a.x, a.y) && t.contains(a.x + a.w - 1, a.y + a.h - 1),
+        "accessory escapes titlebar"
+    );
+    let l2 = light_rect(2, w, h, false).inflate(LIGHT_HIT_PAD);
+    assert!(l2.x + l2.w <= a.x, "accessory overlaps the traffic lights");
+    let narrow = accessory_rect(60, h, false, 236).expect("accessory clamps to a narrow window");
+    assert!(narrow.x + narrow.w <= titlebar_rect(60, h, false).x + titlebar_rect(60, h, false).w);
 
     println!("[FRAME-GEOM] PASS");
 }

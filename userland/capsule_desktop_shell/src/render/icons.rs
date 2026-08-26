@@ -16,30 +16,11 @@
 
 use crate::state::apps::LauncherIcon;
 use crate::state::Context;
+use nonos_toolkit::icons::{mask, IconId};
 
 mod badge;
 mod nonos_logo;
 
-// Real anti-aliased line-icons, one per app, rasterized from SVG (48x48 RGBA)
-// and tinted at render time in each app's accent colour.
-const TERMINAL: &[u8] = include_bytes!("../../assets/app_icons/terminal.rgba");
-const FILES: &[u8] = include_bytes!("../../assets/app_icons/files.rgba");
-const EDITOR: &[u8] = include_bytes!("../../assets/app_icons/editor.rgba");
-const SETTINGS: &[u8] = include_bytes!("../../assets/app_icons/settings.rgba");
-const PROCESSES: &[u8] = include_bytes!("../../assets/app_icons/processes.rgba");
-const ABOUT: &[u8] = include_bytes!("../../assets/app_icons/about.rgba");
-const CALC: &[u8] = include_bytes!("../../assets/app_icons/calc.rgba");
-const CLOCK: &[u8] = include_bytes!("../../assets/app_icons/clock.rgba");
-const SNAKE: &[u8] = include_bytes!("../../assets/app_icons/snake.rgba");
-const WALLET: &[u8] = include_bytes!("../../assets/app_icons/wallet.rgba");
-const BROWSER: &[u8] = include_bytes!("../../assets/app_icons/browser.rgba");
-const IMAGE_VIEWER: &[u8] = include_bytes!("../../assets/app_icons/image_viewer.rgba");
-const AUDIO_PLAYER: &[u8] = include_bytes!("../../assets/app_icons/audio_player.rgba");
-const VIDEO_PLAYER: &[u8] = include_bytes!("../../assets/app_icons/video_player.rgba");
-const FS_FOLDER: &[u8] = include_bytes!("../../assets/app_icons/fs_folder.rgba");
-const FS_FILE: &[u8] = include_bytes!("../../assets/app_icons/fs_file.rgba");
-
-// One brand accent for every app: NØNOS cyan on near-black tiles. No rainbow.
 const CYAN: u32 = crate::render::palette::ACCENT;
 
 pub fn draw_app_icon(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u32) {
@@ -53,29 +34,29 @@ pub fn draw_app_glyph(ctx: &Context, x: u32, y: u32, icon: LauncherIcon, size: u
 }
 
 fn icon_bytes(icon: LauncherIcon) -> &'static [u8] {
-    match icon {
-        LauncherIcon::Terminal => TERMINAL,
-        LauncherIcon::FileManager => FILES,
-        LauncherIcon::TextEditor => EDITOR,
-        LauncherIcon::Settings => SETTINGS,
-        LauncherIcon::ProcessManager => PROCESSES,
-        LauncherIcon::About => ABOUT,
-        LauncherIcon::Calculator => CALC,
-        LauncherIcon::Clock => CLOCK,
-        LauncherIcon::Snake => SNAKE,
-        LauncherIcon::Wallet => WALLET,
-        LauncherIcon::Browser => BROWSER,
-        LauncherIcon::ImageViewer => IMAGE_VIEWER,
-        LauncherIcon::AudioPlayer => AUDIO_PLAYER,
-        LauncherIcon::VideoPlayer => VIDEO_PLAYER,
-    }
+    mask(match icon {
+        LauncherIcon::Terminal => IconId::Terminal,
+        LauncherIcon::FileManager => IconId::Files,
+        LauncherIcon::TextEditor => IconId::Editor,
+        LauncherIcon::Settings => IconId::Settings,
+        LauncherIcon::ProcessManager => IconId::Processes,
+        LauncherIcon::About => IconId::About,
+        LauncherIcon::Calculator => IconId::Calc,
+        LauncherIcon::Clock => IconId::Clock,
+        LauncherIcon::Snake => IconId::Snake,
+        LauncherIcon::Wallet => IconId::Wallet,
+        LauncherIcon::Browser => IconId::Browser,
+        LauncherIcon::ImageViewer => IconId::ImageViewer,
+        LauncherIcon::AudioPlayer => IconId::AudioPlayer,
+        LauncherIcon::VideoPlayer => IconId::VideoPlayer,
+    })
 }
 
 /// A file/folder mark for the desktop: the folder glyph for directories, the
 /// document glyph for regular files. Untiled, so the wallpaper shows through.
 pub fn draw_fs_icon(ctx: &Context, x: u32, y: u32, size: u32, is_dir: bool) {
-    let glyph: &[u8] = if is_dir { FS_FOLDER } else { FS_FILE };
-    badge::art(ctx, x, y, size, glyph, CYAN);
+    let id = if is_dir { IconId::FsFolder } else { IconId::FsFile };
+    badge::art(ctx, x, y, size, mask(id), CYAN);
 }
 
 /// An installed-tool tile from its own 96x96 glyph mask, in the same badge
