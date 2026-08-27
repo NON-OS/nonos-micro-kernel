@@ -14,26 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+pub mod codec;
+pub mod decode;
+pub mod encode;
+pub mod gate;
+pub mod load;
+pub mod mode_code;
+pub mod paths;
+pub mod save;
 
-use super::grid::{WIN_H, WIN_W};
-
-const WINDOW_ID: u32 = 0x534E_414B;
-const TITLE: &[u8] = b"Snake";
-const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
-
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 120,
-        initial_y: 70,
-        width: WIN_W,
-        height: WIN_H,
-        input_kind_mask: INPUT_MASK,
-    }
-}
+pub use load::load_into;
+pub use save::save_from;

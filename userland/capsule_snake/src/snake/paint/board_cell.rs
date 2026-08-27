@@ -14,26 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+use crate::snake::ui::metrics::RADIUS_CELL;
+use crate::snake::ui::play_geom::Board;
+use crate::snake::ui::rect::Rect;
 
-use super::grid::{WIN_H, WIN_W};
+// Every piece on the board is placed through here, so the snake, the walls and
+// the food cannot disagree about where a cell sits.
+pub fn cell(b: &Board, at: (i16, i16)) -> Rect {
+    let pad = b.inset();
+    let x = b.x + at.0.max(0) as u32 * b.cell + pad;
+    let y = b.y + at.1.max(0) as u32 * b.cell + pad;
+    let span = b.cell.saturating_sub(pad * 2).max(1);
+    (x, y, span, span)
+}
 
-const WINDOW_ID: u32 = 0x534E_414B;
-const TITLE: &[u8] = b"Snake";
-const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
+pub fn centre(b: &Board, at: (i16, i16)) -> (u32, u32) {
+    let r = cell(b, at);
+    (r.0 + r.2 / 2, r.1 + r.3 / 2)
+}
 
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 120,
-        initial_y: 70,
-        width: WIN_W,
-        height: WIN_H,
-        input_kind_mask: INPUT_MASK,
-    }
+pub fn radius(b: &Board) -> u32 {
+    RADIUS_CELL.min(b.cell / 3).max(1)
 }

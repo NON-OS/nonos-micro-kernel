@@ -14,26 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+use super::metrics::{GAP_WIDE, ROW_H};
+use super::over_geom::body;
+use super::rect::{self, Rect};
 
-use super::grid::{WIN_H, WIN_W};
+pub const SUMMARY_ROWS: usize = 6;
 
-const WINDOW_ID: u32 = 0x534E_414B;
-const TITLE: &[u8] = b"Snake";
-const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
+pub const HEADS: [&[u8]; SUMMARY_ROWS] =
+    [b"Score", b"Length", b"Level", b"Food", b"Time", b"Receipt"];
 
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 120,
-        initial_y: 70,
-        width: WIN_W,
-        height: WIN_H,
-        input_kind_mask: INPUT_MASK,
-    }
+// The still is the run as it ended, not an illustration, so it keeps the left
+// half and the summary reads down the right.
+pub fn still(w: u32, h: u32) -> Rect {
+    rect::column(body(w, h), 0, 2, GAP_WIDE)
+}
+
+pub fn summary(w: u32, h: u32) -> Rect {
+    rect::column(body(w, h), 1, 2, GAP_WIDE)
+}
+
+pub fn summary_row(w: u32, h: u32, index: usize) -> Rect {
+    rect::row(summary(w, h), index.min(SUMMARY_ROWS - 1), ROW_H, 0)
 }

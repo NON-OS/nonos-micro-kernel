@@ -14,26 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+use crate::snake::state::Mode;
 
-use super::grid::{WIN_H, WIN_W};
+// The stored mode is its own byte, decoupled from the enum's declaration order
+// so a future variant cannot silently reinterpret an old record.
+pub fn mode_byte(mode: Mode) -> u8 {
+    match mode {
+        Mode::Arcade => 0,
+        Mode::Classic => 1,
+        Mode::TimeAttack => 2,
+        Mode::Zen => 3,
+    }
+}
 
-const WINDOW_ID: u32 = 0x534E_414B;
-const TITLE: &[u8] = b"Snake";
-const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
-
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 120,
-        initial_y: 70,
-        width: WIN_W,
-        height: WIN_H,
-        input_kind_mask: INPUT_MASK,
+pub fn mode_of(byte: u8) -> Result<Mode, &'static str> {
+    match byte {
+        0 => Ok(Mode::Arcade),
+        1 => Ok(Mode::Classic),
+        2 => Ok(Mode::TimeAttack),
+        3 => Ok(Mode::Zen),
+        _ => Err("snake store mode"),
     }
 }

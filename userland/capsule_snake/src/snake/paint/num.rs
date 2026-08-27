@@ -14,26 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+pub const CAP: usize = 24;
 
-use super::grid::{WIN_H, WIN_W};
+// A number rendered without an allocator. The digits are laid down from the
+// end of the buffer, so the slice the painters read is always the tail.
+pub struct Digits {
+    buf: [u8; CAP],
+    len: usize,
+}
 
-const WINDOW_ID: u32 = 0x534E_414B;
-const TITLE: &[u8] = b"Snake";
-const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
-
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 120,
-        initial_y: 70,
-        width: WIN_W,
-        height: WIN_H,
-        input_kind_mask: INPUT_MASK,
+impl Digits {
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.buf[CAP - self.len..]
     }
+}
+
+pub fn tail(buf: [u8; CAP], at: usize) -> Digits {
+    Digits { buf, len: CAP - at }
+}
+
+pub fn dec(mut value: u32) -> Digits {
+    let mut buf = [b'0'; CAP];
+    let mut at = CAP;
+    loop {
+        at -= 1;
+        buf[at] = b'0' + (value % 10) as u8;
+        value /= 10;
+        if value == 0 {
+            break;
+        }
+    }
+    tail(buf, at)
 }

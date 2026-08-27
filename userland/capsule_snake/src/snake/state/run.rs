@@ -14,29 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::snake::grid::{BOARD_Y, COLS, MARGIN, ROWS};
+use super::mode::Mode;
 
-pub struct Layout {
-    pub cell: u32,
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
+#[derive(Clone, Copy)]
+pub struct RunRecord {
+    pub score: u32,
+    pub mode: Mode,
+    pub length: u16,
+    pub seq: u32,
 }
 
-impl Layout {
-    pub fn inset(&self) -> u32 {
-        (self.cell / 16).max(1)
+pub const MAX_RUNS: usize = 10;
+
+impl RunRecord {
+    pub fn new(score: u32, mode: Mode, length: u16, seq: u32) -> Self {
+        RunRecord { score, mode, length, seq }
     }
-}
-
-pub fn compute(width: u32, height: u32) -> Layout {
-    let avail_w = width.saturating_sub(2 * MARGIN).max(COLS as u32);
-    let avail_h = height.saturating_sub(BOARD_Y + MARGIN).max(ROWS as u32);
-    let cell = (avail_w / COLS as u32).min(avail_h / ROWS as u32).max(4);
-    let w = cell * COLS as u32;
-    let h = cell * ROWS as u32;
-    let x = width.saturating_sub(w) / 2;
-    let y = BOARD_Y + avail_h.saturating_sub(h) / 2;
-    Layout { cell, x, y, w, h }
 }

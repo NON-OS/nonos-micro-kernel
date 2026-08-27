@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::grid::{COLS, ROWS};
-
 pub fn next(state: &mut u64) -> u64 {
     let mut x = *state;
     x ^= x << 13;
@@ -25,24 +23,7 @@ pub fn next(state: &mut u64) -> u64 {
     x
 }
 
-pub fn place_food(state: &mut u64, body: &[(i16, i16)]) -> (i16, i16) {
-    for _ in 0..64 {
-        let r = next(state);
-        let cell = ((r % COLS as u64) as i16, ((r >> 16) % ROWS as u64) as i16);
-        if !body.contains(&cell) {
-            return cell;
-        }
-    }
-    first_free(body)
-}
-
-fn first_free(body: &[(i16, i16)]) -> (i16, i16) {
-    for y in 0..ROWS {
-        for x in 0..COLS {
-            if !body.contains(&(x, y)) {
-                return (x, y);
-            }
-        }
-    }
-    (0, 0)
+pub fn cell(state: &mut u64, cols: i16, rows: i16) -> (i16, i16) {
+    let r = next(state);
+    ((r % cols as u64) as i16, ((r >> 16) % rows as u64) as i16)
 }

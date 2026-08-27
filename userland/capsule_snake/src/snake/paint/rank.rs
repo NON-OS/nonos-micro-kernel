@@ -14,26 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+use nonos_app_skeleton::PaintBuffer;
 
-use super::grid::{WIN_H, WIN_W};
+use crate::snake::input::hover::{self, Tag};
+use crate::snake::state::Game;
+use crate::snake::ui::button::{self, Style};
+use crate::snake::ui::card;
+use crate::snake::ui::metrics::RADIUS_PANEL;
+use crate::snake::ui::rank_geom::{awards, back, table};
 
-const WINDOW_ID: u32 = 0x534E_414B;
-const TITLE: &[u8] = b"Snake";
-const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
+use super::{rank_awards, rank_rows};
 
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 120,
-        initial_y: 70,
-        width: WIN_W,
-        height: WIN_H,
-        input_kind_mask: INPUT_MASK,
-    }
+const BACK: &[u8] = b"Back";
+
+pub fn paint(game: &Game, fb: &mut PaintBuffer) {
+    let (w, h) = (fb.width, fb.height);
+    card::panel(fb, table(w, h), RADIUS_PANEL);
+    card::panel(fb, awards(w, h), RADIUS_PANEL);
+    rank_rows::paint(game, fb);
+    rank_awards::paint(game, fb);
+    button::paint(fb, back(w, h), BACK, Style::Ghost, hover::is(Tag::RankBack, 0));
 }

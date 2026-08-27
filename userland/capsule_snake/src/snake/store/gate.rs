@@ -14,26 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{AppManifest, WindowKind};
+use core::sync::atomic::{AtomicBool, Ordering};
 
-use super::grid::{WIN_H, WIN_W};
+static DEAD: AtomicBool = AtomicBool::new(false);
 
-const WINDOW_ID: u32 = 0x534E_414B;
-const TITLE: &[u8] = b"Snake";
-const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_POINTER_ABS_BIT | INPUT_BUTTON_DOWN_BIT;
+// The transport error `vfs::call` raises when the endpoint answers nothing;
+// the kernel bounds that at a 5 s timeout. Anything else is a live server
+// refusing or missing a file, which must not latch the store off.
+const TRANSPORT: &str = "vfs ipc failed";
 
-pub fn manifest() -> AppManifest {
-    AppManifest {
-        title: TITLE,
-        window_id: WINDOW_ID,
-        kind: WindowKind::Normal,
-        initial_x: 120,
-        initial_y: 70,
-        width: WIN_W,
-        height: WIN_H,
-        input_kind_mask: INPUT_MASK,
+pub fn live() -> bool {
+    !DEAD.load(Ordering::Relaxed)
+}
+
+// One dead-VFS round trip costs the caller five seconds. Latching after the
+// first keeps a missing file server from taxing every later run.
+pub fn note(err: &'static str) {
+    if err == TRANSPORT {
+        DEAD.store(true, Ordering::Relaxed);
     }
 }
