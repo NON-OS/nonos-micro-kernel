@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod key_classifier;
+mod on_convert;
+mod on_history;
 mod on_key;
 mod on_pointer;
 mod on_pointer_button;

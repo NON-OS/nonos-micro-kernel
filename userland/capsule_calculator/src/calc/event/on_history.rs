@@ -14,14 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use crate::calc::mode::Mode;
+use crate::calc::state::State;
+use crate::calc::ui::history_geom;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
+pub fn click(state: &mut State, x: i32, y: i32) -> bool {
+    let (w, h) = state.view;
+    let index = match history_geom::at(w, h, x, y) {
+        Some(found) => found,
+        None => return false,
+    };
+    let value = match state.history.get(index) {
+        Some(entry) => entry.value,
+        None => return false,
+    };
+    state.set_mode(Mode::Basic);
+    state.display = value;
+    true
 }

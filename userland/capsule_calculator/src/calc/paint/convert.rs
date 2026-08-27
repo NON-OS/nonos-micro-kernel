@@ -14,14 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use nonos_app_skeleton::PaintBuffer;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
+use super::chips;
+use super::result;
+use super::swap_key;
+use super::unit_col;
+use crate::calc::state::State;
+
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    chips::paint(state, fb);
+    unit_col::paint(state, fb, true);
+    unit_col::paint(state, fb, false);
+    swap_key::paint(state, fb);
+    result::paint(state, fb);
 }

@@ -14,14 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use super::State;
+use crate::calc::convert::{list, CATEGORIES};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
+impl State {
+    pub fn set_category(&mut self, index: usize) {
+        let cat = match CATEGORIES.get(index) {
+            Some(found) => *found,
+            None => return,
+        };
+        self.cat = cat;
+        self.from = 0;
+        self.to = if list(cat).len() > 1 { 1 } else { 0 };
+    }
+    pub fn set_unit(&mut self, from: bool, index: usize) {
+        if index >= list(self.cat).len() {
+            return;
+        }
+        if from {
+            self.from = index;
+        } else {
+            self.to = index;
+        }
+    }
+    pub fn swap_units(&mut self) {
+        core::mem::swap(&mut self.from, &mut self.to);
+    }
 }

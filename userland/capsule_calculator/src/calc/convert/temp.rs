@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use super::units::Unit;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
-}
+pub const CELSIUS: usize = 0;
+pub const FAHRENHEIT: usize = 1;
+pub const KELVIN: usize = 2;
+
+pub static TEMPERATURE: [Unit; 3] = [
+    Unit { name: "Celsius", num: 1, den: 1 },
+    Unit { name: "Fahrenheit", num: 1, den: 1 },
+    Unit { name: "Kelvin", num: 1, den: 1 },
+];

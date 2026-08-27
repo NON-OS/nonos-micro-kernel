@@ -14,14 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use crate::calc::state::State;
+use crate::calc::ui::convert_hit::{at, ConvertHit};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
+pub fn click(state: &mut State, x: i32, y: i32) -> bool {
+    match at(state.cat, state.view.0, x, y) {
+        Some(ConvertHit::Chip(i)) => state.set_category(i),
+        Some(ConvertHit::From(i)) => state.set_unit(true, i),
+        Some(ConvertHit::To(i)) => state.set_unit(false, i),
+        Some(ConvertHit::Swap) => state.swap_units(),
+        None => return false,
+    }
+    true
 }

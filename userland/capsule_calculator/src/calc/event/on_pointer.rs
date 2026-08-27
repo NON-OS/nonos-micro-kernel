@@ -21,6 +21,8 @@ use crate::calc::layout::hit_test;
 use crate::calc::mode::Mode;
 use crate::calc::state::State;
 use crate::calc::ui::bits_geom;
+use crate::calc::ui::convert_hit;
+use crate::calc::ui::history_geom;
 use crate::calc::ui::metrics::RAIL_W;
 use crate::calc::ui::nav_geom;
 
@@ -32,6 +34,12 @@ fn hover_at(state: &State, x: i32, y: i32) -> Option<Hit> {
         return nav_geom::at(x, y).map(Hit::Rail);
     }
     let (w, h) = state.view;
+    if state.mode == Mode::Convert {
+        return convert_hit::at(state.cat, w, x, y).map(Hit::Convert);
+    }
+    if state.mode == Mode::History {
+        return history_geom::at(w, h, x, y).map(Hit::Row);
+    }
     if state.mode == Mode::Programmer {
         if let Some(bit) = bits_geom::at(w, x, y) {
             return Some(Hit::Bit(bit));

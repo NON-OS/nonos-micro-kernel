@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use super::units::Unit;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
-}
+pub static CURRENCY: [Unit; 7] = [
+    Unit { name: "US Dollar", num: 100, den: 100 },
+    Unit { name: "Euro", num: 108, den: 100 },
+    Unit { name: "Pound Sterling", num: 127, den: 100 },
+    Unit { name: "Swiss Franc", num: 112, den: 100 },
+    Unit { name: "Canadian Dollar", num: 74, den: 100 },
+    Unit { name: "Australian Dollar", num: 66, den: 100 },
+    Unit { name: "Japanese Yen", num: 2, den: 300 },
+];

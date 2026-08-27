@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use super::units::Unit;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
-}
+pub static WEIGHT: [Unit; 6] = [
+    Unit { name: "Milligram", num: 1, den: 1_000 },
+    Unit { name: "Gram", num: 1, den: 1 },
+    Unit { name: "Kilogram", num: 1_000, den: 1 },
+    Unit { name: "Tonne", num: 1_000_000, den: 1 },
+    Unit { name: "Ounce", num: 28_349_523, den: 1_000_000 },
+    Unit { name: "Pound", num: 45_359_237, den: 100_000 },
+];

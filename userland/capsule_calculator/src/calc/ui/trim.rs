@@ -14,14 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use nonos_app_skeleton::PaintBuffer;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
+pub const ELLIPSIS: &str = "..";
+
+pub fn trim<'a>(fb: &PaintBuffer, text: &'a str, budget: i32, px: f32) -> (&'a str, bool) {
+    if budget <= 0 {
+        return ("", false);
+    }
+    if fb.measure_ttf(text, px) <= budget {
+        return (text, false);
+    }
+    let room = budget - fb.measure_ttf(ELLIPSIS, px);
+    let mut cut = 0;
+    for (i, _) in text.char_indices() {
+        if fb.measure_ttf(&text[..i], px) > room {
+            break;
+        }
+        cut = i;
+    }
+    (&text[..cut], true)
 }

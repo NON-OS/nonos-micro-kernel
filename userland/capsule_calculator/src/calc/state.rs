@@ -14,13 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::convert::{Category, CATEGORIES};
 use super::fixed::Fixed;
+use super::history::Ring;
 use super::hit::Hit;
 use super::manifest::{HEIGHT, WIDTH};
 use super::mode::Mode;
 use super::op::Op;
 use super::prog::{Base, Bitwise};
 
+mod convert_sel;
 mod programmer;
 mod set_mode;
 
@@ -47,6 +50,10 @@ pub struct State {
     pub prog_acc: i64,
     pub prog_op: Option<Bitwise>,
     pub base: Base,
+    pub cat: Category,
+    pub from: usize,
+    pub to: usize,
+    pub history: Ring,
 }
 
 impl State {
@@ -66,6 +73,10 @@ impl State {
             prog_acc: 0,
             prog_op: None,
             base: Base::Dec,
+            cat: CATEGORIES[0],
+            from: 0,
+            to: 1,
+            history: Ring::new(),
         }
     }
     pub fn memory_engaged(&self) -> bool {

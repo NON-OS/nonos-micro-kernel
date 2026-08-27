@@ -14,14 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+use crate::calc::fixed::Fixed;
+use crate::calc::format::format;
+use crate::calc::op::Op;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
+fn symbol(op: Op) -> u8 {
+    match op {
+        Op::Add => b'+',
+        Op::Sub => b'-',
+        Op::Mul => b'x',
+        Op::Div => b'/',
+        Op::Pow => b'^',
+        Op::None => b'=',
+    }
+}
+
+fn put(out: &mut [u8], at: usize, byte: u8) -> usize {
+    if at < out.len() {
+        out[at] = byte;
+        1
+    } else {
+        0
+    }
+}
+
+pub fn write(lhs: Fixed, op: Op, rhs: Fixed, out: &mut [u8]) -> usize {
+    let mut n = format(lhs, 0, out);
+    n += put(out, n, b' ');
+    n += put(out, n, symbol(op));
+    n += put(out, n, b' ');
+    if n < out.len() {
+        n += format(rhs, 0, &mut out[n..]);
+    }
+    n
 }

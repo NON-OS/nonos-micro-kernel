@@ -20,10 +20,13 @@ use super::programmer;
 use super::scientific;
 use crate::calc::mode::Mode;
 
+static EMPTY: [&[Button]; 0] = [];
+
 pub fn grid(mode: Mode) -> &'static [&'static [Button]] {
     match mode {
         Mode::Scientific => &scientific::ROWS,
         Mode::Programmer => &programmer::ROWS,
-        Mode::Basic | Mode::Convert | Mode::History => &basic::ROWS,
+        Mode::Convert | Mode::History => &EMPTY,
+        Mode::Basic => &basic::ROWS,
     }
 }

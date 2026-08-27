@@ -14,14 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::mode::Mode;
-use super::ui::convert_hit::ConvertHit;
+mod entry;
+mod expr;
+mod ring;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Hit {
-    Rail(Mode),
-    Key(usize, usize),
-    Bit(u8),
-    Convert(ConvertHit),
-    Row(usize),
-}
+pub use entry::{Entry, EXPR_MAX};
+pub use expr::write as write_expr;
+pub use ring::{Ring, CAP};

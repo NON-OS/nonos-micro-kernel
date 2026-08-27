@@ -17,9 +17,11 @@
 mod actions;
 mod app;
 mod buttons;
+mod convert;
 mod event;
 mod fixed;
 mod format;
+mod history;
 mod hit;
 mod layout;
 mod manifest;

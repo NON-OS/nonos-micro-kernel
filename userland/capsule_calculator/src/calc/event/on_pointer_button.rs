@@ -16,6 +16,8 @@
 
 use nonos_app_skeleton::EventOutcome;
 
+use super::on_convert;
+use super::on_history;
 use crate::calc::actions::{dispatch, prog_bit};
 use crate::calc::buttons::grid;
 use crate::calc::layout::hit_test;
@@ -24,6 +26,14 @@ use crate::calc::state::State;
 use crate::calc::ui::bits_geom;
 use crate::calc::ui::metrics::RAIL_W;
 use crate::calc::ui::nav_geom;
+
+fn outcome(changed: bool) -> EventOutcome {
+    if changed {
+        EventOutcome::Repaint
+    } else {
+        EventOutcome::Idle
+    }
+}
 
 pub fn on_pointer_button(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if x < 0 || y < 0 {
@@ -37,6 +47,12 @@ pub fn on_pointer_button(state: &mut State, x: i32, y: i32) -> EventOutcome {
         return EventOutcome::Idle;
     }
     let (w, h) = state.view;
+    if state.mode == Mode::Convert {
+        return outcome(on_convert::click(state, x, y));
+    }
+    if state.mode == Mode::History {
+        return outcome(on_history::click(state, x, y));
+    }
     if state.mode == Mode::Programmer {
         if let Some(bit) = bits_geom::at(w, x, y) {
             prog_bit::run(state, bit);
