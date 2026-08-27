@@ -33,5 +33,6 @@ pub fn destroy_domain(id: DomainId) -> Result<(), VtdError> {
     }
     state.bindings.retain(|binding| binding.domain != id);
     state.domains[index].used = false;
+    state.domains[index].root = 0;
     Ok(())
 }

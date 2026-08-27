@@ -45,7 +45,8 @@ pub fn run() -> Result<Driver, &'static str> {
     edid::fetch(&control_queue, init.edid);
     // 3D bring-up is best-effort: a host without a GL backend still gets the
     // full 2D scanout path, and the boot log records which one this is.
-    let virgl_ready = probe_3d::probe(&control_queue, &fences, init.virgl);
+    let virgl_ready =
+        probe_3d::probe(&control_queue, &fences, init.virgl, dev.device_id, claim_epoch);
     let primary = create_primary::create(
         dev.device_id,
         claim_epoch,

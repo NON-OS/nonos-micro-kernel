@@ -17,7 +17,7 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
-use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -44,12 +44,16 @@ impl From<u8> for CpuState {
 
 #[repr(C, align(64))]
 pub struct CpuDescriptor {
-    pub cpu_id: u32,
-    pub apic_id: u32,
+    /// Written once by the BSP before the AP is started, read afterwards by
+    /// that AP and by any CPU sending it an IPI. Atomic because the
+    /// descriptors live in a shared static: a plain field written through a
+    /// cast from `&self` is a data race the compiler may reorder or drop.
+    pub cpu_id: AtomicU32,
+    pub apic_id: AtomicU32,
     state: AtomicU32,
     pub numa_node: u32,
     pub stack_base: AtomicU64,
-    pub stack_size: usize,
+    pub stack_size: AtomicUsize,
     pub idle_cycles: AtomicU64,
     pub total_cycles: AtomicU64,
     pub current_pid: AtomicU32,
@@ -68,12 +72,12 @@ pub struct CpuDescriptor {
 impl CpuDescriptor {
     pub const fn new() -> Self {
         Self {
-            cpu_id: 0,
-            apic_id: 0,
+            cpu_id: AtomicU32::new(0),
+            apic_id: AtomicU32::new(0),
             state: AtomicU32::new(CpuState::Offline as u32),
             numa_node: 0,
             stack_base: AtomicU64::new(0),
-            stack_size: 0,
+            stack_size: AtomicUsize::new(0),
             idle_cycles: AtomicU64::new(0),
             total_cycles: AtomicU64::new(0),
             current_pid: AtomicU32::new(0),
@@ -99,12 +103,20 @@ impl CpuDescriptor {
 
     /// Get CPU ID
     pub fn get_cpu_id(&self) -> u32 {
-        self.cpu_id
+        self.cpu_id.load(Ordering::Acquire)
     }
 
     /// Get APIC ID
     pub fn get_apic_id(&self) -> u32 {
-        self.apic_id
+        self.apic_id.load(Ordering::Acquire)
+    }
+
+    /// Identity is published together, before the AP is released, so a reader
+    /// that sees one sees both.
+    pub fn set_identity(&self, cpu_id: u32, apic_id: u32, stack_size: usize) {
+        self.stack_size.store(stack_size, Ordering::Relaxed);
+        self.cpu_id.store(cpu_id, Ordering::Relaxed);
+        self.apic_id.store(apic_id, Ordering::Release);
     }
 
     /// Get NUMA node
@@ -119,7 +131,7 @@ impl CpuDescriptor {
 
     /// Get stack size
     pub fn get_stack_size(&self) -> usize {
-        self.stack_size
+        self.stack_size.load(Ordering::Acquire)
     }
 
     /// Get idle cycles
