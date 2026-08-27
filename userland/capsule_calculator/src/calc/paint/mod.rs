@@ -20,6 +20,7 @@ mod display;
 mod frame;
 mod grid;
 mod memory_badge;
+mod rail;
 mod wordmark;
 
 pub use frame::paint;

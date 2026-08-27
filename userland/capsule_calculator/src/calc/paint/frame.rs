@@ -20,6 +20,7 @@ use super::background;
 use super::display;
 use super::grid;
 use super::memory_badge;
+use super::rail;
 use super::wordmark;
 use crate::calc::state::State;
 
@@ -29,4 +30,5 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     display::paint(state, fb);
     memory_badge::paint(state, fb);
     grid::paint(fb);
+    rail::paint(state, fb);
 }

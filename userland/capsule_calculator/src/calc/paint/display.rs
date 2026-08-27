@@ -20,22 +20,22 @@ use crate::calc::format::{format, DISPLAY_MAX, ERROR_TEXT};
 use crate::calc::layout::{DISPLAY_H, PADDING};
 use crate::calc::manifest::WIDTH;
 use crate::calc::state::State;
-use crate::calc::theme::{DISPLAY_BG, DISPLAY_BORDER, DISPLAY_ERROR, DISPLAY_TEXT};
+use crate::calc::theme::{ERROR, INK, LINE_2, PANEL};
 
 const CELL_WIDTH: u32 = 8;
 const TEXT_RIGHT_PADDING: u32 = 16;
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     let display_top = 20;
-    fb.fill_rect(PADDING, display_top, WIDTH - PADDING * 2, DISPLAY_H, DISPLAY_BG);
-    fb.fill_rect(PADDING, display_top, WIDTH - PADDING * 2, 1, DISPLAY_BORDER);
-    fb.fill_rect(PADDING, display_top + DISPLAY_H - 1, WIDTH - PADDING * 2, 1, DISPLAY_BORDER);
+    fb.fill_rect(PADDING, display_top, WIDTH - PADDING * 2, DISPLAY_H, PANEL);
+    fb.blend_rect(PADDING, display_top, WIDTH - PADDING * 2, 1, LINE_2);
+    fb.blend_rect(PADDING, display_top + DISPLAY_H - 1, WIDTH - PADDING * 2, 1, LINE_2);
     let mut buf = [0u8; DISPLAY_MAX];
     let (text, color): (&[u8], u32) = if state.is_error() {
-        (ERROR_TEXT, DISPLAY_ERROR)
+        (ERROR_TEXT, ERROR)
     } else {
         let n = format(state.display, state.decimal_digits_typed, &mut buf);
-        (&buf[..n], DISPLAY_TEXT)
+        (&buf[..n], INK)
     };
     let text_width = (text.len() as u32) * CELL_WIDTH;
     let display_right = WIDTH - PADDING - TEXT_RIGHT_PADDING;

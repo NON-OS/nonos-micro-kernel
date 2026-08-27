@@ -22,10 +22,12 @@ mod fixed;
 mod format;
 mod layout;
 mod manifest;
+mod mode;
 mod op;
 mod paint;
 mod state;
 mod theme;
+mod ui;
 mod unary;
 
 pub use app::Calculator;

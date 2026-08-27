@@ -20,9 +20,18 @@ use crate::calc::actions::dispatch;
 use crate::calc::buttons::GRID;
 use crate::calc::layout::hit_test;
 use crate::calc::state::State;
+use crate::calc::ui::metrics::RAIL_W;
+use crate::calc::ui::nav_geom;
 
 pub fn on_pointer_button(state: &mut State, x: i32, y: i32) -> EventOutcome {
     if x < 0 || y < 0 {
+        return EventOutcome::Idle;
+    }
+    if x < RAIL_W {
+        if let Some(mode) = nav_geom::at(x, y) {
+            state.set_mode(mode);
+            return EventOutcome::Repaint;
+        }
         return EventOutcome::Idle;
     }
     let (row, col) = match hit_test(x as u32, y as u32) {

@@ -14,10 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod key_classifier;
-mod on_key;
-mod on_pointer;
-mod on_pointer_button;
-mod router;
+use super::{ErrorKind, State};
+use crate::calc::mode::Mode;
 
-pub use router::on_event;
+impl State {
+    pub fn set_mode(&mut self, mode: Mode) {
+        self.mode = mode;
+        self.new_input = true;
+        self.decimal_digits_typed = 0;
+        self.error = ErrorKind::None;
+    }
+}

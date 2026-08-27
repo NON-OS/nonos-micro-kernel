@@ -15,7 +15,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::fixed::Fixed;
+use super::mode::Mode;
 use super::op::Op;
+
+mod set_mode;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ErrorKind {
@@ -26,6 +29,8 @@ pub enum ErrorKind {
 }
 
 pub struct State {
+    pub mode: Mode,
+    pub hover: Option<Mode>,
     pub display: Fixed,
     pub operand: Fixed,
     pub operator: Op,
@@ -38,6 +43,8 @@ pub struct State {
 impl State {
     pub fn new() -> Self {
         State {
+            mode: Mode::Basic,
+            hover: None,
             display: 0,
             operand: 0,
             operator: Op::None,

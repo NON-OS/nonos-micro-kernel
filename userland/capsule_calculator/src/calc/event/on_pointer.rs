@@ -14,10 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod key_classifier;
-mod on_key;
-mod on_pointer;
-mod on_pointer_button;
-mod router;
+use nonos_app_skeleton::EventOutcome;
 
-pub use router::on_event;
+use crate::calc::state::State;
+use crate::calc::ui::metrics::RAIL_W;
+use crate::calc::ui::nav_geom;
+
+pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
+    let hover = if x >= 0 && y >= 0 && x < RAIL_W {
+        nav_geom::at(x, y)
+    } else {
+        None
+    };
+    if hover == state.hover {
+        return EventOutcome::Idle;
+    }
+    state.hover = hover;
+    EventOutcome::Repaint
+}
