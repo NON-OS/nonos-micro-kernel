@@ -46,9 +46,10 @@ pub fn convert(cat: Category, from: usize, to: usize, value: Fixed) -> Option<Fi
     let units = list(cat);
     let src = units.get(from)?;
     let dst = units.get(to)?;
-    if src.den == 0 || dst.num == 0 {
+    let num = src.num.checked_mul(dst.den)?;
+    let den = src.den.checked_mul(dst.num)?;
+    if den == 0 {
         return None;
     }
-    let base = value.checked_mul(src.num)? / src.den;
-    Some(base.checked_mul(dst.den)? / dst.num)
+    Some(value.checked_mul(num)? / den)
 }
