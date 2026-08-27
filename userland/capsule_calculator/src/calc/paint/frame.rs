@@ -17,15 +17,22 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::background;
+use super::bits;
 use super::display;
 use super::grid;
+use super::radix;
 use super::rail;
+use crate::calc::mode::Mode;
 use crate::calc::state::State;
 
 pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
     state.view = (fb.width as i32, fb.height as i32);
     background::paint(fb);
     display::paint(state, fb);
+    if state.mode == Mode::Programmer {
+        bits::paint(state, fb);
+        radix::paint(state, fb);
+    }
     grid::paint(state, fb);
     rail::paint(state, fb);
 }

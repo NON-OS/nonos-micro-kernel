@@ -14,16 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::basic;
-use super::kinds::Button;
-use super::programmer;
-use super::scientific;
-use crate::calc::mode::Mode;
+use crate::calc::prog::mask;
+use crate::calc::state::State;
 
-pub fn grid(mode: Mode) -> &'static [&'static [Button]] {
-    match mode {
-        Mode::Scientific => &scientific::ROWS,
-        Mode::Programmer => &programmer::ROWS,
-        Mode::Basic | Mode::Convert | Mode::History => &basic::ROWS,
+pub fn run(state: &mut State, digit: u8) {
+    let radix = state.base.radix();
+    if u32::from(digit) >= radix {
+        return;
     }
+    let next = if state.new_input {
+        i64::from(digit)
+    } else {
+        state
+            .prog
+            .wrapping_mul(i64::from(radix))
+            .wrapping_add(i64::from(digit))
+    };
+    state.prog = mask(next);
+    state.new_input = false;
 }

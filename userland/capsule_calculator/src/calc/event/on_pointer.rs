@@ -18,7 +18,9 @@ use nonos_app_skeleton::EventOutcome;
 
 use crate::calc::hit::Hit;
 use crate::calc::layout::hit_test;
+use crate::calc::mode::Mode;
 use crate::calc::state::State;
+use crate::calc::ui::bits_geom;
 use crate::calc::ui::metrics::RAIL_W;
 use crate::calc::ui::nav_geom;
 
@@ -30,6 +32,11 @@ fn hover_at(state: &State, x: i32, y: i32) -> Option<Hit> {
         return nav_geom::at(x, y).map(Hit::Rail);
     }
     let (w, h) = state.view;
+    if state.mode == Mode::Programmer {
+        if let Some(bit) = bits_geom::at(w, x, y) {
+            return Some(Hit::Bit(bit));
+        }
+    }
     hit_test(state.mode, w, h, x, y).map(|(row, col)| Hit::Key(row, col))
 }
 

@@ -16,12 +16,25 @@
 
 mod basic;
 mod kinds;
+mod prog_base;
+mod prog_four;
+mod prog_hex;
+mod prog_one;
+mod prog_seven;
+mod programmer;
 mod row_four;
 mod row_function;
 mod row_memory;
 mod row_one;
 mod row_seven;
 mod row_zero;
+mod sci_const;
+mod sci_inverse;
+mod sci_logs;
+mod sci_power;
+mod sci_tail;
+mod sci_trig;
+mod scientific;
 mod table;
 
 pub use kinds::{Action, Button, Role};

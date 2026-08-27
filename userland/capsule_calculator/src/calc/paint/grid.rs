@@ -19,6 +19,8 @@ use nonos_app_skeleton::PaintBuffer;
 use super::button;
 use crate::calc::buttons::grid;
 use crate::calc::hit::Hit;
+use crate::calc::mode::Mode;
+use crate::calc::prog::allowed;
 use crate::calc::state::State;
 use crate::calc::ui::keypad_geom::cell;
 
@@ -29,8 +31,9 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         for (idx, btn) in buttons.iter().enumerate() {
             let span = btn.span.max(1);
             let rect = cell(state.mode, w, h, row, col, span);
-            let hover = state.hover == Some(Hit::Key(row, idx));
-            button::paint(fb, btn, rect, hover);
+            let enabled = state.mode != Mode::Programmer || allowed(state.base, btn.action);
+            let hover = enabled && state.hover == Some(Hit::Key(row, idx));
+            button::paint(fb, btn, rect, hover, enabled);
             col += span as usize;
         }
     }

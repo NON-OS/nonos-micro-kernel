@@ -14,16 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::basic;
-use super::kinds::Button;
-use super::programmer;
-use super::scientific;
-use crate::calc::mode::Mode;
+pub const BITS: u8 = 32;
 
-pub fn grid(mode: Mode) -> &'static [&'static [Button]] {
-    match mode {
-        Mode::Scientific => &scientific::ROWS,
-        Mode::Programmer => &programmer::ROWS,
-        Mode::Basic | Mode::Convert | Mode::History => &basic::ROWS,
-    }
+pub fn mask(value: i64) -> i64 {
+    value as i32 as i64
 }

@@ -14,16 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::basic;
-use super::kinds::Button;
-use super::programmer;
-use super::scientific;
-use crate::calc::mode::Mode;
-
-pub fn grid(mode: Mode) -> &'static [&'static [Button]] {
-    match mode {
-        Mode::Scientific => &scientific::ROWS,
-        Mode::Programmer => &programmer::ROWS,
-        Mode::Basic | Mode::Convert | Mode::History => &basic::ROWS,
-    }
-}
+pub const NUM: [&str; 32] = [
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
+    "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31",
+];

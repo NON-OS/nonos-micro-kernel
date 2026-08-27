@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::fixed::{Fixed, FRAC};
+use super::sci::power;
 use super::state::ErrorKind;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -24,6 +25,7 @@ pub enum Op {
     Sub,
     Mul,
     Div,
+    Pow,
 }
 
 pub fn apply(a: Fixed, b: Fixed, op: Op) -> Result<Fixed, ErrorKind> {
@@ -42,5 +44,6 @@ pub fn apply(a: Fixed, b: Fixed, op: Op) -> Result<Fixed, ErrorKind> {
             let scaled = a.checked_mul(FRAC).ok_or(ErrorKind::Overflow)?;
             Ok(scaled / b)
         }
+        Op::Pow => power(a, b),
     }
 }

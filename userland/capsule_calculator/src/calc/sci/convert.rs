@@ -14,16 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::basic;
-use super::kinds::Button;
-use super::programmer;
-use super::scientific;
-use crate::calc::mode::Mode;
+use crate::calc::fixed::{Fixed, FRAC};
+use crate::calc::state::ErrorKind;
 
-pub fn grid(mode: Mode) -> &'static [&'static [Button]] {
-    match mode {
-        Mode::Scientific => &scientific::ROWS,
-        Mode::Programmer => &programmer::ROWS,
-        Mode::Basic | Mode::Convert | Mode::History => &basic::ROWS,
+const LIMIT: f64 = 1.0e30;
+
+pub fn to_f64(value: Fixed) -> f64 {
+    (value as f64) / (FRAC as f64)
+}
+
+pub fn from_f64(value: f64) -> Result<Fixed, ErrorKind> {
+    if value.is_nan() {
+        return Err(ErrorKind::DomainError);
     }
+    if !value.is_finite() {
+        return Err(ErrorKind::Overflow);
+    }
+    let scaled = value * (FRAC as f64);
+    if scaled > LIMIT || scaled < -LIMIT {
+        return Err(ErrorKind::Overflow);
+    }
+    Ok(scaled as Fixed)
 }

@@ -19,7 +19,9 @@ use super::hit::Hit;
 use super::manifest::{HEIGHT, WIDTH};
 use super::mode::Mode;
 use super::op::Op;
+use super::prog::{Base, Bitwise};
 
+mod programmer;
 mod set_mode;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -41,6 +43,10 @@ pub struct State {
     pub new_input: bool,
     pub decimal_digits_typed: u8,
     pub error: ErrorKind,
+    pub prog: i64,
+    pub prog_acc: i64,
+    pub prog_op: Option<Bitwise>,
+    pub base: Base,
 }
 
 impl State {
@@ -56,6 +62,10 @@ impl State {
             new_input: true,
             decimal_digits_typed: 0,
             error: ErrorKind::None,
+            prog: 0,
+            prog_acc: 0,
+            prog_op: None,
+            base: Base::Dec,
         }
     }
     pub fn memory_engaged(&self) -> bool {

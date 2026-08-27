@@ -15,11 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod background;
+mod bits;
+mod bits_num;
 mod button;
 mod display;
 mod frame;
 mod grid;
 mod memory_badge;
+mod radix;
 mod rail;
 mod wordmark;
 

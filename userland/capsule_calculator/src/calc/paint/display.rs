@@ -18,7 +18,9 @@ use nonos_app_skeleton::PaintBuffer;
 use nonos_toolkit::font::ttf::line_height;
 
 use crate::calc::format::{format, DISPLAY_MAX, ERROR_TEXT};
+use crate::calc::mode::Mode;
 use crate::calc::op::Op;
+use crate::calc::prog::{write, Bitwise, RADIX_MAX};
 use crate::calc::state::State;
 use crate::calc::theme;
 use crate::calc::ui::metrics::{PX_BODY, PX_RESULT, R_PANEL};
@@ -34,6 +36,19 @@ fn eyebrow(op: Op) -> &'static str {
         Op::Sub => "-",
         Op::Mul => "x",
         Op::Div => "/",
+        Op::Pow => "^",
+    }
+}
+
+fn pending(state: &State) -> &'static str {
+    if state.mode != Mode::Programmer {
+        return eyebrow(state.operator);
+    }
+    match state.prog_op {
+        Some(Bitwise::And) => "AND",
+        Some(Bitwise::Or) => "OR",
+        Some(Bitwise::Xor) => "XOR",
+        _ => "",
     }
 }
 
@@ -56,15 +71,19 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     fb.panel(ux, uy, uw, uh, R_PANEL as u32, theme::PANEL, theme::LINE_2);
     fb.gradient_v(ux + 1, uy + 1, uw - 2, uh - 2, 0, SHADE);
     let pad = inset();
-    fb.text_ttf(ox + pad, oy + pad, eyebrow(state.operator), theme::FAINT, PX_BODY);
+    fb.text_ttf(ox + pad, oy + pad, pending(state), theme::FAINT, PX_BODY);
     if state.memory_engaged() {
         let mx = ox + w - pad - fb.measure_ttf("M", PX_BODY);
         fb.text_ttf(mx, oy + pad, "M", theme::AMBER, PX_BODY);
     }
     let mut buf = [0u8; DISPLAY_MAX];
+    let mut rbuf = [0u8; RADIX_MAX];
     let n = format(state.display, state.decimal_digits_typed, &mut buf);
+    let r = write(state.prog, state.base, &mut rbuf);
     let (text, ink) = if state.is_error() {
         (core::str::from_utf8(ERROR_TEXT).unwrap_or("Error"), theme::ERROR)
+    } else if state.mode == Mode::Programmer {
+        (core::str::from_utf8(&rbuf[..r]).unwrap_or("0"), theme::INK)
     } else {
         (core::str::from_utf8(&buf[..n]).unwrap_or("Error"), theme::INK)
     };

@@ -26,6 +26,8 @@ mod manifest;
 mod mode;
 mod op;
 mod paint;
+mod prog;
+mod sci;
 mod state;
 mod theme;
 mod ui;

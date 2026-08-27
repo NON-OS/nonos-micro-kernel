@@ -20,4 +20,5 @@ use super::mode::Mode;
 pub enum Hit {
     Rail(Mode),
     Key(usize, usize),
+    Bit(u8),
 }

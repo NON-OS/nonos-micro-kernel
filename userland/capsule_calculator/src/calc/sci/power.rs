@@ -14,16 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::basic;
-use super::kinds::Button;
-use super::programmer;
-use super::scientific;
-use crate::calc::mode::Mode;
+use libm::{pow, trunc};
 
-pub fn grid(mode: Mode) -> &'static [&'static [Button]] {
-    match mode {
-        Mode::Scientific => &scientific::ROWS,
-        Mode::Programmer => &programmer::ROWS,
-        Mode::Basic | Mode::Convert | Mode::History => &basic::ROWS,
+use super::convert::{from_f64, to_f64};
+use crate::calc::fixed::Fixed;
+use crate::calc::state::ErrorKind;
+
+pub fn power(base: Fixed, exponent: Fixed) -> Result<Fixed, ErrorKind> {
+    let b = to_f64(base);
+    let e = to_f64(exponent);
+    if b == 0.0 && e < 0.0 {
+        return Err(ErrorKind::DivByZero);
     }
+    if b < 0.0 && e != trunc(e) {
+        return Err(ErrorKind::DomainError);
+    }
+    from_f64(pow(b, e))
 }

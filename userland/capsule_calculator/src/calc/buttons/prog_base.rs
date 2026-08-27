@@ -14,16 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::basic;
-use super::kinds::Button;
-use super::programmer;
-use super::scientific;
-use crate::calc::mode::Mode;
+use super::kinds::{b, Action, Button, Role};
+use crate::calc::prog::{Base, Bitwise};
 
-pub fn grid(mode: Mode) -> &'static [&'static [Button]] {
-    match mode {
-        Mode::Scientific => &scientific::ROWS,
-        Mode::Programmer => &programmer::ROWS,
-        Mode::Basic | Mode::Convert | Mode::History => &basic::ROWS,
-    }
-}
+pub const ROW: [Button; 6] = [
+    b("HEX", Role::Function, Action::SetBase(Base::Hex)),
+    b("DEC", Role::Function, Action::SetBase(Base::Dec)),
+    b("OCT", Role::Function, Action::SetBase(Base::Oct)),
+    b("BIN", Role::Function, Action::SetBase(Base::Bin)),
+    b("NOT", Role::Operator, Action::Bitwise(Bitwise::Not)),
+    b("AC", Role::Function, Action::Clear),
+];

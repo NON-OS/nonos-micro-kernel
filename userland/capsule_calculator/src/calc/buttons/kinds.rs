@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::calc::op::Op;
+use crate::calc::prog::{Base, Bitwise};
+use crate::calc::sci::{Konst, SciFn};
 
 #[derive(Clone, Copy)]
 pub enum Role {
@@ -43,6 +45,10 @@ pub enum Action {
     MemoryRecall,
     MemoryClear,
     MemoryStore,
+    Sci(SciFn),
+    Const(Konst),
+    SetBase(Base),
+    Bitwise(Bitwise),
 }
 
 #[derive(Clone, Copy)]

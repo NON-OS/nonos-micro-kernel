@@ -19,6 +19,11 @@ use crate::calc::mode::Mode;
 
 impl State {
     pub fn set_mode(&mut self, mode: Mode) {
+        if mode == Mode::Programmer && self.mode != Mode::Programmer {
+            self.enter_programmer();
+        } else if self.mode == Mode::Programmer && mode != Mode::Programmer {
+            self.leave_programmer();
+        }
         self.mode = mode;
         self.hover = None;
         self.new_input = true;

@@ -15,12 +15,20 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::metrics::{KEY_GAP, PANE_PAD, RAIL_W, READOUT_H};
+use super::radix_geom;
 use crate::calc::buttons::grid;
 use crate::calc::mode::Mode;
 
-pub fn area(win_w: i32, win_h: i32) -> (i32, i32, i32, i32) {
+pub fn top(mode: Mode) -> i32 {
+    match mode {
+        Mode::Programmer => radix_geom::bottom() + radix_geom::KEYPAD_GAP,
+        _ => PANE_PAD + READOUT_H + PANE_PAD,
+    }
+}
+
+pub fn area(mode: Mode, win_w: i32, win_h: i32) -> (i32, i32, i32, i32) {
     let x = RAIL_W + PANE_PAD;
-    let y = PANE_PAD + READOUT_H + PANE_PAD;
+    let y = top(mode);
     (x, y, win_w - RAIL_W - PANE_PAD * 2, win_h - y - PANE_PAD)
 }
 
@@ -34,7 +42,7 @@ pub fn cols(mode: Mode) -> i32 {
 }
 
 pub fn stride(mode: Mode, win_w: i32, win_h: i32) -> (i32, i32, i32, i32, i32, i32) {
-    let (ax, ay, aw, ah) = area(win_w, win_h);
+    let (ax, ay, aw, ah) = area(mode, win_w, win_h);
     let nc = cols(mode).max(1);
     let nr = (grid(mode).len() as i32).max(1);
     let cw = (aw - KEY_GAP * (nc - 1)) / nc;

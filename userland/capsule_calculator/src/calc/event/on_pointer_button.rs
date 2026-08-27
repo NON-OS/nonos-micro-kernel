@@ -16,10 +16,12 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::calc::actions::dispatch;
+use crate::calc::actions::{dispatch, prog_bit};
 use crate::calc::buttons::grid;
 use crate::calc::layout::hit_test;
+use crate::calc::mode::Mode;
 use crate::calc::state::State;
+use crate::calc::ui::bits_geom;
 use crate::calc::ui::metrics::RAIL_W;
 use crate::calc::ui::nav_geom;
 
@@ -35,6 +37,12 @@ pub fn on_pointer_button(state: &mut State, x: i32, y: i32) -> EventOutcome {
         return EventOutcome::Idle;
     }
     let (w, h) = state.view;
+    if state.mode == Mode::Programmer {
+        if let Some(bit) = bits_geom::at(w, x, y) {
+            prog_bit::run(state, bit);
+            return EventOutcome::Repaint;
+        }
+    }
     let (row, col) = match hit_test(state.mode, w, h, x, y) {
         Some(rc) => rc,
         None => return EventOutcome::Idle,
