@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum IconId {
     About,
@@ -49,4 +48,14 @@ pub enum IconId {
     PmMemory,
     PmAuthority,
     PmSecurity,
+    GameTrophy,
+    GameCrown,
+    GameGauge,
+    GameHeart,
+    GameLotus,
+    GameBolt,
+    GameBlocks,
+    GameStopwatch,
+    GameTarget,
+    GameLock,
 }

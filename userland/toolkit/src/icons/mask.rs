@@ -14,13 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod all;
-mod draw;
-mod id;
-mod mask;
-mod name;
-mod table;
+use super::id::IconId;
+use super::table::MASKS;
 
-pub use draw::{draw, draw_mask};
-pub use id::IconId;
-pub use mask::{dim, mask};
+pub fn mask(id: IconId) -> &'static [u8] {
+    MASKS[id as usize]
+}
+
+/// Side length of `mask(id)`, recovered from its length rather than stored, so
+/// regenerating the assets at another resolution needs no code change.
+pub fn dim(id: IconId) -> u32 {
+    (mask(id).len() as u32).isqrt()
+}

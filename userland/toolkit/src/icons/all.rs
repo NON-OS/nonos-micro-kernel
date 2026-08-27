@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 use super::id::IconId;
 
 impl IconId {
-    pub const ALL: [IconId; 32] = [
+    pub const ALL: [IconId; 42] = [
         IconId::About,
         IconId::AudioPlayer,
         IconId::Browser,
@@ -51,5 +50,15 @@ impl IconId {
         IconId::PmMemory,
         IconId::PmAuthority,
         IconId::PmSecurity,
+        IconId::GameTrophy,
+        IconId::GameCrown,
+        IconId::GameGauge,
+        IconId::GameHeart,
+        IconId::GameLotus,
+        IconId::GameBolt,
+        IconId::GameBlocks,
+        IconId::GameStopwatch,
+        IconId::GameTarget,
+        IconId::GameLock,
     ];
 }

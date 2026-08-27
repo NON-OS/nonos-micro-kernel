@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-use super::id::IconId;
-
 /// One 8-bit coverage mask per icon, ordered to match `IconId`. The host test
 /// compares every entry against the file `IconId::name` points at, so the
 /// ordinal indexing below is proven rather than assumed.
-const MASKS: [&[u8]; 32] = [
+pub(super) const MASKS: [&[u8]; 42] = [
     include_bytes!("../../../assets/icons/about.a8"),
     include_bytes!("../../../assets/icons/audio_player.a8"),
     include_bytes!("../../../assets/icons/browser.a8"),
@@ -53,14 +50,14 @@ const MASKS: [&[u8]; 32] = [
     include_bytes!("../../../assets/icons/pm_memory.a8"),
     include_bytes!("../../../assets/icons/pm_authority.a8"),
     include_bytes!("../../../assets/icons/pm_security.a8"),
+    include_bytes!("../../../assets/icons/game_trophy.a8"),
+    include_bytes!("../../../assets/icons/game_crown.a8"),
+    include_bytes!("../../../assets/icons/game_gauge.a8"),
+    include_bytes!("../../../assets/icons/game_heart.a8"),
+    include_bytes!("../../../assets/icons/game_lotus.a8"),
+    include_bytes!("../../../assets/icons/game_bolt.a8"),
+    include_bytes!("../../../assets/icons/game_blocks.a8"),
+    include_bytes!("../../../assets/icons/game_stopwatch.a8"),
+    include_bytes!("../../../assets/icons/game_target.a8"),
+    include_bytes!("../../../assets/icons/game_lock.a8"),
 ];
-
-pub fn mask(id: IconId) -> &'static [u8] {
-    MASKS[id as usize]
-}
-
-/// Side length of `mask(id)`, recovered from its length rather than stored, so
-/// regenerating the assets at another resolution needs no code change.
-pub fn dim(id: IconId) -> u32 {
-    (mask(id).len() as u32).isqrt()
-}
