@@ -60,5 +60,10 @@ impl IconId {
         IconId::GameStopwatch,
         IconId::GameTarget,
         IconId::GameLock,
+        IconId::CalcBasic,
+        IconId::CalcScientific,
+        IconId::CalcProgrammer,
+        IconId::CalcConvert,
+        IconId::CalcHistory,
     ];
 }

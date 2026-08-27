@@ -60,4 +60,9 @@ pub(super) const MASKS: [&[u8]; 42] = [
     include_bytes!("../../../assets/icons/game_stopwatch.a8"),
     include_bytes!("../../../assets/icons/game_target.a8"),
     include_bytes!("../../../assets/icons/game_lock.a8"),
+    include_bytes!("../../../assets/icons/calc_basic.a8"),
+    include_bytes!("../../../assets/icons/calc_scientific.a8"),
+    include_bytes!("../../../assets/icons/calc_programmer.a8"),
+    include_bytes!("../../../assets/icons/calc_convert.a8"),
+    include_bytes!("../../../assets/icons/calc_history.a8"),
 ];

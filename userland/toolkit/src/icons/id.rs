@@ -58,4 +58,9 @@ pub enum IconId {
     GameStopwatch,
     GameTarget,
     GameLock,
+    CalcBasic,
+    CalcScientific,
+    CalcProgrammer,
+    CalcConvert,
+    CalcHistory,
 }
