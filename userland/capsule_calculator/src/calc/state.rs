@@ -15,6 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::fixed::Fixed;
+use super::hit::Hit;
+use super::manifest::{HEIGHT, WIDTH};
 use super::mode::Mode;
 use super::op::Op;
 
@@ -30,7 +32,8 @@ pub enum ErrorKind {
 
 pub struct State {
     pub mode: Mode,
-    pub hover: Option<Mode>,
+    pub hover: Option<Hit>,
+    pub view: (i32, i32),
     pub display: Fixed,
     pub operand: Fixed,
     pub operator: Op,
@@ -45,6 +48,7 @@ impl State {
         State {
             mode: Mode::Basic,
             hover: None,
+            view: (WIDTH as i32, HEIGHT as i32),
             display: 0,
             operand: 0,
             operator: Op::None,

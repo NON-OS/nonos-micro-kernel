@@ -23,6 +23,7 @@ pub enum Role {
     Equals,
     Function,
     Memory,
+    Blank,
 }
 
 #[derive(Clone, Copy)]
@@ -46,11 +47,16 @@ pub enum Action {
 
 #[derive(Clone, Copy)]
 pub struct Button {
-    pub label: &'static [u8],
+    pub label: &'static str,
     pub role: Role,
     pub action: Action,
+    pub span: u8,
 }
 
-pub const fn b(label: &'static [u8], role: Role, action: Action) -> Button {
-    Button { label, role, action }
+pub const fn b(label: &'static str, role: Role, action: Action) -> Button {
+    Button { label, role, action, span: 1 }
+}
+
+pub const fn bs(label: &'static str, role: Role, action: Action, span: u8) -> Button {
+    Button { label, role, action, span }
 }

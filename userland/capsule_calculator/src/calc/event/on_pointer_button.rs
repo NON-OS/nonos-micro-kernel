@@ -17,7 +17,7 @@
 use nonos_app_skeleton::EventOutcome;
 
 use crate::calc::actions::dispatch;
-use crate::calc::buttons::GRID;
+use crate::calc::buttons::grid;
 use crate::calc::layout::hit_test;
 use crate::calc::state::State;
 use crate::calc::ui::metrics::RAIL_W;
@@ -34,14 +34,15 @@ pub fn on_pointer_button(state: &mut State, x: i32, y: i32) -> EventOutcome {
         }
         return EventOutcome::Idle;
     }
-    let (row, col) = match hit_test(x as u32, y as u32) {
+    let (w, h) = state.view;
+    let (row, col) = match hit_test(state.mode, w, h, x, y) {
         Some(rc) => rc,
         None => return EventOutcome::Idle,
     };
-    if row as usize >= GRID.len() || col as usize >= GRID[0].len() {
-        return EventOutcome::Idle;
-    }
-    let button = GRID[row as usize][col as usize];
+    let button = match grid(state.mode).get(row).and_then(|r| r.get(col)) {
+        Some(btn) => *btn,
+        None => return EventOutcome::Idle,
+    };
     dispatch::run(state, button.action);
     EventOutcome::Repaint
 }

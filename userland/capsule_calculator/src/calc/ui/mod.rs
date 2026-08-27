@@ -14,5 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod keypad_geom;
+pub mod keypad_hit;
 pub mod metrics;
 pub mod nav_geom;
+pub mod readout_geom;

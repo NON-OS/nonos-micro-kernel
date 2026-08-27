@@ -19,16 +19,13 @@ use nonos_app_skeleton::PaintBuffer;
 use super::background;
 use super::display;
 use super::grid;
-use super::memory_badge;
 use super::rail;
-use super::wordmark;
 use crate::calc::state::State;
 
-pub fn paint(state: &State, fb: &mut PaintBuffer) {
+pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
+    state.view = (fb.width as i32, fb.height as i32);
     background::paint(fb);
-    wordmark::paint(fb);
     display::paint(state, fb);
-    memory_badge::paint(state, fb);
-    grid::paint(fb);
+    grid::paint(state, fb);
     rail::paint(state, fb);
 }

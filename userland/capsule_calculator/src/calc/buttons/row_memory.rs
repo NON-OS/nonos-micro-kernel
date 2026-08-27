@@ -17,9 +17,9 @@
 use super::kinds::{b, Action, Button, Role};
 
 pub const ROW: [Button; 5] = [
-    b(b"MC", Role::Memory, Action::MemoryClear),
-    b(b"MR", Role::Memory, Action::MemoryRecall),
-    b(b"M+", Role::Memory, Action::MemoryAdd),
-    b(b"M-", Role::Memory, Action::MemorySub),
-    b(b"MS", Role::Memory, Action::MemoryStore),
+    b("MC", Role::Memory, Action::MemoryClear),
+    b("MR", Role::Memory, Action::MemoryRecall),
+    b("M+", Role::Memory, Action::MemoryAdd),
+    b("M-", Role::Memory, Action::MemorySub),
+    b("MS", Role::Memory, Action::MemoryStore),
 ];

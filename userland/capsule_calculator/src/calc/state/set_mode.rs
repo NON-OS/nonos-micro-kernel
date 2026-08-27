@@ -20,6 +20,7 @@ use crate::calc::mode::Mode;
 impl State {
     pub fn set_mode(&mut self, mode: Mode) {
         self.mode = mode;
+        self.hover = None;
         self.new_input = true;
         self.decimal_digits_typed = 0;
         self.error = ErrorKind::None;

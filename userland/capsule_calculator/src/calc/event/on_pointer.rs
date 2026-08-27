@@ -16,16 +16,25 @@
 
 use nonos_app_skeleton::EventOutcome;
 
+use crate::calc::hit::Hit;
+use crate::calc::layout::hit_test;
 use crate::calc::state::State;
 use crate::calc::ui::metrics::RAIL_W;
 use crate::calc::ui::nav_geom;
 
+fn hover_at(state: &State, x: i32, y: i32) -> Option<Hit> {
+    if x < 0 || y < 0 {
+        return None;
+    }
+    if x < RAIL_W {
+        return nav_geom::at(x, y).map(Hit::Rail);
+    }
+    let (w, h) = state.view;
+    hit_test(state.mode, w, h, x, y).map(|(row, col)| Hit::Key(row, col))
+}
+
 pub fn on_pointer(state: &mut State, x: i32, y: i32) -> EventOutcome {
-    let hover = if x >= 0 && y >= 0 && x < RAIL_W {
-        nav_geom::at(x, y)
-    } else {
-        None
-    };
+    let hover = hover_at(state, x, y);
     if hover == state.hover {
         return EventOutcome::Idle;
     }

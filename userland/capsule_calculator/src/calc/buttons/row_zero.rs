@@ -14,12 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::kinds::{b, Action, Button, Role};
+use super::kinds::{b, bs, Action, Button, Role};
 
-pub const ROW: [Button; 5] = [
-    b(b"0", Role::Number, Action::Digit(0)),
-    b(b"00", Role::Number, Action::Digit(0)),
-    b(b"00", Role::Number, Action::Digit(0)),
-    b(b"=", Role::Equals, Action::Equals),
-    b(b"=", Role::Equals, Action::Equals),
+pub const ROW: [Button; 3] = [
+    b("0", Role::Number, Action::Digit(0)),
+    bs("00", Role::Number, Action::Digit(0), 2),
+    bs("=", Role::Equals, Action::Equals, 2),
 ];

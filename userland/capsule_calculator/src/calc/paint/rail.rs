@@ -17,6 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 use nonos_toolkit::font::ttf::line_height;
 
+use crate::calc::hit::Hit;
 use crate::calc::mode::MODES;
 use crate::calc::state::State;
 use crate::calc::theme;
@@ -48,7 +49,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         if active {
             fb.fill_round(x, y, w, NAV_H as u32, NAV_RADIUS as u32, theme::GLOW);
             fb.stroke_round(x, y, w, NAV_H as u32, NAV_RADIUS as u32, 1, theme::LINE_3);
-        } else if state.hover == Some(*mode) {
+        } else if state.hover == Some(Hit::Rail(*mode)) {
             fb.blend_rect(x, y, w, NAV_H as u32, theme::LINE);
         }
         let ink = if active { theme::CYAN } else { theme::DIM };

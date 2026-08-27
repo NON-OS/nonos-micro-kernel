@@ -20,6 +20,7 @@ mod buttons;
 mod event;
 mod fixed;
 mod format;
+mod hit;
 mod layout;
 mod manifest;
 mod mode;
