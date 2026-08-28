@@ -16,3 +16,4 @@
 
 pub mod md;
 pub mod zip;
+pub mod docx;
