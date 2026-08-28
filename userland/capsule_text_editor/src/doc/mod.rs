@@ -16,6 +16,7 @@
 
 pub mod block;
 pub mod document;
+pub mod edit;
 pub mod kind;
 pub mod measure;
 pub mod style;
