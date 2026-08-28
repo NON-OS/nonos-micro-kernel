@@ -14,14 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod block;
-pub mod document;
-pub mod edit;
-pub mod kind;
-pub mod linebox;
-pub mod linebreak;
-pub mod measure;
-pub mod restyle;
-pub mod style;
-#[cfg(target_os = "none")]
-pub mod ttf_measure;
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct LineBox {
+    pub block: usize,
+    pub start: usize,
+    pub end: usize,
+    pub width: f32,
+    pub height: f32,
+    pub ascent: f32,
+    pub y: f32,
+}
