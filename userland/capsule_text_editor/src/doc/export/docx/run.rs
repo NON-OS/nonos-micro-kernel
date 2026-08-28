@@ -43,7 +43,9 @@ pub fn half_points(size_px: f32) -> u32 {
 pub fn rpr(s: &RunStyle, out: &mut String) {
     out.push_str("<w:rPr>");
     if s.family == Family::Mono {
-        out.push_str("<w:rFonts w:ascii=\"Courier New\" w:hAnsi=\"Courier New\" w:cs=\"Courier New\"/>");
+        out.push_str(
+            "<w:rFonts w:ascii=\"Courier New\" w:hAnsi=\"Courier New\" w:cs=\"Courier New\"/>",
+        );
     }
     if s.bold {
         out.push_str("<w:b/>");

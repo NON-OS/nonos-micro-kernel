@@ -16,9 +16,9 @@
 
 use alloc::string::String;
 
+use super::escape::push_escaped;
 use crate::doc::block::Block;
 use crate::doc::kind::BlockKind;
-use super::escape::push_escaped;
 use crate::doc::style::RunStyle;
 
 pub fn push_inline(block: &Block, out: &mut String) {

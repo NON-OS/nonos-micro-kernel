@@ -20,9 +20,7 @@ use crate::doc::measure::Measurer;
 use crate::doc::page::Page;
 
 pub fn line_for(page: &Page, block: usize, off: usize) -> Option<&LineBox> {
-    page.lines
-        .iter()
-        .find(|l| l.block == block && off >= l.start && off <= l.end)
+    page.lines.iter().find(|l| l.block == block && off >= l.start && off <= l.end)
 }
 
 pub fn caret_rect(
@@ -40,14 +38,12 @@ pub fn caret_rect(
 }
 
 pub fn caret_at(page: &Page, doc: &Doc, x: f32, y: f32, m: &dyn Measurer) -> (usize, usize) {
-    let line = page
-        .lines
-        .iter()
-        .find(|l| y >= l.y && y < l.y + l.height)
-        .or_else(|| match page.lines.first() {
+    let line = page.lines.iter().find(|l| y >= l.y && y < l.y + l.height).or_else(|| {
+        match page.lines.first() {
             Some(f) if y < f.y => Some(f),
             _ => page.lines.last(),
-        });
+        }
+    });
     let line = match line {
         Some(l) => l,
         None => return (0, 0),

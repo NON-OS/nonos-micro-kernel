@@ -16,8 +16,8 @@
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, MOD_CTRL};
 
-use super::ctrl_open::ctrl_open;
 use super::ctrl_export::ctrl_export;
+use super::ctrl_open::ctrl_open;
 use super::ctrl_save::ctrl_save;
 use super::state::{PromptOp, State};
 

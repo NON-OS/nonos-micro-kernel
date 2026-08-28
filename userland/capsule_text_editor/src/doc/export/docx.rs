@@ -24,7 +24,6 @@ use alloc::vec::Vec;
 use crate::doc::document::Doc;
 use crate::doc::export::zip::Zip;
 
-
 pub fn document_xml(doc: &Doc) -> String {
     let mut out = String::from(parts::DOCUMENT_HEAD);
     for b in &doc.blocks {

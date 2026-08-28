@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod md;
-pub mod zip;
 pub mod docx;
+pub mod md;
 pub mod pdf;
+pub mod zip;

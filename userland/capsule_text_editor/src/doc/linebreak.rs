@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-use alloc::vec::Vec;
 use crate::doc::block::Block;
 use crate::doc::linebox::LineBox;
 use crate::doc::measure::Measurer;
+use alloc::vec;
+use alloc::vec::Vec;
 
 pub fn break_block(block: &Block, idx: usize, max_w: f32, m: &dyn Measurer) -> Vec<LineBox> {
     let text = block.as_str();
@@ -38,16 +38,29 @@ pub fn break_block(block: &Block, idx: usize, max_w: f32, m: &dyn Measurer) -> V
             let cand = text[start..cut].trim_end();
             if m.advance(cand, &style) <= max_w {
                 best = start + cand.len();
-                if cut >= text.len() { break; }
+                if cut >= text.len() {
+                    break;
+                }
                 cut = next_break(text, cut + 1);
-            } else { break; }
+            } else {
+                break;
+            }
         }
         if best == start {
             cut = next_break(text, start);
-            best = start + text[start..if cut == start { text.len() } else { cut }].trim_end().len();
+            best =
+                start + text[start..if cut == start { text.len() } else { cut }].trim_end().len();
         }
         let t = text[start..best].trim_end();
-        lines.push(LineBox { block: idx, start, end: best, width: m.advance(t, &style), height, ascent, y: 0.0 });
+        lines.push(LineBox {
+            block: idx,
+            start,
+            end: best,
+            width: m.advance(t, &style),
+            height,
+            ascent,
+            y: 0.0,
+        });
         pos = best;
         while pos < text.len() {
             match text[pos..].chars().next() {
@@ -63,5 +76,9 @@ pub fn break_block(block: &Block, idx: usize, max_w: f32, m: &dyn Measurer) -> V
 }
 
 fn next_break(text: &str, pos: usize) -> usize {
-    if pos >= text.len() { text.len() } else { text[pos..].find(' ').map(|p| pos + p).unwrap_or(text.len()) }
+    if pos >= text.len() {
+        text.len()
+    } else {
+        text[pos..].find(' ').map(|p| pos + p).unwrap_or(text.len())
+    }
 }
