@@ -19,7 +19,7 @@ use crate::doc::linebox::LineBox;
 use crate::doc::measure::Measurer;
 use crate::doc::page::Page;
 
-fn line_for(page: &Page, block: usize, off: usize) -> Option<&LineBox> {
+pub fn line_for(page: &Page, block: usize, off: usize) -> Option<&LineBox> {
     page.lines
         .iter()
         .find(|l| l.block == block && off >= l.start && off <= l.end)
@@ -44,7 +44,10 @@ pub fn caret_at(page: &Page, doc: &Doc, x: f32, y: f32, m: &dyn Measurer) -> (us
         .lines
         .iter()
         .find(|l| y >= l.y && y < l.y + l.height)
-        .or_else(|| page.lines.last());
+        .or_else(|| match page.lines.first() {
+            Some(f) if y < f.y => Some(f),
+            _ => page.lines.last(),
+        });
     let line = match line {
         Some(l) => l,
         None => return (0, 0),

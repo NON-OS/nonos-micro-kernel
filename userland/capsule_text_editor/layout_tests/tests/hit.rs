@@ -16,7 +16,7 @@
 
 use capsule_text_editor_layout_tests::doc::block::Block;
 use capsule_text_editor_layout_tests::doc::document::Doc;
-use capsule_text_editor_layout_tests::doc::hit::{caret_at, caret_rect};
+use capsule_text_editor_layout_tests::doc::hit::{caret_at, caret_rect, line_for};
 use capsule_text_editor_layout_tests::doc::kind::BlockKind;
 use capsule_text_editor_layout_tests::doc::measure::FixedMeasurer;
 use capsule_text_editor_layout_tests::doc::page::PageMetrics;
@@ -82,4 +82,29 @@ fn a_click_below_the_last_line_falls_back_to_the_last_line() {
     let pages = paginate(&d, &pm, &FixedMeasurer);
     assert_eq!(caret_at(&pages[0], &d, 5000.0, 99999.0, &FixedMeasurer), (1, 11));
     assert_eq!(caret_at(&pages[0], &d, -50.0, 99999.0, &FixedMeasurer), (1, 0));
+}
+
+#[test]
+fn a_click_above_the_first_line_falls_back_to_the_first_line() {
+    let (d, pm) = fixture();
+    let pages = paginate(&d, &pm, &FixedMeasurer);
+    assert_eq!(caret_at(&pages[0], &d, -50.0, -99999.0, &FixedMeasurer), (0, 0));
+    assert_eq!(caret_at(&pages[0], &d, 5000.0, -99999.0, &FixedMeasurer), (0, 16));
+}
+
+#[test]
+fn a_caret_late_in_a_long_block_belongs_to_a_later_page() {
+    let mut text = String::from("word");
+    for _ in 0..300 {
+        text.push_str(" word");
+    }
+    let mut d = Doc::new();
+    d.blocks.push(Block::plain(BlockKind::Paragraph, &text, RunStyle::body()));
+    let pm = PageMetrics { width: 816.0, height: 200.0, margin: 48.0 };
+    let pages = paginate(&d, &pm, &FixedMeasurer);
+    assert!(pages.len() > 1, "the block must span several pages");
+    let off = d.blocks[0].text.len();
+    assert!(line_for(&pages[0], 0, off).is_none(), "page 0 must not claim the last offset");
+    let page = pages.iter().position(|p| line_for(p, 0, off).is_some());
+    assert_eq!(page, Some(pages.len() - 1));
 }
