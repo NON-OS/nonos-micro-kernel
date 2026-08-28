@@ -22,11 +22,14 @@ use alloc::format;
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::canvas::page_index;
 use super::language::language_name;
+use super::mode::Mode;
 use super::layout::{FOOTER_H, PAD_X, STATUS_PX};
 use super::paint::caret_position;
 use super::state::State;
 use super::theme;
+use crate::doc::counts::word_count;
 
 pub(super) fn paint_status(fb: &mut PaintBuffer, doc: &State, width: u32, height: u32) {
     let th = theme::active();
@@ -74,6 +77,19 @@ pub(super) fn paint_status(fb: &mut PaintBuffer, doc: &State, width: u32, height
         let _ = fb.text_ttf(x as i32, ty, typed, th.foreground, STATUS_PX);
         let tw = fb.measure_ttf(typed, STATUS_PX).max(0) as u32;
         let _ = fb.text_ttf((x + tw) as i32, ty, "|", th.accent, STATUS_PX);
+        return;
+    }
+
+    if doc.mode == Mode::Document {
+        let info = format!(
+            "Page {} of {}    {} words    UTF-8",
+            page_index(doc) + 1,
+            doc.pages.len().max(1),
+            word_count(&doc.doc)
+        );
+        let iw = fb.measure_ttf(&info, STATUS_PX).max(0) as u32;
+        let _ =
+            fb.text_ttf(width.saturating_sub(PAD_X + iw) as i32, ty, &info, th.muted, STATUS_PX);
         return;
     }
 
