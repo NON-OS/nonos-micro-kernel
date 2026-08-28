@@ -24,8 +24,8 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::canvas::page_index;
 use super::language::language_name;
-use super::mode::Mode;
 use super::layout::{FOOTER_H, PAD_X, STATUS_PX};
+use super::mode::Mode;
 use super::paint::caret_position;
 use super::state::State;
 use super::theme;

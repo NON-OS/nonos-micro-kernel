@@ -52,7 +52,13 @@ pub(super) fn paint_document(state: &mut State, fb: &mut PaintBuffer) {
     if state.pages.is_empty() {
         state.reflow();
     }
-    fb.fill_rect(state.pane_x, state.pane_y, state.pane_w, state.pane_h, theme::active().background);
+    fb.fill_rect(
+        state.pane_x,
+        state.pane_y,
+        state.pane_w,
+        state.pane_h,
+        theme::active().background,
+    );
     let (sx, sy) = sheet_origin(state);
     let sw = state.page_metrics.width as u32;
     let sh = (state.page_metrics.height as u32).min(state.pane_h.saturating_sub(2 * SHEET_TOP));
