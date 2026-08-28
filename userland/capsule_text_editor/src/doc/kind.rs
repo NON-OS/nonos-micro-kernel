@@ -14,8 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod block;
-pub mod document;
-pub mod kind;
-pub mod measure;
-pub mod style;
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum BlockKind {
+    Paragraph,
+    Heading(u8),
+    Bullet,
+    Numbered,
+}
+
+impl BlockKind {
+    pub fn heading_level(&self) -> Option<u8> {
+        match self {
+            BlockKind::Heading(n) => Some(*n),
+            _ => None,
+        }
+    }
+}

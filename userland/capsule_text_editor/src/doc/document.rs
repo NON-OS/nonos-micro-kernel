@@ -14,8 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod block;
-pub mod document;
-pub mod kind;
-pub mod measure;
-pub mod style;
+use alloc::vec::Vec;
+
+use crate::doc::block::Block;
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct Doc {
+    pub blocks: Vec<Block>,
+}
+
+impl Doc {
+    pub fn new() -> Self {
+        Self { blocks: Vec::new() }
+    }
+
+    pub fn covered(&self) -> bool {
+        self.blocks.iter().all(|b| b.covered())
+    }
+}
+
+impl Default for Doc {
+    fn default() -> Self {
+        Self::new()
+    }
+}
