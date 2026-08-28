@@ -35,7 +35,7 @@ impl State {
             pane_w: 0,
             pane_h: 0,
             glyph_advance: super::layout::GLYPH_ADVANCE,
-            status: b"Ctrl-O open  Ctrl-S save  Ctrl-C copy  Ctrl-V paste",
+            status: b"Ctrl-O open  Ctrl-S save  Ctrl-E export  Ctrl-C copy  Ctrl-V paste",
             path,
             path_len: PATH.len(),
             prompt: None,

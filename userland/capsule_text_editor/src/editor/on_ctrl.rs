@@ -33,6 +33,7 @@ pub(super) fn on_ctrl(state: &mut State, code: u32, shift: bool) -> EventOutcome
         0x48 | 0x68 if shift => replace_all(state),
         0x48 | 0x68 => open_replace(state),
         0x4B | 0x6B if shift => line_edit(state, true),
+        0x45 | 0x65 => path_prompt::start(state, PromptOp::Export),
         0x4F | 0x6F => path_prompt::start(state, PromptOp::Open),
         // Ctrl+S writes straight to the file's own path; Ctrl+Shift+S (and a
         // document that never had a path) goes through the Save As prompt.

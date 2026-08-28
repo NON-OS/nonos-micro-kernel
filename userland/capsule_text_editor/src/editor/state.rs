@@ -23,6 +23,7 @@ pub const PATH: &[u8] = b"/notes.txt";
 pub enum PromptOp {
     Open,
     Save,
+    Export,
 }
 
 pub struct State {

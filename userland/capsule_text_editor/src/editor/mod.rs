@@ -27,6 +27,7 @@ mod ctrl_copy;
 mod ctrl_cut;
 mod ctrl_open;
 mod ctrl_paste;
+mod ctrl_export;
 mod ctrl_save;
 mod delete;
 mod doc_pos;
