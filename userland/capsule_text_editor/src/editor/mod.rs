@@ -19,6 +19,7 @@ mod app;
 mod autoclose;
 mod backspace;
 mod byte_at;
+mod canvas;
 mod caret_nav;
 mod clamp_scroll;
 mod click_caret;
