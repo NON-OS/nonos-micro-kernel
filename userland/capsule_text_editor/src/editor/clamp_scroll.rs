@@ -15,10 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::max_scroll::max_scroll;
+use super::mode::Mode;
 use super::state::State;
 use super::visual_lines::visual_lines;
 
 pub(super) fn clamp_scroll(state: &mut State, rows: u32) {
+    if state.mode == Mode::Document {
+        return;
+    }
     let total = visual_lines(&state.buf[..state.len], state.wrap_cols);
     state.scroll_line = state.scroll_line.min(max_scroll(total, rows));
 }

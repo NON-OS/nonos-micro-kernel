@@ -34,7 +34,12 @@ const SHEET_BG: u32 = 0xFF14_1A22;
 const SHEET_SHADOW: u32 = 0x5000_0000;
 
 pub(super) fn page_index(state: &State) -> usize {
-    (state.scroll_line as usize).min(state.pages.len().saturating_sub(1))
+    let (block, _) = state.doc_pos(state.caret);
+    state
+        .pages
+        .iter()
+        .position(|p| p.lines.iter().any(|l| l.block == block))
+        .unwrap_or_else(|| state.pages.len().saturating_sub(1))
 }
 
 pub(super) fn sheet_origin(state: &State) -> (u32, u32) {
