@@ -18,6 +18,7 @@ pub mod block;
 pub mod counts;
 pub mod document;
 pub mod edit;
+pub mod hit;
 pub mod kind;
 pub mod linebox;
 pub mod linebreak;
