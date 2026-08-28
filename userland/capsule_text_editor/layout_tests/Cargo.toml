@@ -14,3 +14,6 @@ path = "tests/measure.rs"
 [[test]]
 name = "style"
 path = "tests/style.rs"
+
+[dependencies]
+ab_glyph = "0.2"
