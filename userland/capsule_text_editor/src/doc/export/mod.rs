@@ -14,20 +14,4 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod block;
-pub mod counts;
-pub mod document;
-pub mod edit;
-pub mod export;
-pub mod hit;
-pub mod kind;
-pub mod linebox;
-pub mod linebreak;
-pub mod measure;
-pub mod page;
-pub mod paginate;
-pub mod restyle;
-pub mod style;
-pub mod text_bridge;
-#[cfg(target_os = "none")]
-pub mod ttf_measure;
+pub mod md;
