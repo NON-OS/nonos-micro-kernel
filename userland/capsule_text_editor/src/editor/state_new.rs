@@ -20,7 +20,7 @@ impl State {
     pub fn new() -> Self {
         let mut path = [0u8; 256];
         path[..PATH.len()].copy_from_slice(PATH);
-        State {
+        let mut s = State {
             owner_pid: 0,
             buf: alloc::vec![0; super::state::CAPACITY],
             len: 0,
@@ -59,7 +59,9 @@ impl State {
                 height: 980.0,
                 margin: 56.0,
             },
-            mode: super::mode::Mode::Code,
-        }
+            mode: super::mode::mode_for_path(core::str::from_utf8(PATH).unwrap_or("")),
+        };
+        s.reflow();
+        s
     }
 }
