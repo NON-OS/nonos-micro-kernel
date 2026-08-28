@@ -21,3 +21,5 @@ pub mod kind;
 pub mod measure;
 pub mod restyle;
 pub mod style;
+#[cfg(target_os = "none")]
+pub mod ttf_measure;
