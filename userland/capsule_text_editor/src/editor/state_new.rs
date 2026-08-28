@@ -52,6 +52,14 @@ impl State {
             last_click_x: 0,
             last_click_y: 0,
             font_scale: 2,
+            doc: crate::doc::document::Doc::new(),
+            pages: alloc::vec::Vec::new(),
+            page_metrics: crate::doc::page::PageMetrics {
+                width: 760.0,
+                height: 980.0,
+                margin: 56.0,
+            },
+            mode: super::mode::Mode::Code,
         }
     }
 }

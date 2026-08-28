@@ -43,6 +43,7 @@ mod line_bounds;
 mod line_ops;
 mod manifest;
 mod max_scroll;
+mod mode;
 mod notify;
 mod on_ctrl;
 mod on_ctrl_nav;

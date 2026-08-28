@@ -81,4 +81,11 @@ pub struct State {
     // reproduces the original 15px look exactly. The theme is process-wide, so
     // it does not live here.
     pub font_scale: u32,
+    // The styled document model, rebuilt from `buf` on every mutation while the
+    // editor is in Document mode, plus the pages it lays out into. Painting and
+    // hit-testing both read `pages`, so a click lands where the glyph was drawn.
+    pub doc: crate::doc::document::Doc,
+    pub pages: alloc::vec::Vec<crate::doc::page::Page>,
+    pub page_metrics: crate::doc::page::PageMetrics,
+    pub mode: super::mode::Mode,
 }
