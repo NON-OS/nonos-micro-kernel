@@ -27,5 +27,6 @@ pub mod page;
 pub mod paginate;
 pub mod restyle;
 pub mod style;
+pub mod text_bridge;
 #[cfg(target_os = "none")]
 pub mod ttf_measure;
