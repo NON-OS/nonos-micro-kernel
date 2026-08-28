@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::metrics::{NAV_GAP, NAV_H, NAV_TOP, RAIL_PAD_X, RAIL_W};
+use super::metrics::{NAV_GAP, NAV_H, NAV_TOP, RAIL_CARD_W, RAIL_PAD_X, RAIL_X};
 use crate::calc::mode::{Mode, MODES};
 
 pub fn row_y(i: usize) -> i32 {
@@ -22,11 +22,11 @@ pub fn row_y(i: usize) -> i32 {
 }
 
 pub fn row_x() -> i32 {
-    RAIL_PAD_X
+    RAIL_X + RAIL_PAD_X
 }
 
 pub fn row_w() -> i32 {
-    RAIL_W - RAIL_PAD_X * 2
+    RAIL_CARD_W - RAIL_PAD_X * 2
 }
 
 pub fn at(x: i32, y: i32) -> Option<Mode> {

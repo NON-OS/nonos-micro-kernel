@@ -16,6 +16,8 @@
 
 pub const RAIL_W: i32 = 212;
 pub const RAIL_PAD_X: i32 = 12;
+pub const RAIL_X: i32 = PANE_PAD;
+pub const RAIL_CARD_W: i32 = RAIL_W - PANE_PAD;
 pub const BRAND_TOP: i32 = 16;
 pub const BRAND_H: i32 = 48;
 pub const NAV_TOP: i32 = 76;
