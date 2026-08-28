@@ -24,7 +24,9 @@ use nonos_toolkit::font::ttf::{builtin_face, draw_text_with};
 
 use super::state::State;
 use super::theme;
+use crate::doc::hit::caret_rect;
 use crate::doc::style::Family;
+use crate::doc::ttf_measure::TtfMeasurer;
 
 const SHEET_R: u32 = 10;
 const SHEET_TOP: u32 = 12;
@@ -52,6 +54,20 @@ pub(super) fn paint_document(state: &mut State, fb: &mut PaintBuffer) {
     fb.shadow_round(sx, sy, sw, sh, SHEET_R, 10, SHEET_SHADOW);
     fb.fill_round(sx, sy, sw, sh, SHEET_R, SHEET_BG);
     paint_lines(state, fb, sx, sy);
+    paint_caret(state, fb, sx, sy);
+}
+
+fn paint_caret(state: &State, fb: &mut PaintBuffer, sx: u32, sy: u32) {
+    let Some(page) = state.pages.get(page_index(state)) else { return };
+    let (block, off) = state.doc_pos(state.caret);
+    let off = state.snap(block, off);
+    let Some((cx, cy, ch)) = caret_rect(page, &state.doc, block, off, &TtfMeasurer) else {
+        return;
+    };
+    let m = state.page_metrics.margin as u32;
+    let x = sx + m + cx.max(0.0) as u32;
+    let y = sy + m + cy.max(0.0) as u32;
+    fb.blend_rect(x, y, 2, ch.max(1.0) as u32, theme::active().caret);
 }
 
 fn paint_lines(state: &State, fb: &mut PaintBuffer, sx: u32, sy: u32) {
