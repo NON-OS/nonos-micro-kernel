@@ -19,4 +19,5 @@ pub mod document;
 pub mod edit;
 pub mod kind;
 pub mod measure;
+pub mod restyle;
 pub mod style;
