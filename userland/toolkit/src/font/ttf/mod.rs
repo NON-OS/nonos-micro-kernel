@@ -31,4 +31,7 @@ pub use readable::MIN_UI_PX;
 
 pub use ab_glyph::FontRef;
 pub use draw::{draw_text, draw_text_spaced, draw_text_tracked, draw_text_with};
-pub use metrics::{ascent, line_height, measure, measure_spaced, measure_tracked, measure_with};
+pub use metrics::{
+    ascent, ascent_with, line_height, line_height_with, measure, measure_spaced, measure_tracked,
+    measure_with,
+};
