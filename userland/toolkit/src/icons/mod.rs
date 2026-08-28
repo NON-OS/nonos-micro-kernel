@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 mod all;
 mod draw;
 mod id;
+mod mask;
 mod name;
 mod table;
 
 pub use draw::{draw, draw_mask};
 pub use id::IconId;
-pub use table::{dim, mask};
+pub use mask::{dim, mask};

@@ -14,22 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const BACKGROUND: u32 = 0xFF0A0F0A;
-pub const DISPLAY_BG: u32 = 0xFF050A05;
-pub const DISPLAY_BORDER: u32 = 0xFF1F4020;
-pub const DISPLAY_TEXT: u32 = 0xFF8CF08C;
-pub const DISPLAY_ERROR: u32 = 0xFFFF5757;
-pub const MEMORY_INDICATOR: u32 = 0xFFD8B45F;
-
-pub const NUMBER_BG: u32 = 0xFF101810;
-pub const NUMBER_TEXT: u32 = 0xFFB6FF7A;
-pub const OPERATOR_BG: u32 = 0xFF1A3520;
-pub const OPERATOR_TEXT: u32 = 0xFF8CF08C;
-pub const FUNCTION_BG: u32 = 0xFF152015;
-pub const FUNCTION_TEXT: u32 = 0xFF5FB95F;
-pub const EQUALS_BG: u32 = 0xFF2D8F44;
-pub const EQUALS_TEXT: u32 = 0xFF0A0F0A;
-pub const MEMORY_BG: u32 = 0xFF332010;
-pub const MEMORY_TEXT: u32 = 0xFFD8B45F;
-pub const BUTTON_BORDER: u32 = 0xFF2A4530;
-pub const WORDMARK: u32 = 0xFF1F4020;
+pub const VOID: u32 = 0xFF04_090F;
+pub const WIN: u32 = 0xFF08_121A;
+pub const PANEL: u32 = 0xFF0D_1A25;
+pub const KEY: u32 = 0xFF0B_1822;
+pub const KEY_HI: u32 = 0xFF13_2A3B;
+pub const CYAN: u32 = 0xFF3F_C8F5;
+pub const INK: u32 = 0xFFDC_EAF2;
+pub const DIM: u32 = 0xFF89_A3B2;
+pub const FAINT: u32 = 0xFF5B_7383;
+pub const LINE: u32 = 0x1A3F_C8F5;
+pub const LINE_2: u32 = 0x383F_C8F5;
+pub const LINE_3: u32 = 0x6B3F_C8F5;
+pub const GLOW: u32 = 0x333F_C8F5;
+pub const ERROR: u32 = 0xFFFF_5757;
+pub const AMBER: u32 = 0xFFD8_B45F;

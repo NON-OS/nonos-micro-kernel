@@ -67,7 +67,9 @@ dependencies = [
 name = "nonos_calculator"
 version = "0.3.0"
 dependencies = [
+ "libm",
  "nonos_app_skeleton",
+ "nonos_toolkit",
  "nonos_userland_libc",
 ]
 

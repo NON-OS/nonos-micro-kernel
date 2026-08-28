@@ -18,7 +18,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::calc::layout::PADDING;
 use crate::calc::state::State;
-use crate::calc::theme::MEMORY_INDICATOR;
+use crate::calc::theme::AMBER;
 
 const BADGE_TEXT: &[u8] = b"M";
 
@@ -26,5 +26,5 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     if !state.memory_engaged() {
         return;
     }
-    fb.text(PADDING + 4, 28, BADGE_TEXT, MEMORY_INDICATOR);
+    fb.text(PADDING + 4, 28, BADGE_TEXT, AMBER);
 }

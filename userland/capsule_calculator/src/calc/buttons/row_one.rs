@@ -18,9 +18,9 @@ use super::kinds::{b, Action, Button, Role};
 use crate::calc::op::Op;
 
 pub const ROW: [Button; 5] = [
-    b(b"1", Role::Number, Action::Digit(1)),
-    b(b"2", Role::Number, Action::Digit(2)),
-    b(b"3", Role::Number, Action::Digit(3)),
-    b(b".", Role::Number, Action::Decimal),
-    b(b"+", Role::Operator, Action::Operator(Op::Add)),
+    b("1", Role::Number, Action::Digit(1)),
+    b("2", Role::Number, Action::Digit(2)),
+    b("3", Role::Number, Action::Digit(3)),
+    b(".", Role::Number, Action::Decimal),
+    b("+", Role::Operator, Action::Operator(Op::Add)),
 ];

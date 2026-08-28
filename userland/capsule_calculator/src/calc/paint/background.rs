@@ -16,8 +16,8 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::calc::theme::BACKGROUND;
+use crate::calc::theme::WIN;
 
 pub fn paint(fb: &mut PaintBuffer) {
-    fb.clear(BACKGROUND);
+    fb.clear(WIN);
 }
