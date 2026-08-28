@@ -24,7 +24,7 @@ use nonos_toolkit::font::ttf::{builtin_face, draw_text_with};
 
 use super::state::State;
 use super::theme;
-use crate::doc::hit::caret_rect;
+use crate::doc::hit::{caret_rect, line_for};
 use crate::doc::style::Family;
 use crate::doc::ttf_measure::TtfMeasurer;
 
@@ -34,11 +34,13 @@ const SHEET_BG: u32 = 0xFF14_1A22;
 const SHEET_SHADOW: u32 = 0x5000_0000;
 
 pub(super) fn page_index(state: &State) -> usize {
-    let (block, _) = state.doc_pos(state.caret);
+    let (block, off) = state.doc_pos(state.caret);
+    let off = state.snap(block, off);
     state
         .pages
         .iter()
-        .position(|p| p.lines.iter().any(|l| l.block == block))
+        .position(|p| line_for(p, block, off).is_some())
+        .or_else(|| state.pages.iter().position(|p| p.lines.iter().any(|l| l.block == block)))
         .unwrap_or_else(|| state.pages.len().saturating_sub(1))
 }
 
