@@ -49,7 +49,15 @@ pub fn break_block(block: &Block, idx: usize, max_w: f32, m: &dyn Measurer) -> V
         let t = text[start..best].trim_end();
         lines.push(LineBox { block: idx, start, end: best, width: m.advance(t, &style), height, ascent, y: 0.0 });
         pos = best;
-        while pos < text.len() && text.as_bytes()[pos] == b' ' { pos += 1; }
+        while pos < text.len() {
+            match text[pos..].chars().next() {
+                Some(c) if c.is_whitespace() => pos += c.len_utf8(),
+                _ => break,
+            }
+        }
+        if pos == start {
+            pos = start + text[start..].chars().next().map_or(1, |c| c.len_utf8());
+        }
     }
     lines
 }

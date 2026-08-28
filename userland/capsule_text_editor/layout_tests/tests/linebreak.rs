@@ -85,3 +85,49 @@ fn heading_lines_are_taller_than_body_lines() {
     let pl = break_block(&p, 0, 400.0, &FixedMeasurer);
     assert!(hl[0].height > pl[0].height);
 }
+
+#[test]
+fn a_line_ending_in_a_tab_terminates() {
+    let b = para("hello\t");
+    let lines = break_block(&b, 0, 400.0, &FixedMeasurer);
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0].end, 5);
+}
+
+#[test]
+fn a_crlf_line_terminates_without_a_trailing_carriage_return_line() {
+    let b = para("hello\r");
+    let lines = break_block(&b, 0, 400.0, &FixedMeasurer);
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0].end, 5);
+}
+
+#[test]
+fn a_block_that_is_only_whitespace_terminates() {
+    for text in ["\t", "\t\t\t", "   ", " \t\r", "\u{a0}\u{a0}"] {
+        let b = para(text);
+        let lines = break_block(&b, 0, 400.0, &FixedMeasurer);
+        assert_eq!(lines.len(), 1, "{text:?} must collapse to a single empty line");
+        assert_eq!(lines[0].start, 0);
+        assert_eq!(lines[0].end, 0);
+    }
+}
+
+#[test]
+fn trailing_spaces_do_not_add_lines() {
+    let b = para("hello   ");
+    let lines = break_block(&b, 0, 400.0, &FixedMeasurer);
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0].end, 5);
+}
+
+#[test]
+fn wrapped_text_with_tabs_terminates_and_stays_in_bounds() {
+    let b = para("aaaa\tbbbb\tcccc\r");
+    let lines = break_block(&b, 0, 40.0, &FixedMeasurer);
+    assert!(!lines.is_empty());
+    for l in &lines {
+        assert!(l.end <= b.text.len());
+        assert!(l.start <= l.end);
+    }
+}
