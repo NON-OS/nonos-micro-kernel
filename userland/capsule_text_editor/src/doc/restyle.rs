@@ -49,7 +49,8 @@ fn merge(block: &mut Block) {
 }
 
 pub fn set_style(block: &mut Block, off: usize, n: usize, f: &dyn Fn(&mut RunStyle)) {
-    let end = off + n;
+    let off = off.min(block.text.len());
+    let end = (off + n).min(block.text.len());
     if off == end {
         return;
     }
