@@ -14,17 +14,40 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod block;
-pub mod counts;
-pub mod document;
-pub mod edit;
-pub mod kind;
-pub mod linebox;
-pub mod linebreak;
-pub mod measure;
-pub mod page;
-pub mod paginate;
-pub mod restyle;
-pub mod style;
-#[cfg(target_os = "none")]
-pub mod ttf_measure;
+use alloc::vec::Vec;
+
+use crate::doc::linebox::LineBox;
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct PageMetrics {
+    pub width: f32,
+    pub height: f32,
+    pub margin: f32,
+}
+
+impl PageMetrics {
+    pub fn content_width(&self) -> f32 {
+        self.width - 2.0 * self.margin
+    }
+
+    pub fn content_height(&self) -> f32 {
+        self.height - 2.0 * self.margin
+    }
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub struct Page {
+    pub lines: Vec<LineBox>,
+}
+
+impl Page {
+    pub fn new() -> Self {
+        Self { lines: Vec::new() }
+    }
+}
+
+impl Default for Page {
+    fn default() -> Self {
+        Self::new()
+    }
+}
