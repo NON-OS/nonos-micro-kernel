@@ -41,7 +41,6 @@ pub fn submit(
     queue.post_request(dir, lba, nsectors);
     unsafe { regs.w16(LEG_QUEUE_NOTIFY, 0) }
     let mut seq = read_seq(irq_grant)?;
-    let target = queue.last_used.wrapping_add(1);
     // Block on the interrupt instead of yield-polling. The old loop spun up
     // to 200k yields per request; every disk read then cycled the whole run
     // queue for the request's full latency, and on one CPU the rest of the
@@ -56,11 +55,14 @@ pub fn submit(
     let mut timed_out_slices = 0u32;
     let mut passes = 0u32;
     loop {
-        if queue.used_idx() == target {
+        let observed = queue.used_idx();
+        if observed.wrapping_sub(queue.last_used) != 0 {
+            queue.last_used = observed;
             break;
         }
         passes = passes.wrapping_add(1);
         if passes > MAX_PASSES {
+            queue.last_used = queue.used_idx();
             return Err(BlkError::Timeout);
         }
         let mut out_seq: u64 = 0;
@@ -69,11 +71,11 @@ pub fn submit(
         } else {
             timed_out_slices = timed_out_slices.wrapping_add(1);
             if timed_out_slices > MAX_SLICES {
+                queue.last_used = queue.used_idx();
                 return Err(BlkError::Timeout);
             }
         }
     }
-    queue.last_used = target;
     let status = queue.status_byte();
     if mk_irq_ack(irq_grant) < 0 {
         return Err(BlkError::Io);
