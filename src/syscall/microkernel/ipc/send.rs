@@ -69,7 +69,7 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
     else {
         return 0;
     };
-    if !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
+    if redirect_token.is_none() && !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
         return ERRNO_PERM;
     }
     // A redirected reply carries the caller's per-call token so the caller can
