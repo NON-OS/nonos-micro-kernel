@@ -20,7 +20,7 @@
 use nonos_app_skeleton::{measure_ttf, PaintBuffer};
 
 use super::icons::{chevron, icon};
-use super::items::{RibbonItem, TOGGLES};
+use super::items::{RibbonItem, TOGGLES, TOGGLE_LIVE};
 use super::metrics::{Geom, RibbonCell, CHEVRON_W, PILL_PAD, SEP_GAP};
 use super::snapshot::RibbonState;
 use crate::editor::layout::CHROME_PX;
@@ -46,18 +46,23 @@ pub(super) fn paint_cell(
         }
         RibbonItem::Toggle(t) => {
             separator(fb, c.x0, g, t == 0);
-            let on = st.flags[t];
+            let live = TOGGLE_LIVE.get(t).copied().unwrap_or(false);
+            let on = live && st.flags[t];
             if on {
                 fb.panel(c.x0, g.cy, w, g.ch, 5, th.tab_inactive_bg, th.accent);
             }
-            let fg = if on { th.accent } else { th.muted };
+            let fg = match (live, on) {
+                (false, _) => th.disabled,
+                (_, true) => th.accent,
+                _ => th.muted,
+            };
             let tw = measure_ttf(TOGGLES[t], CHROME_PX).max(0) as u32;
             let x = (c.x0 + w.saturating_sub(tw) / 2) as i32;
             let _ = fb.text_ttf(x, g.ty, TOGGLES[t], fg, CHROME_PX);
         }
         RibbonItem::Icon(k) => {
             separator(fb, c.x0, g, k == 0);
-            icon(fb, c.x0, g.cy, w, g.ch, k, th.muted);
+            icon(fb, c.x0, g.cy, w, g.ch, k, th.disabled);
         }
     }
 }

@@ -22,6 +22,7 @@ use nonos_app_skeleton::EventOutcome;
 use super::hit::{ribbon_hit, RibbonHit};
 use super::items::RibbonItem;
 use crate::editor::app::Editor;
+use crate::editor::unsupported::NO_BLOCK_MODEL;
 
 impl Editor {
     pub(in crate::editor) fn ribbon_press(&mut self, x: i32, y: i32) -> EventOutcome {
@@ -31,15 +32,15 @@ impl Editor {
             }
             RibbonHit::Cell(RibbonItem::Toggle(t)) => {
                 self.rb_open = None;
-                self.apply_toggle(t);
+                self.doc().apply_toggle(t);
             }
             RibbonHit::Cell(RibbonItem::Icon(_)) => {
                 self.rb_open = None;
-                self.doc().status = b"not implemented yet";
+                self.doc().status = NO_BLOCK_MODEL;
             }
             RibbonHit::Row(r) => {
                 let pill = self.rb_open.take().unwrap_or(0);
-                self.apply_pill_row(pill, r);
+                self.doc().apply_pill_row(pill, r);
             }
             RibbonHit::Outside => self.rb_open = None,
         }

@@ -22,8 +22,10 @@ use super::tables;
 #[derive(Clone, Copy, PartialEq)]
 pub(in crate::editor) enum MenuCmd {
     Ctrl(u32, bool),
+    NewTab,
     CloseTab,
     ToggleSidebar,
+    Info(usize),
     Todo,
 }
 

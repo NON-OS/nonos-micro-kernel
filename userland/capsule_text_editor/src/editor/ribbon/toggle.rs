@@ -21,16 +21,16 @@
 use super::items::{HEADINGS, SIZES};
 use super::snapshot::ribbon_state;
 use crate::doc::style::{Family, RunStyle};
-use crate::editor::app::Editor;
+use crate::editor::state::State;
 
 const NEED_SEL: &[u8] = b"select text to format";
 
-impl Editor {
-    pub(super) fn apply_toggle(&mut self, t: usize) {
+impl State {
+    pub(in crate::editor) fn apply_toggle(&mut self, t: usize) {
         let accent = crate::editor::theme::active().accent;
         let body = RunStyle::body().color;
-        let on = !ribbon_state(self.doc()).flags[t];
-        let st = self.doc();
+        let on = !ribbon_state(self).flags[t];
+        let st = self;
         let applied = match t {
             0 => st.restyle_sel(&move |s| s.bold = on),
             1 => st.restyle_sel(&move |s| s.italic = on),
@@ -43,8 +43,8 @@ impl Editor {
         }
     }
 
-    pub(super) fn apply_pill_row(&mut self, pill: usize, row: usize) {
-        let st = self.doc();
+    pub(in crate::editor) fn apply_pill_row(&mut self, pill: usize, row: usize) {
+        let st = self;
         let applied = match pill {
             0 => match HEADINGS.get(row) {
                 Some(&(_, level)) => {

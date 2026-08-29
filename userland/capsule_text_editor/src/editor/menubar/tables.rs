@@ -16,11 +16,11 @@
 
 //! Row tables. The row index is the action selector, so order is load-bearing.
 
-use super::items::MenuCmd::{CloseTab, Ctrl, Todo, ToggleSidebar};
+use super::items::MenuCmd::{CloseTab, Ctrl, Info, NewTab, Todo, ToggleSidebar};
 use super::items::MenuRow;
 
 pub(super) const FILE: [MenuRow; 6] = [
-    ("New Tab", Todo),
+    ("New Tab", NewTab),
     ("Open...", Ctrl(0x4F, false)),
     ("Save", Ctrl(0x53, false)),
     ("Save As...", Ctrl(0x53, true)),
@@ -47,8 +47,12 @@ pub(super) const VIEW: [MenuRow; 5] = [
 ];
 pub(super) const INSERT: [MenuRow; 4] =
     [("Image", Todo), ("Link", Todo), ("Page Break", Todo), ("Special Character", Todo)];
-pub(super) const FORMAT: [MenuRow; 4] =
-    [("Bold", Todo), ("Italic", Todo), ("Underline", Todo), ("Toggle Comment", Ctrl(0x2F, false))];
+pub(super) const FORMAT: [MenuRow; 4] = [
+    ("Bold", Ctrl(0x42, true)),
+    ("Italic", Ctrl(0x49, false)),
+    ("Underline", Ctrl(0x55, false)),
+    ("Toggle Comment", Ctrl(0x2F, false)),
+];
 pub(super) const TOOLS: [MenuRow; 3] = [
     ("Duplicate Line", Ctrl(0x44, false)),
     ("Delete Line", Ctrl(0x4B, true)),
@@ -56,4 +60,5 @@ pub(super) const TOOLS: [MenuRow; 3] = [
 ];
 pub(super) const TABLE: [MenuRow; 4] =
     [("Insert Table", Todo), ("Insert Row", Todo), ("Insert Column", Todo), ("Delete Table", Todo)];
-pub(super) const HELP: [MenuRow; 2] = [("Keyboard Shortcuts", Todo), ("About NONOS Docs", Todo)];
+pub(super) const HELP: [MenuRow; 2] =
+    [("Keyboard Shortcuts", Info(0)), ("About NONOS Docs", Info(1))];

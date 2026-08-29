@@ -20,7 +20,7 @@
 //! the paint would then disagree with the layout.
 
 use nonos_app_skeleton::PaintBuffer;
-use nonos_toolkit::font::ttf::{builtin_face, draw_text_with};
+use nonos_toolkit::font::ttf::{ascent_with, builtin_face, draw_text_sheared, OBLIQUE};
 
 use super::state::State;
 use super::theme;
@@ -94,6 +94,28 @@ fn paint_lines(state: &State, fb: &mut PaintBuffer, sx: u32, sy: u32) {
         let Some(f) = builtin_face(st.family == Family::Mono, st.bold) else { continue };
         let x = sx as i32 + m;
         let y = sy as i32 + m + line.y as i32;
-        let _ = draw_text_with(f, fb.pixels, stride, w, h, x, y, text, st.color, st.size_px);
+        let slant = if st.italic { OBLIQUE } else { 0.0 };
+        let end = draw_text_sheared(
+            f, fb.pixels, stride, w, h, x, y, text, st.color, st.size_px, 0.0, slant,
+        );
+        if st.underline || st.strike {
+            let a = ascent_with(f, st.size_px);
+            if st.underline {
+                rule(fb, x, y + a + 2, end - x, st.size_px, st.color);
+            }
+            if st.strike {
+                rule(fb, x, y + a * 2 / 3, end - x, st.size_px, st.color);
+            }
+        }
     }
+}
+
+// A horizontal rule under or through a run, drawn at the run's own colour and
+// scaled with its size so underline and strike stay legible at every zoom.
+fn rule(fb: &mut PaintBuffer, x: i32, y: i32, len: i32, px: f32, color: u32) {
+    if len <= 0 || x < 0 || y < 0 {
+        return;
+    }
+    let t = ((px / 14.0) as u32).max(1);
+    fb.blend_rect(x as u32, y as u32, len as u32, t, color);
 }

@@ -22,6 +22,7 @@ use nonos_app_skeleton::EventOutcome;
 use super::app::Editor;
 use super::menubar::{menubar_hit, rows, MenuCmd, MenuHit};
 use super::on_ctrl::on_ctrl;
+use super::unsupported::NO_HANDLER;
 
 impl Editor {
     pub(super) fn menubar_press(&mut self, x: i32, y: i32) -> EventOutcome {
@@ -48,6 +49,7 @@ impl Editor {
                 let doc = self.doc();
                 let _ = on_ctrl(doc, code, shift);
             }
+            MenuCmd::NewTab => self.new_tab(),
             MenuCmd::CloseTab => {
                 let idx = self.active;
                 self.close_tab(idx);
@@ -58,7 +60,8 @@ impl Editor {
                     self.tree.reload(self.owner_pid);
                 }
             }
-            MenuCmd::Todo => self.doc().status = b"not implemented yet",
+            MenuCmd::Info(which) => self.info_tab(which),
+            MenuCmd::Todo => self.doc().status = NO_HANDLER,
         }
     }
 }

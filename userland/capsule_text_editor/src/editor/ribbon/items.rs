@@ -42,6 +42,7 @@ pub(in crate::editor) const HEADINGS: [(&str, u8); 7] = [
 pub(in crate::editor) const FONTS: [&str; 2] = ["Inter", "JetBrains Mono"];
 pub(in crate::editor) const SIZES: [u32; 10] = [10, 11, 12, 14, 16, 18, 21, 26, 34, 48];
 pub(super) const TOGGLES: [&str; 5] = ["B", "I", "U", "S", "A"];
+pub(in crate::editor) const TOGGLE_LIVE: [bool; 5] = [true, true, true, true, true];
 pub(super) const ICON_COUNT: usize = 6;
 
 pub(super) fn pill_labels(pill: usize) -> Vec<String> {

@@ -49,6 +49,10 @@ pub(super) fn on_ctrl(state: &mut State, code: u32, shift: bool) -> EventOutcome
         0x3D | 0x2B => zoom(state, 1),
         0x2D | 0x5F => zoom(state, -1),
         0x30 => zoom_reset(state),
+        // Ctrl+Shift+B bolds the selection, Ctrl+I italicises it, Ctrl+U underlines it.
+        0x42 | 0x62 if shift => run_toggle(state, 0),
+        0x49 | 0x69 => run_toggle(state, 1),
+        0x55 | 0x75 => run_toggle(state, 2),
         // Ctrl+B cycles the editor theme.
         0x42 | 0x62 => cycle_theme(state),
         _ => EventOutcome::Idle,
@@ -73,6 +77,13 @@ fn zoom_reset(state: &mut State) -> EventOutcome {
     }
     state.font_scale = 2;
     state.status = b"zoom reset";
+    EventOutcome::Repaint
+}
+
+// A ribbon run-style toggle driven from the keyboard or a Format menu row, so
+// the row and the shortcut cannot drift apart.
+fn run_toggle(state: &mut State, t: usize) -> EventOutcome {
+    state.apply_toggle(t);
     EventOutcome::Repaint
 }
 
