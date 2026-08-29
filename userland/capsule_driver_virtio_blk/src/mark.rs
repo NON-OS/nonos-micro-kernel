@@ -13,40 +13,32 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-#![no_std]
-#![no_main]
-extern crate alloc;
-mod constants;
-mod discover;
-mod init;
-mod io;
-mod mark;
-mod protocol;
-mod queue;
-mod regs;
-mod server;
-mod setup;
-use nonos_libc::{heap_init, mk_exit, mk_yield};
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    if heap_init().is_err() {
-        mk_exit(1);
+
+use nonos_libc::mk_debug;
+
+const LOUD_ATTEMPTS: u32 = 3;
+const QUIET_PERIOD: u32 = 64;
+
+pub fn up() {
+    emit(b"[NBLK] up", "");
+}
+
+pub fn setup_fail(attempt: u32, err: &str) {
+    if attempt >= LOUD_ATTEMPTS && attempt % QUIET_PERIOD != 0 {
+        return;
     }
-    let mut attempt = 0u32;
-    let mut driver = loop {
-        match setup::run() {
-            Ok(d) => {
-                mark::up();
-                break d;
-            }
-            Err(e) => {
-                mark::setup_fail(attempt, e);
-                attempt = attempt.wrapping_add(1);
-                for _ in 0..64 {
-                    mk_yield();
-                }
-            }
+    emit(b"[NBLK] setup-fail ", err);
+}
+
+fn emit(tag: &[u8], detail: &str) {
+    let mut line = [0u8; 128];
+    let mut n = 0usize;
+    for b in tag.iter().chain(detail.as_bytes()).chain(b"\n") {
+        if n == line.len() {
+            break;
         }
-    };
-    server::run(&mut driver);
+        line[n] = *b;
+        n += 1;
+    }
+    let _ = mk_debug(line.as_ptr(), n);
 }
