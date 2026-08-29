@@ -25,6 +25,8 @@ use alloc::vec::Vec;
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
 use super::manifest::manifest;
+use super::menubar::TitleSpan;
+use super::ribbon::RibbonCell;
 use super::sb_entry::SbEntry;
 use super::sb_menu::SbMenu;
 use super::state::State;
@@ -46,6 +48,12 @@ pub struct Editor {
     // Explorer file management: the open context menu and the inline name
     // entry for create/rename, at most one of each at a time.
     pub(super) menu: Option<SbMenu>,
+    pub(super) mb_open: Option<usize>,
+    pub(super) mb_layout: Vec<TitleSpan>,
+    // Formatting ribbon: the pill whose dropdown is open, and the control cells
+    // from the last paint, whose widths track the labels the caret dictates.
+    pub(super) rb_open: Option<usize>,
+    pub(super) rb_layout: Vec<RibbonCell>,
     pub(super) entry: Option<SbEntry>,
 }
 
@@ -61,6 +69,10 @@ impl Editor {
             last_w: 0,
             last_h: 0,
             menu: None,
+            mb_open: None,
+            mb_layout: Vec::new(),
+            rb_open: None,
+            rb_layout: Vec::new(),
             entry: None,
         }
     }

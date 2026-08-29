@@ -21,7 +21,7 @@ use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
 use super::activity_bar::activity_hit;
 use super::app::Editor;
-use super::layout::{ACTIVITY_W, TABBAR_H, TITLEBAR_H};
+use super::layout::{ACTIVITY_W, RIBBON_H, TABBAR_H, TITLEBAR_H};
 use super::sb_menu::{menu_hit, open_menu};
 use super::shell::pane_x;
 use super::sidebar::sidebar_row_at;
@@ -37,6 +37,7 @@ impl Editor {
         let px = pane_x(self.sidebar_open) as i32;
         let tb_top = TITLEBAR_H as i32;
         let tb_bot = (TITLEBAR_H + TABBAR_H) as i32;
+        let rb_bot = tb_bot + RIBBON_H as i32;
 
         // An open context menu takes the whole next press: run the item under
         // the click, or just close on a miss.
@@ -48,6 +49,18 @@ impl Editor {
                 }
             }
             return Some(EventOutcome::Repaint);
+        }
+
+        // The menu bar's dropdown overlays the ribbon, so it is asked first and
+        // takes the ribbon's dropdown down with it.
+        if press && (self.mb_open.is_some() || y < tb_top) {
+            self.rb_open = None;
+            return Some(self.menubar_press(x, y));
+        }
+
+        let in_ribbon = x >= ACTIVITY_W as i32 && y >= tb_bot && y < rb_bot;
+        if press && (self.rb_open.is_some() || in_ribbon) {
+            return Some(self.ribbon_press(x, y));
         }
 
         if press && activity_hit(x) {

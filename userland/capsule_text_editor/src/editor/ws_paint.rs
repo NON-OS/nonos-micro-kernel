@@ -23,7 +23,9 @@ use nonos_libc::mk_getpid;
 
 use super::activity_bar::paint_activity;
 use super::app::Editor;
+use super::menubar::{paint_dropdown, paint_menubar};
 use super::paint::paint_document;
+use super::ribbon::{paint_ribbon, paint_ribbon_drop, ribbon_state};
 use super::sb_entry::paint_entry;
 use super::sb_menu::paint_menu;
 use super::shell::{pane_rect, pane_x};
@@ -53,8 +55,13 @@ impl Editor {
         let px = pane_x(self.sidebar_open);
         self.tab_layout = paint_tabs(fb, &self.docs, self.active, px, w);
 
-        let (rx, ry, rw, rh) = pane_rect(w, h, self.sidebar_open);
+        self.mb_layout = paint_menubar(fb, w, self.mb_open);
+
         let i = self.active.min(self.docs.len().saturating_sub(1));
+        let rb = ribbon_state(&self.docs[i]);
+        self.rb_layout = paint_ribbon(fb, w, &rb, self.rb_open);
+
+        let (rx, ry, rw, rh) = pane_rect(w, h, self.sidebar_open);
         {
             let d = &mut self.docs[i];
             d.pane_x = rx;
@@ -73,6 +80,12 @@ impl Editor {
         }
         if let Some(menu) = &self.menu {
             paint_menu(fb, menu);
+        }
+        if let Some(pill) = self.rb_open {
+            paint_ribbon_drop(fb, &self.rb_layout, pill);
+        }
+        if let Some(open) = self.mb_open {
+            paint_dropdown(fb, &self.mb_layout, open);
         }
     }
 }
