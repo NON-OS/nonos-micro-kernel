@@ -21,3 +21,6 @@
 pub(in crate::editor) const NO_BLOCK_MODEL: &[u8] =
     b"unavailable: alignment, lists and tables need block-level styling";
 pub(in crate::editor) const NO_HANDLER: &[u8] = b"unavailable: not built into this capsule";
+pub(in crate::editor) const NO_DOC_MODE: &[u8] = b"unavailable: tables need document mode";
+
+pub(in crate::editor) const NO_TABLE_AT_CARET: &[u8] = b"place the caret inside a table first";

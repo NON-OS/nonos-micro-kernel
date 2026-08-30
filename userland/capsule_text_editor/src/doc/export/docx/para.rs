@@ -23,7 +23,7 @@ use super::run::{escape, rpr};
 
 pub fn pstyle(kind: BlockKind) -> Option<&'static str> {
     match kind {
-        BlockKind::Paragraph => None,
+        BlockKind::Paragraph | BlockKind::PageBreak => None,
         BlockKind::Heading(n) => Some(match n.clamp(1, 6) {
             1 => "Heading1",
             2 => "Heading2",

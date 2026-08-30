@@ -34,6 +34,10 @@ pub fn doc_from_text(bytes: &[u8]) -> Doc {
     let text = core::str::from_utf8(bytes).unwrap_or("");
     let mut d = Doc::new();
     for line in text.split('\n') {
+        if line == "\u{c}" {
+            d.blocks.push(Block::plain(BlockKind::PageBreak, "", RunStyle::body()));
+            continue;
+        }
         let n = heading_level(line);
         if n > 0 {
             let body = &line[(n as usize) + 1..];
@@ -53,6 +57,10 @@ pub fn text_from_doc(doc: &Doc) -> Vec<u8> {
     for (i, b) in doc.blocks.iter().enumerate() {
         if i > 0 {
             out.push(b'\n');
+        }
+        if b.kind == BlockKind::PageBreak {
+            out.push(0x0C);
+            continue;
         }
         if let Some(n) = b.kind.heading_level() {
             for _ in 0..n {

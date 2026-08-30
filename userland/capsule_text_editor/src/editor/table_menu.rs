@@ -14,20 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum BlockKind {
-    Paragraph,
-    Heading(u8),
-    Bullet,
-    Numbered,
-    PageBreak,
-}
+//! Table menu actions. Every row but the first needs a table under the caret,
+//! so a miss reports why instead of failing quietly.
 
-impl BlockKind {
-    pub fn heading_level(&self) -> Option<u8> {
-        match self {
-            BlockKind::Heading(n) => Some(*n),
-            _ => None,
+use super::app::Editor;
+use super::unsupported::NO_TABLE_AT_CARET;
+
+impl Editor {
+    pub(super) fn table_menu(&mut self, op: u8) {
+        let st = self.doc();
+        let done = match op {
+            0 => st.insert_table(3, 3),
+            1 => st.insert_table_row(),
+            2 => st.insert_table_col(),
+            _ => st.delete_table(),
+        };
+        if !done {
+            st.status = NO_TABLE_AT_CARET;
         }
     }
 }

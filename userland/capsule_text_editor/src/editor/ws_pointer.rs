@@ -40,6 +40,10 @@ impl Editor {
         let tb_bot = (TITLEBAR_H + TABBAR_H) as i32;
         let rb_bot = tb_bot + RIBBON_H as i32;
 
+        if press && self.panel.is_some() {
+            return Some(self.panel_press(x, y));
+        }
+
         // An open context menu takes the whole next press: run the item under
         // the click, or just close on a miss.
         if press && self.menu.is_some() {

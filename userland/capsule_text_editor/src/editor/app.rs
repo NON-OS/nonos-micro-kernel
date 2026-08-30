@@ -26,6 +26,7 @@ use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer
 
 use super::manifest::manifest;
 use super::menubar::TitleSpan;
+use super::panel::Panel;
 use super::ribbon::RibbonCell;
 use super::screen::Screen;
 use super::sb_entry::SbEntry;
@@ -56,6 +57,9 @@ pub struct Editor {
     pub(super) rb_open: Option<usize>,
     pub(super) rb_layout: Vec<RibbonCell>,
     pub(super) entry: Option<SbEntry>,
+    // The floating Word Count or Special Character panel, if one is open. It
+    // takes the whole next press, and any key dismisses it.
+    pub(super) panel: Option<Panel>,
     pub(super) screen: Screen,
 }
 
@@ -76,6 +80,7 @@ impl Editor {
             rb_open: None,
             rb_layout: Vec::new(),
             entry: None,
+            panel: None,
             screen: Screen::Editor,
         }
     }

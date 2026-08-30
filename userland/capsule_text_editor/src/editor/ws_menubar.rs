@@ -22,6 +22,7 @@ use nonos_app_skeleton::EventOutcome;
 use super::app::Editor;
 use super::menubar::{menubar_hit, rows, MenuCmd, MenuHit};
 use super::on_ctrl::on_ctrl;
+use super::panel::Panel;
 use super::unsupported::NO_HANDLER;
 
 impl Editor {
@@ -61,6 +62,10 @@ impl Editor {
                 }
             }
             MenuCmd::Info(which) => self.info_tab(which),
+            MenuCmd::PageBreak => self.insert_page_break(),
+            MenuCmd::Special => self.open_panel(Panel::Special),
+            MenuCmd::WordCount => self.open_panel(Panel::WordCount),
+            MenuCmd::Table(op) => self.table_menu(op),
             MenuCmd::Todo => self.doc().status = NO_HANDLER,
         }
     }

@@ -16,7 +16,9 @@
 
 //! Row tables. The row index is the action selector, so order is load-bearing.
 
-use super::items::MenuCmd::{CloseTab, Ctrl, Info, NewTab, Todo, ToggleSidebar};
+use super::items::MenuCmd::{
+    CloseTab, Ctrl, Info, NewTab, PageBreak, Special, Table, Todo, ToggleSidebar, WordCount,
+};
 use super::items::MenuRow;
 
 pub(super) const FILE: [MenuRow; 6] = [
@@ -46,7 +48,7 @@ pub(super) const VIEW: [MenuRow; 5] = [
     ("Toggle Sidebar", ToggleSidebar),
 ];
 pub(super) const INSERT: [MenuRow; 4] =
-    [("Image", Todo), ("Link", Todo), ("Page Break", Todo), ("Special Character", Todo)];
+    [("Image", Todo), ("Link", Todo), ("Page Break", PageBreak), ("Special Character", Special)];
 pub(super) const FORMAT: [MenuRow; 4] = [
     ("Bold", Ctrl(0x42, true)),
     ("Italic", Ctrl(0x49, false)),
@@ -56,9 +58,9 @@ pub(super) const FORMAT: [MenuRow; 4] = [
 pub(super) const TOOLS: [MenuRow; 3] = [
     ("Duplicate Line", Ctrl(0x44, false)),
     ("Delete Line", Ctrl(0x4B, true)),
-    ("Word Count", Todo),
+    ("Word Count", WordCount),
 ];
 pub(super) const TABLE: [MenuRow; 4] =
-    [("Insert Table", Todo), ("Insert Row", Todo), ("Insert Column", Todo), ("Delete Table", Todo)];
+    [("Insert Table", Table(0)), ("Insert Row", Table(1)), ("Insert Column", Table(2)), ("Delete Table", Table(3))];
 pub(super) const HELP: [MenuRow; 2] =
     [("Keyboard Shortcuts", Info(0)), ("About NONOS Docs", Info(1))];

@@ -26,6 +26,10 @@ pub(in crate::editor) enum MenuCmd {
     CloseTab,
     ToggleSidebar,
     Info(usize),
+    PageBreak,
+    Special,
+    WordCount,
+    Table(u8),
     Todo,
 }
 

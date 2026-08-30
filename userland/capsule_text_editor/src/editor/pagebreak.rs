@@ -14,20 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum BlockKind {
-    Paragraph,
-    Heading(u8),
-    Bullet,
-    Numbered,
-    PageBreak,
-}
+//! Insert > Page Break. The break is a form feed alone on its line, so it
+//! lives in the text buffer itself and is rebuilt by `doc_from_text` on every
+//! reflow the way a heading prefix is, rather than being kept beside it.
 
-impl BlockKind {
-    pub fn heading_level(&self) -> Option<u8> {
-        match self {
-            BlockKind::Heading(n) => Some(*n),
-            _ => None,
+use super::app::Editor;
+use super::mode::Mode;
+use super::unsupported::NO_BLOCK_MODEL;
+
+impl Editor {
+    pub(super) fn insert_page_break(&mut self) {
+        let doc = self.doc();
+        if doc.mode != Mode::Document {
+            doc.status = NO_BLOCK_MODEL;
+            return;
         }
+        let at = doc.caret.min(doc.len);
+        let opening = at > 0 && doc.buf.get(at - 1) != Some(&b'\n');
+        let bytes: &[u8] = if opening { b"\n\x0c\n" } else { b"\x0c\n" };
+        let _ = doc.insert(bytes);
     }
 }

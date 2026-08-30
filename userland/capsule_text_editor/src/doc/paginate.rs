@@ -17,6 +17,7 @@
 use alloc::vec::Vec;
 
 use crate::doc::document::Doc;
+use crate::doc::kind::BlockKind;
 use crate::doc::linebreak::break_block;
 use crate::doc::measure::Measurer;
 use crate::doc::page::{Page, PageMetrics};
@@ -36,6 +37,11 @@ pub fn paginate(doc: &Doc, pm: &PageMetrics, m: &dyn Measurer) -> Vec<Page> {
             line.y = y;
             y += line.height;
             page.lines.push(line);
+        }
+        if block.kind == BlockKind::PageBreak {
+            pages.push(page);
+            page = Page::new();
+            y = 0.0;
         }
     }
     pages.push(page);

@@ -24,6 +24,7 @@ use nonos_libc::mk_getpid;
 use super::activity_bar::paint_activity;
 use super::app::Editor;
 use super::menubar::{paint_dropdown, paint_menubar};
+use super::pagebreak_mark::paint_page_breaks;
 use super::paint::paint_document;
 use super::ribbon::{paint_ribbon, paint_ribbon_drop, ribbon_state};
 use super::sb_entry::paint_entry;
@@ -70,6 +71,7 @@ impl Editor {
             d.pane_w = rw;
             d.pane_h = rh;
             paint_document(d, fb);
+            paint_page_breaks(d, fb);
         }
         paint_status(fb, &self.docs[i], w, h);
 
@@ -87,6 +89,9 @@ impl Editor {
         }
         if let Some(open) = self.mb_open {
             paint_dropdown(fb, &self.mb_layout, open);
+        }
+        if let Some(panel) = self.panel {
+            self.paint_panel(fb, panel);
         }
     }
 }

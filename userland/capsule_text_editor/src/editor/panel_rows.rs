@@ -14,20 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum BlockKind {
-    Paragraph,
-    Heading(u8),
-    Bullet,
-    Numbered,
-    PageBreak,
-}
+//! The row labels behind an open panel, built once and read by both the
+//! painter and the hit-test so the two never disagree about the row count.
 
-impl BlockKind {
-    pub fn heading_level(&self) -> Option<u8> {
-        match self {
-            BlockKind::Heading(n) => Some(*n),
-            _ => None,
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+
+use super::app::Editor;
+use super::panel::{special_labels, Panel};
+use super::wordcount::count_rows;
+
+impl Editor {
+    pub(super) fn panel_rows(&self, panel: Panel) -> Vec<String> {
+        match panel {
+            Panel::WordCount => {
+                let i = self.active.min(self.docs.len().saturating_sub(1));
+                count_rows(&self.docs[i])
+            }
+            Panel::Special => special_labels().iter().map(|s| s.to_string()).collect(),
         }
     }
 }

@@ -54,6 +54,7 @@ fn push_prefix(kind: BlockKind, number: usize, out: &mut String) {
         }
         BlockKind::Bullet => out.push_str("- "),
         BlockKind::Numbered => out.push_str(&format!("{}. ", number)),
+        BlockKind::PageBreak => out.push_str("---"),
         BlockKind::Paragraph => {}
     }
 }

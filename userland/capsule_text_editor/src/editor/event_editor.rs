@@ -32,6 +32,11 @@ impl Editor {
             self.owner_pid = mk_getpid();
         }
 
+        if self.panel.is_some() && event.is_key_down() {
+            self.panel = None;
+            return EventOutcome::Repaint;
+        }
+
         // The name entry owns the keyboard while it is open.
         if self.entry.is_some() && event.is_key_down() {
             return self.entry_key_event(event.code);

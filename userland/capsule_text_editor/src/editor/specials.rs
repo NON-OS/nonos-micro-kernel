@@ -14,20 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum BlockKind {
-    Paragraph,
-    Heading(u8),
-    Bullet,
-    Numbered,
-    PageBreak,
-}
+//! The Insert > Special Character table: the label a row shows and the UTF-8
+//! text it inserts. The row index is the selector, so order is load-bearing.
 
-impl BlockKind {
-    pub fn heading_level(&self) -> Option<u8> {
-        match self {
-            BlockKind::Heading(n) => Some(*n),
-            _ => None,
-        }
-    }
-}
+pub(in crate::editor) const SPECIALS: [(&str, &str); 14] = [
+    ("—   Em Dash", "—"),
+    ("–   En Dash", "–"),
+    ("…   Ellipsis", "…"),
+    ("•   Bullet", "•"),
+    ("→   Right Arrow", "→"),
+    ("←   Left Arrow", "←"),
+    ("×   Multiplication", "×"),
+    ("÷   Division", "÷"),
+    ("±   Plus-Minus", "±"),
+    ("≠   Not Equal", "≠"),
+    ("°   Degree", "°"),
+    ("€   Euro", "€"),
+    ("£   Pound", "£"),
+    ("π   Pi", "π"),
+];
