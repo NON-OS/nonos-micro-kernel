@@ -19,10 +19,11 @@
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
-use super::activity_bar::activity_hit;
+use super::activity_bar::{activity_hit, row_screen};
 use super::app::Editor;
 use super::layout::{ACTIVITY_W, RIBBON_H, TABBAR_H, TITLEBAR_H};
 use super::sb_menu::{menu_hit, open_menu};
+use super::screen::Screen;
 use super::shell::pane_x;
 use super::sidebar::sidebar_row_at;
 use super::tabbar::{tab_hit, toolbar_hit};
@@ -63,12 +64,8 @@ impl Editor {
             return Some(self.ribbon_press(x, y));
         }
 
-        if press && activity_hit(x) {
-            self.sidebar_open = !self.sidebar_open;
-            if self.sidebar_open {
-                self.tree.reload(self.owner_pid);
-            }
-            return Some(EventOutcome::Repaint);
+        if press && x >= 0 && (x as u32) < ACTIVITY_W {
+            return Some(self.activity_press(activity_hit(y)));
         }
 
         let in_sidebar = self.sidebar_open && x >= ACTIVITY_W as i32 && x < px && y >= tb_bot;
@@ -116,5 +113,23 @@ impl Editor {
             }
             _ => super::theme::cycle(),
         }
+    }
+
+    pub(super) fn activity_press(&mut self, row: Option<usize>) -> EventOutcome {
+        let Some(row) = row else {
+            return EventOutcome::Repaint;
+        };
+        let target = row_screen(row);
+        if self.screen == target {
+            if target == Screen::Editor {
+                self.sidebar_open = !self.sidebar_open;
+                if self.sidebar_open {
+                    self.tree.reload(self.owner_pid);
+                }
+            }
+        } else {
+            self.screen = target;
+        }
+        EventOutcome::Repaint
     }
 }
