@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The Settings palette. Two variants of each control style: the live one, and
-//! a dimmed one for the rows that have no implementation behind them yet, so a
-//! dead control never reads as a working one.
+//! The Settings palette. Controls that have an implementation behind them use
+//! the live style; the dropdowns, which have no popup to open, use the dimmed
+//! variant so a dead control never reads as a working one.
 
 use crate::editor::widget::{DropdownStyle, NavStyle};
 
@@ -38,10 +38,6 @@ pub(super) fn nav_live() -> NavStyle {
         radius: 9,
         pad_x: 12,
     }
-}
-
-pub(super) fn nav_dim() -> NavStyle {
-    NavStyle { accent: 0x600C4C5D, ring: 0x2017BED9, label: DIM, label_sel: MUTED, ..nav_live() }
 }
 
 pub(super) fn drop_dim() -> DropdownStyle {

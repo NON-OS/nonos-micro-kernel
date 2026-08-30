@@ -20,10 +20,10 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::super::app::Editor;
+use super::super::theme;
 use super::create::paint_create;
 use super::metrics::{pane_x, CARD_W, COL_GAP, PANE_PAD};
 use super::pane::paint_pane_head;
-use super::palette::BG;
 use super::rail::paint_rail;
 use super::recent::paint_recent;
 use super::state::HomeState;
@@ -32,7 +32,7 @@ const MIN_COLS_W: u32 = 200;
 
 pub(crate) fn paint_home(_ed: &mut Editor, fb: &mut PaintBuffer) {
     let (w, h) = (fb.width, fb.height);
-    fb.fill_rect(0, 0, w, h, BG);
+    fb.fill_rect(0, 0, w, h, theme::active().background);
     HomeState::note_width(w);
     if h == 0 || w <= pane_x() + PANE_PAD * 2 {
         return;

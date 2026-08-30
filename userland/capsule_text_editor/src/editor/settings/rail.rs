@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The left navigation rail: the screen title over a label list. The list is
-//! painted in two passes so the six sections with no panel behind them stay
-//! visibly dim even while one of them is the selected row.
+//! The left navigation rail: the screen title over a label list. Every section
+//! now has a panel behind it, so the list is painted live in one pass.
 
 use nonos_app_skeleton::PaintBuffer;
 
 use super::geom::{nav_rect, title_top, NAV_LABELS, NAV_PX, RAIL_PAD, RAIL_W, RAIL_X, TITLE_PX};
-use super::style::{nav_dim, nav_live, HAIRLINE, RAIL_BG, TEXT};
-use crate::editor::widget::{nav_row_h, paint_navlist};
+use super::style::{nav_live, HAIRLINE, RAIL_BG, TEXT};
+use crate::editor::widget::paint_navlist;
 
 pub(super) fn paint_rail(fb: &mut PaintBuffer, selected: usize) {
     let h = fb.height;
@@ -32,9 +31,5 @@ pub(super) fn paint_rail(fb: &mut PaintBuffer, selected: usize) {
     let _ = fb.text_ttf(tx, title_top() as i32, "Docs Settings", TEXT, TITLE_PX);
 
     let (nx, ny, nw) = nav_rect();
-    let head = if selected == 0 { 0 } else { usize::MAX };
-    paint_navlist(fb, (nx, ny, nw), &NAV_LABELS[..1], head, NAV_PX, &nav_live());
-    let rest = selected.wrapping_sub(1);
-    let ry = ny + nav_row_h(NAV_PX);
-    paint_navlist(fb, (nx, ry, nw), &NAV_LABELS[1..], rest, NAV_PX, &nav_dim());
+    paint_navlist(fb, (nx, ny, nw), &NAV_LABELS, selected, NAV_PX, &nav_live());
 }

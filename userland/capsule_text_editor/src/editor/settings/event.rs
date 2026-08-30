@@ -14,15 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Input routing for the Settings screen. Presses land on the rail rows and on
-//! the four live switches; the dropdowns are drawn dimmed and swallow nothing,
-//! so a click that misses every live control stays idle.
+//! Input routing for the Settings screen. Presses land on the rail rows, on the
+//! four General switches, and on the switches of the selected section; the
+//! dropdowns are drawn dimmed, so a click that misses a live control stays idle.
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
 use super::super::app::Editor;
 use super::card::{control_box, DROP_VALUES, ROWS, TOGGLE_H, TOGGLE_W};
 use super::geom::{nav_rect, NAV_LABELS, NAV_PX};
+use super::sect::section;
+use super::sect_event::section_press;
 use super::state::{flip_switch, select_nav, state, width};
 use crate::editor::widget::{navlist_hit, toggle_hit};
 
@@ -33,10 +35,14 @@ pub(crate) fn settings_event(_ed: &mut Editor, event: InputEvent) -> EventOutcom
     if let Some(i) = navlist_hit(nav_rect(), NAV_LABELS.len(), NAV_PX, event.x, event.y) {
         return if select_nav(i) { EventOutcome::Repaint } else { EventOutcome::Idle };
     }
-    if state().nav != 0 {
-        return EventOutcome::Idle;
+    let nav = state().nav;
+    if nav == 0 {
+        return switch_press(event.x, event.y);
     }
-    switch_press(event.x, event.y)
+    match section(nav) {
+        Some(sec) => section_press(nav, sec, event.x, event.y),
+        None => EventOutcome::Idle,
+    }
 }
 
 fn switch_press(mx: i32, my: i32) -> EventOutcome {

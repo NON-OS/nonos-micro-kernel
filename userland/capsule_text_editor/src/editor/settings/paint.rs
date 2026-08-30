@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! The Settings screen: an opaque ground, the navigation rail, and the panel
-//! for the selected section. Only General has a panel; the other sections draw
-//! their rail row dimmed and leave the pane empty.
+//! for the selected section. General has its own hand-laid card; the other six
+//! sections share one table-driven painter.
 
 use nonos_app_skeleton::PaintBuffer;
 
@@ -24,6 +24,8 @@ use super::super::app::Editor;
 use super::super::theme;
 use super::pane::paint_pane;
 use super::rail::paint_rail;
+use super::sect::section;
+use super::sect_paint::paint_section;
 use super::state::{latch_width, state};
 
 pub(crate) fn paint_settings(_ed: &mut Editor, fb: &mut PaintBuffer) {
@@ -34,5 +36,7 @@ pub(crate) fn paint_settings(_ed: &mut Editor, fb: &mut PaintBuffer) {
     paint_rail(fb, st.nav);
     if st.nav == 0 {
         paint_pane(fb, &st);
+    } else if let Some(sec) = section(st.nav) {
+        paint_section(fb, st.nav, sec);
     }
 }

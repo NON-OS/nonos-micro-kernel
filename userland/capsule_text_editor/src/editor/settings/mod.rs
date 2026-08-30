@@ -20,6 +20,12 @@ mod geom;
 mod paint;
 mod pane;
 mod rail;
+mod sect;
+mod sect_event;
+mod sect_paint;
+mod sect_state;
+mod sects_a;
+mod sects_b;
 mod state;
 mod style;
 
