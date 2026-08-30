@@ -22,6 +22,8 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
+use crate::doc::align::Align;
+
 #[derive(Clone, Copy, PartialEq)]
 pub(in crate::editor) enum RibbonItem {
     Pill(usize),
@@ -44,6 +46,10 @@ pub(in crate::editor) const SIZES: [u32; 10] = [10, 11, 12, 14, 16, 18, 21, 26, 
 pub(super) const TOGGLES: [&str; 5] = ["B", "I", "U", "S", "A"];
 pub(in crate::editor) const TOGGLE_LIVE: [bool; 5] = [true, true, true, true, true];
 pub(super) const ICON_COUNT: usize = 6;
+pub(super) const ICON_ALIGN: [Option<Align>; ICON_COUNT] =
+    [Some(Align::Left), Some(Align::Center), Some(Align::Right), None, None, None];
+pub(super) const ICON_TABLE: usize = 5;
+pub(super) const ICON_LIVE: [bool; ICON_COUNT] = [true, true, true, false, false, true];
 
 pub(super) fn pill_labels(pill: usize) -> Vec<String> {
     match pill {

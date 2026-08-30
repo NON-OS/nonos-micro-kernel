@@ -25,6 +25,12 @@ pub fn break_block(block: &Block, idx: usize, max_w: f32, m: &dyn Measurer) -> V
     let style = block.style_at(0);
     let height = m.line_height(&style);
     let ascent = m.ascent(&style);
+    if crate::doc::table::syntax::is_row(text) {
+        let height = crate::doc::table::geom::row_height(&style, m);
+        let b =
+            LineBox { block: idx, start: 0, end: text.len(), width: max_w, height, ascent, y: 0.0 };
+        return vec![b];
+    }
     let mut lines = Vec::new();
     if text.is_empty() {
         return vec![LineBox { block: idx, start: 0, end: 0, width: 0.0, height, ascent, y: 0.0 }];

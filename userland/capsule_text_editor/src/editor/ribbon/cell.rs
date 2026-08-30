@@ -20,7 +20,7 @@
 use nonos_app_skeleton::{measure_ttf, PaintBuffer};
 
 use super::icons::{chevron, icon};
-use super::items::{RibbonItem, TOGGLES, TOGGLE_LIVE};
+use super::items::{RibbonItem, ICON_ALIGN, ICON_LIVE, TOGGLES, TOGGLE_LIVE};
 use super::metrics::{Geom, RibbonCell, CHEVRON_W, PILL_PAD, SEP_GAP};
 use super::snapshot::RibbonState;
 use crate::editor::layout::CHROME_PX;
@@ -62,7 +62,17 @@ pub(super) fn paint_cell(
         }
         RibbonItem::Icon(k) => {
             separator(fb, c.x0, g, k == 0);
-            icon(fb, c.x0, g.cy, w, g.ch, k, th.disabled);
+            let live = ICON_ALIGN.get(k).copied().flatten();
+            let on = live == Some(st.align);
+            if on {
+                fb.panel(c.x0, g.cy, w, g.ch, 5, th.tab_inactive_bg, th.accent);
+            }
+            let fg = match (ICON_LIVE.get(k).copied().unwrap_or(false), on) {
+                (false, _) => th.disabled,
+                (_, true) => th.accent,
+                _ => th.muted,
+            };
+            icon(fb, c.x0, g.cy, w, g.ch, k, fg);
         }
     }
 }

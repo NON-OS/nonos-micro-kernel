@@ -20,9 +20,10 @@
 use nonos_app_skeleton::EventOutcome;
 
 use super::hit::{ribbon_hit, RibbonHit};
-use super::items::RibbonItem;
+use super::items::{RibbonItem, ICON_ALIGN, ICON_TABLE};
 use crate::editor::app::Editor;
-use crate::editor::unsupported::NO_BLOCK_MODEL;
+use crate::editor::table_ops::{DEFAULT_COLS, DEFAULT_ROWS};
+use crate::editor::unsupported::{NO_BLOCK_MODEL, NO_DOC_MODE};
 
 impl Editor {
     pub(in crate::editor) fn ribbon_press(&mut self, x: i32, y: i32) -> EventOutcome {
@@ -34,9 +35,13 @@ impl Editor {
                 self.rb_open = None;
                 self.doc().apply_toggle(t);
             }
-            RibbonHit::Cell(RibbonItem::Icon(_)) => {
+            RibbonHit::Cell(RibbonItem::Icon(k)) => {
                 self.rb_open = None;
-                self.doc().status = NO_BLOCK_MODEL;
+                match ICON_ALIGN.get(k).copied().flatten() {
+                    Some(a) => self.doc().align_sel(a),
+                    None if k == ICON_TABLE => self.insert_default_table(),
+                    None => self.doc().status = NO_BLOCK_MODEL,
+                }
             }
             RibbonHit::Row(r) => {
                 let pill = self.rb_open.take().unwrap_or(0);
@@ -45,5 +50,11 @@ impl Editor {
             RibbonHit::Outside => self.rb_open = None,
         }
         EventOutcome::Repaint
+    }
+
+    fn insert_default_table(&mut self) {
+        if !self.doc().insert_table(DEFAULT_ROWS, DEFAULT_COLS) {
+            self.doc().status = NO_DOC_MODE;
+        }
     }
 }

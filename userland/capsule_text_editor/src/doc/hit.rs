@@ -14,10 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::doc::align::line_offset;
 use crate::doc::document::Doc;
 use crate::doc::linebox::LineBox;
 use crate::doc::measure::Measurer;
 use crate::doc::page::Page;
+use crate::doc::table::caret::caret_in_row;
+use crate::doc::table::pick::offset_at_row;
 
 pub fn line_for(page: &Page, block: usize, off: usize) -> Option<&LineBox> {
     page.lines.iter().find(|l| l.block == block && off >= l.start && off <= l.end)
@@ -28,16 +31,27 @@ pub fn caret_rect(
     doc: &Doc,
     block: usize,
     off: usize,
+    content_w: f32,
     m: &dyn Measurer,
 ) -> Option<(f32, f32, f32)> {
     let line = line_for(page, block, off)?;
     let b = doc.blocks.get(block)?;
+    if let Some(r) = caret_in_row(doc, line, off, content_w, m) {
+        return Some(r);
+    }
     let style = b.style_at(line.start);
-    let x = m.advance(&b.as_str()[line.start..off], &style);
+    let x = line_offset(b, line, content_w) + m.advance(&b.as_str()[line.start..off], &style);
     Some((x, line.y, line.height))
 }
 
-pub fn caret_at(page: &Page, doc: &Doc, x: f32, y: f32, m: &dyn Measurer) -> (usize, usize) {
+pub fn caret_at(
+    page: &Page,
+    doc: &Doc,
+    x: f32,
+    y: f32,
+    content_w: f32,
+    m: &dyn Measurer,
+) -> (usize, usize) {
     let line = page.lines.iter().find(|l| y >= l.y && y < l.y + l.height).or_else(|| {
         match page.lines.first() {
             Some(f) if y < f.y => Some(f),
@@ -52,12 +66,16 @@ pub fn caret_at(page: &Page, doc: &Doc, x: f32, y: f32, m: &dyn Measurer) -> (us
         Some(b) => b,
         None => return (line.block, line.start),
     };
+    if let Some(off) = offset_at_row(doc, line, x, content_w, m) {
+        return (line.block, off);
+    }
     let style = b.style_at(line.start);
     let text = &b.as_str()[line.start..line.end];
+    let ox = line_offset(b, line, content_w);
     let mut best = line.start;
     let mut best_d = f32::MAX;
     for (i, _) in text.char_indices().chain(core::iter::once((text.len(), ' '))) {
-        let cx = m.advance(&text[..i], &style);
+        let cx = ox + m.advance(&text[..i], &style);
         let d = (cx - x).abs();
         if d < best_d {
             best_d = d;

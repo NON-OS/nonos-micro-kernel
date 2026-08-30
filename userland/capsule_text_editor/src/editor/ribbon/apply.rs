@@ -18,6 +18,7 @@
 //! the text buffer, so they re-paginate instead of calling `reflow`, which
 //! rebuilds `doc` from the text and would throw the new runs away.
 
+use crate::doc::align::Align;
 use crate::doc::paginate::paginate;
 use crate::doc::restyle::set_style;
 use crate::doc::style::RunStyle;
@@ -42,6 +43,18 @@ impl State {
         }
         self.repaginate();
         true
+    }
+
+    pub(in crate::editor) fn align_sel(&mut self, a: Align) {
+        let (s, e) = self.sel_range().unwrap_or((self.caret, self.caret));
+        let (b0, _) = self.doc_pos(s);
+        let (b1, _) = self.doc_pos(e);
+        for b in b0..=b1 {
+            if let Some(block) = self.doc.blocks.get_mut(b) {
+                block.align = a;
+            }
+        }
+        self.repaginate();
     }
 
     pub(in crate::editor) fn repaginate(&mut self) {

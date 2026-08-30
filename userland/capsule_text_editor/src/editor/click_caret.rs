@@ -34,7 +34,8 @@ pub(super) fn click_caret(state: &mut State, x: i32, y: i32) {
         let px = (x - sx as i32) as f32 - m;
         let py = (y - sy as i32) as f32 - m;
         if let Some(page) = state.pages.get(page_index(state)) {
-            let (block, off) = caret_at(page, &state.doc, px, py, &TtfMeasurer);
+            let cw = state.page_metrics.content_width();
+            let (block, off) = caret_at(page, &state.doc, px, py, cw, &TtfMeasurer);
             state.caret = state.doc_byte(block, off);
         }
         return;

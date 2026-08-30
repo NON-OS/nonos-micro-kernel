@@ -17,6 +17,7 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
+use crate::doc::align::Align;
 use crate::doc::kind::BlockKind;
 use crate::doc::style::RunStyle;
 
@@ -31,6 +32,7 @@ pub struct Block {
     pub kind: BlockKind,
     pub text: Vec<u8>,
     pub runs: Vec<Run>,
+    pub align: Align,
 }
 
 impl Block {
@@ -39,6 +41,7 @@ impl Block {
             kind,
             text: text.as_bytes().to_vec(),
             runs: vec![Run { len: text.len(), style }],
+            align: Align::Left,
         }
     }
 

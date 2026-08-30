@@ -23,9 +23,12 @@ use nonos_app_skeleton::PaintBuffer;
 use nonos_toolkit::font::ttf::{ascent_with, builtin_face, draw_text_sheared, OBLIQUE};
 
 use super::state::State;
+use super::table_paint::paint_row;
 use super::theme;
+use crate::doc::align::line_offset;
 use crate::doc::hit::{caret_rect, line_for};
 use crate::doc::style::Family;
+use crate::doc::table::syntax::is_row;
 use crate::doc::ttf_measure::TtfMeasurer;
 
 const SHEET_R: u32 = 10;
@@ -74,7 +77,8 @@ fn paint_caret(state: &State, fb: &mut PaintBuffer, sx: u32, sy: u32) {
     let Some(page) = state.pages.get(page_index(state)) else { return };
     let (block, off) = state.doc_pos(state.caret);
     let off = state.snap(block, off);
-    let Some((cx, cy, ch)) = caret_rect(page, &state.doc, block, off, &TtfMeasurer) else {
+    let cw = state.page_metrics.content_width();
+    let Some((cx, cy, ch)) = caret_rect(page, &state.doc, block, off, cw, &TtfMeasurer) else {
         return;
     };
     let m = state.page_metrics.margin as u32;
@@ -87,12 +91,18 @@ fn paint_lines(state: &State, fb: &mut PaintBuffer, sx: u32, sy: u32) {
     let Some(page) = state.pages.get(page_index(state)) else { return };
     let m = state.page_metrics.margin as i32;
     let (w, h, stride) = (fb.width, fb.height, fb.stride_words as usize);
-    for line in &page.lines {
+    let cw = state.page_metrics.content_width();
+    for (li, line) in page.lines.iter().enumerate() {
         let Some(b) = state.doc.blocks.get(line.block) else { continue };
+        if is_row(b.as_str()) {
+            let tail = li + 1 == page.lines.len();
+            paint_row(state, fb, line, (sx as i32 + m, sy as i32 + m), tail);
+            continue;
+        }
         let Some(text) = b.as_str().get(line.start..line.end) else { continue };
         let st = b.style_at(line.start);
         let Some(f) = builtin_face(st.family == Family::Mono, st.bold) else { continue };
-        let x = sx as i32 + m;
+        let x = sx as i32 + m + line_offset(b, line, cw) as i32;
         let y = sy as i32 + m + line.y as i32;
         let slant = if st.italic { OBLIQUE } else { 0.0 };
         let end = draw_text_sheared(
