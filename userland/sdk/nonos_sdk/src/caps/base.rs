@@ -14,25 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
+use nonos_cap::{CAP_CORE_EXEC, CAP_MEMORY};
 
-use nonos_appkit::{Button, Label, Panel, Theme};
-use nonos_sdk::prelude::*;
-
-fn app() {
-    let theme = Theme::dark();
-    let root = Panel::new()
-        .label(Label::new(Rect { x: 16, y: 16, w: 300, h: 8 }, "NONOS App Kit", theme.foreground))
-        .button(Button::new(
-            Rect { x: 16, y: 40, w: 120, h: 28 },
-            "Launch",
-            theme.button_bg,
-            theme.button_fg,
-            theme.accent,
-        ));
-    App::new("App Kit Demo").size(480, 320).background(theme.background).run(root);
-}
-
-// Widgets and a window; it needs nothing else.
-sdk_main!(app, caps: [WINDOW]);
+/// What every program needs to exist at all: the right to run, and memory to
+/// run in.
+///
+/// This is the floor, not a default set of conveniences. An app that declares
+/// nothing gets exactly this and can do nothing else — it cannot draw, reach
+/// the network, or read a file. Everything beyond it has to be asked for by
+/// name, which is the point: what an app can do should be visible in its
+/// source, in its manifest, and to the person installing it.
+pub const BASE: u64 = CAP_CORE_EXEC | CAP_MEMORY;
