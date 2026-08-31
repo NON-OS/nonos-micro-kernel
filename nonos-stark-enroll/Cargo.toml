@@ -10,5 +10,5 @@ name = "nonos-stark-enroll"
 path = "src/main.rs"
 
 [dependencies]
-nonos-stark = { path = "../nonos-stark" }
+nonos-stark = { path = "../stark-attest/crates/stark-core" }
 blake3 = "1"
