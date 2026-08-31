@@ -25,6 +25,6 @@ name = "nonos-attack"
 path = "src/bin/attack.rs"
 
 [dependencies]
-nonos-stark = { path = "../../nonos-stark", version = "0.2.0" }
+nonos-stark = { path = "../../stark-attest/crates/stark-core", version = "0.2.0" }
 embed-zk-proof = { path = "../../nonos-bootloader/tools/embed-zk-proof", version = "0.2.0" }
 blake3 = "1"

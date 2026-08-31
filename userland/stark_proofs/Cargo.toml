@@ -12,7 +12,7 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
-nonos-stark = { path = "../../nonos-stark" }
+nonos-stark = { path = "../../stark-attest/crates/stark-core" }
 
 [dev-dependencies]
 rayon = "1"

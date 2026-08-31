@@ -19,3 +19,6 @@
 [submodule "assets/wallpapers"]
 	path = wallpapers
 	url = https://github.com/NON-OS/nonos-wallpapers.git
+[submodule "stark-attest"]
+	path = stark-attest
+	url = https://github.com/NON-OS/stark-attest.git

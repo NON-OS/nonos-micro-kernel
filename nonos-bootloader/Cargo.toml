@@ -22,7 +22,7 @@ path = "src/main.rs"
 [dependencies]
 # Transparent STARK verifier, shared with the kernel. Verifies the kernel
 # self-attestation before jump when `stark-kernel-attest` is on.
-nonos-stark = { path = "../nonos-stark", optional = true }
+nonos-stark = { path = "../stark-attest/crates/stark-core", optional = true }
 # UEFI stack
 uefi = { version = "0.23", features = ["alloc"] }
 uefi-services = "0.20"
