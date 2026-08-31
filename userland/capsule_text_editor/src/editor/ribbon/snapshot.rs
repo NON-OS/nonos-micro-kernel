@@ -23,6 +23,7 @@ use alloc::string::{String, ToString};
 
 use super::items::{FONTS, HEADINGS};
 use crate::doc::align::Align;
+use crate::doc::list::syntax::{kind_of, ListKind};
 use crate::doc::style::{Family, RunStyle};
 use crate::editor::state::State;
 use crate::editor::theme;
@@ -33,6 +34,7 @@ pub(in crate::editor) struct RibbonState {
     pub size: String,
     pub flags: [bool; 5],
     pub align: Align,
+    pub list: Option<ListKind>,
 }
 
 pub(in crate::editor) fn ribbon_state(st: &State) -> RibbonState {
@@ -47,5 +49,6 @@ pub(in crate::editor) fn ribbon_state(st: &State) -> RibbonState {
         size: format!("{}", (run.size_px + 0.5) as u32),
         flags: [run.bold, run.italic, run.underline, run.strike, run.color == accent],
         align: block.map(|x| x.align).unwrap_or(Align::Left),
+        list: block.and_then(|x| kind_of(x.as_str().as_bytes())),
     }
 }

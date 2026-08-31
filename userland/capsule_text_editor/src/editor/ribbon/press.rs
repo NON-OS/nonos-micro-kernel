@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Ribbon press handling: open or close a pill, run a toggle, or report a
-//! paragraph icon the block model cannot express yet.
+//! Ribbon press handling: open or close a pill, run a toggle, or apply the
+//! paragraph icon under the pointer.
 
 use nonos_app_skeleton::EventOutcome;
 
 use super::hit::{ribbon_hit, RibbonHit};
-use super::items::{RibbonItem, ICON_ALIGN, ICON_TABLE};
+use super::items::{RibbonItem, ICON_ALIGN, ICON_LIST, ICON_TABLE};
+use crate::doc::list::syntax::ListKind;
 use crate::editor::app::Editor;
 use crate::editor::table_ops::{DEFAULT_COLS, DEFAULT_ROWS};
-use crate::editor::unsupported::{NO_BLOCK_MODEL, NO_DOC_MODE};
+use crate::editor::unsupported::NO_DOC_MODE;
 
 impl Editor {
     pub(in crate::editor) fn ribbon_press(&mut self, x: i32, y: i32) -> EventOutcome {
@@ -39,8 +40,7 @@ impl Editor {
                 self.rb_open = None;
                 match ICON_ALIGN.get(k).copied().flatten() {
                     Some(a) => self.doc().align_sel(a),
-                    None if k == ICON_TABLE => self.insert_default_table(),
-                    None => self.doc().status = NO_BLOCK_MODEL,
+                    None => self.icon_press(k),
                 }
             }
             RibbonHit::Row(r) => {
@@ -52,8 +52,14 @@ impl Editor {
         EventOutcome::Repaint
     }
 
-    fn insert_default_table(&mut self) {
-        if !self.doc().insert_table(DEFAULT_ROWS, DEFAULT_COLS) {
+    fn icon_press(&mut self, k: usize) {
+        let applied = match (ICON_LIST.get(k).copied().flatten(), k == ICON_TABLE) {
+            (Some(ListKind::Bullet), _) => self.doc().toggle_bullet_list(),
+            (Some(ListKind::Number), _) => self.doc().toggle_numbered_list(),
+            (None, true) => self.doc().insert_table(DEFAULT_ROWS, DEFAULT_COLS),
+            (None, false) => return,
+        };
+        if !applied {
             self.doc().status = NO_DOC_MODE;
         }
     }

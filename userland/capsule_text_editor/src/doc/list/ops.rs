@@ -14,12 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Why a dimmed control is dimmed. A disabled row or cell reports the model gap
-//! that blocks it instead of a blanket "not implemented", so the status bar
-//! names the missing piece rather than the missing handler.
+//! Building a marker and keeping an offset honest across a splice. Both are
+//! pure so the toggle can plan an edit before it commits one.
 
-pub(in crate::editor) const NO_HANDLER: &[u8] = b"unavailable: not built into this capsule";
-pub(in crate::editor) const NO_DOC_MODE: &[u8] =
-    b"unavailable: lists, tables and page breaks need document mode";
+use alloc::format;
+use alloc::vec::Vec;
 
-pub(in crate::editor) const NO_TABLE_AT_CARET: &[u8] = b"place the caret inside a table first";
+use crate::doc::list::syntax::{ListKind, BULLET};
+
+pub fn marker(kind: ListKind, index: usize) -> Vec<u8> {
+    match kind {
+        ListKind::Bullet => BULLET.to_vec(),
+        ListKind::Number => format!("{}. ", index).into_bytes(),
+    }
+}
+
+pub fn shifted(caret: usize, at: usize, del: usize, ins: usize) -> usize {
+    if caret <= at {
+        return caret;
+    }
+    match caret < at + del {
+        true => at + ins,
+        false => caret - del + ins,
+    }
+}

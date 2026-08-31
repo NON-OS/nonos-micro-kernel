@@ -20,13 +20,13 @@
 
 use super::app::Editor;
 use super::mode::Mode;
-use super::unsupported::NO_BLOCK_MODEL;
+use super::unsupported::NO_DOC_MODE;
 
 impl Editor {
     pub(super) fn insert_page_break(&mut self) {
         let doc = self.doc();
         if doc.mode != Mode::Document {
-            doc.status = NO_BLOCK_MODEL;
+            doc.status = NO_DOC_MODE;
             return;
         }
         let at = doc.caret.min(doc.len);

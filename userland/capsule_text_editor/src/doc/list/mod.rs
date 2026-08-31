@@ -14,12 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Why a dimmed control is dimmed. A disabled row or cell reports the model gap
-//! that blocks it instead of a blanket "not implemented", so the status bar
-//! names the missing piece rather than the missing handler.
-
-pub(in crate::editor) const NO_HANDLER: &[u8] = b"unavailable: not built into this capsule";
-pub(in crate::editor) const NO_DOC_MODE: &[u8] =
-    b"unavailable: lists, tables and page breaks need document mode";
-
-pub(in crate::editor) const NO_TABLE_AT_CARET: &[u8] = b"place the caret inside a table first";
+pub mod ops;
+pub mod scan;
+pub mod syntax;

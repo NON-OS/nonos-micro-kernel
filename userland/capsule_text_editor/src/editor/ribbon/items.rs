@@ -16,13 +16,14 @@
 
 //! The ribbon's data tables. A pill's row index selects the value it applies,
 //! so order is load-bearing. Only values the document model can actually carry
-//! appear here; the paragraph icons have no model behind them and stay dimmed.
+//! appear here; an icon names the alignment or the list kind it applies.
 
 use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
 use crate::doc::align::Align;
+use crate::doc::list::syntax::ListKind;
 
 #[derive(Clone, Copy, PartialEq)]
 pub(in crate::editor) enum RibbonItem {
@@ -48,8 +49,10 @@ pub(in crate::editor) const TOGGLE_LIVE: [bool; 5] = [true, true, true, true, tr
 pub(super) const ICON_COUNT: usize = 6;
 pub(super) const ICON_ALIGN: [Option<Align>; ICON_COUNT] =
     [Some(Align::Left), Some(Align::Center), Some(Align::Right), None, None, None];
+pub(super) const ICON_LIST: [Option<ListKind>; ICON_COUNT] =
+    [None, None, None, Some(ListKind::Bullet), Some(ListKind::Number), None];
 pub(super) const ICON_TABLE: usize = 5;
-pub(super) const ICON_LIVE: [bool; ICON_COUNT] = [true, true, true, false, false, true];
+pub(super) const ICON_LIVE: [bool; ICON_COUNT] = [true; ICON_COUNT];
 
 pub(super) fn pill_labels(pill: usize) -> Vec<String> {
     match pill {

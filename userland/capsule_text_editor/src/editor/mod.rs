@@ -48,6 +48,8 @@ mod language;
 mod layout;
 mod line_bounds;
 mod line_ops;
+mod list_ops;
+mod list_renumber;
 mod manifest;
 mod max_scroll;
 mod menubar;
