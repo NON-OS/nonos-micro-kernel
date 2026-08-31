@@ -14,5 +14,5 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub(super) const POLICY_EPOCH: u64 = 1;
-pub(super) const POLICY_TREE_DEPTH: usize = 8;
+pub(crate) const POLICY_EPOCH: u64 = 1;
+pub(crate) const POLICY_TREE_DEPTH: usize = 8;

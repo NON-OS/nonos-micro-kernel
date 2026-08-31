@@ -18,19 +18,21 @@ extern crate alloc;
 use alloc::vec::Vec;
 use spin::Mutex;
 
+mod adopt;
 mod auth;
 mod endpoint;
 mod error;
 mod policy;
 mod reserved;
 
+pub(crate) use adopt::adopt_endpoint;
 pub use endpoint::ServiceEndpoint;
 pub use error::RegError;
 pub use policy::required_caps;
 pub(crate) use reserved::is_reserved_service;
 
 pub const MAX_SERVICES: usize = 256;
-static ENDPOINTS: Mutex<Vec<ServiceEndpoint>> = Mutex::new(Vec::new());
+pub(self) static ENDPOINTS: Mutex<Vec<ServiceEndpoint>> = Mutex::new(Vec::new());
 
 /// Register a service endpoint on behalf of `pid`. This is the trusted core
 /// path: the kernel spawn path calls it to publish a verified capsule's own

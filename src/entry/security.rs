@@ -40,6 +40,9 @@ fn log_entropy(handoff: &BootHandoffV1) {
         if let Err(_) = crate::crypto::rng::seed_from_bootloader(&handoff.rng.seed32) {
             serial::println(b"[NONOS] RNG seed: FAILED TO APPLY");
         } else {
+            // Consumed, so it has no reason to stay in the handoff page for
+            // the life of the system.
+            crate::boot::handoff::wipe_boot_seed();
             serial::println(b"[NONOS] RNG seed: APPLIED SUCCESSFULLY");
         }
     } else {

@@ -27,7 +27,7 @@
 extern crate alloc;
 
 mod attest;
-mod constants;
+pub(crate) mod constants;
 mod equality;
 mod field;
 mod membership;

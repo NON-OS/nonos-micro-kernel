@@ -46,6 +46,9 @@ max_caps        = 1024
 max_devices     = 256
 
 [numbers]
+MADC = 0x4344414D
+MDRC = 0x4352444D
+MDRQ = 0x5152444D
 APPS = 0x53505041
 CDAD = 0x44414443
 CEAD = 0x44414543
@@ -670,4 +673,22 @@ ret  = {type="i64"}
 nr   = 0x5441574D
 caps = ["valid_token"]
 args = [{name="pid",type="u64",dir="in"},{name="timeout_ms",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MADC]
+nr   = 0x4344414D
+caps = ["valid_token"]
+args = [{name="challenge_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MDRC]
+nr   = 0x4352444D
+caps = ["valid_token"]
+args = [{name="answer",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MDRQ]
+nr   = 0x5152444D
+caps = ["valid_token"]
+args = [{name="root_ptr",type="u64",dir="in"}]
 ret  = {type="i64"}

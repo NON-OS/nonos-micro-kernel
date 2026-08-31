@@ -81,6 +81,8 @@ pub fn init_core_systems() {
     // hand out a register window, so it runs here, not beside the parse.
     #[cfg(feature = "nonos-arch-iommu")]
     crate::arch::x86_64::iommu::unit::report::init();
+    #[cfg(feature = "nonos-arch-iommu")]
+    crate::arch::x86_64::iommu::unit::bringup::init();
     crate::kernel_core::init::init_platform_baseline();
     crate::sys::bench::mark(b"kernel_core_ready");
 }

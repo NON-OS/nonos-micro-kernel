@@ -37,8 +37,25 @@ fn main() {
     compile_pqclean_mldsa();
     compile_arch_asm();
     configure_kernel_target();
+    stage_image_capability_ceiling();
     generate_manifest_and_signature();
     embed_kernel_build_info();
+}
+
+// The image capability ceiling is baked into the kernel, but most images do not
+// set one: the default is unrestricted and lives nowhere on disk. include_bytes!
+// cannot express an optional file, so the source path is staged through OUT_DIR.
+// A ceiling file present under the trust policy is copied verbatim; when it is
+// absent the eight zero bytes written here decode, per image_ceiling::ceiling,
+// to the unrestricted default. This keeps a plain checkout building while still
+// letting an image lower its own ceiling by dropping the file.
+fn stage_image_capability_ceiling() {
+    let out_dir = env::var("OUT_DIR").unwrap();
+    let src = PathBuf::from("nonos-data/trust/policy/image_capability_ceiling.bin");
+    println!("cargo:rerun-if-changed={}", src.display());
+    let dst = PathBuf::from(&out_dir).join("image_capability_ceiling.bin");
+    let bytes = fs::read(&src).unwrap_or_else(|_| vec![0u8; 8]);
+    fs::write(&dst, bytes).expect("stage image capability ceiling");
 }
 
 // Assemble src/arch/<arch>/asm/*.S for the kernel target.
