@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! A read-only search field: rounded panel, a leading glyph slot, and either
-//! the current text or a dimmed placeholder. Key handling belongs to the
+//! the current text or dimmed hint text. Key handling belongs to the
 //! screen that owns the field.
 
 use nonos_app_skeleton::PaintBuffer;

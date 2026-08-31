@@ -15,8 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! The pane header: greeting, strapline, and the search field. The field is
-//! display-only until there is an index to search, so it is drawn with a sunk
-//! glyph and placeholder.
+//! display-only until there is an index to search, so it is drawn sunk, with
+//! a glyph and hint text.
 
 use nonos_app_skeleton::PaintBuffer;
 
