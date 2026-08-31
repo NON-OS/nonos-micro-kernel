@@ -19,6 +19,7 @@
 
 extern crate alloc;
 
+mod doc;
 mod editor;
 
 use nonos_app_skeleton::run;

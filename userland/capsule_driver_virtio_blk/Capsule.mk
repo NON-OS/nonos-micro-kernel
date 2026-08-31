@@ -12,8 +12,8 @@ CAPSULE_FEATURE          := nonos-capsule-driver-virtio-blk
 CAPSULE_NAMESPACE        := systems.nonos.driver.virtio_blk0
 CAPSULE_SERVICE_ENDPOINT := service:4202:driver.virtio_blk0
 CAPSULE_REPLY_ENDPOINT   := reply:4203:endpoint.4294967304
-# IPC|Memory|Driver|DeviceEnum|Mmio|Irq|Dma|Pio = 0x1F8019
-CAPSULE_REQUIRED_CAPS    := 0x1F8019
+# IPC|Memory|Debug|Driver|DeviceEnum|Mmio|Irq|Dma|Pio = 0x1F8119
+CAPSULE_REQUIRED_CAPS    := 0x1F8119
 CAPSULE_KERNEL_MIRROR    := src/hardware/virtio_blk_capsule
 
 include nonos-mk/capsule.mk

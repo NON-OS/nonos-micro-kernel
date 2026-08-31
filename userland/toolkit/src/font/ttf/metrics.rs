@@ -65,9 +65,22 @@ pub fn line_height(px: f32) -> i32 {
     (sf.ascent() - sf.descent() + sf.line_gap()) as i32
 }
 
+// Same measurement with a caller-provided face, matching measure_with. Unlike
+// line_height, px is not clamped to the readable floor.
+pub fn line_height_with<F: Font>(f: &F, px: f32) -> i32 {
+    let sf = f.as_scaled(PxScale::from(px));
+    (sf.ascent() - sf.descent() + sf.line_gap()) as i32
+}
+
 // Top-of-line to baseline at `px`.
 pub fn ascent(px: f32) -> i32 {
     let px = readable_px(px);
     let Some(f) = face(false) else { return px as i32 };
+    f.as_scaled(PxScale::from(px)).ascent() as i32
+}
+
+// Same measurement with a caller-provided face, matching measure_with. Unlike
+// ascent, px is not clamped to the readable floor.
+pub fn ascent_with<F: Font>(f: &F, px: f32) -> i32 {
     f.as_scaled(PxScale::from(px)).ascent() as i32
 }

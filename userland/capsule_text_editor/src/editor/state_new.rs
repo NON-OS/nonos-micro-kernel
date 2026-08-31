@@ -20,7 +20,7 @@ impl State {
     pub fn new() -> Self {
         let mut path = [0u8; 256];
         path[..PATH.len()].copy_from_slice(PATH);
-        State {
+        let mut s = State {
             owner_pid: 0,
             buf: alloc::vec![0; super::state::CAPACITY],
             len: 0,
@@ -35,7 +35,7 @@ impl State {
             pane_w: 0,
             pane_h: 0,
             glyph_advance: super::layout::GLYPH_ADVANCE,
-            status: b"Ctrl-O open  Ctrl-S save  Ctrl-C copy  Ctrl-V paste",
+            status: b"Ctrl-O open  Ctrl-S save  Ctrl-E export  Ctrl-C copy  Ctrl-V paste",
             path,
             path_len: PATH.len(),
             prompt: None,
@@ -52,6 +52,16 @@ impl State {
             last_click_x: 0,
             last_click_y: 0,
             font_scale: 2,
-        }
+            doc: crate::doc::document::Doc::new(),
+            pages: alloc::vec::Vec::new(),
+            page_metrics: crate::doc::page::PageMetrics {
+                width: 760.0,
+                height: 980.0,
+                margin: 56.0,
+            },
+            mode: super::mode::mode_for_path(core::str::from_utf8(PATH).unwrap_or("")),
+        };
+        s.reflow();
+        s
     }
 }

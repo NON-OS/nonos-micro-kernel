@@ -21,6 +21,7 @@ path = "src/main.rs"
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
+nonos_toolkit = { path = "../toolkit" }
 
 [profile.release]
 panic = "abort"

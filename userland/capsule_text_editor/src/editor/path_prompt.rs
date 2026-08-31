@@ -16,6 +16,7 @@
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, KEY_BACKSPACE, KEY_ENTER, KEY_ESC, MOD_CTRL};
 
+use super::ctrl_export::ctrl_export;
 use super::ctrl_open::ctrl_open;
 use super::ctrl_save::ctrl_save;
 use super::state::{PromptOp, State};
@@ -27,7 +28,7 @@ pub(super) fn start(state: &mut State, op: PromptOp) -> EventOutcome {
     // whole of the old one first.
     match op {
         PromptOp::Open => state.prompt_len = 0,
-        PromptOp::Save => {
+        PromptOp::Save | PromptOp::Export => {
             state.prompt_path[..state.path_len].copy_from_slice(&state.path[..state.path_len]);
             state.prompt_len = state.path_len;
         }
@@ -35,6 +36,7 @@ pub(super) fn start(state: &mut State, op: PromptOp) -> EventOutcome {
     state.status = match op {
         PromptOp::Open => b"open path, Enter to load, Esc cancels",
         PromptOp::Save => b"save path, Enter to write, Esc cancels",
+        PromptOp::Export => b"export path: .md, .docx or .pdf, Esc cancels",
     };
     EventOutcome::Repaint
 }
@@ -59,6 +61,11 @@ pub(super) fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
                 state.status = b"no path given";
                 return EventOutcome::Repaint;
             }
+            if op == PromptOp::Export {
+                let n = state.prompt_len;
+                state.prompt_len = 0;
+                return ctrl_export(state, n);
+            }
             // Commit point: the typed path becomes the document's only here.
             state.path[..state.prompt_len].copy_from_slice(&state.prompt_path[..state.prompt_len]);
             state.path_len = state.prompt_len;
@@ -66,6 +73,7 @@ pub(super) fn on_key(state: &mut State, event: InputEvent) -> EventOutcome {
             return match op {
                 PromptOp::Open => ctrl_open(state),
                 PromptOp::Save => ctrl_save(state),
+                PromptOp::Export => EventOutcome::Repaint,
             };
         }
         code => {

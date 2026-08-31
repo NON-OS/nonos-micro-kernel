@@ -11,8 +11,8 @@ CAPSULE_FEATURE          := nonos-capsule-vfs
 CAPSULE_NAMESPACE        := systems.nonos.vfs
 CAPSULE_SERVICE_ENDPOINT := service:4104:vfs_pool
 CAPSULE_REPLY_ENDPOINT   := reply:4105:endpoint.4294967301
-# IPC | Memory | StoreWrite = 0x08 | 0x10 | 0x4000000 = 0x4000019
-CAPSULE_REQUIRED_CAPS    := 0x4000019
+# IPC | Memory | Debug | StoreWrite = 0x08 | 0x10 | 0x100 | 0x4000000 = 0x4000119
+CAPSULE_REQUIRED_CAPS    := 0x4000119
 CAPSULE_KERNEL_MIRROR    := src/fs/vfs_capsule
 
 # Resonare (app.audio_player) auto-boots on the base desktop and loads its

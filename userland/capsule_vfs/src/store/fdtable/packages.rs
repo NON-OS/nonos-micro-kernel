@@ -29,17 +29,18 @@ use super::types::{File, Store, MAX_FILES};
 // instead of failing the capsule, since the rest of the filesystem still works.
 
 impl Store {
-    pub(super) fn seed_packages(&mut self) {
+    pub(crate) fn seed_packages(&mut self) -> bool {
         let staged = match crate::blk::load() {
             Ok(staged) => staged,
             Err(e) => {
                 crate::blk::status::record(&e);
-                return;
+                return false;
             }
         };
         for entry in staged {
             self.stage(entry.name, entry.data);
         }
+        true
     }
 
     fn stage(&mut self, name: String, data: Vec<u8>) {

@@ -14,16 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use alloc::string::ToString;
 
 use nonos_app_skeleton::clients::vfs::list_paths;
 
 use super::{FileTree, Node};
 
+const RETRY_FRAMES: u32 = 120;
+
+static RETRY_GATE: AtomicU32 = AtomicU32::new(0);
+
 impl FileTree {
     // (Re)read the whole store and rebuild the visible rows, keeping whatever
     // directories were expanded before.
     pub fn reload(&mut self, owner_pid: u32) {
+        let waiting = RETRY_GATE.load(Ordering::Relaxed);
+        if waiting > 0 {
+            RETRY_GATE.store(waiting - 1, Ordering::Relaxed);
+            return;
+        }
         match list_paths(owner_pid, b"/") {
             Ok(paths) => {
                 self.nodes.clear();
@@ -43,7 +54,8 @@ impl FileTree {
             }
             Err(e) => {
                 self.status = e;
-                self.loaded = true;
+                self.loaded = false;
+                RETRY_GATE.store(RETRY_FRAMES, Ordering::Relaxed);
             }
         }
     }

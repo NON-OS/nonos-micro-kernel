@@ -88,6 +88,7 @@ impl State {
         self.buf[at..at + ins.len()].copy_from_slice(ins);
         self.len = self.len - del + ins.len();
         self.caret = at + ins.len();
+        self.reflow();
         Some(removed)
     }
 
