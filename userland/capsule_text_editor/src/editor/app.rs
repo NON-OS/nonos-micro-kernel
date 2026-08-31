@@ -20,6 +20,7 @@
 //! `ws_event` and `ws_paint` modules.
 
 use alloc::vec;
+use alloc::string::String;
 use alloc::vec::Vec;
 
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
@@ -39,6 +40,7 @@ pub struct Editor {
     pub(super) docs: Vec<State>,
     pub(super) active: usize,
     pub(super) tree: FileTree,
+    pub(super) mru: Vec<String>,
     pub(super) sidebar_open: bool,
     pub(super) owner_pid: u32,
     // Tab pixel spans from the last paint, used to hit-test tab-strip clicks.
@@ -69,6 +71,7 @@ impl Editor {
             docs: vec![State::new()],
             active: 0,
             tree: FileTree::new(),
+            mru: Vec::new(),
             sidebar_open: true,
             owner_pid: 0,
             tab_layout: Vec::new(),

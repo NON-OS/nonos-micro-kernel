@@ -30,18 +30,21 @@ use super::state::HomeState;
 
 const MIN_COLS_W: u32 = 200;
 
-pub(crate) fn paint_home(_ed: &mut Editor, fb: &mut PaintBuffer) {
+pub(crate) fn paint_home(ed: &mut Editor, fb: &mut PaintBuffer) {
     let (w, h) = (fb.width, fb.height);
     fb.fill_rect(0, 0, w, h, theme::active().background);
-    HomeState::note_width(w);
+    HomeState::note_size(w, h);
     if h == 0 || w <= pane_x() + PANE_PAD * 2 {
         return;
+    }
+    if ed.owner_pid != 0 && !ed.tree.loaded {
+        ed.tree.reload(ed.owner_pid);
     }
     let st = HomeState::load();
     paint_rail(fb, &st);
     paint_pane_head(fb);
     if w >= pane_x() + PANE_PAD * 2 + CARD_W + COL_GAP + MIN_COLS_W {
-        paint_recent(fb);
+        paint_recent(ed, fb, st.nav);
         paint_create(fb);
     }
 }

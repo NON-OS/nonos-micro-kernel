@@ -14,27 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Input routing for the Home screen. The nav selection is the only wired
-//! control; the search field and the document and template rows are drawn sunk,
-//! so a click on one of them stays idle rather than pretending to act.
+//! Input routing for the Home screen. The nav rows with a store behind them,
+//! the document rows and the "View all" link are wired; the search field, the
+//! template rows and the storeless nav rows are drawn sunk and stay idle.
 
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
 use crate::editor::widget::navlist_hit;
 
 use super::super::app::Editor;
+use super::doc_click::doc_click;
 use super::metrics::{nav_rect, BODY};
 use super::state::{HomeState, NAV_LABELS};
 
-pub(crate) fn home_event(_ed: &mut Editor, event: InputEvent) -> EventOutcome {
+pub(crate) fn home_event(ed: &mut Editor, event: InputEvent) -> EventOutcome {
     if event.kind != InputKind::ButtonDown {
         return EventOutcome::Idle;
     }
     if let Some(row) = navlist_hit(nav_rect(), NAV_LABELS.len(), BODY, event.x, event.y) {
-        return match HomeState::select(row) {
-            true => EventOutcome::Repaint,
-            false => EventOutcome::Idle,
-        };
+        return select_outcome(row);
     }
-    EventOutcome::Idle
+    if HomeState::view_all_hit(event.x, event.y) {
+        return select_outcome(0);
+    }
+    doc_click(ed, event)
+}
+
+fn select_outcome(row: usize) -> EventOutcome {
+    match HomeState::select(row) {
+        true => EventOutcome::Repaint,
+        false => EventOutcome::Idle,
+    }
 }

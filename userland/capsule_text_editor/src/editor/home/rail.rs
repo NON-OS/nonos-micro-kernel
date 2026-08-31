@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The left navigation rail: brand, nav list, account footer. Only "Home" has
-//! a screen behind it, so every other row is painted with a sunk label even
-//! when it holds the selection.
+//! The left navigation rail: brand, nav list, account footer. Only the rows
+//! with a document store behind them are painted live; the rest are sunk even
+//! when they hold the selection.
 
 use nonos_app_skeleton::PaintBuffer;
 
@@ -26,7 +26,7 @@ use super::brand::paint_brand;
 use super::footer::paint_footer;
 use super::metrics::{nav_rect, rail_x, BODY, RAIL_W};
 use super::palette::{dim, LABEL, NAV_ACCENT, NAV_RING, RAIL_BG, RAIL_LINE, TITLE};
-use super::state::{HomeState, NAV_LABELS};
+use super::state::{HomeState, NAV_LABELS, NAV_LIVE};
 
 pub(super) fn paint_rail(fb: &mut PaintBuffer, st: &HomeState) {
     let h = fb.height;
@@ -41,7 +41,7 @@ fn paint_nav(fb: &mut PaintBuffer, st: &HomeState) {
     let (x, y, w) = nav_rect();
     let rh = nav_row_h(BODY);
     for (i, label) in NAV_LABELS.iter().enumerate() {
-        let live = i == 0;
+        let live = NAV_LIVE.get(i).copied().unwrap_or(false);
         let style = NavStyle {
             accent: if live { NAV_ACCENT } else { dim(NAV_ACCENT) },
             ring: if live { NAV_RING } else { dim(NAV_RING) },

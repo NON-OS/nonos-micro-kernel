@@ -48,3 +48,10 @@ pub(super) fn card_x(w: u32) -> u32 {
     let (x, cw) = pane_content(w);
     x + cw.saturating_sub(CARD_W)
 }
+
+pub(super) fn docs_list_rect(w: u32, h: u32, count: usize) -> (u32, u32, u32, u32) {
+    let (x, y, cw) = docs_rect(w);
+    let rh = doc_row_h().max(1);
+    let room = (h.saturating_sub(y) / rh) as usize;
+    (x, y, cw, count.min(room) as u32 * rh)
+}

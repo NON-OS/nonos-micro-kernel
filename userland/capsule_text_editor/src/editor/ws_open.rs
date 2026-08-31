@@ -30,6 +30,7 @@ impl Editor {
         if path.len() > 255 {
             return;
         }
+        self.mru_note(path);
         if let Some(i) = self.docs.iter().position(|d| doc_path(d) == path) {
             self.active = i;
             return;
