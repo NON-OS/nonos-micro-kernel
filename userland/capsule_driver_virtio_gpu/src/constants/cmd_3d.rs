@@ -17,6 +17,10 @@
 /// behind a virtio-vga-gl device, modern transport only. The guest never
 /// renders: it builds Gallium streams for host-side execution.
 pub const VIRTIO_GPU_F_VIRGL: u32 = 1 << 0;
+/// Feature bit 1 unlocks GET_EDID, through which the device hands back the
+/// monitor's raw EDID block: the only source of the panel's physical size, and
+/// so of a measured DPI rather than an assumed one.
+pub const VIRTIO_GPU_F_EDID: u32 = 1 << 1;
 pub const VG_CMD_GET_CAPSET_INFO: u32 = 0x0108;
 pub const VG_CMD_CTX_CREATE: u32 = 0x0200;
 pub const VG_CMD_CTX_ATTACH_RESOURCE: u32 = 0x0202;

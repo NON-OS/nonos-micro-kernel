@@ -16,8 +16,8 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-pub const WIDTH: u32 = 360;
-pub const HEIGHT: u32 = 520;
+pub const WIDTH: u32 = 880;
+pub const HEIGHT: u32 = 596;
 const WINDOW_ID: u32 = 0x4341_4C43;
 const TITLE: &[u8] = b"Calculator";
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
@@ -30,7 +30,7 @@ pub fn manifest() -> AppManifest {
         title: TITLE,
         window_id: WINDOW_ID,
         kind: WindowKind::Normal,
-        initial_x: 876,
+        initial_x: 120,
         initial_y: 92,
         width: WIDTH,
         height: HEIGHT,

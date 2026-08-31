@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod clear;
+pub mod constant;
 pub mod decimal;
 pub mod digit;
 pub mod digit_helpers;
@@ -27,7 +28,12 @@ pub mod memory_store;
 pub mod memory_sub;
 pub mod negate;
 pub mod percent;
+pub mod prog_bit;
+pub mod prog_bitwise;
+pub mod prog_digit;
+pub mod prog_dispatch;
 pub mod reciprocal;
+pub mod sci_fn;
 pub mod set_op;
 pub mod square;
 pub mod square_root;

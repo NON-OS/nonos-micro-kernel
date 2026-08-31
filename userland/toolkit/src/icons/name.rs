@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 use super::id::IconId;
 
 impl IconId {
@@ -52,6 +51,21 @@ impl IconId {
             IconId::PmMemory => "pm_memory",
             IconId::PmAuthority => "pm_authority",
             IconId::PmSecurity => "pm_security",
+            IconId::GameTrophy => "game_trophy",
+            IconId::GameCrown => "game_crown",
+            IconId::GameGauge => "game_gauge",
+            IconId::GameHeart => "game_heart",
+            IconId::GameLotus => "game_lotus",
+            IconId::GameBolt => "game_bolt",
+            IconId::GameBlocks => "game_blocks",
+            IconId::GameStopwatch => "game_stopwatch",
+            IconId::GameTarget => "game_target",
+            IconId::GameLock => "game_lock",
+            IconId::CalcBasic => "calc_basic",
+            IconId::CalcScientific => "calc_scientific",
+            IconId::CalcProgrammer => "calc_programmer",
+            IconId::CalcConvert => "calc_convert",
+            IconId::CalcHistory => "calc_history",
         }
     }
 }

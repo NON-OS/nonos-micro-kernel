@@ -20,6 +20,7 @@ mod constants;
 mod discover;
 mod init;
 mod io;
+mod mark;
 mod protocol;
 mod queue;
 mod regs;

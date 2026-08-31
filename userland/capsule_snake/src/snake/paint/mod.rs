@@ -15,25 +15,32 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod board;
-mod header;
-mod layout;
-mod overlay;
+mod board_cell;
+mod board_fit;
+mod board_pieces;
+mod board_snake;
+mod diamond;
+mod glow;
+mod home;
+mod home_cards;
+mod num;
+mod num_clock;
+mod over;
+mod over_summary;
+mod pause;
+mod play;
+mod play_foot;
+mod play_hud;
+mod play_rail;
+mod play_rail_tip;
+mod rank;
+mod rank_awards;
+mod rank_rows;
+mod receipt;
+mod screen;
+mod setup;
+mod setup_chips;
+mod setup_toggles;
+mod wrap;
 
-use nonos_app_skeleton::PaintBuffer;
-
-use super::state::{Game, Phase};
-
-const BG: u32 = 0xFF10_1418;
-
-pub fn paint(game: &Game, fb: &mut PaintBuffer) {
-    let layout = layout::compute(fb.width, fb.height);
-    fb.clear(BG);
-    header::paint(game, &layout, fb);
-    board::paint(game, &layout, fb);
-    match game.phase {
-        Phase::Ready => overlay::ready(&layout, fb),
-        Phase::Paused => overlay::paused(&layout, fb),
-        Phase::GameOver => overlay::game_over(&layout, fb),
-        Phase::Running => {}
-    }
-}
+pub use screen::paint;

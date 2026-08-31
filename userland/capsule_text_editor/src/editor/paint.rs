@@ -29,6 +29,10 @@ use super::state::State;
 use super::theme;
 
 pub(super) fn paint_document(state: &mut State, fb: &mut PaintBuffer) {
+    if state.mode == super::mode::Mode::Document {
+        super::canvas::paint_document(state, fb);
+        return;
+    }
     let px = body_px(state.font_scale);
     let lh = line_height(state.font_scale);
     let adv = fb.measure_ttf_mono("M", px).max(1) as u32;

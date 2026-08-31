@@ -20,11 +20,16 @@
 //! `ws_event` and `ws_paint` modules.
 
 use alloc::vec;
+use alloc::string::String;
 use alloc::vec::Vec;
 
 use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer};
 
 use super::manifest::manifest;
+use super::menubar::TitleSpan;
+use super::panel::Panel;
+use super::ribbon::RibbonCell;
+use super::screen::Screen;
 use super::sb_entry::SbEntry;
 use super::sb_menu::SbMenu;
 use super::state::State;
@@ -35,6 +40,7 @@ pub struct Editor {
     pub(super) docs: Vec<State>,
     pub(super) active: usize,
     pub(super) tree: FileTree,
+    pub(super) mru: Vec<String>,
     pub(super) sidebar_open: bool,
     pub(super) owner_pid: u32,
     // Tab pixel spans from the last paint, used to hit-test tab-strip clicks.
@@ -46,7 +52,17 @@ pub struct Editor {
     // Explorer file management: the open context menu and the inline name
     // entry for create/rename, at most one of each at a time.
     pub(super) menu: Option<SbMenu>,
+    pub(super) mb_open: Option<usize>,
+    pub(super) mb_layout: Vec<TitleSpan>,
+    // Formatting ribbon: the pill whose dropdown is open, and the control cells
+    // from the last paint, whose widths track the labels the caret dictates.
+    pub(super) rb_open: Option<usize>,
+    pub(super) rb_layout: Vec<RibbonCell>,
     pub(super) entry: Option<SbEntry>,
+    // The floating Word Count or Special Character panel, if one is open. It
+    // takes the whole next press, and any key dismisses it.
+    pub(super) panel: Option<Panel>,
+    pub(super) screen: Screen,
 }
 
 impl Editor {
@@ -55,13 +71,20 @@ impl Editor {
             docs: vec![State::new()],
             active: 0,
             tree: FileTree::new(),
+            mru: Vec::new(),
             sidebar_open: true,
             owner_pid: 0,
             tab_layout: Vec::new(),
             last_w: 0,
             last_h: 0,
             menu: None,
+            mb_open: None,
+            mb_layout: Vec::new(),
+            rb_open: None,
+            rb_layout: Vec::new(),
             entry: None,
+            panel: None,
+            screen: Screen::Editor,
         }
     }
 

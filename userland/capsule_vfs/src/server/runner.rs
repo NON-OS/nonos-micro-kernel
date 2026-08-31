@@ -19,6 +19,7 @@ use alloc::vec;
 use nonos_libc::{mk_debug, mk_ipc_recv_from, mk_ipc_send};
 
 use super::dispatch::dispatch;
+use super::seeder::PackageSeeder;
 use crate::protocol::{decode_request, encode_response, EINVAL, KERNEL_REPLY_ENDPOINT};
 use crate::store::Store;
 
@@ -28,6 +29,7 @@ pub fn run() -> ! {
     let mut buf = vec![0u8; MAX_MSG];
     let mut store = Store::new();
     store.seed();
+    let mut seeder = PackageSeeder::new();
     // Seeding blocks on the package store, up to one blk timeout per call,
     // and a failure leaves /capsules silently empty. One line says how the
     // seed ended, so a missing desktop names its layer instead of reading as
@@ -40,10 +42,12 @@ pub fn run() -> ! {
     let _ = mk_debug(line.as_ptr(), n);
     loop {
         let mut sender_pid: u32 = 0;
-        let n = mk_ipc_recv_from(0, buf.as_mut_ptr(), MAX_MSG, 0, &mut sender_pid);
+        let n = mk_ipc_recv_from(0, buf.as_mut_ptr(), MAX_MSG, seeder.poll_ms(), &mut sender_pid);
         if n <= 0 {
+            seeder.on_idle(&mut store);
             continue;
         }
+        seeder.saw_request();
         let n = n as usize;
         let started = nonos_libc::mk_uptime_ms();
         let op = if n >= 8 { u16::from_le_bytes([buf[6], buf[7]]) } else { 0 };

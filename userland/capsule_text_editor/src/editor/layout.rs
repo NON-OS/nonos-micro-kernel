@@ -23,6 +23,9 @@
 // Window chrome and shell panels.
 pub(super) const TITLEBAR_H: u32 = 26;
 pub(super) const TABBAR_H: u32 = 32;
+// The formatting ribbon between the tab strip and the pane. Chrome text clamps
+// to 17px, so the row is tall enough for a 27px control cell plus its padding.
+pub(super) const RIBBON_H: u32 = 40;
 pub(super) const FOOTER_H: u32 = 26;
 pub(super) const ACTIVITY_W: u32 = 46;
 pub(super) const SIDEBAR_W: u32 = 220;

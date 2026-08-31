@@ -15,11 +15,22 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 mod background;
+mod bits;
+mod bits_num;
 mod button;
+mod chips;
+mod convert;
 mod display;
 mod frame;
 mod grid;
+mod history;
+mod history_row;
 mod memory_badge;
+mod radix;
+mod rail;
+mod result;
+mod swap_key;
+mod unit_col;
 mod wordmark;
 
 pub use frame::paint;

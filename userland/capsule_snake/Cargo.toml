@@ -1,8 +1,8 @@
 # NONOS userland: capsule_snake
 #
-# Classic snake on a 28x18 grid. Owned state, no globals. Keyboard
-# input (arrows/WASD steer, Space/P pause, Enter restarts). Real
-# production capsule built on `nonos_app_skeleton`.
+# Arcade snake on a 35x21 grid. Owned state, no globals. Keyboard
+# input (arrows/WASD steer, Space/P pause, Enter restarts) plus pointer.
+# Real production capsule built on `nonos_app_skeleton`.
 
 [package]
 name = "nonos_snake"
@@ -19,6 +19,7 @@ path = "src/main.rs"
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
+nonos_toolkit = { path = "../toolkit", default-features = false }
 
 [profile.release]
 panic = "abort"

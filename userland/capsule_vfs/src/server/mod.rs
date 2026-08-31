@@ -17,5 +17,6 @@
 mod dispatch;
 mod handlers;
 mod runner;
+mod seeder;
 
 pub use runner::run;

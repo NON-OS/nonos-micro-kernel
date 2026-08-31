@@ -17,10 +17,14 @@
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 
 use super::on_key::on_key;
+use super::on_pointer::on_pointer;
 use super::on_pointer_button::on_pointer_button;
 use crate::calc::state::State;
 
 pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
+    if event.kind == InputKind::PointerAbs {
+        return on_pointer(state, event.x, event.y);
+    }
     if event.kind == InputKind::ButtonDown {
         return on_pointer_button(state, event.x, event.y);
     }

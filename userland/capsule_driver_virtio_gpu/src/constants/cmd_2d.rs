@@ -21,8 +21,10 @@ pub const VG_CMD_RESOURCE_FLUSH: u32 = 0x0104;
 pub const VG_CMD_TRANSFER_TO_HOST_2D: u32 = 0x0105;
 pub const VG_CMD_RESOURCE_ATTACH_BACKING: u32 = 0x0106;
 pub const VG_CMD_RESOURCE_DETACH_BACKING: u32 = 0x0107;
+pub const VG_CMD_GET_EDID: u32 = 0x010A;
 pub const VG_RESP_OK_NODATA: u32 = 0x1100;
 pub const VG_RESP_OK_DISPLAY_INFO: u32 = 0x1101;
+pub const VG_RESP_OK_EDID: u32 = 0x1104;
 /// The device signals completion through fence_id in the response, once
 /// host-side execution finished.
 pub const VG_FLAG_FENCE: u32 = 1 << 0;

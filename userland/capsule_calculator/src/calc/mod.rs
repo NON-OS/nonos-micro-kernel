@@ -17,15 +17,22 @@
 mod actions;
 mod app;
 mod buttons;
+mod convert;
 mod event;
 mod fixed;
 mod format;
+mod history;
+mod hit;
 mod layout;
 mod manifest;
+mod mode;
 mod op;
 mod paint;
+mod prog;
+mod sci;
 mod state;
 mod theme;
+mod ui;
 mod unary;
 
 pub use app::Calculator;

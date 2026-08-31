@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::calc::history::{write_expr, EXPR_MAX};
 use crate::calc::op::{apply, Op};
 use crate::calc::state::State;
 
@@ -21,9 +22,13 @@ pub fn run(state: &mut State) {
     if state.is_error() || state.operator == Op::None {
         return;
     }
-    match apply(state.operand, state.display, state.operator) {
+    let (lhs, rhs, op) = (state.operand, state.display, state.operator);
+    match apply(lhs, rhs, op) {
         Ok(result) => {
             state.display = result;
+            let mut buf = [0u8; EXPR_MAX];
+            let n = write_expr(lhs, op, rhs, &mut buf);
+            state.history.push(&buf[..n], result);
         }
         Err(kind) => {
             state.error = kind;
