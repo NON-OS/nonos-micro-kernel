@@ -17,34 +17,29 @@
 //! A battery outline filled in proportion to the real charge. Green when
 //! healthy, amber when low; on AC power the caller draws no fill.
 
-use crate::render::fill::fill_rect;
+use crate::render::palette;
+use crate::render::surface::surface;
 use crate::render::ui_font::scale;
 use crate::state::Context;
 
-const SHELL: u32 = 0xFFB8_C6D6;
-const GOOD: u32 = 0xFF5F_D08A;
-const LOW: u32 = 0xFFE0_9A5A;
+const SHELL: u32 = palette::TEXT_DIM;
+const GOOD: u32 = palette::POSITIVE;
+const LOW: u32 = palette::WARN;
 
 pub(super) fn battery_glyph(ctx: &Context, x: u32, y: u32, pct: Option<u32>) {
-    let (va, st, w, h) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
-    let bar =
-        |gx: u32, gy: u32, gw: u32, gh: u32, c: u32| fill_rect(va, st, w, h, gx, gy, gw, gh, c);
-
     let s = scale();
+    let t = (3 * s + 1) / 2;
+    let mut fb = surface(ctx);
 
-    // Shell: a 20x11 outline with a small terminal nub on the right.
-    bar(x, y, 20 * s, s, SHELL);
-    bar(x, y + 10 * s, 20 * s, s, SHELL);
-    bar(x, y, s, 11 * s, SHELL);
-    bar(x + 19 * s, y, s, 11 * s, SHELL);
-    bar(x + 20 * s, y + 3 * s, 2 * s, 5 * s, SHELL);
+    fb.stroke_round(x, y, 24 * s, 12 * s, 3 * s, t, SHELL);
+    fb.fill_round(x + 24 * s, y + 4 * s, 2 * s, 4 * s, s, SHELL);
 
     if let Some(p) = pct {
-        let p = p.min(100);
-        let fill_w = 18 * s * p / 100;
+        let room = 24 * s - (t + 2 * s) * 2;
+        let fill_w = room * p.min(100) / 100;
         if fill_w > 0 {
             let color = if p > 20 { GOOD } else { LOW };
-            bar(x + s, y + 2 * s, fill_w, 7 * s, color);
+            fb.fill_round(x + t + 2 * s, y + t + 2 * s, fill_w, 12 * s - (t + 2 * s) * 2, s, color);
         }
     }
 }

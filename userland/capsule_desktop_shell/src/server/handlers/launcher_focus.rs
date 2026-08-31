@@ -16,7 +16,9 @@
 
 use nonos_libc::mk_time_millis;
 
-use crate::render::layout::{bottom_dock_rect, launchpad_slot_x, taskbar_entry_w};
+use crate::render::layout::{
+    bottom_dock_rect, dock_box_inset, dock_gap, dock_pad, launchpad_slot_x, taskbar_entry_w,
+};
 use crate::server::handlers::launcher_request::{self, LaunchOutcome};
 use crate::server::handlers::launchpad;
 use crate::server::refresh_taskbar::refresh_taskbar;
@@ -24,12 +26,12 @@ use crate::state::{mark_taskbar_launch, Context, NotifyLevel, LAUNCHER_APPS};
 
 pub fn handle(ctx: &mut Context, x: u32, y: u32) {
     let bottom = bottom_dock_rect(ctx.width, ctx.height);
-    let mut row_x = bottom.x + 12;
+    let mut row_x = bottom.x + dock_pad();
     for (index, app) in LAUNCHER_APPS.iter().enumerate() {
         if x >= row_x
             && x < row_x + taskbar_entry_w()
-            && y >= bottom.y + 10
-            && y < bottom.y + bottom.height - 10
+            && y >= bottom.y + dock_box_inset()
+            && y < bottom.y + bottom.height - dock_box_inset()
         {
             let now = mk_time_millis();
             // Already running: focus it rather than spawn another. Asking to
@@ -62,14 +64,14 @@ pub fn handle(ctx: &mut Context, x: u32, y: u32) {
             refresh_taskbar(ctx);
             return;
         }
-        row_x += taskbar_entry_w() + 6;
+        row_x += taskbar_entry_w() + dock_gap();
     }
     // The trailing dock slot is the Launchpad button.
     let lp = launchpad_slot_x(bottom);
     if x >= lp
         && x < lp + taskbar_entry_w()
-        && y >= bottom.y + 10
-        && y < bottom.y + bottom.height - 10
+        && y >= bottom.y + dock_box_inset()
+        && y < bottom.y + bottom.height - dock_box_inset()
     {
         launchpad::open(ctx);
     }

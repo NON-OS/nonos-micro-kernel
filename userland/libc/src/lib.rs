@@ -67,11 +67,7 @@ pub use crypto::{
     crypto_x25519_shared,
 };
 pub use debug::mk_debug;
-pub use graphics::{
-    nonos_cursor_present, nonos_display_dimensions, nonos_display_list, nonos_surface_create,
-    nonos_surface_destroy, nonos_surface_map, nonos_surface_present_full,
-    nonos_surface_present_rect, NonosDisplayInfo, NONOS_PIXEL_FMT_ARGB8888,
-};
+pub use graphics::nonos_display_dimensions;
 #[cfg(feature = "heap")]
 pub use heap::{init as heap_init, init_sized as heap_init_sized, HeapError};
 pub use ipc::{

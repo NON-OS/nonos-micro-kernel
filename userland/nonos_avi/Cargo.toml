@@ -1,0 +1,17 @@
+# NONOS userland: nonos_avi
+# eK@nonos.systems
+#
+# `no_std` RIFF/AVI demuxer. Pure logic over borrowed byte slices, no
+# allocation in the parse path and no I/O, so it is testable on the host
+# and linkable into a CPL=3 capsule unchanged.
+
+[package]
+name = "nonos_avi"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS no_std AVI/RIFF demuxer"
+
+[dependencies]

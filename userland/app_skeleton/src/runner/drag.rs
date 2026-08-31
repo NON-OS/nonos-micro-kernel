@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_toolkit::decorations::{hit_test, DecorationHit};
+use nonos_toolkit::decorations::{hit_test, margin, DecorationHit};
 
 use crate::input::{InputEvent, InputKind};
 
@@ -69,14 +69,16 @@ pub(super) fn handle(
     height: u32,
     win_x: u32,
     win_y: u32,
+    maximized: bool,
     event: &InputEvent,
 ) -> PointerAction {
+    let m = margin(maximized);
     match event.kind {
         InputKind::ButtonDown => {
             if event.x >= 0 && event.y >= 0 {
                 let (x, y) = (event.x as u32, event.y as u32);
-                let on_right = x + EDGE >= width;
-                let on_bottom = y + EDGE >= height;
+                let on_right = x + EDGE + m >= width;
+                let on_bottom = y + EDGE + m >= height;
                 // Resize grabs the right/bottom borders (below the titlebar);
                 // the titlebar itself still moves the window.
                 if (on_right || on_bottom) && (event.y as i64) >= MENUBAR_H {
@@ -88,7 +90,7 @@ pub(super) fn handle(
                     state.active = false;
                     return PointerAction::None;
                 }
-                if hit_test(width, x, y) == DecorationHit::Titlebar {
+                if hit_test(width, height, maximized, x, y) == DecorationHit::Titlebar {
                     state.active = true;
                     state.resizing = false;
                     state.press_x = event.x;
@@ -113,8 +115,8 @@ pub(super) fn handle(
         }
         InputKind::PointerAbs if state.resizing => {
             // Track the target size during the drag; do NOT reallocate yet.
-            let nw = if state.rz_right { (event.x.max(0) as u32).max(MIN_W) } else { width };
-            let nh = if state.rz_bottom { (event.y.max(0) as u32).max(MIN_H) } else { height };
+            let nw = if state.rz_right { (event.x.max(0) as u32 + m).max(MIN_W) } else { width };
+            let nh = if state.rz_bottom { (event.y.max(0) as u32 + m).max(MIN_H) } else { height };
             state.last_w = nw;
             state.last_h = nh;
             let _ = STEP;
@@ -127,7 +129,7 @@ pub(super) fn handle(
         }
         InputKind::PointerAbs => {
             let hit = if event.x >= 0 && event.y >= 0 {
-                hit_test(width, event.x as u32, event.y as u32)
+                hit_test(width, height, maximized, event.x as u32, event.y as u32)
             } else {
                 DecorationHit::None
             };

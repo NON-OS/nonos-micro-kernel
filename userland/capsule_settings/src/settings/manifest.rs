@@ -23,7 +23,7 @@ const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
 
 pub fn manifest() -> AppManifest {
     AppManifest {
-        title: b"NONOS Settings",
+        title: "NØNOS Settings".as_bytes(),
         window_id: 0x5345_5447,
         kind: WindowKind::Normal,
         initial_x: 420,

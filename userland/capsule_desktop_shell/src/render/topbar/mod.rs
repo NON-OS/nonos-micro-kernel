@@ -27,7 +27,13 @@ mod metrics;
 mod net_glyph;
 mod notify_dot;
 mod paint;
+mod search_box;
+mod search_glyph;
+mod search_hit;
 mod status;
+
+pub(crate) use metrics::brand_right;
 
 pub use brand_hit::brand_hit;
 pub use paint::paint;
+pub use search_hit::search_hit;

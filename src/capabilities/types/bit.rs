@@ -47,6 +47,10 @@ impl Capability {
             Self::SpawnWindow => 16777216,
             Self::ProcessControl => 33554432,
             Self::StoreWrite => 67108864,
+            Self::EnrolDevRoot => 134217728,
+            Self::Keyring => 268435456,
+            Self::Entropy => 536870912,
+            Self::AppInstall => 1073741824,
         }
     }
 }

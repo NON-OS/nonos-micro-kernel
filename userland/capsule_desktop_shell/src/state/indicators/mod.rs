@@ -16,5 +16,6 @@
 
 pub mod battery;
 pub mod clock;
+pub mod clock_stamp;
 pub mod net;
 pub mod policy;

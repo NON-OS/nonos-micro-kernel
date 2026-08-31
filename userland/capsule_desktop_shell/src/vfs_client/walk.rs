@@ -20,16 +20,15 @@
 //! runs past the reply, or a flood of entries can only ever yield fewer
 //! results, never an out-of-range read or an unbounded allocation.
 
-use alloc::string::String;
 use alloc::vec::Vec;
 
 /// Ceiling on entries so a malformed reply cannot drive us to allocate without
 /// bound. The real root holds a handful of items.
 const MAX_ENTRIES: usize = 4096;
 
-pub(super) fn walk<F>(rx: &[u8], start: usize, end: usize, mut classify: F) -> Vec<(String, bool)>
+pub(super) fn walk<T, F>(rx: &[u8], start: usize, end: usize, mut classify: F) -> Vec<T>
 where
-    F: FnMut(&str) -> Option<(String, bool)>,
+    F: FnMut(&str) -> Option<T>,
 {
     let end = end.min(rx.len());
     let mut out = Vec::new();

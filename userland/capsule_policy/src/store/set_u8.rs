@@ -35,6 +35,10 @@ pub fn set(field: Field, value: u8) -> bool {
         Field::AutoLockTimeout => s.auto_lock_timeout = value,
         Field::CursorSize => s.cursor_size = value,
         Field::Wallpaper => s.wallpaper = value,
+        Field::ProxyMode => s.proxy_mode = value,
+        Field::Volume => s.volume = value,
+        Field::AudioBalance => s.audio_balance = value,
+
         _ => return false,
     }
     true

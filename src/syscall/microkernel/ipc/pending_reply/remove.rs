@@ -37,3 +37,18 @@ pub(in crate::syscall::microkernel::ipc) fn remove(
     }
     Some(token)
 }
+
+/// Remove the newest entry for `caller_inbox`. The failed-send path must strip
+/// the entry it just pushed and only that one: this caller may still be owed an
+/// older reply from an earlier timed-out call, and taking the older entry shifts
+/// the server's whole FIFO onto the wrong callers.
+pub(in crate::syscall::microkernel::ipc) fn remove_latest(server_pid: u32, caller_inbox: &str) {
+    let mut map = PENDING.lock();
+    let Some(queue) = map.get_mut(&server_pid) else { return };
+    if let Some(pos) = queue.iter().rposition(|(_, inbox, _)| inbox == caller_inbox) {
+        queue.remove(pos);
+    }
+    if queue.is_empty() {
+        map.remove(&server_pid);
+    }
+}

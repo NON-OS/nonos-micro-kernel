@@ -321,7 +321,7 @@ checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
 
 [[package]]
 name = "nonos_app_skeleton"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "nonos_toolkit",
  "nonos_userland_libc",
@@ -329,7 +329,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_toolkit"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "ab_glyph",
  "nonos_userland_libc",
@@ -338,7 +338,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_userland_libc"
-version = "0.1.0"
+version = "0.3.0"
 
 [[package]]
 name = "num-traits"

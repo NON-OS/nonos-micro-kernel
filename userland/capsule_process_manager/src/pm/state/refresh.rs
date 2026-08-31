@@ -95,7 +95,7 @@ impl State {
         } else {
             self.selected_pid = 0;
         }
-        let max = self.rows.len().saturating_sub(self.visible);
+        let max = self.filtered().len().saturating_sub(self.visible);
         if self.scroll > max {
             self.scroll = max;
         }
@@ -104,5 +104,12 @@ impl State {
         // then keep the findings selection valid against the new list.
         self.alerts = self.monitor.evaluate(&self.rows);
         self.clamp_alert_scroll();
+        self.flagged = self.alerts.iter().filter(|a| a.pid != 0).map(|a| a.pid).collect();
+        self.history.total.push(self.total_cpu.min(255) as u8, self.total_mem_kb);
+        for row in &self.rows {
+            self.history.record(row.pid, row.cpu_pct, row.mem_kb);
+        }
+        let live: Vec<u32> = self.rows.iter().map(|r| r.pid).collect();
+        self.history.retain_live(&live);
     }
 }

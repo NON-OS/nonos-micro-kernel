@@ -1,7 +1,7 @@
 # Booting the image under QEMU (GUI, headless, serial, GDB, TPM), plus the
 # static and verification gates that run over the built kernel.
 
-.PHONY: nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast
+.PHONY: nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-check-caps nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast
 
 # QEMU
 
@@ -15,7 +15,10 @@ $(QEMU_BLK_IMG):
 # re-pack on every mtime bump while still not ordering creation before packing.
 QEMU_BLK_STORE_STAMP := $(QEMU_BLK_IMG).store.stamp
 
-$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack | $(QEMU_BLK_IMG)
+NONOS_MEDIA_DIR := media/samples
+NONOS_MEDIA_FILES := $(wildcard $(NONOS_MEDIA_DIR)/*)
+
+$(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_2048_ARTIFACTS) $(egui_proof_ARTIFACTS) tools/nonos-store-pack $(NONOS_MEDIA_FILES) | $(QEMU_BLK_IMG)
 	@$(NONOS_PYTHON) tools/nonos-store-pack --image $(QEMU_BLK_IMG) --lba 256 \
 		--entry /capsules/std_proof.elf=$(std-proof_BIN) \
 		--entry /capsules/std_proof.nonos_id_cert.bin=$(std-proof_CERT) \
@@ -32,7 +35,13 @@ $(QEMU_BLK_STORE_STAMP): $(std-proof_ARTIFACTS) $(gui_demo_ARTIFACTS) $(game_204
 		--entry /capsules/egui_proof.elf=$(egui_proof_BIN) \
 		--entry /capsules/egui_proof.nonos_id_cert.bin=$(egui_proof_CERT) \
 		--entry /capsules/egui_proof.manifest.bin=$(egui_proof_MANIFEST) \
-		--entry /capsules/egui_proof.zk_trailer.bin=$(egui_proof_ATTESTATION)
+		--entry /capsules/egui_proof.zk_trailer.bin=$(egui_proof_ATTESTATION) \
+		--entry /Movies/big_buck_bunny.avi=$(NONOS_MEDIA_DIR)/big_buck_bunny.avi \
+		--entry /Movies/blender_reel_2013.mp4=$(NONOS_MEDIA_DIR)/blender_reel_2013.mp4 \
+		--entry /Movies/caminandes_llamigos.avi=$(NONOS_MEDIA_DIR)/caminandes_llamigos.avi \
+		--entry /Movies/elephants_dream.avi=$(NONOS_MEDIA_DIR)/elephants_dream.avi \
+		--entry /Movies/sintel.avi=$(NONOS_MEDIA_DIR)/sintel.avi \
+		--entry /Movies/tears_of_steel.avi=$(NONOS_MEDIA_DIR)/tears_of_steel.avi
 	@touch $@
 
 # Declared in mk/20-build.mk; this only extends its prerequisites.
@@ -252,6 +261,13 @@ nonos-mk-boot-image-viewer:
 		$(MAKE) -B nonos-mk-image-viewer-sign >/dev/null 2>&1; \
 		exit $$rc
 
+.PHONY: nonos-mk-boot-video-player
+nonos-mk-boot-video-player:
+	@./tests/boot/video_player.sh; rc=$$?; \
+		echo "Restoring GUI video_player capsule (undo smoketest artifact)..."; \
+		$(MAKE) -B nonos-mk-video-player-sign >/dev/null 2>&1; \
+		exit $$rc
+
 .PHONY: nonos-mk-pack-install-test
 nonos-mk-pack-install-test: $(NONOS_PACK_BIN)
 	@./tests/boot/pack_install_boot.sh
@@ -270,7 +286,13 @@ nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) 
 
 # Verify
 
-nonos-mk-static:
+# Capability parity runs first and on its own. A capsule that declares a bit
+# the kernel means differently is granted the wrong permission with every layer
+# below agreeing, so this fails before anything is built or signed.
+nonos-mk-check-caps:
+	@$(NONOS_PYTHON) scripts/check_cap_parity.py
+
+nonos-mk-static: nonos-mk-check-caps
 	@./nonos-ci/run-static-checks.sh
 
 MICROKERNEL_BIN := $(TARGET_DIR)/x86_64-nonos/release/nonos-kernel

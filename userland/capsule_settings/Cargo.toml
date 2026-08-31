@@ -12,6 +12,7 @@ edition = "2021"
 publish = false
 license = "AGPL-3.0"
 authors = ["eK@nonos.systems"]
+build = "build.rs"
 description = "NONOS settings capsule"
 
 [[bin]]
@@ -22,6 +23,7 @@ path = "src/main.rs"
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_app_skeleton = { path = "../app_skeleton" }
 nonos_policy_proto = { path = "../policy_proto" }
+nonos_toolkit = { path = "../toolkit", default-features = false }
 
 [profile.release]
 panic = "abort"

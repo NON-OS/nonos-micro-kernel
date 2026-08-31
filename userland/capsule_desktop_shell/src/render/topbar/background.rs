@@ -26,5 +26,6 @@ pub(super) fn background(ctx: &Context) {
     let (va, st, w, h) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
     fill_rect(va, st, w, h, bar.x, bar.y, bar.width, bar.height, BAR_BG);
     let edge = crate::render::ui_font::scale();
-    fill_rect(va, st, w, h, bar.x, bar.y + bar.height - edge, bar.width, edge, BAR_BORDER);
+    let mut fb = crate::render::surface::surface(ctx);
+    fb.blend_rect(bar.x, bar.y + bar.height - edge, bar.width, edge, BAR_BORDER);
 }

@@ -108,6 +108,7 @@ nonos-capsule-attest            = []
 nonos-capsule-power             = []
 nonos-capsule-image-codec       = []
 nonos-capsule-image-viewer      = []
+nonos-capsule-video-player      = []
 nonos-capsule-about             = []
 nonos-capsule-audio-player      = []
 nonos-capsule-hello             = []
@@ -210,6 +211,7 @@ input-probe-inject = []
 nonos-terminal-smoketest = ["nonos-capsule-terminal", "nonos-user-entry-proof"]
 
 nonos-image-viewer-smoketest = ["nonos-capsule-image-viewer", "nonos-user-entry-proof"]
+nonos-video-player-smoketest = ["nonos-capsule-video-player", "nonos-user-entry-proof"]
 
 nonos-ntp-smoketest = ["microkernel-net-ntp", "nonos-user-entry-proof"]
 
@@ -551,7 +553,10 @@ microkernel-desktop-base = [
   "nonos-capsule-driver-hda",
   "nonos-capsule-boot-splash",
   "nonos-capsule-calculator",
+  "nonos-capsule-snake",
   "nonos-capsule-browser",
+  "nonos-capsule-audio-player",
+  "nonos-capsule-video-player",
   "nonos-capsule-wallet-nonos",
   "nonos-capsule-terminal",
   "nonos-capsule-file-manager",
@@ -651,6 +656,18 @@ microkernel-image-viewer-smoketest = [
   "nonos-capsule-proof-io",
   "nonos-capsule-image-viewer",
   "nonos-image-viewer-smoketest",
+]
+
+# Headless video_player smoketest. The capsule is built with
+# `nonos-video-player-smoketest` by the Makefile target and exercises
+# only the baked AVI parse + MJPEG decode + scale path: no vfs, no IPC.
+microkernel-video-player-smoketest = [
+  "microkernel-core",
+  "capsule-serial-debug",
+  "nonos-stark-attest",
+  "nonos-capsule-proof-io",
+  "nonos-capsule-video-player",
+  "nonos-video-player-smoketest",
 ]
 
 # Headless HDA driver smoketest. Trimmed kernel that spawns only the
