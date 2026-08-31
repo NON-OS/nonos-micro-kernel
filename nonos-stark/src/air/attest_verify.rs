@@ -73,6 +73,7 @@ pub fn verify_membership_trailer(
         return false;
     };
 
-    let air = MerkleMembership::new(hasher.clone(), log_rounds, to_rate(&root), siblings, directions);
+    let air =
+        MerkleMembership::new(hasher.clone(), log_rounds, to_rate(&root), siblings, directions);
     stark_verify_ext_blown_bound(&air, &proof, n_queries, grind_bits, extra_blowup_bits, context)
 }

@@ -29,7 +29,7 @@ use super::super::field::{Fp, Fp2};
 use super::super::fri::root_of_unity;
 use super::super::fri_ext::fri_prove_ext;
 use super::super::merkle::MerkleTree;
-use super::super::poly::{eval_ext, eval_lagrange_ext, intt, lde};
+use super::super::poly::{eval_ext, eval_subgroup_or_lagrange_ext, intt, lde};
 use super::super::transcript::Transcript;
 use super::composition::{compose_ext, domain_params_blown, num_coeffs};
 use super::prove_ext::draw_ood_point_ext;
@@ -127,7 +127,7 @@ pub fn stark_prove_ext_preprocessed<A: AirExt>(
         v
     };
     let periodic_z: Vec<Fp2> =
-        periodic_cols.iter().map(|col| eval_lagrange_ext(&h_pts, col, z)).collect();
+        periodic_cols.iter().map(|col| eval_subgroup_or_lagrange_ext(g, &h_pts, col, z)).collect();
     for value in &periodic_z {
         transcript.absorb_fp(value.c0);
         transcript.absorb_fp(value.c1);

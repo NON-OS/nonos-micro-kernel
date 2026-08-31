@@ -15,7 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::crypto::stark::field::{Fp, Fp2};
-use crate::crypto::stark::fri::{fold_ext, fold_first, fold_layer, fri_prove, fri_verify, root_of_unity};
+use crate::crypto::stark::fri::{
+    fold_ext, fold_first, fold_layer, fri_prove, fri_verify, root_of_unity,
+};
 use crate::crypto::stark::poly::eval;
 
 extern crate alloc;

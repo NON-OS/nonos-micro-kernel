@@ -107,6 +107,7 @@ import Nonos.Stark.CapabilityBinding
 import Nonos.Stark.Commitment
 import Nonos.Stark.Constraint
 import Nonos.Stark.ContextBinding
+import Nonos.Stark.ContextLayout
 import Nonos.Stark.CopyConstraint
 import Nonos.Stark.DomainSeparation
 import Nonos.Stark.Enrollment

@@ -17,7 +17,6 @@
 use super::error::AttestError;
 #[cfg(not(feature = "nonos-stark-attest"))]
 use super::layout::POLICY_EPOCH;
-#[cfg(not(feature = "nonos-stark-attest"))]
 use super::policy_root;
 #[cfg(not(feature = "nonos-stark-attest"))]
 use super::trailer::parse;
@@ -35,7 +34,10 @@ pub fn verify_capsule_attestation(
 ) -> Result<(), AttestError> {
     #[cfg(feature = "nonos-stark-attest")]
     {
-        super::stark::verify_capsule_attestation_stark(trailer, elf, granted_caps)
+        // The verifier takes the root as a parameter now; the kernel's own
+        // policy root is the one a shipped capsule proves membership under.
+        let root = policy_root::root().ok_or(AttestError::RootUnavailable)?;
+        super::stark::verify_against(trailer, elf, granted_caps, &root).map(|_| ())
     }
     #[cfg(not(feature = "nonos-stark-attest"))]
     {
