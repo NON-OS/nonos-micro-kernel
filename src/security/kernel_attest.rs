@@ -25,12 +25,11 @@
 use crate::crypto::stark::air::{verify_membership_trailer, Poseidon, RATE};
 use crate::crypto::stark::field::Fp;
 use crate::security::capsule_attest::AttestError;
+// One definition, in crate::crypto::stark. Prover and verifier must
+// agree exactly; a drift downward in queries or grinding still verifies.
+use crate::crypto::stark::attest_params::{GRIND_BITS, LOG_ROUNDS, N_QUERIES, EXTRA_BLOWUP_BITS as EXTRA_BLOWUP_BITS};
 
-const LOG_ROUNDS: u32 = 3;
 const DEPTH: usize = 8;
-const N_QUERIES: usize = 32;
-const GRIND_BITS: u32 = 16;
-const EXTRA_BLOWUP_BITS: u32 = 3;
 const BOOT_EPOCH: u64 = 1;
 
 /// Verify the kernel's self-attestation: its measurement is enrolled under `root`,

@@ -31,6 +31,42 @@ use alloc::vec::Vec;
 
 const MAGIC: &[u8; 8] = b"NZKSTRK1";
 
+/// The measured image set, committed once. Measuring an image is a Poseidon
+/// sponge over every byte of it, so an enrollment that rebuilt this per capsule
+/// would pay for the whole set N times over; at the current capsule count that
+/// was the bulk of enrollment.
+pub struct MeasuredSet {
+    leaves: Vec<[Fp; RATE]>,
+    tree: PoseidonMerkleTree,
+}
+
+impl MeasuredSet {
+    /// Measure every image and commit them under one tree.
+    pub fn commit(hasher: &Poseidon, images: &[&[u8]]) -> MeasuredSet {
+        let leaves: Vec<[Fp; RATE]> = images.iter().map(|i| measure_capsule(hasher, i)).collect();
+        let tree = PoseidonMerkleTree::commit(hasher, &leaves);
+        MeasuredSet { leaves, tree }
+    }
+
+    /// The policy root the kernel holds.
+    pub fn root(&self) -> [Fp; RATE] {
+        self.tree.root()
+    }
+
+    /// Slot `i`'s measured digest, or `None` past the end of the set.
+    pub fn leaf(&self, i: usize) -> Option<[Fp; RATE]> {
+        self.leaves.get(i).copied()
+    }
+
+    /// Slot `i`'s sibling path, or `None` past the end of the set.
+    pub fn path(&self, i: usize) -> Option<Vec<[Fp; RATE]>> {
+        if i >= self.leaves.len() {
+            return None;
+        }
+        Some(self.tree.open(i))
+    }
+}
+
 /// The attestation trailer for `images[index]`, bound to `context`, at the given
 /// soundness. Layout: magic, depth, the sibling path (four little-endian words per
 /// node), the direction bits, then the serialized proof.
@@ -45,8 +81,35 @@ pub fn build_attestation_trailer(
     grind_bits: u32,
     extra_blowup_bits: u32,
 ) -> Vec<u8> {
-    let leaves: Vec<[Fp; RATE]> = images.iter().map(|i| measure_capsule(hasher, i)).collect();
-    let tree = PoseidonMerkleTree::commit(hasher, &leaves);
+    let set = MeasuredSet::commit(hasher, images);
+    build_attestation_trailer_from_set(
+        hasher,
+        log_rounds,
+        &set,
+        index,
+        context,
+        n_queries,
+        grind_bits,
+        extra_blowup_bits,
+    )
+}
+
+/// The same trailer, from a set measured once. Byte-identical to
+/// `build_attestation_trailer` on the same images; an enrollment proving many
+/// capsules should commit once and call this per capsule.
+#[allow(clippy::too_many_arguments)]
+pub fn build_attestation_trailer_from_set(
+    hasher: &Poseidon,
+    log_rounds: u32,
+    set: &MeasuredSet,
+    index: usize,
+    context: &[u8],
+    n_queries: usize,
+    grind_bits: u32,
+    extra_blowup_bits: u32,
+) -> Vec<u8> {
+    let leaves = &set.leaves;
+    let tree = &set.tree;
     let path = tree.open(index);
     let depth = path.len();
     let directions: Vec<bool> = (0..depth).map(|k| (index >> k) & 1 == 1).collect();
@@ -54,7 +117,14 @@ pub fn build_attestation_trailer(
     let air =
         MerkleMembership::new(hasher.clone(), log_rounds, tree.root(), path.clone(), directions);
     let trace = air.trace(leaves[index]);
-    let proof = stark_prove_ext_blown_bound(&air, &trace, n_queries, grind_bits, extra_blowup_bits, context);
+    let proof = stark_prove_ext_blown_bound(
+        &air,
+        &trace,
+        n_queries,
+        grind_bits,
+        extra_blowup_bits,
+        context,
+    );
 
     let mut out = Vec::new();
     out.extend_from_slice(MAGIC);

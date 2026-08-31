@@ -58,10 +58,9 @@ fn the_conclusion_holds_across_layer_sizes() {
 // rejected.
 
 use crate::crypto::stark::air::{FriTranscript, Poseidon, RATE};
+use crate::crypto::stark::attest_params::LOG_ROUNDS;
 use crate::crypto::stark::poseidon_transcript::PoseidonTranscript;
 use alloc::vec::Vec;
-
-const LOG_ROUNDS: u32 = 3;
 
 fn sample_roots(n_folds: usize) -> Vec<[Fp; RATE]> {
     (0..n_folds)

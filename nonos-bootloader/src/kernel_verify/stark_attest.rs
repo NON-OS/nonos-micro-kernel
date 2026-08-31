@@ -24,12 +24,11 @@
 
 use nonos_stark::air::{verify_membership_trailer, Poseidon, RATE};
 use nonos_stark::field::Fp;
+// One definition, in nonos_stark. Prover and verifier must
+// agree exactly; a drift downward in queries or grinding still verifies.
+use nonos_stark::attest_params::{GRIND_BITS, LOG_ROUNDS, N_QUERIES, EXTRA_BLOWUP_BITS as EXTRA_BLOWUP_BITS};
 
-const LOG_ROUNDS: u32 = 3;
 const DEPTH: usize = 8;
-const N_QUERIES: usize = 32;
-const GRIND_BITS: u32 = 16;
-const EXTRA_BLOWUP_BITS: u32 = 3;
 const BOOT_EPOCH: u64 = 1;
 
 /// The enrolled kernel measurement root the boot chain trusts, provisioned by
@@ -42,6 +41,13 @@ include!(concat!(env!("OUT_DIR"), "/kernel_attest_root.rs"));
 /// money-grade membership proof of exactly this kernel under exactly this root.
 #[must_use = "the boot chain must halt if the kernel does not self-attest"]
 pub fn verify_kernel_self_attestation(kernel_bytes: &[u8], trailer: &[u8]) -> bool {
+    // An unenrolled build carries an all-zero root. Nothing should verify under
+    // it, but that rests on nobody finding a fold to zero. Refuse it outright:
+    // a build that was never enrolled has nothing to say, and the alternative
+    // is a gate whose safety is a hash assumption rather than a check.
+    if KERNEL_ATTEST_ROOT == [0u8; 32] {
+        return false;
+    }
     let measurement = *blake3::hash(kernel_bytes).as_bytes();
     let mut ctx = [0u8; 40];
     ctx[..32].copy_from_slice(&measurement);
