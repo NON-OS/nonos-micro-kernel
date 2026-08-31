@@ -31,6 +31,7 @@ pub(super) fn repaint<A: App>(booted: &mut BootedApp<A>, peers: &Peers, request_
         peers.toolkit,
         toolkit_rid,
         booted.drag.hover,
+        booted.maximized,
     );
     let rid = next(request_id);
     let _ = compositor::damage_commit(

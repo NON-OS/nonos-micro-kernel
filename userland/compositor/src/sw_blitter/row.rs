@@ -47,14 +47,9 @@ pub fn composite_row(src: &[u32], dst: &mut [u32]) {
 /// result is written back fully opaque, since the frame has no alpha.
 pub fn blend(src: u32, dst: u32, a: u32) -> u32 {
     let ia = 255 - a;
-    let sr = (src >> 16) & 0xFF;
-    let sg = (src >> 8) & 0xFF;
-    let sb = src & 0xFF;
-    let dr = (dst >> 16) & 0xFF;
-    let dg = (dst >> 8) & 0xFF;
-    let db = dst & 0xFF;
-    let r = (sr * a + dr * ia) / 255;
-    let g = (sg * a + dg * ia) / 255;
-    let b = (sb * a + db * ia) / 255;
-    0xFF00_0000 | (r << 16) | (g << 8) | b
+    let rb = (src & 0x00FF_00FF) * a + (dst & 0x00FF_00FF) * ia;
+    let g = ((src >> 8) & 0xFF) * a + ((dst >> 8) & 0xFF) * ia;
+    let rb = ((rb + 0x0001_0001 + ((rb >> 8) & 0x00FF_00FF)) >> 8) & 0x00FF_00FF;
+    let g = (g + 1 + (g >> 8)) >> 8;
+    0xFF00_0000 | rb | (g << 8)
 }

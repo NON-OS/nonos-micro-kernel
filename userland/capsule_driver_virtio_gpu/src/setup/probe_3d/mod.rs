@@ -22,3 +22,4 @@ mod teardown;
 mod verify;
 
 pub use run::probe;
+pub(crate) use log::{push, push_dec};

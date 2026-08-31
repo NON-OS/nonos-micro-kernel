@@ -3,10 +3,45 @@
 version = 4
 
 [[package]]
+name = "ab_glyph"
+version = "0.2.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01c0457472c38ea5bd1c3b5ada5e368271cb550be7a4ca4a0b4634e9913f6cc2"
+dependencies = [
+ "ab_glyph_rasterizer",
+ "libm",
+ "owned_ttf_parser",
+]
+
+[[package]]
+name = "ab_glyph_rasterizer"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "366ffbaa4442f4684d91e2cd7c5ea7c4ed8add41959a31447066e279e432b618"
+dependencies = [
+ "libm",
+]
+
+[[package]]
+name = "core_maths"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77745e017f5edba1a9c1d854f6f3a52dac8a12dd5af5d2f54aecf61e43d80d30"
+dependencies = [
+ "libm",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
+
+[[package]]
+name = "libm"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "linked_list_allocator"
@@ -28,7 +63,7 @@ dependencies = [
 
 [[package]]
 name = "nonos-std"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "hashbrown",
  "nonos_userland_libc",
@@ -36,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_app_skeleton"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "nonos_toolkit",
  "nonos_userland_libc",
@@ -44,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "nonos_capsule_gui_proof"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "nonos-std",
  "nonos_app_skeleton",
@@ -53,17 +88,27 @@ dependencies = [
 
 [[package]]
 name = "nonos_toolkit"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
+ "ab_glyph",
  "nonos_userland_libc",
  "spin",
 ]
 
 [[package]]
 name = "nonos_userland_libc"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "linked_list_allocator",
+]
+
+[[package]]
+name = "owned_ttf_parser"
+version = "0.25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36820e9051aca1014ddc75770aab4d68bc1e9e632f0f5627c4086bc216fb583b"
+dependencies = [
+ "ttf-parser",
 ]
 
 [[package]]
@@ -88,4 +133,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b9eb1a2f4c41445a3a0ff9abc5221c5fcd28e1f13cd7c0397706f9ac938ddb0"
 dependencies = [
  "lock_api",
+]
+
+[[package]]
+name = "ttf-parser"
+version = "0.25.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
+dependencies = [
+ "core_maths",
 ]

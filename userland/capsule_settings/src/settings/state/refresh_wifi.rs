@@ -123,7 +123,6 @@ pub fn connect_selected(state: &mut State) {
 /// which keeps the app responsive while navigating. Leaves editing behind, like
 /// selecting any other section.
 pub fn enter_wifi(state: &mut State) {
-    state.wifi_active = true;
     state.editing = false;
     refresh_wifi(state);
     refresh_wifi_status(state);

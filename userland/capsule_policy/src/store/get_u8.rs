@@ -31,6 +31,10 @@ pub fn get(field: Field) -> Option<u8> {
         Field::AutoLockTimeout => s.auto_lock_timeout,
         Field::CursorSize => s.cursor_size,
         Field::Wallpaper => s.wallpaper,
+        Field::ProxyMode => s.proxy_mode,
+        Field::Volume => s.volume,
+        Field::AudioBalance => s.audio_balance,
+
         _ => return None,
     })
 }

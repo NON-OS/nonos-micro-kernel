@@ -53,6 +53,27 @@ QEMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-serial.log
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
+# Control socket for screendumps and input injection against a live desktop.
+QEMU_QMP_SOCK := $(TARGET_DIR)/qemu-run.qmp
+QEMU_QMP := -qmp unix:$(QEMU_QMP_SOCK),server,nowait
+# These feed xres=/yres= on the GPU device line AND NONOS_GOP_PREF in the
+# bootloader, so a non-default mode must go through nonos-mk-dev-run (see
+# mk/40-run.mk:58) to reach the bootloader splash.
+#
+# The desktop resolution is a separate decision: it comes from the virtio-gpu
+# GET_DISPLAY_INFO reply, not from GOP. Under -display cocoa the UI overrides
+# xres/yres with its own window geometry, fitted to the host screen in logical
+# POINTS -- on a 1440x900-point Retina panel every 16:9 request comes back as
+# 1280x720, whether 2560x1440 or 5120x2880 was asked for. No xres/yres value
+# escapes that cap. For a full-resolution desktop, serve the framebuffer over
+# VNC: with no client attached at boot nothing overrides xres/yres, and the
+# guest reads GET_DISPLAY_INFO once at driver init, so attaching a viewer
+# afterwards cannot shrink it.
+#   make NONOS_DEV=1 QEMU_XRES=2560 QEMU_YRES=1440 \
+#        QEMU_DISPLAY=vnc=127.0.0.1:1 nonos-mk-dev-run
+#   open vnc://127.0.0.1:5901
+# Screendumps over QMP ($(QEMU_QMP_SOCK)) work on either display.
+# The default stays 1080p because fill cost scales with pixel count on 1 vCPU.
 QEMU_XRES ?= 1920
 QEMU_YRES ?= 1080
 # QEMU_GL=1 swaps the display device for virtio-vga-gl (modern transport,

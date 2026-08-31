@@ -19,25 +19,28 @@
 //! line-icon language of the dock.
 
 use crate::render::fill::fill_rect;
+use crate::render::palette;
+use crate::render::ui_font::scale;
 use crate::state::Context;
 
-const C: u32 = 0xFF66_E6FF;
+const C: u32 = palette::ACCENT;
 
 pub(super) fn glyph(ctx: &Context, x: u32, y: u32, is_folder: bool) {
     let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
     let stroke = |gx: u32, gy: u32, w: u32, h: u32| fill_rect(va, st, vw, vh, gx, gy, w, h, C);
+    let s = scale();
     if is_folder {
-        stroke(x, y + 1, 8, 2); // tab
-        stroke(x, y + 3, 20, 1); // top
-        stroke(x, y + 15, 20, 1); // bottom
-        stroke(x, y + 3, 1, 13); // left
-        stroke(x + 19, y + 3, 1, 13); // right
+        stroke(x, y + s, 8 * s, 2 * s); // tab
+        stroke(x, y + 3 * s, 20 * s, s); // top
+        stroke(x, y + 15 * s, 20 * s, s); // bottom
+        stroke(x, y + 3 * s, s, 13 * s); // left
+        stroke(x + 19 * s, y + 3 * s, s, 13 * s); // right
     } else {
-        stroke(x + 2, y, 14, 1); // top
-        stroke(x + 2, y + 17, 14, 1); // bottom
-        stroke(x + 2, y, 1, 18); // left
-        stroke(x + 15, y, 1, 18); // right
-        stroke(x + 5, y + 6, 8, 1); // text line
-        stroke(x + 5, y + 10, 8, 1); // text line
+        stroke(x + 2 * s, y, 14 * s, s); // top
+        stroke(x + 2 * s, y + 17 * s, 14 * s, s); // bottom
+        stroke(x + 2 * s, y, s, 18 * s); // left
+        stroke(x + 15 * s, y, s, 18 * s); // right
+        stroke(x + 5 * s, y + 6 * s, 8 * s, s); // text line
+        stroke(x + 5 * s, y + 10 * s, 8 * s, s); // text line
     }
 }

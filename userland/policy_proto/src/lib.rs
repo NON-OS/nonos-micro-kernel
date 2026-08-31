@@ -33,6 +33,7 @@ pub mod kind;
 pub mod language_labels;
 pub mod limits;
 pub mod ops;
+pub mod proxy_mode_labels;
 pub mod service;
 pub mod theme_labels;
 pub mod wallpaper_labels;

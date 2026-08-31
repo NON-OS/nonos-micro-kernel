@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use super::{claim, create_primary, dma, irq, mmio, pci, probe_3d, scanouts};
+use super::{claim, create_primary, dma, edid, irq, mmio, pci, probe_3d, scanouts};
 use crate::device::virtqueue::QueueLayout;
 use crate::device::ControlQueue;
 use crate::discover::find_virtio_gpu;
@@ -42,7 +42,9 @@ pub fn run() -> Result<Driver, &'static str> {
     let fences = FenceCounter::new();
     let resources = ResourceTable::new();
     scanouts::seed(&control_queue, &scanouts, &fences)?;
-    // Best effort: a host with no GL backend still gets full 2D scanout.
+    edid::fetch(&control_queue, init.edid);
+    // 3D bring-up is best-effort: a host without a GL backend still gets the
+    // full 2D scanout path, and the boot log records which one this is.
     let virgl_ready =
         probe_3d::probe(&control_queue, &fences, init.virgl, dev.device_id, claim_epoch);
     let primary = create_primary::create(

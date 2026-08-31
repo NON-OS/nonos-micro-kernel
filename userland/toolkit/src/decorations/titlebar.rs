@@ -14,38 +14,52 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::metrics::{TITLEBAR_HEIGHT, TITLEBAR_PADDING, TITLE_TEXT_Y};
-use crate::font::render::draw_text;
+use super::accessory::accessory_rect;
+use super::frame_rect::{frame_rect, margin, radius};
+use super::metrics::{ACCESSORY_INSET, HAIRLINE_PX, LIGHT_D, LIGHT_INSET, TITLEBAR_H, TITLE_PX};
+use super::palette::{FRAME_BG, FRAME_BORDER, HAIRLINE, SHADOW, TITLE_TEXT, TRANSPARENT};
+use super::traffic_lights::draw_traffic_lights;
+use crate::paint::{measure_ttf, PaintBuffer};
 
-pub fn draw_titlebar(
-    pixels: &mut [u32],
-    stride_words: usize,
-    width: u32,
-    height: u32,
-    band_argb: u32,
-    text_argb: u32,
+pub fn draw_frame(
+    fb: &mut PaintBuffer,
+    maximized: bool,
     title: &[u8],
+    hover: bool,
+    accessory_w: u32,
 ) {
-    if height < TITLEBAR_HEIGHT {
-        return;
-    }
-    for row in 0..TITLEBAR_HEIGHT {
-        let row_start = (row as usize) * stride_words;
-        for col in 0..width {
-            let idx = row_start + col as usize;
-            if idx < pixels.len() {
-                pixels[idx] = band_argb;
-            }
-        }
-    }
-    draw_text(
-        pixels,
-        stride_words,
-        width,
-        height,
-        TITLEBAR_PADDING,
-        TITLE_TEXT_Y,
-        title,
-        text_argb,
-    );
+    let (w, h) = (fb.width, fb.height);
+    let f = frame_rect(w, h, maximized);
+    let r = radius(maximized);
+    fb.clear(TRANSPARENT);
+    fb.shadow_round(f.x, f.y, f.w, f.h, r, margin(maximized), SHADOW);
+    fb.panel(f.x, f.y, f.w, f.h, r, FRAME_BG, FRAME_BORDER);
+    fb.fill_rect(f.x, f.y + TITLEBAR_H, f.w, HAIRLINE_PX, HAIRLINE);
+    draw_traffic_lights(fb, w, h, maximized, hover);
+    draw_title(fb, w, h, maximized, title, accessory_w);
+}
+
+fn draw_title(
+    fb: &mut PaintBuffer,
+    w: u32,
+    h: u32,
+    maximized: bool,
+    title: &[u8],
+    accessory_w: u32,
+) {
+    let text = match core::str::from_utf8(title) {
+        Ok(t) => t,
+        Err(_) => return,
+    };
+    let f = frame_rect(w, h, maximized);
+    let tw = measure_ttf(text, TITLE_PX).max(0) as u32;
+    let floor = f.x + LIGHT_INSET * 2 + LIGHT_D * 3;
+    let ceiling = match accessory_rect(w, h, maximized, accessory_w) {
+        Some(a) => a.x.saturating_sub(ACCESSORY_INSET),
+        None => f.x + f.w,
+    };
+    let centred = f.x + f.w.saturating_sub(tw) / 2;
+    let x = centred.min(ceiling.saturating_sub(tw)).max(floor);
+    let y = f.y + TITLEBAR_H / 2 - (TITLE_PX as u32) / 2;
+    fb.text_ttf(x as i32, y as i32, text, TITLE_TEXT, TITLE_PX);
 }

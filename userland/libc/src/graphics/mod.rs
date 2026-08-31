@@ -14,20 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod cursor_present;
+// Only the display-dimensions query is still served. Surface create, map,
+// present, destroy, the cursor and the display list were retired in favour of
+// the surface registry, and their wrappers here called syscall numbers the
+// kernel no longer defines, so they could not succeed.
 mod display_dimensions;
-mod display_list;
-mod surface_create;
-mod surface_destroy;
-mod surface_map;
-mod surface_present;
-mod surface_present_rect;
 
-pub use cursor_present::nonos_cursor_present;
 pub use display_dimensions::nonos_display_dimensions;
-pub use display_list::{nonos_display_list, NonosDisplayInfo};
-pub use surface_create::{nonos_surface_create, NONOS_PIXEL_FMT_ARGB8888};
-pub use surface_destroy::nonos_surface_destroy;
-pub use surface_map::nonos_surface_map;
-pub use surface_present::nonos_surface_present_full;
-pub use surface_present_rect::nonos_surface_present_rect;

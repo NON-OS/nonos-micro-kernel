@@ -14,63 +14,51 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Draw the menu: a soft shadow, a rounded panel, and one glyph-and-label row
-//! per item with the hovered row lit.
+//! Draw the menu: a rounded, shadowed panel matching the menu-bar drop-downs,
+//! with the hovered row lit and one glyph-and-label per item.
 
 use super::glyph::glyph;
 use super::height::height;
-use super::metrics::{items, row_h, width, LABEL_X, PAD_X, PAD_Y};
+use super::metrics::{items, label_x, pad_x, pad_y, row_h, width};
 use super::origin::origin;
-use crate::render::fill::fill_rect;
+use crate::render::layout::Rect;
+use crate::render::palette;
+use crate::render::panel::{blend, round_fill, shadow_panel};
 use crate::render::text_aa::text_aa_bytes;
-use crate::render::ui_font::{top_y_centered, UI_PX};
+use crate::render::ui_font::{scale, top_y_centered, UI_PX};
 use crate::state::Context;
 
-const SHADOW: u32 = 0xFF07_0B11;
-const PANEL: u32 = 0xFF12_1A26;
-const BORDER: u32 = 0xFF2E_3A4C;
-const HOVER: u32 = 0xFF1E_2C46;
-const FG: u32 = 0xFFDF_EAF7;
-const GLYPH_H: u32 = 18;
+const GLYPH_H_LOGICAL: u32 = 18;
+const INSET_LOGICAL: u32 = 4;
+const DELETE_ROW: usize = 2;
 
 pub fn paint(ctx: &Context) {
     if ctx.desktop_menu.is_none() {
         return;
     }
-    let (va, st, vw, vh) = (ctx.backing_va, ctx.stride, ctx.width, ctx.height);
     let (ox, oy) = origin(ctx);
-    let h = height(ctx);
-    let w = width(ctx);
-    let rh = row_h();
-    let rows = items(ctx);
+    let (w, rh, s) = (width(ctx), row_h(), scale());
+    let inset = INSET_LOGICAL * s;
     let with_glyph = ctx.menu_target.is_none();
+    let frame = Rect { x: ox, y: oy, width: w, height: height(ctx) };
+    shadow_panel(ctx, frame, palette::R_CARD, palette::PANEL, palette::LINE);
 
-    // Shadow first, then the panel, with the four corners knocked back to the
-    // shadow colour so the edge reads as rounded.
-    fill_rect(va, st, vw, vh, ox + 3, oy + 4, w, h, SHADOW);
-    fill_rect(va, st, vw, vh, ox, oy, w, h, PANEL);
-    for &(cx, cy) in &[(ox, oy), (ox + w - 2, oy), (ox, oy + h - 2), (ox + w - 2, oy + h - 2)] {
-        fill_rect(va, st, vw, vh, cx, cy, 2, 2, SHADOW);
-    }
-
-    // Border, skipping the knocked corners.
-    fill_rect(va, st, vw, vh, ox + 2, oy, w - 4, 1, BORDER);
-    fill_rect(va, st, vw, vh, ox + 2, oy + h - 1, w - 4, 1, BORDER);
-    fill_rect(va, st, vw, vh, ox, oy + 2, 1, h - 4, BORDER);
-    fill_rect(va, st, vw, vh, ox + w - 1, oy + 2, 1, h - 4, BORDER);
-
-    for (i, label) in rows.iter().enumerate() {
-        let top = oy + PAD_Y + i as u32 * rh;
+    for (i, label) in items(ctx).iter().enumerate() {
+        let top = oy + pad_y() + i as u32 * rh;
         if ctx.menu_hover == Some(i) {
-            fill_rect(va, st, vw, vh, ox + 4, top, w - 8, rh, HOVER);
+            let width = w.saturating_sub(inset * 2);
+            let hl = Rect { x: ox + inset, y: top, width, height: rh };
+            round_fill(ctx, hl, palette::R_TILE, palette::ACCENT_HOVER);
         }
-        // The New Folder / New File rows carry a folder or document glyph; the
-        // per-item actions are text with a small accent tick.
         if with_glyph {
-            glyph(ctx, ox + PAD_X, top + rh.saturating_sub(GLYPH_H) / 2, i == 0);
+            glyph(ctx, ox + pad_x(), top + rh.saturating_sub(GLYPH_H_LOGICAL * s) / 2, i == 0);
         } else {
-            fill_rect(va, st, vw, vh, ox + PAD_X + 4, top + rh / 2 - 3, 3, 6, 0xFF66_E6FF);
+            let x = ox + pad_x() + 4 * s;
+            let tick = Rect { x, y: top + rh / 2 - 3 * s, width: 3 * s, height: 6 * s };
+            blend(ctx, tick, palette::ACCENT);
         }
-        text_aa_bytes(ctx, ox + LABEL_X, top_y_centered(top, rh, UI_PX), label, FG, UI_PX);
+        let danger = !with_glyph && i == DELETE_ROW;
+        let fg = if danger { palette::NEGATIVE } else { palette::TEXT };
+        text_aa_bytes(ctx, ox + label_x(), top_y_centered(top, rh, UI_PX), label, fg, UI_PX);
     }
 }

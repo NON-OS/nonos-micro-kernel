@@ -27,6 +27,7 @@ pub use run_queue::{
 };
 pub use run_queue::{get_runnable_pids, runnable_process_count};
 pub use sleep::{
-    check_sleeping_processes, get_remaining_sleep, is_sleeping, sleep_until, wake_process,
+    check_sleeping_processes, get_remaining_sleep, is_sleeping, sleep_until,
+    sleep_until_unless_woken, wake_process, wake_token,
 };
 pub use wakeup::wakeup;

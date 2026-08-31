@@ -16,7 +16,7 @@
 
 mod monitor;
 mod posture;
-mod sensitive;
+pub(super) mod sensitive;
 mod types;
 mod watchlist;
 

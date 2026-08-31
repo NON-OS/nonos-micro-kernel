@@ -16,13 +16,37 @@
 
 //! Grid metrics for the desktop icons.
 
-pub(super) const ICON: u32 = 48;
-pub(super) const CELL_W: u32 = 104;
-pub(super) const CELL_H: u32 = 96;
-pub(super) const LEFT: u32 = 24;
+use crate::render::ui_font;
+
+const ICON_LOGICAL: u32 = 30;
+const CELL_W_LOGICAL: u32 = 102;
+const CELL_H_LOGICAL: u32 = 96;
+const LEFT_LOGICAL: u32 = 26;
+const CARET_W_LOGICAL: u32 = 2;
+const BOTTOM_RESERVE_LOGICAL: u32 = 120;
+
+pub(super) fn icon() -> u32 {
+    ICON_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn cell_w() -> u32 {
+    CELL_W_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn cell_h() -> u32 {
+    CELL_H_LOGICAL * ui_font::scale()
+}
+
+pub(super) fn left() -> u32 {
+    LEFT_LOGICAL * ui_font::scale()
+}
 
 /// Width of the rename caret, which is a rule rather than a glyph cell.
-pub(super) const CARET_W: u32 = 2;
+pub(super) fn caret_w() -> u32 {
+    CARET_W_LOGICAL * ui_font::scale()
+}
 
 /// Leave room at the bottom for the floating dock plus a little breathing space.
-pub(super) const BOTTOM_RESERVE: u32 = 120;
+pub(super) fn bottom_reserve() -> u32 {
+    BOTTOM_RESERVE_LOGICAL * ui_font::scale()
+}
