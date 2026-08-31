@@ -25,7 +25,7 @@ use crate::trace;
 /// Idle ticks to wait before re-syncing when a directory arrived with gateways
 /// but no exit. Long enough not to hammer the API, short enough that the
 /// mixnet becomes usable within moments of the boot-time pressure clearing.
-const RESYNC_FOR_EXIT: usize = 64;
+const RESYNC_FOR_EXIT: usize = 1;
 
 /// Record a step, and hold off after one that did not arrive.
 pub fn record(step: Step) {
@@ -40,12 +40,15 @@ pub fn record(step: Step) {
             // so it is probably not in the one that just arrived.
             super::rebind::rebind_if_unknown();
             BACKOFF.store(1, Ordering::Relaxed);
-            // A sync that landed no exit is not usable: the tick will run again
-            // because the exit count is still zero, but re-fetching the whole
-            // list every tick would hammer the directory. Sit out a fixed
-            // stretch first, long enough for the boot-time crypto pressure that
-            // failed the exit handshake to clear, without giving up on it.
-            if crate::state::directory_exit_count() == 0 {
+            // A sync missing a gateway or an exit is not usable: the tick will
+            // run again because one of those counts is still zero, but
+            // re-fetching the whole list every tick would hammer the directory.
+            // Sit out a fixed stretch first, long enough for the boot-time
+            // crypto pressure that failed the handshake to clear, without giving
+            // up on it.
+            if crate::state::directory_gateway_count() == 0
+                || crate::state::directory_exit_count() == 0
+            {
                 SKIP.store(RESYNC_FOR_EXIT, Ordering::Relaxed);
             }
         }
@@ -53,7 +56,7 @@ pub fn record(step: Step) {
             trace::say_num(b"directory sync failed, code", code as u64);
             let wait = BACKOFF.load(Ordering::Relaxed);
             SKIP.store(wait, Ordering::Relaxed);
-            BACKOFF.store((wait * 2).min(MAX_BACKOFF), Ordering::Relaxed);
+            BACKOFF.store((wait + 1).min(MAX_BACKOFF), Ordering::Relaxed);
         }
     }
 }

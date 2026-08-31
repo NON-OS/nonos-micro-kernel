@@ -37,11 +37,32 @@ pub(super) fn first(tcp_port: u32) -> Step {
     }
 }
 
+/// How many times to re-ask for the gateway list before moving on without it.
+///
+/// The gateway fetch loses its certificate hash to a busy crypto pool early in
+/// boot exactly as the exit fetch does, and comes back as an empty list. A
+/// directory with no gateway in it is worse than one with no exit: a route home
+/// ends at the gateway holding our session, so without a gateway the directory
+/// describes, no reply block can be built and every send is refused. The
+/// original single fetch left that state on any transient miss. Retry it the
+/// same way the exit fetch is retried.
+const GATEWAY_ATTEMPTS: u32 = 12;
+
 /// The gateways a session is held with.
+///
+/// Ask a few times before proceeding: an empty result here is a transient lost
+/// hash, not an empty network, and installing a directory with no gateway makes
+/// a route home impossible.
 pub(super) fn gateways(tcp_port: u32, mut nodes: Vec<Node>) -> Step {
-    if let Ok(mut found) = fetch_gateways(tcp_port) {
-        found.truncate(ENTRY_BUDGET);
-        nodes.append(&mut found);
+    for _ in 0..GATEWAY_ATTEMPTS {
+        match fetch_gateways(tcp_port) {
+            Ok(mut found) if !found.is_empty() => {
+                found.truncate(ENTRY_BUDGET);
+                nodes.append(&mut found);
+                break;
+            }
+            _ => continue,
+        }
     }
     *PARTIAL.lock() = Some((nodes, 2));
     Step::Progressed
@@ -58,7 +79,7 @@ pub(super) fn gateways(tcp_port: u32, mut nodes: Vec<Node>) -> Step {
 /// again, so the browser can build a route home but never find an exit to open
 /// the connection. Retrying here is the difference between a directory that can
 /// carry traffic and one that only looks complete.
-const EXIT_ATTEMPTS: u32 = 4;
+const EXIT_ATTEMPTS: u32 = 12;
 
 /// The gateways a packet leaves by, and then the install.
 ///
