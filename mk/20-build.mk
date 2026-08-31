@@ -170,7 +170,6 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),$(NONOS_TRUST_ANCHOR_PUBKEY),$(SIGNING_KEY)) \
 		$(KERNEL_MLDSA65_PUB) \
 		$(ZK_BOOT_ROOT) \
-		$(if $(NONOS_STARK_KERNEL_ATTEST_ON),$(KERNEL_ATTEST_STAMP)) \
 		$(GOP_PREF_STAMP) \
 		$(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building UEFI bootloader (policy: $(BOOTLOADER_POLICY))..."
@@ -1246,8 +1245,14 @@ nonos-mk-esp: \
 	@# matches both. One recipe, three ordered steps, no window in which a
 	@# parallel job can observe a half-rebuilt chain; the old approach deleted
 	@# the enrollment here, which shot any bootloader compile already in flight.
+	@# Enrol, then rebuild the bootloader against the root that enrolment
+	@# produced, then embed. Sequenced here rather than as a prerequisite of
+	@# the bootloader: a bootloader built on its own, with the attest gate off
+	@# or with no kernel to enrol, must not be made to demand an enrolment it
+	@# has no way to perform.
 ifeq ($(NONOS_STARK_KERNEL_ATTEST_ON),1)
 	@$(MAKE) --no-print-directory nonos-mk-kernel-attest-ensure
+	@rm -f $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
 	@$(MAKE) --no-print-directory $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
 endif
 	@$(MAKE) --no-print-directory $(TARGET_DIR)/kernel_attested.bin
