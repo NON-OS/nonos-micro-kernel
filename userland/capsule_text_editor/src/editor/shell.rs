@@ -17,16 +17,18 @@
 //! Geometry shared by the shell's painter and its event router, so a click is
 //! tested against the exact rectangle the corresponding panel was drawn in.
 
-use super::layout::{ACTIVITY_W, SIDEBAR_W, TABBAR_H, TITLEBAR_H};
+use super::layout::{ACTIVITY_W, RIBBON_H, SIDEBAR_W, TABBAR_H, TITLEBAR_H};
 
 // Left edge of the code pane: past the activity bar, plus the sidebar when open.
 pub(super) fn pane_x(sidebar_open: bool) -> u32 {
     ACTIVITY_W + if sidebar_open { SIDEBAR_W } else { 0 }
 }
 
-// Top edge of the code pane: below the window titlebar and the tab strip.
+// Top edge of the code pane: below the menu bar, the tab strip, and the ribbon.
+// The sidebar tree hangs off this too, and the ribbon band spans the whole
+// window right of the activity bar, so both stay flush with no seam.
 pub(super) fn pane_y() -> u32 {
-    TITLEBAR_H + TABBAR_H
+    TITLEBAR_H + TABBAR_H + RIBBON_H
 }
 
 // The code pane rectangle for a given window size and sidebar state.

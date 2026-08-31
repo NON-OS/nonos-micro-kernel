@@ -20,6 +20,7 @@ mod constants;
 mod discover;
 mod init;
 mod io;
+mod mark;
 mod protocol;
 mod queue;
 mod regs;
@@ -31,10 +32,16 @@ pub unsafe extern "C" fn _start() -> ! {
     if heap_init().is_err() {
         mk_exit(1);
     }
+    let mut attempt = 0u32;
     let mut driver = loop {
         match setup::run() {
-            Ok(d) => break d,
-            Err(_) => {
+            Ok(d) => {
+                mark::up();
+                break d;
+            }
+            Err(e) => {
+                mark::setup_fail(attempt, e);
+                attempt = attempt.wrapping_add(1);
                 for _ in 0..64 {
                     mk_yield();
                 }

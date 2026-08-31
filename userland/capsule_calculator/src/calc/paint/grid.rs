@@ -17,15 +17,24 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::button;
-use crate::calc::buttons::GRID;
-use crate::calc::layout::{cell_origin, cell_size};
+use crate::calc::buttons::grid;
+use crate::calc::hit::Hit;
+use crate::calc::mode::Mode;
+use crate::calc::prog::allowed;
+use crate::calc::state::State;
+use crate::calc::ui::keypad_geom::cell;
 
-pub fn paint(fb: &mut PaintBuffer) {
-    let (cw, ch) = cell_size();
-    for (row_idx, row) in GRID.iter().enumerate() {
-        for (col_idx, btn) in row.iter().enumerate() {
-            let (x, y) = cell_origin(row_idx as u32, col_idx as u32, cw, ch);
-            button::paint(fb, btn, x, y, cw, ch);
+pub fn paint(state: &State, fb: &mut PaintBuffer) {
+    let (w, h) = (fb.width as i32, fb.height as i32);
+    for (row, buttons) in grid(state.mode).iter().enumerate() {
+        let mut col = 0usize;
+        for (idx, btn) in buttons.iter().enumerate() {
+            let span = btn.span.max(1);
+            let rect = cell(state.mode, w, h, row, col, span);
+            let enabled = state.mode != Mode::Programmer || allowed(state.base, btn.action);
+            let hover = enabled && state.hover == Some(Hit::Key(row, idx));
+            button::paint(fb, btn, rect, hover, enabled);
+            col += span as usize;
         }
     }
 }

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use ab_glyph::{point, Font, FontRef, Glyph, GlyphId, PxScale, ScaleFont};
+use ab_glyph::{point, Font, FontRef, GlyphId, PxScale, ScaleFont};
 
 use super::blend::blend;
 use super::cache::{self, Raster};
@@ -166,6 +166,7 @@ pub fn draw_text_with<F: Font>(
 }
 
 // Same rendering with extra advance between glyphs, for letter-spacing.
+#[allow(clippy::too_many_arguments)]
 pub fn draw_text_tracked<F: Font>(
     f: &F,
     buf: &mut [u32],
@@ -179,36 +180,7 @@ pub fn draw_text_tracked<F: Font>(
     px: f32,
     spacing: f32,
 ) -> i32 {
-    let sf = f.as_scaled(PxScale::from(px));
-    let baseline = top_y as f32 + sf.ascent();
-    let mut pen = x as f32;
-    let mut prev: Option<GlyphId> = None;
-    for ch in text.chars() {
-        let mut g: Glyph = sf.scaled_glyph(ch);
-        if let Some(p) = prev {
-            pen += sf.kern(p, g.id);
-        }
-        g.position = point(pen, baseline);
-        let adv = sf.h_advance(g.id);
-        prev = Some(g.id);
-        if let Some(og) = sf.outline_glyph(g) {
-            let bb = og.px_bounds();
-            og.draw(|dx, dy, c| {
-                blend(
-                    buf,
-                    stride,
-                    w,
-                    h,
-                    bb.min.x as i32 + dx as i32,
-                    bb.min.y as i32 + dy as i32,
-                    argb,
-                    c,
-                );
-            });
-        }
-        pen += adv + spacing;
-    }
-    pen as i32
+    super::slant::draw_text_sheared(f, buf, stride, w, h, x, top_y, text, argb, px, spacing, 0.0)
 }
 
 // Tracked rendering with the built-in faces, the fallback while a page font

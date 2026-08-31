@@ -16,6 +16,7 @@
 
 use nonos_app_skeleton::{clients::vfs, EventOutcome};
 
+use super::mode::mode_for_path;
 use super::resolve_owner_pid::resolve_owner_pid;
 use super::state::{State, CAPACITY};
 
@@ -39,6 +40,9 @@ pub(super) fn ctrl_open(state: &mut State) -> EventOutcome {
             // Open at the top of the file with the caret ready to edit.
             state.caret = 0;
             state.scroll_line = 0;
+            let p = core::str::from_utf8(&state.path[..state.path_len]).unwrap_or("");
+            state.mode = mode_for_path(p);
+            state.reflow();
         }
         Ok(_) => state.status = b"file is not valid utf-8",
         Err(_) => state.status = b"open failed",

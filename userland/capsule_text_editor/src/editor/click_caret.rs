@@ -17,11 +17,27 @@
 //! Place the caret where the pointer clicked in the text body.
 
 use super::byte_at::byte_at;
+use super::canvas::{page_index, sheet_origin};
 use super::layout::{line_height, text_left, PAD_TOP};
+use super::mode::Mode;
 use super::state::State;
+use crate::doc::hit::caret_at;
+use crate::doc::ttf_measure::TtfMeasurer;
 
 pub(super) fn click_caret(state: &mut State, x: i32, y: i32) {
     if x < 0 || y < 0 {
+        return;
+    }
+    if state.mode == Mode::Document {
+        let (sx, sy) = sheet_origin(state);
+        let m = state.page_metrics.margin;
+        let px = (x - sx as i32) as f32 - m;
+        let py = (y - sy as i32) as f32 - m;
+        if let Some(page) = state.pages.get(page_index(state)) {
+            let cw = state.page_metrics.content_width();
+            let (block, off) = caret_at(page, &state.doc, px, py, cw, &TtfMeasurer);
+            state.caret = state.doc_byte(block, off);
+        }
         return;
     }
     let (x, y) = (x as u32, y as u32);

@@ -17,10 +17,10 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::calc::layout::PADDING;
-use crate::calc::theme::WORDMARK;
+use crate::calc::theme::FAINT;
 
 const TEXT: &[u8] = b"NONOS calc";
 
 pub fn paint(fb: &mut PaintBuffer) {
-    fb.text(PADDING, 4, TEXT, WORDMARK);
+    fb.text(PADDING, 4, TEXT, FAINT);
 }

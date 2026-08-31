@@ -34,4 +34,5 @@ fn app() {
     App::new("App Kit Demo").size(480, 320).background(theme.background).run(root);
 }
 
-sdk_main!(app);
+// Widgets and a window; it needs nothing else.
+sdk_main!(app, caps: [WINDOW]);

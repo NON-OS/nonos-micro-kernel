@@ -15,13 +15,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::{
-    clear, decimal, digit, equals, memory_add, memory_clear, memory_recall, memory_store,
-    memory_sub, negate, percent, reciprocal, set_op, square, square_root,
+    clear, constant, decimal, digit, equals, memory_add, memory_clear, memory_recall, memory_store,
+    memory_sub, negate, percent, prog_dispatch, reciprocal, sci_fn, set_op, square, square_root,
 };
 use crate::calc::buttons::Action;
+use crate::calc::mode::Mode;
 use crate::calc::state::State;
 
 pub fn run(state: &mut State, action: Action) {
+    if state.mode == Mode::Programmer && prog_dispatch::run(state, action) {
+        return;
+    }
     match action {
         Action::Digit(d) => digit::run(state, d),
         Action::Decimal => decimal::run(state),
@@ -38,5 +42,8 @@ pub fn run(state: &mut State, action: Action) {
         Action::MemoryRecall => memory_recall::run(state),
         Action::MemoryClear => memory_clear::run(state),
         Action::MemoryStore => memory_store::run(state),
+        Action::Sci(f) => sci_fn::run(state, f),
+        Action::Const(k) => constant::run(state, k),
+        Action::SetBase(_) | Action::Bitwise(_) => {}
     }
 }

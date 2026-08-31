@@ -22,5 +22,8 @@ mod paint;
 mod rng;
 mod state;
 mod step;
+mod store;
+mod theme;
+mod ui;
 
 pub use app::SnakeApp;

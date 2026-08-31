@@ -17,10 +17,14 @@
 //! Scroll just enough to keep the caret's visual line on screen after an edit
 //! or a move.
 
+use super::mode::Mode;
 use super::position_at::position_at;
 use super::state::State;
 
 pub(super) fn follow_caret(state: &mut State, rows: u32) {
+    if state.mode == Mode::Document {
+        return;
+    }
     let (line, _) = position_at(&state.buf[..state.len], state.wrap_cols, state.caret);
     if line < state.scroll_line {
         state.scroll_line = line;

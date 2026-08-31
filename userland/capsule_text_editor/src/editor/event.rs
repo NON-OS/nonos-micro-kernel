@@ -110,7 +110,7 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
         KEY_TAB if shift => state.dedent_selection(),
         KEY_TAB if state.selection_is_multiline() => state.indent_selection(),
         KEY_TAB => insert_replacing(state, b"    "),
-        code if (0x20..=0x10FFFF).contains(&code) => {
+        code if is_printable(code) => {
             let mut scratch = [0u8; 4];
             match char::from_u32(code).map(|ch| ch.encode_utf8(&mut scratch).as_bytes()) {
                 Some(bytes) => insert_replacing(state, bytes),
@@ -126,6 +126,17 @@ pub fn on_event(state: &mut State, event: InputEvent) -> EventOutcome {
     } else {
         EventOutcome::Idle
     }
+}
+
+// The input framework reserves 0x1000..=0x12FF for modifier, function and
+// navigation keys, so a code in that band is a key press, never text. Anything
+// there that no handler above claimed, and every control character, is dropped
+// rather than inserted as a glyph.
+fn is_printable(code: u32) -> bool {
+    if (0x1000..=0x12FF).contains(&code) {
+        return false;
+    }
+    matches!(char::from_u32(code), Some(ch) if !ch.is_control())
 }
 
 // Typing over a selection replaces it: drop the selected text, then insert.

@@ -16,26 +16,35 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::layout::Layout;
+use crate::snake::grid::{COLS, ROWS};
 use crate::snake::state::Game;
+use crate::snake::theme::{BOARD_BG, GRID_DOT, PANEL_BORDER};
+use crate::snake::ui::metrics::RADIUS_PANEL;
+use crate::snake::ui::play_geom::Board;
 
-const BOARD_BG: u32 = 0xFF18_2024;
-const BODY: u32 = 0xFF3F_A34D;
-const HEAD: u32 = 0xFF6A_D47A;
-const FOOD: u32 = 0xFFE0_533D;
+use super::{board_pieces, board_snake};
 
-pub fn paint(game: &Game, layout: &Layout, fb: &mut PaintBuffer) {
-    fb.fill_rect(layout.x, layout.y, layout.w, layout.h, BOARD_BG);
-    cell(fb, layout, game.food, FOOD);
-    for segment in game.body.iter().skip(1) {
-        cell(fb, layout, *segment, BODY);
-    }
-    cell(fb, layout, game.body[0], HEAD);
+pub fn paint(game: &Game, fb: &mut PaintBuffer, b: &Board) {
+    ground(fb, b);
+    board_pieces::paint(game, fb, b);
+    board_snake::paint(game, fb, b);
 }
 
-fn cell(fb: &mut PaintBuffer, layout: &Layout, at: (i16, i16), argb: u32) {
-    let inset = layout.inset();
-    let px = layout.x + at.0 as u32 * layout.cell + inset;
-    let py = layout.y + at.1 as u32 * layout.cell + inset;
-    fb.fill_rect(px, py, layout.cell - 2 * inset, layout.cell - 2 * inset, argb);
+fn ground(fb: &mut PaintBuffer, b: &Board) {
+    fb.fill_round(b.x, b.y, b.w, b.h, RADIUS_PANEL, BOARD_BG);
+    fb.stroke_round(b.x, b.y, b.w, b.h, RADIUS_PANEL, 1, PANEL_BORDER);
+    dots(fb, b);
+}
+
+// A dot at every cell corner rather than a ruled grid: the lattice has to read
+// as depth behind the snake, not as a second set of walls.
+fn dots(fb: &mut PaintBuffer, b: &Board) {
+    let d = (b.cell / 12).max(1);
+    for row in 1..ROWS as u32 {
+        for col in 1..COLS as u32 {
+            let x = b.x + col * b.cell - d / 2;
+            let y = b.y + row * b.cell - d / 2;
+            fb.blend_rect(x, y, d, d, GRID_DOT);
+        }
+    }
 }

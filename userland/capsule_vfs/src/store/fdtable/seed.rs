@@ -36,7 +36,6 @@ impl Store {
         self.seed_file("/images/hardware.jpg", include_bytes!("../../../testimages/hardware.jpg"));
         self.seed_file("/images/network.gif", include_bytes!("../../../testimages/network.gif"));
         self.seed_file("/images/field.png", include_bytes!("../../../testimages/field.png"));
-        self.seed_packages();
         self.seed_capsule_store();
         self.seed_audio_store();
     }

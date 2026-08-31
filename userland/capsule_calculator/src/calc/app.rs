@@ -39,6 +39,6 @@ impl App for Calculator {
         on_event(&mut self.state, event)
     }
     fn paint(&mut self, fb: &mut PaintBuffer) {
-        paint(&self.state, fb);
+        paint(&mut self.state, fb);
     }
 }

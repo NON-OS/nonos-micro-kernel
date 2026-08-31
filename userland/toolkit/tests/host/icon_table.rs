@@ -6,15 +6,17 @@ mod all;
 mod name;
 #[path = "../../src/icons/table.rs"]
 mod table;
+#[path = "../../src/icons/mask.rs"]
+mod mask;
 
 use id::IconId;
-use table::{dim, mask};
+use mask::{dim, mask};
 
 fn main() {
     let all = IconId::ALL;
     let mut fail = 0usize;
-    if all.len() != 32 {
-        println!("expected 32 icons, got {}", all.len());
+    if all.len() != 42 {
+        println!("expected 42 icons, got {}", all.len());
         fail += 1;
     }
     for (i, a) in all.iter().enumerate() {
