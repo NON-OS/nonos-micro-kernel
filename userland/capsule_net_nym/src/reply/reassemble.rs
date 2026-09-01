@@ -19,6 +19,14 @@ use alloc::vec::Vec;
 use super::assembly::Assembly;
 use crate::message::parse;
 
+/// How many part-built messages may wait at once. A browser fetches
+/// concurrently, so replies interleave; with a single slot two interleaved
+/// messages evicted each other on every fragment and neither ever finished,
+/// which read as the page hanging while frames kept arriving. The pool is
+/// bounded so a flood of fabricated set ids cannot grow memory without
+/// limit; past the cap the oldest part-built message is the one abandoned.
+pub const MAX_PENDING: usize = 8;
+
 /// Take one fragment, and hand back the message once it completes one.
 ///
 /// The mixnet does not preserve order, so a fragment is placed by the
