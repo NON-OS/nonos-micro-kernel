@@ -22,7 +22,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use crate::term::theme::types::Theme;
 
-const BANNER: [&str; 6] = [
+pub(crate) const BANNER: [&str; 6] = [
     "███╗   ██╗ ██████╗ ███╗   ██╗ ██████╗ ███████╗",
     "████╗  ██║██╔═══██╗████╗  ██║██╔═══██╗██╔════╝",
     "██╔██╗ ██║██║   ██║██╔██╗ ██║██║   ██║███████╗",

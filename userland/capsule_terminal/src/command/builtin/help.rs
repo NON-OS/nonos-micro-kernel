@@ -20,11 +20,16 @@
 use crate::command::output::Output;
 
 pub fn run(out: &mut Output<'_>) {
-    out.writeln(b"files    ls  cat  cd  pwd  mkdir  touch  rm  rmdir  mv  cp  stat  find");
+    out.writeln(b"files    ls  cat  cd  pwd  mkdir  touch  rm  rmdir  mv  cp  stat  find  du");
+    out.writeln(b"         basename  dirname  pull  push");
     out.writeln(b"text     head  tail  grep  wc  echo  (pipe: sort nl uniq cut)");
-    out.writeln(b"shell    |  >  >>  <   alias   history   clear   Ctrl-L");
+    out.writeln(b"shell    |  >  >>  <   alias  unalias  set  unset  env  history  clear  Ctrl-L");
+    out.writeln(b"         jobs  fg  bg  exec  run/open  exit");
     out.writeln(b"tabs     Ctrl+Shift+T new   Ctrl+Shift+W close   Ctrl+PgUp/PgDn switch");
     out.writeln(b"zoom     Ctrl+=  bigger   Ctrl+-  smaller");
-    out.writeln(b"system   capsules  service  ping  whoami  version  about  motd");
-    out.writeln(b"nox      market  nox <cmd>   (run 'nox help' for the chain tools)");
+    out.writeln(b"system   capsules  service  ps  kill  sys  id  whoami  date  uptime  battery");
+    out.writeln(b"         version  about  motd  neofetch  display  theme/profile");
+    out.writeln(b"net      ping  ifconfig/ip  nslookup/host  curl/http  nym");
+    out.writeln(b"apps     apps/market  install  pkg  git");
+    out.writeln(b"nox      nox <cmd>   (run 'nox help' for the chain tools)");
 }

@@ -27,6 +27,7 @@ pub mod history_cmd;
 pub mod jobs;
 pub mod market;
 pub mod motd;
+pub mod neofetch;
 pub mod nox;
 pub mod ping;
 pub mod service;

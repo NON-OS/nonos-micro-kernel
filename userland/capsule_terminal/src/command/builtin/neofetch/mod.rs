@@ -14,46 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod block_chrome;
-mod block_meta;
-mod compose;
-mod constants;
-mod draw_cursor;
-mod draw_grid;
-mod draw_input_line;
-mod fetch;
-pub(crate) mod fetch_banner;
-mod fetch_palette;
-mod fetch_uptime;
-mod fit_text;
-mod footer;
-mod header;
-mod line_chars;
-mod line_text;
-mod line_window;
-mod metrics;
-mod palette;
-mod palette_row;
-mod prompt;
-mod rail_fmt;
-pub mod rail_left;
-pub mod rail_left_geom;
-mod rail_procs;
-pub mod rail_right;
-pub mod rail_row;
-mod rail_row_draw;
-mod rail_text;
-mod shade;
-mod spark;
-mod suggestion;
-mod syntax;
-pub mod tab_bar;
-mod tab_chip;
-mod tab_label;
-pub mod tab_pill;
-pub mod tokens;
-mod tool_icon;
-pub mod toolbar;
+mod run;
 
-pub use compose::paint_tabs;
-pub use tab_bar::draw_tab_bar;
+pub use run::run;
