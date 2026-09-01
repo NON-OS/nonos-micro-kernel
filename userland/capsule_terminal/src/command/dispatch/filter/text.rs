@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec;
 use alloc::vec::Vec;
 
+use crate::command::flags::{parse, Spec};
 use crate::term::util::format_u64;
 
 // grep [-i] [-v] <pattern>: keep matching lines; -i ignores case, -v inverts.
@@ -32,11 +34,47 @@ pub(super) fn grep(args: &[&[u8]], input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
     input.into_iter().filter(|l| contains(l, pat, ci) != inv).collect()
 }
 
-pub(super) fn sort(mut input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
-    // Unstable sort: in place, no auxiliary allocation, and equal lines are
-    // byte-identical so a stable order would not be observable anyway.
-    input.sort_unstable();
+// sort [-n] [-r] [-u]: -n orders by leading integer, -r reverses, -u drops
+// adjacent duplicates once the order is settled.
+pub(super) fn sort(args: &[&[u8]], mut input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+    let parsed = match parse(&Spec::new(b"sort", b"nru"), args) {
+        Ok(p) => p,
+        Err(e) => return vec![e],
+    };
+    if parsed.has(b'n') {
+        input.sort_unstable_by(|a, b| numeric_key(a).cmp(&numeric_key(b)).then_with(|| a.cmp(b)));
+    } else {
+        // Unstable sort: in place, no auxiliary allocation, and equal lines are
+        // byte-identical so a stable order would not be observable anyway.
+        input.sort_unstable();
+    }
+    if parsed.has(b'r') {
+        input.reverse();
+    }
+    if parsed.has(b'u') {
+        input = uniq(input);
+    }
     input
+}
+
+fn numeric_key(line: &[u8]) -> i64 {
+    let body = line.trim_ascii_start();
+    let (neg, digits) = match body.first() {
+        Some(b'-') => (true, &body[1..]),
+        _ => (false, body),
+    };
+    let mut v: i64 = 0;
+    for &c in digits {
+        if !c.is_ascii_digit() {
+            break;
+        }
+        v = v.saturating_mul(10).saturating_add((c - b'0') as i64);
+    }
+    if neg {
+        -v
+    } else {
+        v
+    }
 }
 
 pub(super) fn uniq(input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
