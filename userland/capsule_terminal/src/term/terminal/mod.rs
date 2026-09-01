@@ -22,6 +22,7 @@ mod app_impl_on_event;
 mod app_impl_on_tick;
 mod app_impl_paint;
 mod new;
+mod rail_click;
 #[cfg(feature = "nonos-autorun-selftest")]
 pub mod selftest;
 mod tabs;

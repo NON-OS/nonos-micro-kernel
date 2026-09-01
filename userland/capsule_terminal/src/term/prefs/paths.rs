@@ -17,6 +17,6 @@
 pub const DIR: &[u8] = b"/etc/terminal";
 pub const PREFS: &[u8] = b"/etc/terminal/prefs.dat";
 
-// The record is a fixed 12 bytes; anything past this bound is not a record this
-// build wrote, so the read is capped rather than trusted.
-pub const MAX_FILE_BYTES: u32 = 64;
+// The record is a fixed length that the projects blob dominates; anything past
+// this bound is not a record this build wrote, so the read is capped.
+pub const MAX_FILE_BYTES: u32 = 512;

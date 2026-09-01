@@ -17,6 +17,7 @@
 pub mod codec;
 pub mod gate;
 pub mod paths;
+pub mod projects;
 pub mod store;
 pub mod types;
 

@@ -37,6 +37,7 @@ impl Terminal {
             prefs_dirty: false,
             prefs_ticks: 0,
             rail: Rail::new(),
+            layout: None,
         }
     }
 }

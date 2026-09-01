@@ -24,13 +24,16 @@ use super::fetch::draw_fetch;
 use super::footer::draw_footer;
 use super::header::draw_header;
 use super::metrics::Metrics;
+use super::rail_left;
 use super::rail_right;
-use crate::layout::{compute, Chrome, Rails};
+use crate::layout::{compute, Chrome, Layout, Rails};
 use crate::rail::Rail;
+use crate::term::prefs::types::Project;
 use crate::term::state::State;
 use crate::term::theme::types::Theme;
 
 const RAIL_W: u32 = 256;
+const RAIL_L: u32 = 240;
 
 pub fn paint_tabs(
     tabs: &[State],
@@ -39,11 +42,22 @@ pub fn paint_tabs(
     t: &Theme,
     font_scale: u32,
     rail: &Rail,
-) {
-    paint(&tabs[active], fb, t, font_scale, rail);
+    projects: &[Project],
+) -> Layout {
+    let l = paint(&tabs[active], fb, t, font_scale, rail);
+    if l.left_rail.w > 0 {
+        rail_left::draw(fb, l.left_rail, tabs, active, projects, t);
+    }
+    l
 }
 
-pub fn paint(state: &State, fb: &mut PaintBuffer, t: &Theme, font_scale: u32, rail: &Rail) {
+pub fn paint(
+    state: &State,
+    fb: &mut PaintBuffer,
+    t: &Theme,
+    font_scale: u32,
+    rail: &Rail,
+) -> Layout {
     fb.clear(t.bg);
     draw_header(state, fb, t);
     let m = Metrics::new(fb, font_scale);
@@ -55,7 +69,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer, t: &Theme, font_scale: u32, ra
         text_left: TEXT_LEFT,
         row_h: m.lh,
     };
-    let l = compute(fb.width, fb.height, &chrome, Rails { left: 0, right: RAIL_W });
+    let l = compute(fb.width, fb.height, &chrome, Rails { left: RAIL_L, right: RAIL_W });
     let text_x = l.body.x + chrome.text_left;
     let alt = state.scrollback.grid.alternate;
     if alt {
@@ -74,4 +88,5 @@ pub fn paint(state: &State, fb: &mut PaintBuffer, t: &Theme, font_scale: u32, ra
         rail_right::draw(fb, l.right_rail, rail, t);
     }
     draw_footer(fb, t);
+    l
 }

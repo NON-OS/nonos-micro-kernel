@@ -16,6 +16,7 @@
 
 use alloc::vec::Vec;
 
+use crate::layout::Layout;
 use crate::rail::Rail;
 use crate::term::prefs::Prefs;
 use crate::term::state::State;
@@ -42,6 +43,10 @@ pub struct Terminal {
     // Live system telemetry for the right rail, polled on its own tick budget
     // so the table never re-reads the kernel once per frame.
     pub(crate) rail: Rail,
+    // The band solve from the last paint. The event path needs the rail rects
+    // and cannot re-solve them: `Metrics` reads the frame buffer, which only
+    // exists during paint.
+    pub(crate) layout: Option<Layout>,
 }
 
 impl Terminal {

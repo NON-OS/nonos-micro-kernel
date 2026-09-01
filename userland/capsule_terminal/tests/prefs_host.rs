@@ -39,18 +39,21 @@ mod term {
     pub mod prefs {
         pub mod types;
 
+        pub mod projects;
+
         pub mod codec;
     }
 }
 
-use term::prefs::codec::{decode, encode, LEN, MAGIC, VERSION};
-use term::prefs::types::Prefs;
+use term::prefs::codec::{decode, encode, HEAD, LEN, MAGIC, VERSION};
+use term::prefs::types::{Prefs, MAX_PROJECTS, PATH_CAP};
 
 fn same(a: &Prefs, b: &Prefs) -> bool {
     a.theme == b.theme
         && a.font_scale == b.font_scale
         && a.cursor == b.cursor
         && a.rails == b.rails
+        && a.project_slice() == b.project_slice()
 }
 
 fn show(p: &Prefs) -> String {
@@ -64,16 +67,17 @@ fn show(p: &Prefs) -> String {
 /// compatibility contract, not an implementation detail.
 #[test]
 fn the_record_shape_is_the_documented_one() {
-    assert_eq!(LEN, 12);
+    assert_eq!(HEAD, 12);
+    assert_eq!(LEN, HEAD + 1 + MAX_PROJECTS * (1 + PATH_CAP));
     assert_eq!(MAGIC, *b"NTP1");
-    assert_eq!(VERSION, 1);
+    assert_eq!(VERSION, 2);
 }
 
 /// Every setting a reader can change must survive a save and a reboot; a
 /// field dropped in the codec looks like the setting silently not sticking.
 #[test]
 fn every_field_round_trips() {
-    let p = Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11 };
+    let p = Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11, ..Prefs::default() };
     let got = decode(&encode(&p));
     assert!(same(&got, &p), "expected {}, got {}", show(&p), show(&got));
 }
@@ -82,9 +86,9 @@ fn every_field_round_trips() {
 /// "no preferences yet", and above all must not index past the end.
 #[test]
 fn short_buffers_fall_back_to_defaults() {
-    let full = encode(&Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11 });
+    let full = encode(&Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11, ..Prefs::default() });
     let d = Prefs::default();
-    for n in 0..LEN {
+    for n in 0..HEAD {
         let got = decode(&full[..n]);
         assert!(
             same(&got, &d),
@@ -100,7 +104,7 @@ fn short_buffers_fall_back_to_defaults() {
 /// as settings.
 #[test]
 fn bad_magic_falls_back_to_defaults() {
-    let mut b = encode(&Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11 });
+    let mut b = encode(&Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11, ..Prefs::default() });
     b[0] = b'X';
     let got = decode(&b);
     assert!(same(&got, &Prefs::default()), "got {}", show(&got));
@@ -110,7 +114,7 @@ fn bad_magic_falls_back_to_defaults() {
 /// reading it as version 1 would apply garbage settings.
 #[test]
 fn an_unknown_version_falls_back_to_defaults() {
-    let mut b = encode(&Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11 });
+    let mut b = encode(&Prefs { theme: 3, font_scale: 5, cursor: 2, rails: 0b11, ..Prefs::default() });
     b[4] = 7;
     b[5] = 0;
     let got = decode(&b);
@@ -121,7 +125,7 @@ fn an_unknown_version_falls_back_to_defaults() {
 /// table, and an out-of-range font scale sizes every glyph on screen.
 #[test]
 fn out_of_range_values_are_clamped() {
-    let b = encode(&Prefs { theme: 9999, font_scale: 200, cursor: 99, rails: 0xFF });
+    let b = encode(&Prefs { theme: 9999, font_scale: 200, cursor: 99, rails: 0xFF, ..Prefs::default() });
     let got = decode(&b);
     assert!(got.theme < 4, "theme {} out of range", got.theme);
     assert!(
@@ -141,4 +145,89 @@ fn the_defaults_match_the_historical_hardcoded_values() {
     assert_eq!(d.font_scale, 2);
     assert_eq!(d.theme, 0);
     assert_eq!(d.cursor, 0);
+}
+
+/// Pinned project paths are settings like any other: dropping them in the codec
+/// looks like the rail forgetting what the user saved.
+#[test]
+fn projects_round_trip() {
+    let mut p = Prefs::default();
+    assert!(p.push_project(b"/home/user/src"));
+    assert!(p.push_project(b"/etc"));
+    let got = decode(&encode(&p));
+    assert!(same(&got, &p), "projects lost: {} slots back", got.project_count);
+    assert_eq!(got.project_slice()[0].as_str(), "/home/user/src");
+    assert_eq!(got.project_slice()[1].as_str(), "/etc");
+}
+
+/// A record whose head is intact but whose blob was cut short must still yield
+/// the settings it does carry, with no projects, rather than defaults or a panic.
+#[test]
+fn a_truncated_project_blob_keeps_the_head_fields() {
+    let mut p = Prefs::default();
+    p.theme = 3;
+    p.font_scale = 5;
+    assert!(p.push_project(b"/home/user/src"));
+    let full = encode(&p);
+    for n in HEAD..LEN {
+        let got = decode(&full[..n]);
+        assert_eq!(got.theme, 3, "{n} bytes lost the theme");
+        assert_eq!(got.font_scale, 5, "{n} bytes lost the font scale");
+        assert_eq!(got.project_count, 0, "{n} bytes kept a partial project");
+    }
+}
+
+/// The slot table is fixed, and the file is untrusted: a count or a length past
+/// the table must be clamped rather than indexed.
+#[test]
+fn a_hostile_project_blob_is_clamped() {
+    let mut b = encode(&Prefs::default());
+    b[HEAD] = 0xFF;
+    for slot in b[HEAD + 1..].iter_mut() {
+        *slot = 0xFF;
+    }
+    let got = decode(&b);
+    assert!(got.project_count as usize <= MAX_PROJECTS, "count {}", got.project_count);
+    for pr in got.project_slice() {
+        assert!(pr.as_bytes().len() <= PATH_CAP, "slot overran the cap");
+    }
+}
+
+/// The table is full at `MAX_PROJECTS`, and pinning the same path twice would
+/// spend a slot on a row the user already has.
+#[test]
+fn pinning_is_bounded_and_deduplicated() {
+    let mut p = Prefs::default();
+    assert!(p.push_project(b"/a"));
+    assert!(!p.push_project(b"/a"));
+    assert!(!p.push_project(b""));
+    for i in 1..MAX_PROJECTS {
+        assert!(p.push_project(format!("/p{i}").as_bytes()), "slot {i} refused");
+    }
+    assert_eq!(p.project_count as usize, MAX_PROJECTS);
+    assert!(!p.push_project(b"/overflow"));
+}
+
+/// A record written before the projects table existed is still a valid record:
+/// its head is byte-identical to the current one, so the user's theme and font
+/// scale must survive the upgrade rather than silently resetting to defaults.
+#[test]
+fn a_v1_record_keeps_its_head_fields() {
+    let mut p = Prefs::default();
+    p.theme = 2;
+    p.font_scale = 3;
+    let mut b = encode(&p);
+    b[4..6].copy_from_slice(&1u16.to_le_bytes());
+    let got = decode(&b[..HEAD]);
+    assert_eq!(got.theme, 2, "v1 theme lost");
+    assert_eq!(got.font_scale, 3, "v1 font scale lost");
+    assert_eq!(got.project_count, 0, "v1 record cannot carry projects");
+}
+
+/// A version from the future is not decodable and must fall back cleanly.
+#[test]
+fn a_future_version_falls_back_to_defaults() {
+    let mut b = encode(&Prefs::default());
+    b[4..6].copy_from_slice(&(VERSION + 1).to_le_bytes());
+    assert_eq!(decode(&b).theme, Prefs::default().theme);
 }
