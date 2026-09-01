@@ -14,13 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
+use alloc::vec::Vec;
 
-use super::types::Terminal;
-use crate::term::state::State;
+/// Label bytes for tab `i`: its 1-based shortcut digit and the working
+/// directory's basename. Length is not capped here; the pill cuts it by
+/// measured width.
+pub fn tab_label(i: usize, cwd: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    out.push(b'1' + i as u8);
+    out.push(b':');
+    out.push(b' ');
+    out.extend_from_slice(basename(cwd));
+    out
+}
 
-impl Terminal {
-    pub fn new() -> Self {
-        Self { tabs: vec![State::new()], active: 0, width: 0, acc_w: 0 }
+fn basename(path: &[u8]) -> &[u8] {
+    match path.iter().rposition(|&b| b == b'/') {
+        Some(i) if i + 1 < path.len() => &path[i + 1..],
+        _ => path,
     }
 }

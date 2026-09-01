@@ -14,22 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::EventOutcome;
+use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, PaintBuffer};
 
 use super::types::Terminal;
 use crate::command::builtin::theme::next_bg;
-use crate::paint::tabstrip::{feature_hit, CLOSE_W, PLUS_W, STRIP_H, STRIP_Y, TAB_W};
+use crate::paint::tab_bar::{feat_hit, nominal_w};
 
 const MAX_FONT_SCALE: u32 = 6;
+const LIGHTS_RESERVE: u32 = 128;
 
 impl Terminal {
-    pub(super) fn tab_click(&mut self, x: i32, y: i32) -> Option<EventOutcome> {
-        if x < 0 || y < STRIP_Y as i32 || y >= (STRIP_Y + STRIP_H) as i32 {
-            return None;
+    pub(super) fn accessory_w(&self) -> u32 {
+        let want = nominal_w(self.tabs.len());
+        match self.width.checked_sub(LIGHTS_RESERVE) {
+            Some(room) => want.min(room),
+            None => want,
         }
-        let xu = x as u32;
-        // Feature toolbar (right side) wins over the tab area it may overlap.
-        if let Some(f) = feature_hit(xu, self.width) {
+    }
+
+    pub(super) fn paint_accessory_inner(&mut self, fb: &mut PaintBuffer) {
+        self.acc_w = fb.width;
+        crate::paint::draw_tab_bar(&self.tabs, self.active, fb);
+    }
+
+    pub(super) fn accessory_event(&mut self, event: InputEvent) -> EventOutcome {
+        if event.kind != InputKind::ButtonDown || event.x < 0 || event.y < 0 {
+            return EventOutcome::Idle;
+        }
+        let x = event.x as u32;
+        if let Some(f) = feat_hit(x, self.acc_w) {
             let s = self.cur();
             match f {
                 0 => s.bg = next_bg(s.bg),
@@ -37,22 +50,8 @@ impl Terminal {
                 2 => s.font_scale = (s.font_scale + 1).min(MAX_FONT_SCALE),
                 _ => s.scrollback.clear(),
             }
-            return Some(EventOutcome::Repaint);
+            return EventOutcome::Repaint;
         }
-        let n = self.tabs.len() as u32;
-        if xu >= n * TAB_W && xu < n * TAB_W + PLUS_W {
-            self.open_tab();
-            return Some(EventOutcome::Repaint);
-        }
-        let i = (xu / TAB_W) as usize;
-        if i >= self.tabs.len() {
-            return None;
-        }
-        if xu >= i as u32 * TAB_W + TAB_W - CLOSE_W {
-            self.active = i;
-            return Some(self.close_tab());
-        }
-        self.active = i;
-        Some(EventOutcome::Repaint)
+        self.pill_click(x)
     }
 }

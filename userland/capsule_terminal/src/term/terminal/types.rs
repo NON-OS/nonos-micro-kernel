@@ -21,9 +21,12 @@ use crate::term::state::State;
 pub struct Terminal {
     pub(crate) tabs: Vec<State>,
     pub(crate) active: usize,
-    // Window width from the last paint, so the toolbar's right-aligned feature
-    // buttons can be hit-tested on click.
+    // Window width from the last paint, so the titlebar accessory can ask for a
+    // width that stays clear of the traffic lights.
     pub(crate) width: u32,
+    // Accessory width the frame actually granted, recorded when it hands over
+    // the sub-buffer so the painter and the hit-test share one geometry.
+    pub(crate) acc_w: u32,
 }
 
 impl Terminal {

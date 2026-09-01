@@ -14,18 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
+use nonos_app_skeleton::{EventOutcome, InputEvent};
 
 use super::types::Terminal;
 use crate::event::on_event;
 
 impl Terminal {
     pub(super) fn on_event_inner(&mut self, event: InputEvent) -> EventOutcome {
-        if event.kind == InputKind::ButtonDown {
-            if let Some(outcome) = self.tab_click(event.x, event.y) {
-                return outcome;
-            }
-        }
         if let Some(outcome) = self.tab_command(event) {
             return outcome;
         }

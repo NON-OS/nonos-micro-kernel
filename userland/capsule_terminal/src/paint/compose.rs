@@ -30,7 +30,6 @@ use crate::term::state::State;
 
 pub fn paint_tabs(tabs: &[State], active: usize, fb: &mut PaintBuffer) {
     paint(&tabs[active], fb);
-    crate::paint::draw_tabstrip(tabs, active, fb);
 }
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
