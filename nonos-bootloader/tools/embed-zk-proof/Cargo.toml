@@ -18,4 +18,4 @@ curve25519-dalek = "4.1.3"
 nonos-attestation-circuit = { path = "../nonos-attestation-circuit" }
 
 [dev-dependencies]
-nonos-stark = { path = "../../../nonos-stark" }
+nonos-stark = { path = "../../../stark-attest/crates/stark-core" }

@@ -16,7 +16,11 @@
 
 use crate::capabilities::Capability;
 
-const BAKED: &[u8] = include_bytes!("../../../nonos-data/trust/policy/image_capability_ceiling.bin");
+// Staged by build.rs: the image's ceiling file when it ships one, otherwise the
+// unset default that reads back as unrestricted. An image restricts its own
+// authority by dropping nonos-data/trust/policy/image_capability_ceiling.bin;
+// absence is not a build error, it is the ordinary case.
+const BAKED: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/image_capability_ceiling.bin"));
 
 /// Const because `ceiling` sits on the token mint path.
 const fn unrestricted() -> u64 {

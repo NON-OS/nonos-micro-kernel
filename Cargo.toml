@@ -838,7 +838,7 @@ std = []
 
 [dependencies]
 # Transparent STARK stack, shared with the bootloader for kernel self-attestation.
-nonos-stark = { path = "nonos-stark", version = "0.2.0" }
+nonos-stark = { path = "stark-attest/crates/stark-core", version = "0.2.0" }
 # Synchronization. spin is the kernel-wide lock primitive (no_std,
 # interrupt-safe).
 spin        = { version = "0.9", default-features = false, features = ["mutex", "spin_mutex", "lazy", "rwlock"] }
