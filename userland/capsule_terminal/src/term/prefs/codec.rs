@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::types::Prefs;
+use crate::term::dimensions::{MAX_FONT_SCALE, MIN_FONT_SCALE};
 
 pub const MAGIC: [u8; 4] = *b"NTP1";
 pub const VERSION: u16 = 1;
@@ -22,8 +23,6 @@ pub const LEN: usize = 12;
 
 const THEME_COUNT: u16 = 4;
 const CURSOR_COUNT: u8 = 4;
-const MIN_SCALE: u8 = 1;
-const MAX_SCALE: u8 = 6;
 const RAILS_MASK: u8 = 0b11;
 
 pub fn encode(p: &Prefs) -> [u8; LEN] {
@@ -60,7 +59,7 @@ pub fn decode(b: &[u8]) -> Prefs {
     let cursor = b[9];
     Prefs {
         theme: if theme < THEME_COUNT { theme } else { 0 },
-        font_scale: if font_scale >= MIN_SCALE && font_scale <= MAX_SCALE { font_scale } else { 2 },
+        font_scale: if font_scale as u32 >= MIN_FONT_SCALE && font_scale as u32 <= MAX_FONT_SCALE { font_scale } else { 2 },
         cursor: if cursor < CURSOR_COUNT { cursor } else { 0 },
         rails: b[10] & RAILS_MASK,
     }

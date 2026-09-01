@@ -18,9 +18,9 @@ use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, PaintBuffer};
 
 use super::types::Terminal;
 use crate::command::builtin::theme::next_bg;
+use crate::term::dimensions::MAX_FONT_SCALE;
 use crate::paint::tab_bar::{feat_hit, nominal_w};
 
-const MAX_FONT_SCALE: u32 = 6;
 const LIGHTS_RESERVE: u32 = 128;
 
 impl Terminal {
