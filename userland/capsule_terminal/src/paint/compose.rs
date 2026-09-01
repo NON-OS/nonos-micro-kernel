@@ -86,7 +86,7 @@ pub fn paint(
         draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.footer.y, text_r, m, t);
         draw_grid_cursor(&state.scrollback.grid, fb, text_x, l.body.y, m, t);
     } else if state.fresh {
-        draw_fetch(state, fb, t);
+        draw_fetch(state, fb, text_x, l.body.y, text_r, t);
     } else {
         draw_block_chrome(state, fb, text_x, l.body.y, l.input.y, text_r, &m, t);
         draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.input.y, text_r, m, t);

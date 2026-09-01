@@ -20,18 +20,17 @@
 use nonos_app_skeleton::PaintBuffer;
 use nonos_libc::mk_time_millis;
 
-use super::constants::BODY_TOP;
 use super::fetch_banner::draw_banner;
 use super::fetch_palette::draw_palette;
 use super::fetch_uptime::uptime_str;
 use crate::term::state::State;
 use crate::term::theme::types::Theme;
 
-const LEFT: i32 = 26;
 // Breathing room between the titlebar and the top of the banner. Anchored to
-// the body region so the art starts inside the content area, not butted against
+// the body rect so the art starts inside the content area, not butted against
 // the chrome above it.
-const BANNER_TOP: i32 = BODY_TOP as i32 + 14;
+const BANNER_PAD: i32 = 14;
+const RULE_W: i32 = 300;
 const INFO_PX: f32 = 14.0;
 const ROW: i32 = 20;
 
@@ -40,16 +39,24 @@ fn row(fb: &mut PaintBuffer, x: i32, y: i32, label: &str, value: &str, t: &Theme
     let _ = fb.text_ttf_mono(x + 96, y, value, t.fg, INFO_PX);
 }
 
-pub fn draw_fetch(state: &State, fb: &mut PaintBuffer, t: &Theme) {
-    let after = draw_banner(fb, LEFT, BANNER_TOP, t);
-    let _ = fb.text_ttf(LEFT, after + 4, "ZeroState Cryptographic OS", t.dim, 14.0);
+pub fn draw_fetch(
+    state: &State,
+    fb: &mut PaintBuffer,
+    x: u32,
+    body_y: u32,
+    right: u32,
+    t: &Theme,
+) {
+    let ix = x as i32;
+    let edge = right as i32;
+    let after = draw_banner(fb, ix, body_y as i32 + BANNER_PAD, edge, t);
+    let _ = fb.text_ttf(ix, after + 4, "ZeroState Cryptographic OS", t.dim, 14.0);
 
-    let ix = LEFT;
     let mut y = after + 34;
     let _ = fb.text_ttf_mono(ix, y, "nonos", t.accent, INFO_PX);
     let _ = fb.text_ttf_mono(ix + 54, y, "@capsule", t.dim, INFO_PX);
     y += 8;
-    fb.fill_rect(ix as u32, (y + 8) as u32, 300, 1, t.dim);
+    fb.fill_rect(ix as u32, (y + 8) as u32, (edge - ix).clamp(0, RULE_W) as u32, 1, t.dim);
     y += 24;
 
     row(fb, ix, y, "os", "NONOS RAM-resident", t);

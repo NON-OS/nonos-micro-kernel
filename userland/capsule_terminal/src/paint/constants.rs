@@ -17,4 +17,3 @@
 pub const TEXT_LEFT: u32 = 14;
 pub const HEADER_H: u32 = 28;
 pub const BODY_PAD_TOP: u32 = 6;
-pub const BODY_TOP: u32 = HEADER_H + BODY_PAD_TOP;
