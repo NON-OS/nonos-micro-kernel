@@ -44,7 +44,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     } else if state.fresh {
         draw_fetch(state, fb);
     } else {
-        draw_block_chrome(state, fb, TEXT_LEFT, BODY_TOP, input_y);
+        draw_block_chrome(state, fb, TEXT_LEFT, BODY_TOP, input_y, &m);
         draw_grid(&state.scrollback.grid, fb, TEXT_LEFT, BODY_TOP, input_y, m);
     }
     if !alt {

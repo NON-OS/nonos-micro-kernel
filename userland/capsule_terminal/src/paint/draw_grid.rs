@@ -52,7 +52,7 @@ pub fn draw_grid_cursor(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, m: Met
 
 pub fn draw_grid(g: &Grid, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32, m: Metrics) {
     for row in 0..VISIBLE_ROWS {
-        let y = oy + row as u32 * m.lh;
+        let y = crate::layout::row_top(row as u32, oy, m.lh);
         if y + m.lh > max_y {
             break;
         }
