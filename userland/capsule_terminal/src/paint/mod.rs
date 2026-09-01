@@ -32,6 +32,8 @@ mod line_chars;
 mod line_text;
 mod line_window;
 mod metrics;
+mod palette;
+mod palette_row;
 mod prompt;
 mod rail_fmt;
 pub mod rail_left;

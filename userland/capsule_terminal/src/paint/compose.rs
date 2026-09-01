@@ -27,6 +27,7 @@ use super::metrics::Metrics;
 use super::rail_left;
 use super::rail_right;
 use crate::layout::{compute, Chrome, Layout, Rails};
+use crate::palette::{Index, Palette};
 use crate::rail::Rail;
 use crate::term::prefs::types::Project;
 use crate::term::state::State;
@@ -43,10 +44,16 @@ pub fn paint_tabs(
     font_scale: u32,
     rail: &Rail,
     projects: &[Project],
+    monitor: bool,
+    pal: &Palette,
 ) -> Layout {
-    let l = paint(&tabs[active], fb, t, font_scale, rail);
+    let l = paint(&tabs[active], fb, t, font_scale, rail, monitor);
     if l.left_rail.w > 0 {
         rail_left::draw(fb, l.left_rail, tabs, active, projects, t);
+    }
+    if pal.open {
+        let ix = Index::build(tabs, active, projects);
+        super::palette::draw(fb, l.body, pal, &ix, t);
     }
     l
 }
@@ -57,6 +64,7 @@ pub fn paint(
     t: &Theme,
     font_scale: u32,
     rail: &Rail,
+    monitor: bool,
 ) -> Layout {
     fb.clear(t.bg);
     draw_header(state, fb, t);
@@ -69,7 +77,8 @@ pub fn paint(
         text_left: TEXT_LEFT,
         row_h: m.lh,
     };
-    let l = compute(fb.width, fb.height, &chrome, Rails { left: RAIL_L, right: RAIL_W });
+    let right = if monitor { RAIL_W } else { 0 };
+    let l = compute(fb.width, fb.height, &chrome, Rails { left: RAIL_L, right });
     let text_x = l.body.x + chrome.text_left;
     let alt = state.scrollback.grid.alternate;
     if alt {

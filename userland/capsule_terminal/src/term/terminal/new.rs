@@ -17,6 +17,7 @@
 use alloc::vec;
 
 use super::types::Terminal;
+use crate::palette::Palette;
 use crate::rail::Rail;
 use crate::term::dimensions::{MAX_FONT_SCALE, MIN_FONT_SCALE};
 use crate::term::prefs::store;
@@ -38,6 +39,7 @@ impl Terminal {
             prefs_ticks: 0,
             rail: Rail::new(),
             layout: None,
+            palette: Palette::new(),
         }
     }
 }

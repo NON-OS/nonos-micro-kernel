@@ -17,6 +17,7 @@
 use alloc::vec::Vec;
 
 use crate::layout::Layout;
+use crate::palette::Palette;
 use crate::rail::Rail;
 use crate::term::prefs::Prefs;
 use crate::term::state::State;
@@ -47,6 +48,9 @@ pub struct Terminal {
     // and cannot re-solve them: `Metrics` reads the frame buffer, which only
     // exists during paint.
     pub(crate) layout: Option<Layout>,
+    // The command overlay. It gates the whole key path while open, so it is
+    // read before the tab bindings rather than beside them.
+    pub(crate) palette: Palette,
 }
 
 impl Terminal {

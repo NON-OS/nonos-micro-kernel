@@ -25,3 +25,6 @@ pub const DOT_IDLE: u32 = 0xFF_5B_71_80;
 pub const TOOLBAR_ICON: u32 = 0xFF_8F_A6_B4;
 pub const TOOLBAR_LABEL: u32 = 0xFF_5B_71_80;
 pub const TOOLBAR_ACTIVE: u32 = 0xFF_5A_E6_D0;
+
+pub const SCRIM: u32 = 0x99_04_08_0C;
+pub const PALETTE_PANEL: u32 = 0xF5_0D_1B_23;

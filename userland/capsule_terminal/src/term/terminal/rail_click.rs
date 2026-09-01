@@ -59,7 +59,7 @@ impl Terminal {
         EventOutcome::Repaint
     }
 
-    fn enter_project(&mut self, i: usize) -> EventOutcome {
+    pub(super) fn enter_project(&mut self, i: usize) -> EventOutcome {
         let Some(path) = self.prefs.project_slice().get(i).map(|p| Vec::from(p.as_bytes())) else {
             return EventOutcome::Idle;
         };

@@ -14,21 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod accessory;
-mod accessory_click;
-mod app_impl;
-mod app_impl_manifest;
-mod app_impl_on_event;
-mod app_impl_on_tick;
-mod app_impl_paint;
-mod new;
-mod palette_act;
-mod palette_key;
-mod palette_pick;
-mod rail_click;
-#[cfg(feature = "nonos-autorun-selftest")]
-pub mod selftest;
-mod tabs;
-mod types;
-
-pub use types::Terminal;
+/// Builtins worth reaching for without typing them. The palette runs the verb
+/// as written, so every entry here must be a word the dispatcher accepts.
+pub const VERBS: [(&str, &str); 12] = [
+    ("help", "the builtins"),
+    ("clear", "empty the scrollback"),
+    ("ls", "list the working directory"),
+    ("pwd", "print the working directory"),
+    ("history", "everything run here"),
+    ("jobs", "background work"),
+    ("theme", "switch the palette"),
+    ("version", "build and manifest"),
+    ("capsules", "what is running"),
+    ("whoami", "the owning identity"),
+    ("motd", "the banner"),
+    ("about", "this window"),
+];

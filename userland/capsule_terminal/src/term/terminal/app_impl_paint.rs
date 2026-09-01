@@ -36,6 +36,8 @@ impl Terminal {
             self.font_scale,
             &self.rail,
             self.prefs.project_slice(),
+            self.prefs.rails & 1 == 0,
+            &self.palette,
         );
         self.layout = Some(l);
     }
