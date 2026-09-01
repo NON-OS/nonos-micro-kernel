@@ -17,11 +17,11 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::block_chrome::draw_block_chrome;
-use super::constants::{BODY_PAD_TOP, FOOTER_H, HEADER_H, TEXT_LEFT};
+use super::constants::{BODY_PAD_TOP, HEADER_H, TEXT_LEFT};
 use super::draw_grid::{draw_grid, draw_grid_cursor};
 use super::draw_input_line::draw_input_line;
 use super::fetch::draw_fetch;
-use super::footer::draw_footer;
+use super::footer::{draw_footer, footer_h};
 use super::header::draw_header;
 use super::metrics::Metrics;
 use super::rail_left;
@@ -73,25 +73,26 @@ pub fn paint(
         titlebar_h: HEADER_H,
         tabstrip_h: 0,
         body_pad_top: BODY_PAD_TOP,
-        footer_h: FOOTER_H,
+        footer_h: footer_h(),
         text_left: TEXT_LEFT,
         row_h: m.lh,
     };
     let right = if monitor { RAIL_W } else { 0 };
     let l = compute(fb.width, fb.height, &chrome, Rails { left: RAIL_L, right });
     let text_x = l.body.x + chrome.text_left;
+    let text_r = (l.body.x + l.body.w).saturating_sub(chrome.text_left);
     let alt = state.scrollback.grid.alternate;
     if alt {
-        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.footer.y, m, t);
+        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.footer.y, text_r, m, t);
         draw_grid_cursor(&state.scrollback.grid, fb, text_x, l.body.y, m, t);
     } else if state.fresh {
         draw_fetch(state, fb, t);
     } else {
-        draw_block_chrome(state, fb, text_x, l.body.y, l.input.y, &m, t);
-        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.input.y, m, t);
+        draw_block_chrome(state, fb, text_x, l.body.y, l.input.y, text_r, &m, t);
+        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.input.y, text_r, m, t);
     }
     if !alt {
-        draw_input_line(state, fb, l.input.y, m, t);
+        draw_input_line(state, fb, l.input, m, t);
     }
     if l.right_rail.w > 0 {
         rail_right::draw(fb, l.right_rail, rail, t);

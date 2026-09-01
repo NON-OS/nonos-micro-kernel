@@ -56,6 +56,7 @@ pub fn draw_grid(
     ox: u32,
     oy: u32,
     max_y: u32,
+    max_x: u32,
     m: Metrics,
     t: &Theme,
 ) {
@@ -67,7 +68,7 @@ pub fn draw_grid(
         let rowcells = g.visible_row(row);
         for (col, cell) in rowcells.iter().enumerate().take(COLS) {
             let x = ox + col as u32 * m.adv;
-            if x + m.adv > fb.width {
+            if x + m.adv > max_x {
                 break;
             }
             let has_bg = cell.bg != DEFAULT_BG;

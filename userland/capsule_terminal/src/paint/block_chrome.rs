@@ -33,6 +33,7 @@ pub fn draw_block_chrome(
     ox: u32,
     oy: u32,
     max_y: u32,
+    max_x: u32,
     m: &Metrics,
     t: &Theme,
 ) {
@@ -50,7 +51,7 @@ pub fn draw_block_chrome(
         // Alternating block shades derived from the theme background, so the
         // command zebra stays subtle on any profile instead of a fixed dark.
         let tint = if idx % 2 == 0 { elevate(t.bg, 5) } else { elevate(t.bg, 13) };
-        fb.fill_rect(ox, y, fb.width.saturating_sub(ox * 2), m.lh, tint);
+        fb.fill_rect(ox, y, max_x.saturating_sub(ox), m.lh, tint);
         let stripe = match status {
             Status::Ok => t.ok,
             Status::Err => t.err,
@@ -59,7 +60,7 @@ pub fn draw_block_chrome(
         fb.fill_rect(ox.saturating_sub(STRIPE_GAP), y, STRIPE_W, m.lh, stripe);
         if let Some(b) = state.block_at(abs) {
             if b.start_abs == abs {
-                draw_meta(fb, b, stripe, y, t);
+                draw_meta(fb, b, stripe, y, max_x, t);
             }
         }
     }

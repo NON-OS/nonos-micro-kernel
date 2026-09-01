@@ -18,7 +18,6 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::TEXT_LEFT;
 use super::line_text::text;
 use crate::term::state::State;
 use crate::term::theme::types::Theme;
@@ -32,6 +31,7 @@ use crate::term::theme::types::Theme;
 pub fn draw_prompt(
     state: &State,
     fb: &mut PaintBuffer,
+    ox: u32,
     y: u32,
     adv: u32,
     px: f32,
@@ -43,8 +43,8 @@ pub fn draw_prompt(
 
     if let Some(search) = &state.search {
         let shown = take.min(search.needle.len());
-        text(fb, TEXT_LEFT, y, b"?", t.accent, adv, px);
-        text(fb, TEXT_LEFT + adv, y, &search.needle[..shown], t.fg, adv, px);
+        text(fb, ox, y, b"?", t.accent, adv, px);
+        text(fb, ox + adv, y, &search.needle[..shown], t.fg, adv, px);
         return 1 + shown + 1;
     }
 
@@ -52,7 +52,7 @@ pub fn draw_prompt(
     // looked away while it ran learns the outcome where they are about to
     // type rather than by finding the block it came from.
     let mark = if state.last_status == 0 { t.accent } else { t.err };
-    text(fb, TEXT_LEFT, y, b">", mark, adv, px);
-    text(fb, TEXT_LEFT + adv, y, &cwd[cwd.len() - take..], t.path, adv, px);
+    text(fb, ox, y, b">", mark, adv, px);
+    text(fb, ox + adv, y, &cwd[cwd.len() - take..], t.path, adv, px);
     1 + take + 1
 }

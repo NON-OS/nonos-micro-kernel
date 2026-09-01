@@ -40,12 +40,11 @@ pub fn draw(fb: &mut PaintBuffer, r: Rect, rail: &Rail, t: &Theme) {
     y = stat(fb, x, y, w, "CPU", pct(&mut buf, rail.sample.cpu_pct), t);
     bar(fb, x, y, w, rail.sample.cpu_pct, t);
     y += RAIL_GAP;
-    y = stat(fb, x, y, w, "MEMORY", mib(&mut buf, rail.sample.mem_total_kb), t);
-    y = head(fb, x, y + RAIL_GAP, w, "CPU", t);
     let spark_h = SPARK_H.min((r.y + r.h).saturating_sub(y));
     draw_spark(fb, Rect { x, y, w, h: spark_h }, rail.spark.slice(), rail.spark.start(), t.accent);
     y += spark_h + RAIL_GAP;
-    y = head(fb, x, y, w, "PROCESSES", t);
+    y = stat(fb, x, y, w, "MEMORY", mib(&mut buf, rail.sample.mem_total_kb), t);
+    y = head(fb, x, y + RAIL_GAP, w, "PROCESSES", t);
     let h = (r.y + r.h).saturating_sub(y + RAIL_PAD);
     if h >= row {
         rail_procs::draw(fb, Rect { x, y, w, h }, &rail.sample, t);

@@ -16,12 +16,12 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::constants::TEXT_LEFT;
 use super::metrics::Metrics;
 use crate::term::theme::types::Theme;
 
 pub fn draw_cursor(
     fb: &mut PaintBuffer,
+    ox: u32,
     prompt_cells: usize,
     cursor_cell: usize,
     baseline_y: u32,
@@ -30,7 +30,7 @@ pub fn draw_cursor(
     t: &Theme,
 ) {
     let (adv, px) = (m.adv, m.px);
-    let x = TEXT_LEFT + (prompt_cells as u32 + cursor_cell as u32) * adv;
+    let x = ox + (prompt_cells as u32 + cursor_cell as u32) * adv;
     fb.fill_rect(x, baseline_y, adv, m.lh.saturating_sub(2), t.accent);
     // Inverse block: when the cursor sits on a printable glyph, repaint it in
     // the background colour so the character reads through the block.

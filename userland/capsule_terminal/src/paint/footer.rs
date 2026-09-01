@@ -15,8 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use nonos_app_skeleton::PaintBuffer;
+use nonos_toolkit::font::ttf::line_height;
 
-use super::constants::{FOOTER_H, TEXT_LEFT};
+use super::constants::TEXT_LEFT;
 use super::shade::elevate;
 use crate::term::theme::types::Theme;
 
@@ -39,26 +40,40 @@ const HINTS: &[(&str, &str)] = &[
 const KEY_GAP: i32 = 5;
 const PAIR_GAP: i32 = 18;
 
+/// Nominal size of the hint text. The face clamps it up to the readable floor,
+/// so the band has to be sized from the measured line box rather than from this.
+const HINT_PX: f32 = 12.0;
+
+/// Space above the hint line, and below its descenders.
+const PAD_TOP: u32 = 3;
+const PAD_BOT: u32 = 3;
+
+/// Height the hint bar needs for the line it actually draws.
+pub fn footer_h() -> u32 {
+    PAD_TOP + line_height(HINT_PX).max(1) as u32 + PAD_BOT
+}
+
 pub fn draw_footer(fb: &mut PaintBuffer, t: &Theme) {
-    let y = fb.height.saturating_sub(FOOTER_H);
-    fb.fill_rect(0, y, fb.width, FOOTER_H, elevate(t.bg, 10));
+    let band = footer_h();
+    let y = fb.height.saturating_sub(band);
+    fb.fill_rect(0, y, fb.width, band, elevate(t.bg, 10));
     // A hairline rather than a block in another shade. It separates the bar
     // from the body without spending a row of height to do it.
     fb.fill_rect(0, y, fb.width, 1, elevate(t.bg, 22));
 
-    let baseline = (y + 3) as i32;
+    let baseline = (y + PAD_TOP) as i32;
     let mut x = TEXT_LEFT as i32;
     for (key, label) in HINTS {
-        let key_w = fb.measure_ttf(key, 12.0);
-        let label_w = fb.measure_ttf(label, 12.0);
+        let key_w = fb.measure_ttf(key, HINT_PX);
+        let label_w = fb.measure_ttf(label, HINT_PX);
         // Stop before a pair would run under the right edge, rather than
         // clipping one in half.
         if x + key_w + KEY_GAP + label_w > fb.width as i32 - TEXT_LEFT as i32 {
             break;
         }
-        let _ = fb.text_ttf(x, baseline, key, t.accent, 12.0);
+        let _ = fb.text_ttf(x, baseline, key, t.accent, HINT_PX);
         x += key_w + KEY_GAP;
-        let _ = fb.text_ttf(x, baseline, label, t.dim, 12.0);
+        let _ = fb.text_ttf(x, baseline, label, t.dim, HINT_PX);
         x += label_w + PAIR_GAP;
     }
 }
