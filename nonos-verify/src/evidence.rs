@@ -77,6 +77,12 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     let ok = pk_ok
         && Command::new("make")
             .env("BOOTLOADER_POLICY", "production")
+            // This check proves the signature chain builds from the public
+            // anchor. The kernel attest gate is a separate lane with its own
+            // enrollment; leaving it on here would demand a generated root
+            // this job never produces, so the build would fail on a
+            // requirement the check does not test.
+            .env("NONOS_STARK_KERNEL_ATTEST", "0")
             .env(
                 "NONOS_TRUST_ANCHOR_PUBKEY",
                 format!("{}/target/ci/trust-anchor.raw", std::env::current_dir()?.display()),
