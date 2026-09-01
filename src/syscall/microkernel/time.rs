@@ -60,11 +60,13 @@ pub fn sys_time_millis() -> i64 {
     now.min(i64::MAX as u64) as i64
 }
 
-// Monotonic milliseconds for `Instant`: the TSC-derived base clock without the
-// NTP offset, so a time correction can never move `Instant` backwards the way
-// it can move the wall clock `sys_time_millis` returns.
+// Monotonic milliseconds since boot, measured off the TSC and carrying no NTP
+// offset, so a time correction can never move it backwards the way it can move
+// the wall clock `sys_time_millis` returns. Zero at boot, which is what the
+// `mk_uptime_ms` contract promises and what a caller reading it as an absolute
+// uptime needs; callers that only take differences are unaffected.
 pub fn sys_time_monotonic() -> i64 {
-    crate::sys::clock::base_unix_ms().min(i64::MAX as u64) as i64
+    crate::sys::clock::since_boot_ms().min(i64::MAX as u64) as i64
 }
 
 fn clock_ready() -> bool {

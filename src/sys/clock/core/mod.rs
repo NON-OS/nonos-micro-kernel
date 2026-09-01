@@ -22,4 +22,4 @@ mod time;
 pub use consts::{BOOT_TSC, BOOT_UNIX_MS, NTP_OFFSET_MS, TSC_HZ};
 pub use init::init;
 pub use rdtsc::rdtsc;
-pub use time::{base_unix_ms, set_ntp_offset_ms, unix_ms};
+pub use time::{base_unix_ms, set_ntp_offset_ms, since_boot_ms, unix_ms};
