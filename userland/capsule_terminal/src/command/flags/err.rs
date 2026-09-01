@@ -14,12 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod builtin;
-pub mod dispatch;
-pub mod flags;
-pub mod output;
-pub mod parse;
-pub mod wire;
+//! Diagnostics for a rejected flag, phrased the way the shell reports them.
 
-pub use dispatch::{alias_expand, expand, run, split_program, Conn, Outcome, Stmt};
-pub use parse::parse;
+use alloc::vec::Vec;
+
+use super::spec::Spec;
+
+pub(super) fn unknown(spec: &Spec, flag: u8) -> Vec<u8> {
+    let mut msg = Vec::new();
+    msg.extend_from_slice(spec.name);
+    msg.extend_from_slice(b": unknown flag -");
+    msg.push(flag);
+    msg
+}
+
+pub(super) fn missing(spec: &Spec, arg: &[u8]) -> Vec<u8> {
+    let mut msg = Vec::new();
+    msg.extend_from_slice(spec.name);
+    msg.extend_from_slice(b": missing value for ");
+    msg.extend_from_slice(arg);
+    msg
+}

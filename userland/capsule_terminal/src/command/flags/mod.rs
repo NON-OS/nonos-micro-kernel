@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod builtin;
-pub mod dispatch;
-pub mod flags;
-pub mod output;
-pub mod parse;
-pub mod wire;
+//! Shared short-flag parsing for the shell builtins and the pipe filters.
 
-pub use dispatch::{alias_expand, expand, run, split_program, Conn, Outcome, Stmt};
+mod cluster;
+mod err;
+mod num;
+mod parse;
+mod spec;
+
+pub use num::parse_usize;
 pub use parse::parse;
+pub use spec::Spec;

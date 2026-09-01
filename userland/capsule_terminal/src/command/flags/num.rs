@@ -14,12 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod builtin;
-pub mod dispatch;
-pub mod flags;
-pub mod output;
-pub mod parse;
-pub mod wire;
+//! Decimal parsing for the flags that carry a count.
 
-pub use dispatch::{alias_expand, expand, run, split_program, Conn, Outcome, Stmt};
-pub use parse::parse;
+pub fn parse_usize(b: &[u8]) -> Option<usize> {
+    if b.is_empty() {
+        return None;
+    }
+    let mut v: usize = 0;
+    for &c in b {
+        if !c.is_ascii_digit() {
+            return None;
+        }
+        v = v.checked_mul(10)?.checked_add((c - b'0') as usize)?;
+    }
+    Some(v)
+}
