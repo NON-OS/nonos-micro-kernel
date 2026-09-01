@@ -1465,7 +1465,7 @@ fn a_fold_bound_to_its_committed_opening_verifies() {
     let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
     let (mem_trace, mem, cells) = opening_of_scalar(a[0], 2);
     assert_eq!(cells[0].1, 0, "the committed scalar should sit in column zero");
-    let mem_h = mem_trace.len() / WIDTH;
+    let mem_h = mem.rows();
     let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
     let fold_trace = fold.trace(&beta, &a, &b);
 
@@ -1489,7 +1489,7 @@ fn a_fold_folding_an_uncommitted_value_is_rejected() {
     // committed, so the single proof fails.
     let (beta, a, b, x_inv, dir, final_value, log_layers, n_folds) = trace_fold_data(6);
     let (mem_trace, mem, cells) = opening_of_scalar(a[0] + Fp::ONE, 2);
-    let mem_h = mem_trace.len() / WIDTH;
+    let mem_h = mem.rows();
     let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
     let fold_trace = fold.trace(&beta, &a, &b);
 
@@ -1520,7 +1520,7 @@ fn a_full_per_query_verifier_is_one_stark() {
 
     // Region offsets: source [0,8), opening [8,24), fold [24,32).
     let src_h = 1usize << 3;
-    let mem_h = mem_trace.len() / WIDTH;
+    let mem_h = mem.rows();
     let fold_off = src_h + mem_h;
     let (k, span) = (2usize, (src_h + mem_h + (1usize << log_layers)).next_power_of_two());
     let mut sigma: Vec<usize> = (0..span * k).collect();
@@ -1548,7 +1548,7 @@ fn a_per_query_verifier_rejects_a_wrong_challenge() {
     let fold_trace = fold.trace(&beta, &a, &b);
 
     let src_h = 1usize << 3;
-    let mem_h = mem_trace.len() / WIDTH;
+    let mem_h = mem.rows();
     let fold_off = src_h + mem_h;
     let (k, span) = (2usize, (src_h + mem_h + (1usize << log_layers)).next_power_of_two());
     let mut sigma: Vec<usize> = (0..span * k).collect();
@@ -1579,7 +1579,7 @@ fn a_per_query_verifier_rejects_a_wrong_opening() {
     let fold_trace = fold.trace(&beta, &a, &b);
 
     let src_h = 1usize << 3;
-    let mem_h = mem_trace.len() / WIDTH;
+    let mem_h = mem.rows();
     let fold_off = src_h + mem_h;
     let (k, span) = (2usize, (src_h + mem_h + (1usize << log_layers)).next_power_of_two());
     let mut sigma: Vec<usize> = (0..span * k).collect();
@@ -1680,7 +1680,7 @@ fn whole_proof_monolith(queries: &[usize], seeds: &[u64], wrong_opening: bool) -
         let scalar = if wrong_opening && qi == 0 { a[0] + Fp::ONE } else { a[0] };
         let (mtr, mem, _) = opening_of_scalar(scalar, 2);
         open_idx.push(regions.len());
-        heights.push(mtr.len() / WIDTH);
+        heights.push(mem.rows());
         traces.push(mtr);
         regions.push(Box::new(mem));
 
@@ -1791,7 +1791,7 @@ fn both_fold_inputs_are_bound_to_committed_openings() {
     let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
     let fold_trace = fold.trace(&beta, &a, &b);
 
-    let mem_h = open_a.len() / WIDTH;
+    let mem_h = mem_a.rows();
     let fold_off = 2 * mem_h;
     let k = 3usize;
     let span = (2 * mem_h + (1usize << log_layers)).next_power_of_two();
@@ -1817,7 +1817,7 @@ fn a_fold_with_an_uncommitted_second_input_is_rejected() {
     let fold = TraceFold::new(log_layers, n_folds, x_inv, dir, final_value);
     let fold_trace = fold.trace(&beta, &a, &b);
 
-    let mem_h = open_a.len() / WIDTH;
+    let mem_h = mem_a.rows();
     let fold_off = 2 * mem_h;
     let k = 3usize;
     let span = (2 * mem_h + (1usize << log_layers)).next_power_of_two();
@@ -2340,7 +2340,7 @@ fn whole_proof_monolith_ext(
         n_folds = nf;
         let (mtr, mem, _) = opening_of_scalar(a[0], 2);
         open_idx.push(regions.len());
-        heights.push(mtr.len() / WIDTH);
+        heights.push(mem.rows());
         traces.push(mtr);
         regions.push(Box::new(mem));
 
@@ -2596,7 +2596,7 @@ fn wired_recursive_check(deep_val: Fp) -> (crate::crypto::stark::air::WiredExt, 
     use alloc::boxed::Box;
     let scalar = Fp::from_u64(777);
     let (mtr, mem, _) = opening_of_scalar(scalar, 2);
-    let mem_height = mtr.len() / WIDTH;
+    let mem_height = mem.rows();
 
     let (cl, cp, cpz, x, z, c0, e) = (
         Fp::from_u64(2),
@@ -2800,13 +2800,14 @@ fn wired_recursive_verifier(
     let regions: Vec<Box<dyn AirExt>> =
         alloc::vec![Box::new(fs) as Box<dyn AirExt>, Box::new(mem), Box::new(fold), Box::new(dc),];
 
-    // Region row offsets exactly as Stack::of lays them, each rounded to a power of
-    // two. The FS challenge sits at row (2^ls - 1) * 2^lr, column 0.
+    // Region row offsets exactly as the engine stacks them: each region takes
+    // its actual rows, unpadded. The FS challenge sits at row (2^ls - 1) * 2^lr,
+    // column 0 of its own region.
     let mut offs = Vec::with_capacity(regions.len());
     let mut row = 0usize;
     for r in &regions {
         offs.push(row);
-        row += 1usize << r.log_trace_len();
+        row += r.rows();
     }
     let span = row.next_power_of_two();
     let (o_mem, o_fold, o_dc) = (offs[1], offs[2], offs[3]);
