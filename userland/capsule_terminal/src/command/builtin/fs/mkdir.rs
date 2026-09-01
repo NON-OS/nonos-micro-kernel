@@ -14,24 +14,43 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Create one or more directories.
+//! Create one or more directories; -p also creates the parents.
 
 use nonos_app_skeleton::clients::vfs;
 
 use super::{abspath, pid};
+use crate::command::flags::{parse, Spec};
 use crate::command::output::Output;
 use crate::term::state::State;
 
 pub fn mkdir(state: &mut State, argv: &[&[u8]]) {
-    if argv.len() < 2 {
+    let parsed = match parse(&Spec::new(b"mkdir", b"p"), &argv[1..]) {
+        Ok(p) => p,
+        Err(e) => return Output::new(&mut state.scrollback).writeln(&e),
+    };
+    if parsed.operands.is_empty() {
         Output::new(&mut state.scrollback).writeln(b"mkdir: missing name");
         return;
     }
-    for arg in &argv[1..] {
+    let parents = parsed.has(b'p');
+    for arg in parsed.operands {
         let path = abspath(state, arg);
         let owner = pid(state);
+        if parents {
+            make_parents(owner, &path);
+            let _ = vfs::mkdir(owner, &path);
+            continue;
+        }
         if let Err(e) = vfs::mkdir(owner, &path) {
             Output::new(&mut state.scrollback).writeln(e.as_bytes());
+        }
+    }
+}
+
+fn make_parents(owner: u32, path: &[u8]) {
+    for i in 1..path.len() {
+        if path[i] == b'/' {
+            let _ = vfs::mkdir(owner, &path[..i]);
         }
     }
 }

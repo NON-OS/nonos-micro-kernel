@@ -19,21 +19,23 @@
 use nonos_app_skeleton::clients::vfs;
 
 use super::{abspath, pid};
+use crate::command::flags::{parse, Spec};
 use crate::command::output::Output;
 use crate::term::state::State;
 
 pub fn cp(state: &mut State, argv: &[&[u8]]) {
-    let recursive = argv.iter().any(|a| *a == b"-r");
-    let ops: alloc::vec::Vec<&[u8]> =
-        argv[1..].iter().copied().filter(|a| a.first() != Some(&b'-')).collect();
-    if ops.len() != 2 {
+    let parsed = match parse(&Spec::new(b"cp", b"r"), &argv[1..]) {
+        Ok(p) => p,
+        Err(e) => return Output::new(&mut state.scrollback).writeln(&e),
+    };
+    if parsed.operands.len() != 2 {
         Output::new(&mut state.scrollback).writeln(b"usage: cp [-r] <src> <dst>");
         return;
     }
-    let src = abspath(state, ops[0]);
-    let dst = abspath(state, ops[1]);
+    let src = abspath(state, parsed.operands[0]);
+    let dst = abspath(state, parsed.operands[1]);
     let owner = pid(state);
-    if let Err(e) = vfs::copy(owner, &src, &dst, recursive) {
+    if let Err(e) = vfs::copy(owner, &src, &dst, parsed.has(b'r')) {
         Output::new(&mut state.scrollback).writeln(e.as_bytes());
     }
 }

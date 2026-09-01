@@ -14,17 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Print the last lines of a file (default ten).
+//! Print the last lines of a file (default ten, -n or -<count> to change).
 
 use alloc::vec::Vec;
 
 use super::read_file::slurp;
+use crate::command::flags::{parse, parse_usize, Spec};
 use crate::command::output::Output;
 use crate::term::state::State;
 
 pub fn tail(state: &mut State, argv: &[&[u8]]) {
-    let (n, file) = super::head_tail_args(argv, 10);
-    let Some(file) = file else {
+    let spec = Spec::new(b"tail", b"").valued(b"n").numeric(b'n');
+    let parsed = match parse(&spec, &argv[1..]) {
+        Ok(p) => p,
+        Err(e) => return Output::new(&mut state.scrollback).writeln(&e),
+    };
+    let n = parsed.value(b'n').and_then(parse_usize).unwrap_or(10);
+    let Some(file) = parsed.operands.last().copied() else {
         Output::new(&mut state.scrollback).writeln(b"tail: missing file");
         return;
     };

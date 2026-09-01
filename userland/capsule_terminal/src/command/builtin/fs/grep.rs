@@ -16,28 +16,62 @@
 
 //! Print the lines of a file that contain a substring.
 
-use super::read_file::slurp;
+use alloc::vec::Vec;
+
+use nonos_app_skeleton::clients::vfs;
+
+use super::grep_scan::{scan, Opts};
+use super::{abspath, pid};
+use crate::command::flags::{parse, Spec};
 use crate::command::output::Output;
 use crate::term::state::State;
 
 pub fn grep(state: &mut State, argv: &[&[u8]]) {
-    if argv.len() < 3 {
+    let parsed = match parse(&Spec::new(b"grep", b"cinrv"), &argv[1..]) {
+        Ok(p) => p,
+        Err(e) => return Output::new(&mut state.scrollback).writeln(&e),
+    };
+    if parsed.operands.len() < 2 {
         Output::new(&mut state.scrollback).writeln(b"usage: grep <pattern> <file>");
         return;
     }
-    let pat = argv[1];
-    let Some(bytes) = slurp(state, argv[2]) else { return };
-    let mut out = Output::new(&mut state.scrollback);
-    for line in bytes.split(|&b| b == b'\n') {
-        if contains(line, pat) {
-            out.writeln(line);
+    let pat = parsed.operands[0];
+    let recurse = parsed.has(b'r');
+    let opts = Opts {
+        number: parsed.has(b'n'),
+        count: parsed.has(b'c'),
+        fold: parsed.has(b'i'),
+        invert: parsed.has(b'v'),
+        label: recurse,
+    };
+    let mut targets: Vec<Vec<u8>> = Vec::new();
+    for arg in &parsed.operands[1..] {
+        if recurse {
+            expand(state, arg, &mut targets);
+        } else {
+            targets.push(arg.to_vec());
         }
+    }
+    for target in targets {
+        scan(state, &target, pat, &opts);
     }
 }
 
-fn contains(hay: &[u8], needle: &[u8]) -> bool {
-    if needle.is_empty() || needle.len() > hay.len() {
-        return needle.is_empty();
+fn expand(state: &mut State, arg: &[u8], out: &mut Vec<Vec<u8>>) {
+    let mut dir = abspath(state, arg);
+    if dir.last() != Some(&b'/') {
+        dir.push(b'/');
     }
-    hay.windows(needle.len()).any(|w| w == needle)
+    let owner = pid(state);
+    match vfs::list_paths(owner, &dir) {
+        Ok(paths) => {
+            for p in paths {
+                let bytes = p.into_bytes();
+                if bytes.last() != Some(&b'/') {
+                    out.push(bytes);
+                }
+            }
+        }
+        Err(_) => out.push(arg.to_vec()),
+    }
 }

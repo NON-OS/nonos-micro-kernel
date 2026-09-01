@@ -14,23 +14,29 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Remove files and directories. A directory needs -r.
+//! Remove files and directories. A directory needs -r; -f swallows errors.
 
 use nonos_app_skeleton::clients::vfs;
 
 use super::{abspath, pid};
+use crate::command::flags::{parse, Spec};
 use crate::command::output::Output;
 use crate::term::state::State;
 
 pub fn rm(state: &mut State, argv: &[&[u8]]) {
-    let recursive = argv.iter().any(|a| *a == b"-r" || *a == b"-rf");
-    let targets: alloc::vec::Vec<&[u8]> =
-        argv[1..].iter().copied().filter(|a| a.first() != Some(&b'-')).collect();
-    if targets.is_empty() {
-        Output::new(&mut state.scrollback).writeln(b"rm: missing path");
+    let parsed = match parse(&Spec::new(b"rm", b"rf"), &argv[1..]) {
+        Ok(p) => p,
+        Err(e) => return Output::new(&mut state.scrollback).writeln(&e),
+    };
+    let recursive = parsed.has(b'r');
+    let force = parsed.has(b'f');
+    if parsed.operands.is_empty() {
+        if !force {
+            Output::new(&mut state.scrollback).writeln(b"rm: missing path");
+        }
         return;
     }
-    for arg in targets {
+    for arg in parsed.operands {
         let path = abspath(state, arg);
         let owner = pid(state);
         let res = match vfs::stat(owner, &path) {
@@ -38,8 +44,9 @@ pub fn rm(state: &mut State, argv: &[&[u8]]) {
             Ok((_, false)) => vfs::unlink(owner, &path),
             Err(e) => Err(e),
         };
-        if let Err(e) = res {
-            Output::new(&mut state.scrollback).writeln(e.as_bytes());
+        match res {
+            Err(e) if !force => Output::new(&mut state.scrollback).writeln(e.as_bytes()),
+            _ => {}
         }
     }
 }
