@@ -27,5 +27,6 @@ pub struct Theme {
     pub ok: u32,
     pub warn: u32,
     pub err: u32,
+    pub run: u32,
     pub chrome_edge: u32,
 }

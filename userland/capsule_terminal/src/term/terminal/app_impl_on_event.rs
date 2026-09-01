@@ -18,12 +18,28 @@ use nonos_app_skeleton::{EventOutcome, InputEvent};
 
 use super::types::Terminal;
 use crate::event::on_event;
+use crate::term::dimensions::{MAX_FONT_SCALE, MIN_FONT_SCALE};
 
 impl Terminal {
     pub(super) fn on_event_inner(&mut self, event: InputEvent) -> EventOutcome {
         if let Some(outcome) = self.tab_command(event) {
             return outcome;
         }
-        on_event(self.cur(), event)
+        let outcome = on_event(self.cur(), event);
+        self.drain_chrome_req();
+        outcome
+    }
+
+    fn drain_chrome_req(&mut self) {
+        let s = self.cur();
+        let theme = s.theme_req.take();
+        let zoom = core::mem::take(&mut s.zoom_req);
+        if let Some(t) = theme {
+            self.theme = t;
+        }
+        if zoom != 0 {
+            let want = self.font_scale as i32 + zoom;
+            self.font_scale = want.clamp(MIN_FONT_SCALE as i32, MAX_FONT_SCALE as i32) as u32;
+        }
     }
 }

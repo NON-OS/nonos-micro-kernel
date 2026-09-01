@@ -27,22 +27,22 @@ use super::suggestion::draw_suggestion;
 use super::syntax::{classify, Part};
 
 use crate::term::state::State;
-use crate::term::theme::ACCENT;
+use crate::term::theme::types::Theme;
 
-pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) {
+pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics, t: &Theme) {
     let (adv, px) = (m.adv, m.px);
     // Warp-style input bar: an inset panel behind the prompt with a left
     // accent stripe, drawn first so the prompt and text land on top.
     let bar_x = TEXT_LEFT / 2;
     let bar_w = fb.width.saturating_sub(TEXT_LEFT);
     let bar_y = y.saturating_sub(3);
-    fb.fill_rect(bar_x, bar_y, bar_w, m.lh + 4, elevate(state.bg, 12));
-    fb.fill_rect(bar_x, bar_y, 2, m.lh + 4, ACCENT);
+    fb.fill_rect(bar_x, bar_y, bar_w, m.lh + 4, elevate(t.bg, 12));
+    fb.fill_rect(bar_x, bar_y, 2, m.lh + 4, t.accent);
     // Character cells that fit between the left inset and an equal right margin.
     let total_cells = (fb.width.saturating_sub(TEXT_LEFT * 2) / adv) as usize;
     // Prompt is glyph + path + trailing space; cap the path to a third of the
     // line so a deep cwd never starves the area left to type in.
-    let prompt_cells = draw_prompt(state, fb, y, adv, px, total_cells / 3);
+    let prompt_cells = draw_prompt(state, fb, y, adv, px, total_cells / 3, t);
     // Horizontal scroll: slide a body_cells-wide window so the cursor is always
     // on screen, showing the start of the line whenever it fits.
     let body = state.line.as_bytes();
@@ -56,15 +56,15 @@ pub fn draw_input_line(state: &State, fb: &mut PaintBuffer, y: u32, m: Metrics) 
     classify(body, &mut parts);
     let from = start.min(MAX_HIGHLIGHT);
     let to = stop.min(MAX_HIGHLIGHT);
-    text_parts(fb, bx, y, &body[start..stop], &parts[from..to], adv, px);
+    text_parts(fb, bx, y, &body[start..stop], &parts[from..to], adv, px, t);
     // The offer sits where the cursor is, so it has to be drawn before the
     // cursor goes on top of it.
     let typed_cells = stop.saturating_sub(start);
     let ghost_x = bx + typed_cells as u32 * adv;
     let room = body_cells.saturating_sub(typed_cells);
-    draw_suggestion(state, fb, ghost_x, y, adv, px, room);
+    draw_suggestion(state, fb, ghost_x, y, adv, px, room, t);
     let under = body.get(cursor).copied().unwrap_or(0);
-    draw_cursor(fb, prompt_cells, cursor - scroll, y + 1, under, m);
+    draw_cursor(fb, prompt_cells, cursor - scroll, y + 1, under, m, t);
 }
 
 // The longest line that is coloured. Past it the tail is drawn plain rather

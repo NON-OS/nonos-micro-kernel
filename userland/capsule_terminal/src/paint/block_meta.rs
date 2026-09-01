@@ -18,7 +18,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::TEXT_LEFT;
 use crate::term::block::Block;
-use crate::term::theme::DIM;
+use crate::term::theme::types::Theme;
 
 /// Size the meta is drawn at. Below the body, because it annotates a command
 /// rather than being part of what the command said.
@@ -32,13 +32,13 @@ const GAP: i32 = 8;
 /// Drawn right to left from the edge, so the columns line up down the
 /// scrollback whatever each command was called. A reader scanning for the one
 /// that failed is looking down a column, not reading each line.
-pub(super) fn draw_meta(fb: &mut PaintBuffer, b: &Block, stripe: u32, y: u32) {
+pub(super) fn draw_meta(fb: &mut PaintBuffer, b: &Block, stripe: u32, y: u32, t: &Theme) {
     let baseline = (y + 1) as i32;
     let mut right = fb.width.saturating_sub(TEXT_LEFT) as i32;
 
     if let Ok(ts) = core::str::from_utf8(&b.ts) {
         right -= fb.measure_ttf(ts, META_PX);
-        let _ = fb.text_ttf(right, baseline, ts, DIM, META_PX);
+        let _ = fb.text_ttf(right, baseline, ts, t.dim, META_PX);
         right -= GAP;
     }
 

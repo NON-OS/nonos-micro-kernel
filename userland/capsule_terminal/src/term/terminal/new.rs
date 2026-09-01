@@ -21,6 +21,6 @@ use crate::term::state::State;
 
 impl Terminal {
     pub fn new() -> Self {
-        Self { tabs: vec![State::new()], active: 0, width: 0, acc_w: 0 }
+        Self { tabs: vec![State::new()], active: 0, width: 0, acc_w: 0, theme: 0, font_scale: 2 }
     }
 }

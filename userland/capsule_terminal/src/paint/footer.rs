@@ -18,7 +18,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::constants::{FOOTER_H, TEXT_LEFT};
 use super::shade::elevate;
-use crate::term::theme::{ACCENT, DIM};
+use crate::term::theme::types::Theme;
 
 /// The hint bar: what to press, and what it does.
 ///
@@ -39,12 +39,12 @@ const HINTS: &[(&str, &str)] = &[
 const KEY_GAP: i32 = 5;
 const PAIR_GAP: i32 = 18;
 
-pub fn draw_footer(fb: &mut PaintBuffer, bg: u32) {
+pub fn draw_footer(fb: &mut PaintBuffer, t: &Theme) {
     let y = fb.height.saturating_sub(FOOTER_H);
-    fb.fill_rect(0, y, fb.width, FOOTER_H, elevate(bg, 10));
+    fb.fill_rect(0, y, fb.width, FOOTER_H, elevate(t.bg, 10));
     // A hairline rather than a block in another shade. It separates the bar
     // from the body without spending a row of height to do it.
-    fb.fill_rect(0, y, fb.width, 1, elevate(bg, 22));
+    fb.fill_rect(0, y, fb.width, 1, elevate(t.bg, 22));
 
     let baseline = (y + 3) as i32;
     let mut x = TEXT_LEFT as i32;
@@ -56,9 +56,9 @@ pub fn draw_footer(fb: &mut PaintBuffer, bg: u32) {
         if x + key_w + KEY_GAP + label_w > fb.width as i32 - TEXT_LEFT as i32 {
             break;
         }
-        let _ = fb.text_ttf(x, baseline, key, ACCENT, 12.0);
+        let _ = fb.text_ttf(x, baseline, key, t.accent, 12.0);
         x += key_w + KEY_GAP;
-        let _ = fb.text_ttf(x, baseline, label, DIM, 12.0);
+        let _ = fb.text_ttf(x, baseline, label, t.dim, 12.0);
         x += label_w + PAIR_GAP;
     }
 }

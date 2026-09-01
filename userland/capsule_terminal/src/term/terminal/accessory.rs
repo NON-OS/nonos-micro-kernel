@@ -17,9 +17,9 @@
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, PaintBuffer};
 
 use super::types::Terminal;
-use crate::command::builtin::theme::next_bg;
-use crate::term::dimensions::MAX_FONT_SCALE;
 use crate::paint::tab_bar::{feat_hit, nominal_w};
+use crate::term::dimensions::{MAX_FONT_SCALE, MIN_FONT_SCALE};
+use crate::term::theme::profiles;
 
 const LIGHTS_RESERVE: u32 = 128;
 
@@ -43,12 +43,11 @@ impl Terminal {
         }
         let x = event.x as u32;
         if let Some(f) = feat_hit(x, self.acc_w) {
-            let s = self.cur();
             match f {
-                0 => s.bg = next_bg(s.bg),
-                1 => s.font_scale = s.font_scale.saturating_sub(1).max(1),
-                2 => s.font_scale = (s.font_scale + 1).min(MAX_FONT_SCALE),
-                _ => s.scrollback.clear(),
+                0 => self.theme = (self.theme + 1) % profiles::COUNT,
+                1 => self.font_scale = self.font_scale.saturating_sub(1).max(MIN_FONT_SCALE),
+                2 => self.font_scale = (self.font_scale + 1).min(MAX_FONT_SCALE),
+                _ => self.cur().scrollback.clear(),
             }
             return EventOutcome::Repaint;
         }

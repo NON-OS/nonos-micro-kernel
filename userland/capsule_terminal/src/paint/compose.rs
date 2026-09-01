@@ -27,15 +27,16 @@ use super::metrics::Metrics;
 use super::tabstrip::STRIP_H;
 use crate::layout::{compute, Chrome, Rails};
 use crate::term::state::State;
+use crate::term::theme::types::Theme;
 
-pub fn paint_tabs(tabs: &[State], active: usize, fb: &mut PaintBuffer) {
-    paint(&tabs[active], fb);
+pub fn paint_tabs(tabs: &[State], active: usize, fb: &mut PaintBuffer, t: &Theme, font_scale: u32) {
+    paint(&tabs[active], fb, t, font_scale);
 }
 
-pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    fb.clear(state.bg);
-    draw_header(state, fb);
-    let m = Metrics::new(fb, state.font_scale);
+pub fn paint(state: &State, fb: &mut PaintBuffer, t: &Theme, font_scale: u32) {
+    fb.clear(t.bg);
+    draw_header(state, fb, t);
+    let m = Metrics::new(fb, font_scale);
     let chrome = Chrome {
         titlebar_h: HEADER_H,
         tabstrip_h: STRIP_H,
@@ -48,16 +49,16 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     let text_x = l.body.x + chrome.text_left;
     let alt = state.scrollback.grid.alternate;
     if alt {
-        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.footer.y, m);
-        draw_grid_cursor(&state.scrollback.grid, fb, text_x, l.body.y, m);
+        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.footer.y, m, t);
+        draw_grid_cursor(&state.scrollback.grid, fb, text_x, l.body.y, m, t);
     } else if state.fresh {
-        draw_fetch(state, fb);
+        draw_fetch(state, fb, t);
     } else {
-        draw_block_chrome(state, fb, text_x, l.body.y, l.input.y, &m);
-        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.input.y, m);
+        draw_block_chrome(state, fb, text_x, l.body.y, l.input.y, &m, t);
+        draw_grid(&state.scrollback.grid, fb, text_x, l.body.y, l.input.y, m, t);
     }
     if !alt {
-        draw_input_line(state, fb, l.input.y, m);
+        draw_input_line(state, fb, l.input.y, m, t);
     }
-    draw_footer(fb, state.bg);
+    draw_footer(fb, t);
 }

@@ -27,6 +27,9 @@ pub struct Terminal {
     // Accessory width the frame actually granted, recorded when it hands over
     // the sub-buffer so the painter and the hit-test share one geometry.
     pub(crate) acc_w: u32,
+    // Window level, so a new tab inherits the look instead of resetting it.
+    pub(crate) theme: u16,
+    pub(crate) font_scale: u32,
 }
 
 impl Terminal {

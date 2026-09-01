@@ -20,7 +20,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::term::theme::ACCENT;
+use crate::term::theme::types::Theme;
 
 const BANNER: [&str; 6] = [
     "███╗   ██╗ ██████╗ ███╗   ██╗ ██████╗ ███████╗",
@@ -35,10 +35,10 @@ const BANNER_PX: f32 = 13.0;
 const BANNER_ROW: i32 = 15;
 
 // Draw the banner at (x, y). Returns the y just below it.
-pub fn draw_banner(fb: &mut PaintBuffer, x: i32, y: i32) -> i32 {
+pub fn draw_banner(fb: &mut PaintBuffer, x: i32, y: i32, t: &Theme) -> i32 {
     let mut yy = y;
     for line in BANNER {
-        let _ = fb.text_ttf_mono(x, yy, line, ACCENT, BANNER_PX);
+        let _ = fb.text_ttf_mono(x, yy, line, t.accent, BANNER_PX);
         yy += BANNER_ROW;
     }
     yy

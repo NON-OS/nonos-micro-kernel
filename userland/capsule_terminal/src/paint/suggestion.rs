@@ -20,7 +20,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::line_text::text;
 use crate::term::state::State;
-use crate::term::theme::DIM;
+use crate::term::theme::types::Theme;
 
 /// Draw the rest of the most recent line that starts with what is typed.
 ///
@@ -39,6 +39,7 @@ pub fn draw_suggestion(
     adv: u32,
     px: f32,
     room_cells: usize,
+    t: &Theme,
 ) {
     let body = state.line.as_bytes();
     if state.line.cursor != body.len() {
@@ -54,5 +55,5 @@ pub fn draw_suggestion(
     if shown == 0 {
         return;
     }
-    text(fb, x, y, &tail[..shown], DIM, adv, px);
+    text(fb, x, y, &tail[..shown], t.dim, adv, px);
 }

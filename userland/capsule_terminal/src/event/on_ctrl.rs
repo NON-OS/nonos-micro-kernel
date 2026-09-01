@@ -22,7 +22,6 @@ use super::copy_line::copy_line;
 use super::paste_clipboard::paste_clipboard;
 use super::search::{search_cancel, search_step};
 use crate::jobs::JobWork;
-use crate::term::dimensions::MAX_FONT_SCALE;
 use crate::term::state::State;
 
 const SIGINT: u64 = 2;
@@ -111,11 +110,11 @@ pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome>
         }
         // Ctrl+= / Ctrl++ zoom the body font in, Ctrl+- / Ctrl+_ out (1..=4).
         ZOOM_IN_EQ | ZOOM_IN_PLUS => {
-            state.font_scale = (state.font_scale + 1).min(MAX_FONT_SCALE);
+            state.zoom_req += 1;
             Some(EventOutcome::Repaint)
         }
         ZOOM_OUT_MINUS | ZOOM_OUT_USCORE => {
-            state.font_scale = state.font_scale.saturating_sub(1).max(1);
+            state.zoom_req -= 1;
             Some(EventOutcome::Repaint)
         }
         _ => None,
