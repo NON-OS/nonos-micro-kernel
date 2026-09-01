@@ -41,6 +41,8 @@ mod tab_chip;
 mod tab_label;
 pub mod tab_pill;
 pub mod tokens;
+mod tool_icon;
+pub mod toolbar;
 
 pub use compose::paint_tabs;
 pub use tab_bar::draw_tab_bar;

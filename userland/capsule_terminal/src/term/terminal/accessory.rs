@@ -17,8 +17,8 @@
 use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind, PaintBuffer};
 
 use super::types::Terminal;
-use crate::paint::tab_bar::{feat_hit, nominal_w};
-use crate::term::dimensions::{MAX_FONT_SCALE, MIN_FONT_SCALE};
+use crate::paint::tab_bar::nominal_w;
+use crate::paint::toolbar::toolbar_hit;
 use crate::term::theme::profiles;
 
 const LIGHTS_RESERVE: u32 = 128;
@@ -42,12 +42,10 @@ impl Terminal {
             return EventOutcome::Idle;
         }
         let x = event.x as u32;
-        if let Some(f) = feat_hit(x, self.acc_w) {
+        if let Some(f) = toolbar_hit(self.acc_w, x, event.y as u32) {
             match f {
-                0 => self.theme = (self.theme + 1) % profiles::COUNT,
-                1 => self.font_scale = self.font_scale.saturating_sub(1).max(MIN_FONT_SCALE),
-                2 => self.font_scale = (self.font_scale + 1).min(MAX_FONT_SCALE),
-                _ => self.cur().scrollback.clear(),
+                0 => self.open_tab(),
+                _ => self.theme = (self.theme + 1) % profiles::COUNT,
             }
             return EventOutcome::Repaint;
         }
