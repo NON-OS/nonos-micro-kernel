@@ -23,6 +23,9 @@
 //! who has learned that green passed and red failed should not have to
 //! relearn it because those are also the brand.
 
+pub mod profiles;
+pub mod types;
+
 /// Body background. A faint cool cast keeps it from reading as a dead grey
 /// once the compositor puts a wallpaper behind a translucent profile.
 pub const BACKGROUND: u32 = 0xFF07_090B;
