@@ -97,6 +97,7 @@ dependencies = [
  "nonos_inflate",
  "nonos_socket",
  "nonos_tls",
+ "nonos_toolkit",
  "nonos_userland_libc",
 ]
 

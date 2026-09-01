@@ -14,29 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod block_chrome;
-mod block_meta;
-mod compose;
-mod constants;
-mod draw_cursor;
-mod draw_grid;
-mod draw_input_line;
-mod fetch;
-mod fetch_banner;
-mod fetch_palette;
-mod fetch_uptime;
-mod footer;
-mod header;
-mod line_chars;
-mod line_text;
-mod line_window;
-mod metrics;
-mod prompt;
-mod shade;
-mod suggestion;
-mod syntax;
-pub mod tabstrip;
-pub mod tokens;
+pub const TAB_ACTIVE: u32 = 0xB0_12_30_3A;
+pub const TAB_ACTIVE_EDGE: u32 = 0xFF_1D_4A_5A;
+pub const TAB_HOVER: u32 = 0xFF_0D_1B_23;
+pub const TAB_IDLE: u32 = 0x00_00_00_00;
 
-pub use compose::paint_tabs;
-pub use tabstrip::draw_tabstrip;
+pub const DOT_OK: u32 = 0xFF_35_D0_7A;
+pub const DOT_IDLE: u32 = 0xFF_5B_71_80;
+
+pub const TOOLBAR_ICON: u32 = 0xFF_8F_A6_B4;
+pub const TOOLBAR_LABEL: u32 = 0xFF_5B_71_80;
+pub const TOOLBAR_ACTIVE: u32 = 0xFF_5A_E6_D0;

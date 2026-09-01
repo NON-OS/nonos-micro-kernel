@@ -31,13 +31,13 @@ pub fn compute(w: u32, h: u32, c: &Chrome, r: Rails) -> Layout {
     let body_w = w.saturating_sub(lw + rw);
 
     Layout {
-        titlebar: Rect::new(0, 0, w, titlebar_h),
-        tabstrip: Rect::new(0, tab_y, w, tabstrip_h),
-        left_rail: Rect::new(0, content_y, lw, content_h),
-        right_rail: Rect::new(lw + body_w, content_y, rw, content_h),
-        body: Rect::new(lw, content_y, body_w, body_h),
-        input: Rect::new(lw, content_y + body_h, body_w, input_h),
-        footer: Rect::new(0, content_y + content_h, w, footer_h),
+        titlebar: Rect { x: 0, y: 0, w, h: titlebar_h },
+        tabstrip: Rect { x: 0, y: tab_y, w, h: tabstrip_h },
+        left_rail: Rect { x: 0, y: content_y, w: lw, h: content_h },
+        right_rail: Rect { x: lw + body_w, y: content_y, w: rw, h: content_h },
+        body: Rect { x: lw, y: content_y, w: body_w, h: body_h },
+        input: Rect { x: lw, y: content_y + body_h, w: body_w, h: input_h },
+        footer: Rect { x: 0, y: content_y + content_h, w, h: footer_h },
     }
 }
 

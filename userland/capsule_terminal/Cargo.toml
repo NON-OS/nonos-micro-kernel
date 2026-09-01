@@ -33,6 +33,7 @@ nonos_git = { path = "../nonos_git" }
 nonos_http = { path = "../nonos_http" }
 nonos_socket = { path = "../nonos_socket" }
 nonos_tls = { path = "../nonos_tls" }
+nonos_toolkit = { path = "../toolkit", default-features = false }
 
 [profile.release]
 panic = "abort"

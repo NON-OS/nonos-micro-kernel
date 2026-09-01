@@ -14,23 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Rect {
-    pub x: u32,
-    pub y: u32,
-    pub w: u32,
-    pub h: u32,
-}
-
-impl Rect {
-    pub fn new(x: u32, y: u32, w: u32, h: u32) -> Self {
-        Self { x, y, w, h }
-    }
-
-    pub fn contains(&self, px: u32, py: u32) -> bool {
-        px >= self.x && py >= self.y && px < self.x + self.w && py < self.y + self.h
-    }
-}
+pub use nonos_toolkit::decorations::Rect;
 
 #[derive(Clone, Copy)]
 pub struct Chrome {
