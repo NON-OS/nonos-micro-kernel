@@ -16,6 +16,7 @@
 
 use alloc::vec::Vec;
 
+use crate::rail::Rail;
 use crate::term::prefs::Prefs;
 use crate::term::state::State;
 
@@ -38,6 +39,9 @@ pub struct Terminal {
     // the tick that writes the record.
     pub(crate) prefs_dirty: bool,
     pub(crate) prefs_ticks: u32,
+    // Live system telemetry for the right rail, polled on its own tick budget
+    // so the table never re-reads the kernel once per frame.
+    pub(crate) rail: Rail,
 }
 
 impl Terminal {

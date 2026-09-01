@@ -1,0 +1,63 @@
+// NONOS Operating System
+// Copyright (C) 2026 NONOS Contributors
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+pub const MAX_PROCS: usize = 64;
+pub const PROC_NAME_LEN: usize = 24;
+
+#[derive(Clone, Copy)]
+pub struct Proc {
+    pub pid: u32,
+    pub name: [u8; PROC_NAME_LEN],
+    pub name_len: u8,
+    pub cpu_pct: u32,
+    pub mem_kb: u64,
+    pub run_ticks: u64,
+}
+
+impl Proc {
+    pub const EMPTY: Proc =
+        Proc { pid: 0, name: [0; PROC_NAME_LEN], name_len: 0, cpu_pct: 0, mem_kb: 0, run_ticks: 0 };
+
+    pub fn name_str(&self) -> &str {
+        let n = (self.name_len as usize).min(PROC_NAME_LEN);
+        core::str::from_utf8(&self.name[..n]).unwrap_or("")
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct Sample {
+    pub total_ticks: u64,
+    pub procs: [Proc; MAX_PROCS],
+    pub n: usize,
+    pub mem_total_kb: u64,
+    pub cpu_pct: u32,
+    pub uptime_ms: u64,
+}
+
+impl Sample {
+    pub const EMPTY: Sample = Sample {
+        total_ticks: 0,
+        procs: [Proc::EMPTY; MAX_PROCS],
+        n: 0,
+        mem_total_kb: 0,
+        cpu_pct: 0,
+        uptime_ms: 0,
+    };
+
+    pub fn live(&self) -> &[Proc] {
+        &self.procs[..self.n.min(MAX_PROCS)]
+    }
+}

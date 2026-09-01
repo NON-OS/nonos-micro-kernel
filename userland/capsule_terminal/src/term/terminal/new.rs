@@ -17,6 +17,7 @@
 use alloc::vec;
 
 use super::types::Terminal;
+use crate::rail::Rail;
 use crate::term::dimensions::{MAX_FONT_SCALE, MIN_FONT_SCALE};
 use crate::term::prefs::store;
 use crate::term::state::State;
@@ -35,6 +36,7 @@ impl Terminal {
             prefs,
             prefs_dirty: false,
             prefs_ticks: 0,
+            rail: Rail::new(),
         }
     }
 }

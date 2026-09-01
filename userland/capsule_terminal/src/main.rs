@@ -26,6 +26,7 @@ mod jobs;
 mod layout;
 mod mixnet;
 mod paint;
+mod rail;
 mod term;
 
 #[cfg(not(feature = "nonos-autorun-selftest"))]

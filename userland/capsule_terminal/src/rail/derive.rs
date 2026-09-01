@@ -14,40 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod block_chrome;
-mod block_meta;
-mod compose;
-mod constants;
-mod draw_cursor;
-mod draw_grid;
-mod draw_input_line;
-mod fetch;
-mod fetch_banner;
-mod fetch_palette;
-mod fetch_uptime;
-mod fit_text;
-mod footer;
-mod header;
-mod line_chars;
-mod line_text;
-mod line_window;
-mod metrics;
-mod prompt;
-mod rail_fmt;
-mod rail_procs;
-pub mod rail_right;
-mod rail_text;
-mod shade;
-mod spark;
-mod suggestion;
-mod syntax;
-pub mod tab_bar;
-mod tab_chip;
-mod tab_label;
-pub mod tab_pill;
-pub mod tokens;
-mod tool_icon;
-pub mod toolbar;
+/// Share of the scheduler's elapsed ticks a run-tick delta accounts for, as a
+/// whole percent. A zero total delta is the first poll or a repeat inside one
+/// tick and has no denominator, so it reads as zero rather than dividing.
+pub fn cpu_pct(run_delta: u64, total_delta: u64) -> u32 {
+    if total_delta == 0 {
+        return 0;
+    }
+    (run_delta.saturating_mul(100) / total_delta).min(100) as u32
+}
 
-pub use compose::paint_tabs;
-pub use tab_bar::draw_tab_bar;
+/// Share of the resident total one process holds. The kernel publishes no
+/// system memory size, so the live set's own resident sum is the denominator.
+pub fn mem_pct(mem_kb: u64, total_kb: u64) -> u32 {
+    if total_kb == 0 {
+        return 0;
+    }
+    (mem_kb.saturating_mul(100) / total_kb).min(100) as u32
+}

@@ -28,6 +28,6 @@ impl Terminal {
         }
         self.width = fb.width;
         let theme = crate::term::theme::profiles::by_index(self.theme);
-        crate::paint::paint_tabs(&self.tabs, self.active, fb, theme, self.font_scale);
+        crate::paint::paint_tabs(&self.tabs, self.active, fb, theme, self.font_scale, &self.rail);
     }
 }

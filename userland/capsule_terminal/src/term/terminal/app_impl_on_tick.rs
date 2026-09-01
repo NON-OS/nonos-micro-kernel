@@ -25,7 +25,8 @@ const SAVE_TICKS: u32 = 34;
 impl Terminal {
     pub(super) fn on_tick_inner(&mut self) -> bool {
         self.flush_prefs();
-        jobs::pump(self.cur())
+        let sampled = self.rail.tick();
+        jobs::pump(self.cur()) || sampled
     }
 
     fn flush_prefs(&mut self) {
