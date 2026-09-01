@@ -14,36 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![no_std]
-#![no_main]
-
-extern crate alloc;
-
-mod command;
-mod event;
-mod git;
-mod jobs;
-mod layout;
-mod mixnet;
-mod paint;
-mod term;
-
-#[cfg(not(feature = "nonos-autorun-selftest"))]
-use nonos_app_skeleton::run;
-
-/// # Safety
-///
-/// This is the capsule entry point. The loader calls it exactly once on a
-/// freshly initialized stack with no live Rust state, and it never returns.
-/// It must not be called from Rust code.
-#[no_mangle]
-pub unsafe extern "C" fn _start() -> ! {
-    #[cfg(feature = "nonos-autorun-selftest")]
-    {
-        term::terminal::selftest::main()
-    }
-    #[cfg(not(feature = "nonos-autorun-selftest"))]
-    {
-        run(term::Terminal::new)
-    }
+pub fn row_top(i: u32, body_y: u32, lh: u32) -> u32 {
+    body_y + i * lh
 }
