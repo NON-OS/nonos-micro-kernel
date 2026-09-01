@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::mk_getpid;
+
 use super::types::State;
 use crate::jobs::JobTable;
 use crate::term::cwd::Cwd;
@@ -28,7 +30,7 @@ impl State {
             history: History::new(),
             scrollback: Scrollback::new(),
             cwd: Cwd::new(),
-            owner_pid: 0,
+            owner_pid: mk_getpid(),
             fresh: true,
             start_ms: 0,
             vars: alloc::vec::Vec::new(),

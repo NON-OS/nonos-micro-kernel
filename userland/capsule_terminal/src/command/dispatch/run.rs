@@ -16,7 +16,6 @@
 
 use alloc::vec::Vec;
 use nonos_app_skeleton::clients::vfs::read_file;
-use nonos_app_skeleton::discover::lookup_service;
 
 use super::exec::exec;
 use super::outcome::Outcome;
@@ -79,9 +78,6 @@ pub fn run(state: &mut State, argv: &Argv<'_>) -> Outcome {
 }
 
 fn read_input(state: &mut State, path_arg: &[u8]) -> Vec<Vec<u8>> {
-    if state.owner_pid == 0 {
-        state.owner_pid = lookup_service(b"app.terminal").map(|p| p.pid).unwrap_or(0);
-    }
     let path = resolve(state.cwd.as_bytes(), path_arg);
     match read_file(state.owner_pid, &path, MAX_INPUT) {
         Ok(data) => data.split(|&b| b == b'\n').map(<[u8]>::to_vec).collect(),
