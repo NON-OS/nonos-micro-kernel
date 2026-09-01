@@ -28,9 +28,9 @@ use crate::term::state::State;
 use crate::term::theme::types::Theme;
 
 const LEFT: i32 = 26;
-// Breathing room between the tab strip and the top of the banner. Anchored to
+// Breathing room between the titlebar and the top of the banner. Anchored to
 // the body region so the art starts inside the content area, not butted against
-// the strip the way it did before.
+// the chrome above it.
 const BANNER_TOP: i32 = BODY_TOP as i32 + 14;
 const INFO_PX: f32 = 14.0;
 const ROW: i32 = 20;

@@ -40,7 +40,6 @@ pub mod tab_bar;
 mod tab_chip;
 mod tab_label;
 pub mod tab_pill;
-pub mod tabstrip;
 pub mod tokens;
 
 pub use compose::paint_tabs;

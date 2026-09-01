@@ -76,7 +76,7 @@ use layout::types::{Chrome, Layout, Rails};
 
 const CHROME: Chrome = Chrome {
     titlebar_h: 28,
-    tabstrip_h: 16,
+    tabstrip_h: 0,
     body_pad_top: 6,
     footer_h: 16,
     text_left: 14,
@@ -103,13 +103,15 @@ fn the_bands_tile_the_window_with_no_gap_or_overlap() {
     assert_eq!(l.footer.y + l.footer.h, 900);
 }
 
-/// The regression guard for the refactor that introduced this module: these
-/// are the exact numbers the pre-refactor constants produced at the shipping
-/// window size, so the default render must not have moved by a pixel.
+/// The regression guard for the shipping window geometry. `body.y` was 50 while
+/// the content area still reserved 16px for the in-content tab strip; the strip
+/// moved into the titlebar accessory, that band was reclaimed, and the body top
+/// is now HEADER_H + BODY_PAD_TOP = 34. The guard is not weakened: `input.y` and
+/// `footer.y` are anchored to the bottom of the window and must not have moved.
 #[test]
-fn the_default_render_is_unchanged() {
+fn the_default_render_pins_the_reclaimed_geometry() {
     let l = lay(520, 300, NO_RAILS);
-    assert_eq!(l.body.y, 50, "BODY_TOP was HEADER_H + 6 + 16");
+    assert_eq!(l.body.y, 34, "BODY_TOP is HEADER_H + BODY_PAD_TOP");
     assert_eq!(l.input.y, 264, "input_y was 300 - (FOOTER_H + row_h)");
     assert_eq!(l.footer.y, 284, "body_max was 300 - FOOTER_H");
     assert_eq!(l.body.x + CHROME.text_left, 14, "TEXT_LEFT with no left rail");
