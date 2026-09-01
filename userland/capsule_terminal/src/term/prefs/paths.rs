@@ -14,16 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Prefs {
-    pub theme: u16,
-    pub font_scale: u8,
-    pub cursor: u8,
-    pub rails: u8,
-}
+pub const DIR: &[u8] = b"/etc/terminal";
+pub const PREFS: &[u8] = b"/etc/terminal/prefs.dat";
 
-impl Default for Prefs {
-    fn default() -> Self {
-        Self { theme: 0, font_scale: 2, cursor: 0, rails: 0 }
-    }
-}
+// The record is a fixed 12 bytes; anything past this bound is not a record this
+// build wrote, so the read is capped rather than trusted.
+pub const MAX_FILE_BYTES: u32 = 64;

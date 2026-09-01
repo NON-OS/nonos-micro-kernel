@@ -15,6 +15,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod codec;
+pub mod gate;
+pub mod paths;
+pub mod store;
 pub mod types;
 
 pub use types::Prefs;

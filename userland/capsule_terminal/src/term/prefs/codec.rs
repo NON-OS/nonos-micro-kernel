@@ -16,12 +16,12 @@
 
 use super::types::Prefs;
 use crate::term::dimensions::{MAX_FONT_SCALE, MIN_FONT_SCALE};
+use crate::term::theme::profiles::COUNT as THEME_COUNT;
 
 pub const MAGIC: [u8; 4] = *b"NTP1";
 pub const VERSION: u16 = 1;
 pub const LEN: usize = 12;
 
-const THEME_COUNT: u16 = 4;
 const CURSOR_COUNT: u8 = 4;
 const RAILS_MASK: u8 = 0b11;
 

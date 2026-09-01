@@ -31,6 +31,7 @@ impl Terminal {
     }
 
     fn drain_chrome_req(&mut self) {
+        let before = (self.theme, self.font_scale);
         let s = self.cur();
         let theme = s.theme_req.take();
         let zoom = core::mem::take(&mut s.zoom_req);
@@ -40,6 +41,9 @@ impl Terminal {
         if zoom != 0 {
             let want = self.font_scale as i32 + zoom;
             self.font_scale = want.clamp(MIN_FONT_SCALE as i32, MAX_FONT_SCALE as i32) as u32;
+        }
+        if (self.theme, self.font_scale) != before {
+            self.prefs_dirty = true;
         }
     }
 }

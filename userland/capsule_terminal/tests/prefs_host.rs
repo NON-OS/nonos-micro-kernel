@@ -30,6 +30,12 @@ mod term {
         pub const MAX_FONT_SCALE: u32 = 6;
     }
 
+    pub mod theme {
+        pub mod profiles {
+            pub const COUNT: u16 = 4;
+        }
+    }
+
     pub mod prefs {
         pub mod types;
 

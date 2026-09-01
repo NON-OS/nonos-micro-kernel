@@ -14,16 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Prefs {
-    pub theme: u16,
-    pub font_scale: u8,
-    pub cursor: u8,
-    pub rails: u8,
+use core::sync::atomic::{AtomicBool, Ordering};
+
+static DEAD: AtomicBool = AtomicBool::new(false);
+
+// The transport error `vfs::call` raises when the endpoint answers nothing;
+// the kernel bounds that at a 5 s timeout. Anything else is a live server
+// refusing or missing a file, which must not latch the store off.
+const TRANSPORT: &str = "vfs ipc failed";
+
+pub fn live() -> bool {
+    !DEAD.load(Ordering::Relaxed)
 }
 
-impl Default for Prefs {
-    fn default() -> Self {
-        Self { theme: 0, font_scale: 2, cursor: 0, rails: 0 }
+// One dead-VFS round trip costs the caller five seconds. Latching after the
+// first keeps a missing file server from taxing every later tick.
+pub fn note(err: &'static str) {
+    if err == TRANSPORT {
+        DEAD.store(true, Ordering::Relaxed);
     }
 }

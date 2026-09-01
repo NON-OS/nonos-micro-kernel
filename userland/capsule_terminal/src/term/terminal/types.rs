@@ -16,6 +16,7 @@
 
 use alloc::vec::Vec;
 
+use crate::term::prefs::Prefs;
 use crate::term::state::State;
 
 pub struct Terminal {
@@ -30,6 +31,13 @@ pub struct Terminal {
     // Window level, so a new tab inherits the look instead of resetting it.
     pub(crate) theme: u16,
     pub(crate) font_scale: u32,
+    // The record as it was last read or written, so a save carries the fields
+    // this build does not surface instead of resetting them to defaults.
+    pub(crate) prefs: Prefs,
+    // Set only when a chrome request actually moved theme or zoom; cleared by
+    // the tick that writes the record.
+    pub(crate) prefs_dirty: bool,
+    pub(crate) prefs_ticks: u32,
 }
 
 impl Terminal {

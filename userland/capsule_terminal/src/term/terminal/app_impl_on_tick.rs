@@ -16,9 +16,31 @@
 
 use super::types::Terminal;
 use crate::jobs;
+use crate::term::prefs::store;
+
+// `tick_interval_ms` is 30, so a whole second of ticks separates two writes and
+// a burst of zoom keystrokes collapses into one VFS round trip.
+const SAVE_TICKS: u32 = 34;
 
 impl Terminal {
     pub(super) fn on_tick_inner(&mut self) -> bool {
+        self.flush_prefs();
         jobs::pump(self.cur())
+    }
+
+    fn flush_prefs(&mut self) {
+        if !self.prefs_dirty {
+            self.prefs_ticks = 0;
+            return;
+        }
+        self.prefs_ticks += 1;
+        if self.prefs_ticks < SAVE_TICKS {
+            return;
+        }
+        self.prefs_ticks = 0;
+        self.prefs_dirty = false;
+        self.prefs.theme = self.theme;
+        self.prefs.font_scale = self.font_scale as u8;
+        store::save(&self.prefs);
     }
 }
