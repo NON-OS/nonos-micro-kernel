@@ -17,7 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::tab_chip::draw_chip;
-use super::tab_label::tab_label;
+use super::tab_label::{tab_label, LABEL_CAP};
 use super::tab_pill::{draw_pill, pill_rect, plus_rect, PILL_H, PILL_W, PLUS_W};
 use super::tokens::{TOOLBAR_ACTIVE, TOOLBAR_ICON};
 use crate::layout::Rect;
@@ -53,9 +53,10 @@ pub fn nominal_w(tabs: usize) -> u32 {
 
 pub fn draw_tab_bar(tabs: &[State], active: usize, fb: &mut PaintBuffer) {
     let avail = tabs_avail(fb.width);
+    let mut buf = [0u8; LABEL_CAP];
     for (i, tab) in tabs.iter().enumerate() {
-        let label = tab_label(i, tab.cwd.as_bytes());
-        draw_pill(fb, pill_rect(i, avail), &label, i == active);
+        let (name_len, n) = tab_label(i, tab, &mut buf);
+        draw_pill(fb, pill_rect(i, avail), &buf[..n], name_len, i == active);
     }
     draw_chip(fb, plus_rect(tabs.len(), avail), "+", TOOLBAR_ACTIVE);
     for (i, label) in FEATURES.iter().enumerate() {

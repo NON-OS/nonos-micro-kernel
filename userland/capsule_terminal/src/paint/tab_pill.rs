@@ -21,7 +21,7 @@ use super::tokens::{DOT_IDLE, DOT_OK, TAB_ACTIVE, TAB_ACTIVE_EDGE, TAB_IDLE};
 use super::tokens::{TOOLBAR_ACTIVE, TOOLBAR_LABEL};
 use crate::layout::Rect;
 
-pub const PILL_W: u32 = 132;
+pub const PILL_W: u32 = 160;
 pub const PLUS_W: u32 = 28;
 pub const PILL_H: u32 = 26;
 pub const LABEL_PX: f32 = 13.0;
@@ -53,7 +53,7 @@ pub fn plus_rect(n: usize, avail_w: u32) -> Rect {
     Rect { x, y: 0, w: PLUS_W - GAP, h: PILL_H }
 }
 
-pub fn draw_pill(fb: &mut PaintBuffer, r: Rect, label: &[u8], active: bool) {
+pub fn draw_pill(fb: &mut PaintBuffer, r: Rect, label: &[u8], name_len: usize, active: bool) {
     if r.w == 0 {
         return;
     }
@@ -65,8 +65,14 @@ pub fn draw_pill(fb: &mut PaintBuffer, r: Rect, label: &[u8], active: bool) {
     let fg = if active { TOOLBAR_ACTIVE } else { TOOLBAR_LABEL };
     let baseline = (r.y + r.h / 2) as i32 - (LABEL_PX as i32) / 2;
     let close = close_rect(r);
-    let cut = core::str::from_utf8(label).unwrap_or("");
-    let cut = fit_text(fb, cut, LABEL_PX, close.x.saturating_sub(r.x + TEXT_X));
+    let room = close.x.saturating_sub(r.x + TEXT_X);
+    let full = core::str::from_utf8(label).unwrap_or("");
+    let cut = if width_of(fb, full, LABEL_PX) <= room {
+        full
+    } else {
+        let name = core::str::from_utf8(&label[..name_len.min(label.len())]).unwrap_or("");
+        fit_text(fb, name, LABEL_PX, room)
+    };
     fb.text_ttf((r.x + TEXT_X) as i32, baseline, cut, fg, LABEL_PX);
     let cx = close.x + close.w / 2 - width_of(fb, "x", LABEL_PX) / 2;
     fb.text_ttf(cx as i32, baseline, "x", fg, LABEL_PX);

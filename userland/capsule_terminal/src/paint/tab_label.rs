@@ -14,23 +14,67 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+use crate::term::state::State;
 
-/// Label bytes for tab `i`: its 1-based shortcut digit and the working
-/// directory's basename. Length is not capped here; the pill cuts it by
-/// measured width.
-pub fn tab_label(i: usize, cwd: &[u8]) -> Vec<u8> {
-    let mut out = Vec::new();
-    out.push(b'1' + i as u8);
-    out.push(b':');
-    out.push(b' ');
-    out.extend_from_slice(basename(cwd));
-    out
+/// Bytes a tab label is built into. The bar owns one buffer for the whole
+/// frame, so labelling never allocates.
+pub const LABEL_CAP: usize = 96;
+
+const SEP: &str = " \u{2022} ";
+
+/// Session name for tab `i`: `local` for the first, `shell-N` after it. Kept
+/// separate so a user-set name can replace it without touching the label.
+pub fn session_name(i: usize, out: &mut [u8]) -> usize {
+    if i == 0 {
+        return copy(out, b"local");
+    }
+    let n = copy(out, b"shell-");
+    if i < 10 && n < out.len() {
+        out[n] = b'0' + i as u8;
+        return n + 1;
+    }
+    n
 }
 
-fn basename(path: &[u8]) -> &[u8] {
-    match path.iter().rposition(|&b| b == b'/') {
-        Some(i) if i + 1 < path.len() => &path[i + 1..],
-        _ => path,
+/// Writes `<name> • <path>` for tab `i` into `out`, the cwd's `$HOME` prefix
+/// collapsed to `~`. Returns the name length and the total, so the pill can
+/// drop the path half before it ever cuts the name.
+pub fn tab_label(i: usize, tab: &State, out: &mut [u8; LABEL_CAP]) -> (usize, usize) {
+    let name_len = session_name(i, &mut out[..]);
+    let mut n = name_len + copy(&mut out[name_len..], SEP.as_bytes());
+    let cwd = tab.cwd.as_bytes();
+    match strip_home(cwd, home_var(tab)) {
+        Some(tail) => {
+            n += copy(&mut out[n..], b"~");
+            n += copy(&mut out[n..], tail);
+        }
+        None => n += copy(&mut out[n..], cwd),
     }
+    (name_len, n)
+}
+
+fn home_var(tab: &State) -> &[u8] {
+    for (k, v) in tab.vars.iter() {
+        if k.as_slice() == b"HOME" {
+            return v.as_slice();
+        }
+    }
+    b""
+}
+
+fn strip_home<'a>(cwd: &'a [u8], home: &[u8]) -> Option<&'a [u8]> {
+    if home.is_empty() || home == b"/" || !cwd.starts_with(home) {
+        return None;
+    }
+    let tail = &cwd[home.len()..];
+    (tail.is_empty() || tail[0] == b'/').then_some(tail)
+}
+
+fn copy(out: &mut [u8], src: &[u8]) -> usize {
+    let mut n = src.len().min(out.len());
+    while n > 0 && n < src.len() && src[n] & 0xC0 == 0x80 {
+        n -= 1;
+    }
+    out[..n].copy_from_slice(&src[..n]);
+    n
 }
