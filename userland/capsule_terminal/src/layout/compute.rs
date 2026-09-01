@@ -21,7 +21,7 @@ pub fn compute(w: u32, h: u32, c: &Chrome, r: Rails) -> Layout {
     let titlebar_h = c.titlebar_h.min(h);
     let tab_y = titlebar_h;
     let tabstrip_h = c.tabstrip_h.min(h.saturating_sub(tab_y));
-    let content_y = tab_y + tabstrip_h;
+    let content_y = (tab_y + tabstrip_h + c.body_pad_top).min(h);
     let footer_h = c.footer_h.min(h.saturating_sub(content_y));
     let content_h = h.saturating_sub(content_y + footer_h);
     let input_h = c.row_h.min(content_h);

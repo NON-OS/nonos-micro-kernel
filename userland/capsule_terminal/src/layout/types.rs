@@ -36,6 +36,7 @@ impl Rect {
 pub struct Chrome {
     pub titlebar_h: u32,
     pub tabstrip_h: u32,
+    pub body_pad_top: u32,
     pub footer_h: u32,
     pub text_left: u32,
     pub row_h: u32,
