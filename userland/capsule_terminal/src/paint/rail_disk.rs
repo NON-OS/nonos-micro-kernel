@@ -24,9 +24,9 @@ use crate::term::theme::types::Theme;
 
 pub use super::rail_geom::disk_h as height;
 
-/// The mount rows. NONOS has no statfs and the capsule store is a raw signed
-/// region rather than a volume, so both figures are standing gaps: the section
-/// says so instead of the rail quietly omitting it.
+/// The mount rows. The VFS reports what its store holds, so USED is measured;
+/// nothing reports a byte ceiling to hold it against, so TOTAL stays a standing
+/// gap the section says out loud instead of quietly omitting.
 pub fn draw(fb: &mut PaintBuffer, x: u32, y: i32, w: u32, d: &Disk, t: &Theme) {
     let mut b = [0u8; 32];
     let mut y = head(fb, x, y, w, "DISK USAGE", t);

@@ -18,8 +18,8 @@ use super::metrics::Proc;
 use super::value::Metric;
 
 /// The memory panel's figures. Resident use is a real sum over the live process
-/// table. The kernel exposes no physical memory size and NONOS has no swap
-/// subsystem, so neither a total nor a swap figure exists to report.
+/// table and the total is the kernel's physical figure from the boot memory map.
+/// NONOS has no swap subsystem, so only that figure has no source to report.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct Mem {
     pub used_kb: Metric<u64>,
@@ -30,17 +30,20 @@ pub struct Mem {
 impl Mem {
     pub const UNKNOWN: Mem = Mem {
         used_kb: Metric::Unknown,
-        total_kb: Metric::Unsupported,
+        total_kb: Metric::Unknown,
         swap_used_kb: Metric::Unsupported,
     };
 }
 
 /// A live process table always has a resident sum, including the degenerate
 /// zero; an empty one is a failed read rather than a machine using no memory.
-pub fn summarize(procs: &[Proc]) -> Mem {
+/// A zero total is a memory map the kernel could not read, never a machine with
+/// no RAM, so it stays unmeasured rather than claiming a size.
+pub fn summarize(procs: &[Proc], total_kb: u64) -> Mem {
+    let total = if total_kb == 0 { Metric::Unknown } else { Metric::Known(total_kb) };
     if procs.is_empty() {
-        return Mem::UNKNOWN;
+        return Mem { total_kb: total, ..Mem::UNKNOWN };
     }
     let used = procs.iter().fold(0u64, |acc, p| acc.saturating_add(p.mem_kb));
-    Mem { used_kb: Metric::Known(used), ..Mem::UNKNOWN }
+    Mem { used_kb: Metric::Known(used), total_kb: total, ..Mem::UNKNOWN }
 }

@@ -36,6 +36,30 @@ pub fn u32_into(buf: &mut [u8], v: u32) -> usize {
     format_u64(v as u64, buf)
 }
 
+/// One Q11 fixed-point load average as a two-place decimal: the kernel publishes
+/// 2048 for a load of 1.00 and no float crosses the ABI. Hundredths are rounded
+/// half away from zero, so 1024 reads as "0.50" and 21 as "0.01".
+pub fn load_q11_into(buf: &mut [u8], q: u64) -> usize {
+    let hundredths = (q.saturating_mul(100).saturating_add(1024)) / 2048;
+    let mut n = format_u64(hundredths / 100, buf);
+    n += copy_into(&mut buf[n..], b".");
+    if hundredths % 100 < 10 {
+        n += copy_into(&mut buf[n..], b"0");
+    }
+    n + format_u64(hundredths % 100, &mut buf[n..])
+}
+
+/// The 1/5/15-minute averages as one space-separated figure, the shape every
+/// unix load row takes.
+pub fn load3_into(buf: &mut [u8], v: [u64; 3]) -> usize {
+    let mut n = load_q11_into(buf, v[0]);
+    for q in &v[1..] {
+        n += copy_into(&mut buf[n..], b" ");
+        n += load_q11_into(&mut buf[n..], *q);
+    }
+    n
+}
+
 /// A byte rate. NONOS's virtio-net driver publishes no counters, so this is the
 /// shape a rate would take, never a rate this build has ever measured.
 pub fn bps_into(buf: &mut [u8], v: u64) -> usize {

@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use nonos_app_skeleton::PaintBuffer;
 
-use super::rail_fmt::{mib_into, pct, u32_into, uptime};
+use super::rail_fmt::{load3_into, mib_into, pct, uptime};
 use super::rail_geom::SPARK_H;
 use super::rail_metric::{one, pair};
 use super::rail_stat::stat;
@@ -27,15 +27,15 @@ use crate::term::theme::types::Theme;
 
 pub use super::rail_geom::sys_h as height;
 
-/// What the machine is doing now and what it has been doing. Load and swap have
-/// no source on NONOS and say so; the CPU figure is real and carries both the
-/// bar and the trend beneath it.
+/// What the machine is doing now and what it has been doing. Swap has no source
+/// on NONOS and says so; the CPU figure is real and carries both the bar and the
+/// trend beneath it.
 pub fn draw(fb: &mut PaintBuffer, x: u32, y: i32, w: u32, rail: &Rail, t: &Theme) {
     let s = &rail.sample;
     let mut b = [0u8; 48];
     let mut y = head(fb, x, y, w, "SYSTEM", t);
     y = stat(fb, x, y, w, "UPTIME", uptime(&mut b, s.uptime_ms), t);
-    y = stat(fb, x, y, w, "LOAD", one(&mut b, s.load_avg, u32_into), t);
+    y = stat(fb, x, y, w, "LOAD", one(&mut b, s.load_avg, load3_into), t);
     y = stat(fb, x, y, w, "CPU", pct(&mut b, s.cpu_pct), t);
     bar(fb, x, y, w, s.cpu_pct, t);
     y += (BAR_H + RAIL_GAP) as i32;

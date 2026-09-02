@@ -44,9 +44,9 @@ pub struct Sample {
     pub mem: Mem,
     pub net: Net,
     pub disk: Disk,
-    /// The scheduler keeps no runnable-queue average, so a load figure would be
-    /// invented rather than measured.
-    pub load_avg: Metric<u32>,
+    /// The scheduler's 1/5/15-minute runnable-queue averages in Q11 fixed point,
+    /// where 2048 reads as 1.00. Unknown until the first read of the table.
+    pub load_avg: Metric<[u64; 3]>,
 }
 
 impl Sample {
@@ -59,8 +59,8 @@ impl Sample {
         uptime_ms: 0,
         mem: Mem::UNKNOWN,
         net: Net::DOWN,
-        disk: Disk::UNSUPPORTED,
-        load_avg: Metric::Unsupported,
+        disk: Disk::UNKNOWN,
+        load_avg: Metric::Unknown,
     };
 
     pub fn live(&self) -> &[Proc] {

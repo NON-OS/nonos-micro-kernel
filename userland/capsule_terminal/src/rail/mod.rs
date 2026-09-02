@@ -16,6 +16,8 @@
 
 pub mod derive;
 pub mod disk;
+pub mod disk_decode;
+pub mod disk_query;
 pub mod mem;
 pub mod metrics;
 pub mod net;

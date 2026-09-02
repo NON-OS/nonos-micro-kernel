@@ -14,19 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::disk::Disk;
 use super::value::Metric;
 
-/// The VFS reports the bytes its store currently holds, so `used_kb` is a real
-/// measurement. It has no byte ceiling to report against: the store is bounded
-/// by a 2048-slot file table, and the 16 MiB budget in the block layer covers
-/// only the persisted extents rather than the namespace this figure sums. A
-/// total is therefore a standing gap the panel says out loud.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Disk {
-    pub total_kb: Metric<u64>,
-    pub used_kb: Metric<u64>,
+pub const HDR_LEN: usize = 20;
+pub const BODY_LEN: usize = 20;
+pub const REPLY_LEN: usize = HDR_LEN + BODY_LEN;
+
+const STATUS_OK: i32 = 0;
+
+/// A short reply, or one carrying a failure status, is a store that could not
+/// be measured rather than a store holding nothing.
+pub fn decode_usage(rx: &[u8]) -> Disk {
+    if rx.len() < REPLY_LEN || status(rx) != STATUS_OK {
+        return Disk::UNKNOWN;
+    }
+    let mut bytes = [0u8; 8];
+    bytes.copy_from_slice(&rx[HDR_LEN + 8..HDR_LEN + 16]);
+    Disk { used_kb: Metric::Known(u64::from_le_bytes(bytes) / 1024), ..Disk::UNKNOWN }
 }
 
-impl Disk {
-    pub const UNKNOWN: Disk = Disk { total_kb: Metric::Unsupported, used_kb: Metric::Unknown };
+fn status(rx: &[u8]) -> i32 {
+    let mut raw = [0u8; 4];
+    raw.copy_from_slice(&rx[HDR_LEN..HDR_LEN + 4]);
+    i32::from_le_bytes(raw)
 }

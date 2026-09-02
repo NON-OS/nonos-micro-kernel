@@ -21,6 +21,7 @@ use nonos_libc::{mk_proc_stat, mk_uptime_ms, ProcStatEntry, ProcStatHeader};
 use super::derive::cpu_pct;
 use super::mem::summarize;
 use super::metrics::{Proc, Sample, MAX_PROCS};
+use super::value::Metric;
 
 const HEADER_LEN: usize = size_of::<ProcStatHeader>();
 const ENTRY_LEN: usize = size_of::<ProcStatEntry>();
@@ -39,6 +40,8 @@ pub fn poll(prev: &Sample) -> Sample {
     let header: ProcStatHeader =
         unsafe { core::ptr::read_unaligned(buf.as_ptr() as *const ProcStatHeader) };
     out.total_ticks = header.total_ticks;
+    out.mem_total_kb = header.mem_total_kb;
+    out.load_avg = Metric::Known(header.load_avg_fixed);
     let dt = header.total_ticks.saturating_sub(prev.total_ticks);
     let count = (written as usize).min(MAX_PROCS);
     for i in 0..count {
@@ -56,11 +59,10 @@ pub fn poll(prev: &Sample) -> Sample {
             run_ticks: e.run_ticks,
         };
         out.n += 1;
-        out.mem_total_kb = out.mem_total_kb.saturating_add(e.mem_kb);
     }
     out.procs[..out.n]
         .sort_unstable_by(|a, b| b.cpu_pct.cmp(&a.cpu_pct).then(b.mem_kb.cmp(&a.mem_kb)));
     out.cpu_pct = out.live().iter().map(|p| p.cpu_pct).sum::<u32>().min(100);
-    out.mem = summarize(out.live());
+    out.mem = summarize(out.live(), out.mem_total_kb);
     out
 }
