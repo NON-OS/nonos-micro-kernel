@@ -19,21 +19,27 @@
 use alloc::vec::Vec;
 use nonos_libc::mk_time_millis;
 
-use crate::paint::fetch_banner::BANNER;
 use crate::command::output::Output;
+use crate::term::identity::{hostname, USER};
 use crate::term::state::State;
 use crate::term::util::{copy_into, format_u64};
 
+use super::compose::two_column;
+use super::logo::LOGO;
+use super::palette::palette;
+
 const VERSION: &str = include_str!("../../../../../../VERSION");
 
-fn row(out: &mut Output<'_>, label: &str, value: &str) {
+const GAP: usize = 2;
+
+fn row(label: &str, value: &[u8]) -> Vec<u8> {
     let mut line = Vec::with_capacity(48);
     line.extend_from_slice(label.as_bytes());
     while line.len() < 8 {
         line.push(b' ');
     }
-    line.extend_from_slice(value.as_bytes());
-    out.writeln(&line);
+    line.extend_from_slice(value);
+    line
 }
 
 fn uptime(state: &State, buf: &mut [u8]) -> usize {
@@ -49,27 +55,41 @@ fn uptime(state: &State, buf: &mut [u8]) -> usize {
     k
 }
 
+fn info(kernel: &[u8], up: &[u8]) -> Vec<Vec<u8>> {
+    let mut head = Vec::with_capacity(32);
+    head.extend_from_slice(USER);
+    head.push(b'@');
+    head.extend_from_slice(hostname());
+    let mut rule = Vec::with_capacity(head.len());
+    rule.resize(head.len(), b'-');
+    alloc::vec![
+        head,
+        rule,
+        Vec::from(&b"ZeroState Cryptographic OS"[..]),
+        Vec::new(),
+        row("os", b"NONOS RAM-resident"),
+        row("kernel", kernel),
+        row("shell", b"nox   (type 'help')"),
+        row("trust", b"Ed25519 + ML-DSA-65"),
+        row("arch", b"x86_64"),
+        row("uptime", up),
+    ]
+}
+
 pub fn run(state: &mut State) {
     let mut ubuf = [0u8; 24];
     let n = uptime(state, &mut ubuf);
-    let up = core::str::from_utf8(&ubuf[..n]).unwrap_or("");
     let mut kernel = Vec::with_capacity(32);
     kernel.extend_from_slice(b"microkernel ");
     kernel.extend_from_slice(VERSION.trim_end().as_bytes());
-    let kernel = core::str::from_utf8(&kernel).unwrap_or("microkernel");
+
+    let rows = two_column(&LOGO, &info(&kernel, &ubuf[..n]), GAP);
+    let (plain, styled) = palette();
 
     let out = &mut Output::new(&mut state.scrollback);
-    for line in BANNER {
-        out.writeln(line.as_bytes());
+    for line in &rows {
+        out.writeln(line);
     }
-    out.writeln(b"ZeroState Cryptographic OS");
     out.writeln(b"");
-    out.writeln(b"nonos@capsule");
-    out.writeln(b"-------------");
-    row(out, "os", "NONOS RAM-resident");
-    row(out, "kernel", kernel);
-    row(out, "shell", "nox   (type 'help')");
-    row(out, "trust", "Ed25519 + ML-DSA-65");
-    row(out, "arch", "x86_64");
-    row(out, "uptime", up);
+    out.writeln_styled(&plain, &styled);
 }

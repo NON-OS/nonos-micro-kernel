@@ -14,18 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod capture;
-mod clear;
-mod feed_raw;
-mod jump_bottom;
-mod new;
-mod push_dir_row;
-mod push_error;
-mod push_line;
-mod push_raw;
-mod push_styled;
-mod role;
-mod scroll_down;
-mod scroll_up;
-mod types;
-pub use types::Scrollback;
+use super::types::Scrollback;
+
+impl Scrollback {
+    /// Append a line that carries its own colour escapes on screen and none
+    /// at all through a pipe.
+    ///
+    /// The two forms are supplied by the caller rather than derived, because
+    /// stripping escapes after the fact cannot tell a colour code from text
+    /// the user typed. While a capture is active only `plain` is emitted, so a
+    /// file downstream never receives colour metadata.
+    pub fn push_styled(&mut self, plain: &[u8], styled: &[u8]) {
+        if self.capture.is_some() {
+            self.push_line(plain);
+            return;
+        }
+        self.grid.feed(styled);
+        self.grid.feed(b"\x1b[0m\n");
+    }
+}

@@ -14,18 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod capture;
-mod clear;
-mod feed_raw;
-mod jump_bottom;
-mod new;
-mod push_dir_row;
-mod push_error;
-mod push_line;
-mod push_raw;
-mod push_styled;
-mod role;
-mod scroll_down;
-mod scroll_up;
-mod types;
-pub use types::Scrollback;
+use super::types::Output;
+
+impl<'a> Output<'a> {
+    pub fn writeln_styled(&mut self, plain: &[u8], styled: &[u8]) {
+        self.sb.push_styled(plain, styled);
+    }
+}
