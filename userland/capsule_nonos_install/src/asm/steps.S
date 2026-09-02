@@ -15,10 +15,11 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 # Install steps whose kernel service has not landed yet. Every handler
-# follows one contract: no arguments, rax nonzero on refusal, everything
-# else preserved by the caller. Survey and boot-verdict live in their
-# own files; the four below announce themselves pending and succeed, so
-# the ritual's frame runs end to end while their services are built.
+# follows one contract: no arguments, rax nonzero on refusal, all other
+# registers preserved by the caller. Survey and boot-verdict live in
+# their own files; the ones below announce themselves pending and
+# succeed, so the ritual's frame runs end to end while their services
+# are built.
 
 .text
 
