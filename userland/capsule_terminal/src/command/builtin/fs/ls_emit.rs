@@ -19,9 +19,11 @@
 
 use alloc::vec::Vec;
 
+use super::ls_dots::{dot_names, dot_rows};
 use super::ls_flags::LsFlags;
-use super::ls_long::long_row;
+use super::ls_long::{long_prefix, long_row};
 use super::ls_meta::{meta, subdirs};
+use super::ls_total::total_line;
 use crate::command::output::Output;
 use crate::term::state::State;
 
@@ -37,6 +39,7 @@ pub fn emit(
     let rows = if flags.needs_meta() { meta(state, base, &kept, flags) } else { Vec::new() };
     let ordered: Vec<Vec<u8>> =
         if flags.needs_meta() { rows.iter().map(|r| r.name.clone()).collect() } else { kept };
+    let dots = dot_names(base, flags.all);
     let mut out = Output::new(&mut state.scrollback);
     if header {
         let mut line = base.to_vec();
@@ -44,12 +47,22 @@ pub fn emit(
         out.writeln(&line);
     }
     if flags.long {
-        for row in &rows {
-            out.writeln(&long_row(row, flags.human));
+        out.writeln(&total_line(&rows, flags.human));
+        let leading = dot_rows(&dots);
+        for row in leading.iter().chain(rows.iter()) {
+            if row.is_dir {
+                out.writeln_dir(&long_prefix(row, flags.human), &row.name);
+            } else {
+                out.writeln(&long_row(row, flags.human));
+            }
         }
     } else {
-        for name in &ordered {
-            out.writeln(name);
+        for name in dots.iter().chain(ordered.iter()) {
+            if name.last() == Some(&b'/') {
+                out.writeln_dir(b"", name);
+            } else {
+                out.writeln(name);
+            }
         }
     }
     subdirs(base, &ordered)

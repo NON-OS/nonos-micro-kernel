@@ -20,6 +20,7 @@
 
 use alloc::vec::Vec;
 
+use super::ls_date::stamp;
 use super::ls_num::{decimal, human_size, pad_left};
 
 pub struct Row {
@@ -31,6 +32,14 @@ pub struct Row {
 }
 
 pub fn long_row(row: &Row, human: bool) -> Vec<u8> {
+    let mut line = long_prefix(row, human);
+    line.extend_from_slice(&row.name);
+    line
+}
+
+/// Everything on the row ahead of the name, so a caller that colours the name
+/// separately splits it at the same place the joined row does.
+pub fn long_prefix(row: &Row, human: bool) -> Vec<u8> {
     let mut line = Vec::new();
     line.push(if row.is_dir { b'd' } else { b'-' });
     line.push(b'r');
@@ -40,9 +49,7 @@ pub fn long_row(row: &Row, human: bool) -> Vec<u8> {
     let size = if human { human_size(row.size) } else { decimal(row.size) };
     pad_left(&mut line, &size, 9);
     line.push(b' ');
-    let stamp = if row.mtime == 0 { Vec::from(&b"-"[..]) } else { decimal(row.mtime) };
-    pad_left(&mut line, &stamp, 14);
+    pad_left(&mut line, &stamp(row.mtime), 12);
     line.push(b' ');
-    line.extend_from_slice(&row.name);
     line
 }
