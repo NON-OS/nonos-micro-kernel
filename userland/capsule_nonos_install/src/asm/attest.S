@@ -38,7 +38,8 @@ step_prove:
 1:
     push    rcx
     lea     rax, [rip + flagnames]
-    mov     rdi, [rax + rcx*8]
+    mov     rdi, [rax + rcx*8]          # name offset from flagnames
+    add     rdi, rax
     lea     rax, [rip + flaglens]
     mov     rsi, [rax + rcx*8]
     call    console_write
@@ -76,7 +77,9 @@ step_prove:
     pop     rbx
     ret
 
+# Offsets from flagnames, so the table carries no absolute relocation
+# in this position independent capsule.
 .section .rodata
 .p2align 3
-flagnames: .quad t_f_zk, t_f_sig, t_f_sb, t_f_att
+flagnames: .quad t_f_zk - flagnames, t_f_sig - flagnames, t_f_sb - flagnames, t_f_att - flagnames
 flaglens:  .quad t_f_zk_len, t_f_sig_len, t_f_sb_len, t_f_att_len

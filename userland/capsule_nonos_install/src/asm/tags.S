@@ -21,8 +21,6 @@
 # Convention for every call: rax the tag, arguments in rdi rsi rdx r10 r8 r9,
 # result in rax, negative on refusal. Nothing survives a syscall but rax.
 
-.intel_syntax noprefix
-
 .set SYS_STDOUT,       0x574F534D     # "MSOW" console write: ptr, len
 .set SYS_DEBUG,        0x4742444D     # "MDBG" serial trace:  ptr, len
 .set SYS_EXIT,         0x5458454D     # "MEXT" terminate:     code
