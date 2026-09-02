@@ -57,9 +57,14 @@ pub(super) fn build(
     if let Some(prefix) = mldsa_prefix()? {
         cmd.env("KERNEL_MLDSA65_PREFIX", prefix);
     }
-    for key in
-        ["NONOS_DEV", "ZK_BOOT_INDEX", "ZK_BOOT_SECRET_X", "ZK_BOOT_SECRET_R", "ZK_BOOT_NONCE_SEED"]
-    {
+    for key in [
+        "NONOS_DEV",
+        "NONOS_DEVICE_BINDING",
+        "ZK_BOOT_INDEX",
+        "ZK_BOOT_SECRET_X",
+        "ZK_BOOT_SECRET_R",
+        "ZK_BOOT_NONCE_SEED",
+    ] {
         if let Ok(value) = std::env::var(key) {
             cmd.env(key, value);
         }

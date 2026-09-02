@@ -102,6 +102,23 @@ $(SIGN_TOOL): nonos-mk-check-deps
 	@cd $(BOOTLOADER_DIR)/tools/sign-kernel && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
 
+ifeq ($(NONOS_DEVICE_BINDING),unbound)
+# The vendor image carries no device slot set. The baked root is the
+# sha256 of a fixed public tag, so it is reproducible by anyone and
+# opens nothing: every runtime binding proof is refused until the
+# installer enrolls the owner's slots and writes an enrolled loader.
+# The boot gate itself is the kernel STARK self-attestation and does
+# not touch this root. Secrets have no rule here on purpose; a target
+# that wants them in an unbound build must fail loudly.
+$(ZK_BOOT_ROOT):
+	@mkdir -p $(dir $@)
+	@printf '%s' 'NONOS-DEVICE-SLOT-UNBOUND-v1' | $(SHA256) | cut -c1-64 | xxd -r -p > $@
+	@test "$$(wc -c < $@ | tr -d ' ')" = 32 || { echo "sentinel root malformed"; exit 1; }
+	@echo "Device slot: unbound (sentinel root baked)"
+
+$(ZK_BOOT_COMMITMENTS): $(ZK_BOOT_ROOT)
+	@: > $@
+else
 $(ZK_BOOT_LABELS):
 	@test "$(NONOS_DEV)" = 1 || { echo "$@ is required"; exit 1; }
 	@mkdir -p $(dir $@)
@@ -117,6 +134,7 @@ $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS) $(ZK_BOOT_SECRETS): $(ZK_BOOT_LABELS) $(Z
 		--root-out $(ZK_BOOT_ROOT) \
 		--secrets-out $(ZK_BOOT_SECRETS) \
 		--commitments-out $(ZK_BOOT_COMMITMENTS)
+endif
 
 # Bootloader
 #

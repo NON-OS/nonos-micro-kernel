@@ -73,6 +73,7 @@ jobs:
               # vendor pipeline. A release therefore ships without a binding
               # sidecar, and their absence here is the correct state, not a
               # missing provisioning step.
+              echo "NONOS_DEVICE_BINDING=unbound" >> "$GITHUB_ENV"
               ;;
             *)
               echo "::error::unknown trust-mode '${NONOS_CI_TRUST_MODE}'"
