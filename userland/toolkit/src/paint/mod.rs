@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 mod blend;
 mod blit;
 mod buffer;
@@ -29,6 +28,7 @@ pub mod mixer;
 mod panel;
 pub mod radius;
 pub mod resample;
+mod ring_arc;
 mod round_fill;
 mod round_stroke;
 mod shadow;
