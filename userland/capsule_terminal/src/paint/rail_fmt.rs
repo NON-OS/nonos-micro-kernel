@@ -16,11 +16,6 @@
 
 use crate::term::util::{copy_into, format_u64};
 
-pub fn num(buf: &mut [u8], v: u64) -> &str {
-    let n = format_u64(v, buf);
-    core::str::from_utf8(&buf[..n]).unwrap_or("")
-}
-
 pub fn pct(buf: &mut [u8], v: u32) -> &str {
     let mut n = format_u64(v as u64, buf);
     n += copy_into(&mut buf[n..], b"%");

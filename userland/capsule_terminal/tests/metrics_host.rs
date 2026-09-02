@@ -33,8 +33,8 @@ mod rail {
     pub mod value;
 }
 
-use rail::derive::{cpu_pct, mem_pct};
-use rail::metrics::{Proc, Sample, MAX_PROCS};
+use rail::derive::cpu_pct;
+use rail::metrics::{Sample, MAX_PROCS};
 use rail::ring::{SparkRing, SPARK_SAMPLES};
 
 #[test]
@@ -55,13 +55,6 @@ fn a_zero_total_delta_reads_as_idle() {
 fn a_run_delta_over_the_total_clamps() {
     assert_eq!(cpu_pct(400, 100), 100);
     assert_eq!(cpu_pct(u64::MAX, 1), 100);
-}
-
-#[test]
-fn memory_share_guards_an_empty_live_set() {
-    assert_eq!(mem_pct(512, 2048), 25);
-    assert_eq!(mem_pct(4096, 0), 0);
-    assert_eq!(mem_pct(4096, 1024), 100);
 }
 
 fn chronological(r: &SparkRing) -> Vec<u8> {
@@ -107,14 +100,5 @@ fn pushed_values_are_clamped_to_a_percentage() {
 fn an_empty_sample_has_no_live_processes() {
     let s = Sample::EMPTY;
     assert_eq!(s.live().len(), 0);
-    assert_eq!(Proc::EMPTY.name_str(), "");
     assert!(MAX_PROCS >= 40);
-}
-
-#[test]
-fn a_name_reads_back_to_its_declared_length() {
-    let mut p = Proc::EMPTY;
-    p.name[..5].copy_from_slice(b"shell");
-    p.name_len = 5;
-    assert_eq!(p.name_str(), "shell");
 }

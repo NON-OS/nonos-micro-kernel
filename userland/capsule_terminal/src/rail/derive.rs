@@ -23,12 +23,3 @@ pub fn cpu_pct(run_delta: u64, total_delta: u64) -> u32 {
     }
     (run_delta.saturating_mul(100) / total_delta).min(100) as u32
 }
-
-/// Share of the resident total one process holds. The kernel publishes no
-/// system memory size, so the live set's own resident sum is the denominator.
-pub fn mem_pct(mem_kb: u64, total_kb: u64) -> u32 {
-    if total_kb == 0 {
-        return 0;
-    }
-    (mem_kb.saturating_mul(100) / total_kb).min(100) as u32
-}

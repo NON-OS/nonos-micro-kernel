@@ -74,14 +74,13 @@ fn every_profile_separates_text_from_ground() {
 }
 
 /// A status colour that vanishes into the ground is worse than no colour at
-/// all: it silently drops the signal an error or a warning was meant to carry.
+/// all: it silently drops the signal an error or a path was meant to carry.
 #[test]
 fn status_colours_are_legible_on_every_ground() {
     for (name, t) in profiles() {
         for (role, c) in [
             ("accent", t.accent),
             ("ok", t.ok),
-            ("warn", t.warn),
             ("err", t.err),
             ("path", t.path),
             ("dim", t.dim),

@@ -20,26 +20,17 @@ use super::net::Net;
 use super::value::Metric;
 
 pub const MAX_PROCS: usize = 64;
-pub const PROC_NAME_LEN: usize = 24;
 
 #[derive(Clone, Copy)]
 pub struct Proc {
     pub pid: u32,
-    pub name: [u8; PROC_NAME_LEN],
-    pub name_len: u8,
     pub cpu_pct: u32,
     pub mem_kb: u64,
     pub run_ticks: u64,
 }
 
 impl Proc {
-    pub const EMPTY: Proc =
-        Proc { pid: 0, name: [0; PROC_NAME_LEN], name_len: 0, cpu_pct: 0, mem_kb: 0, run_ticks: 0 };
-
-    pub fn name_str(&self) -> &str {
-        let n = (self.name_len as usize).min(PROC_NAME_LEN);
-        core::str::from_utf8(&self.name[..n]).unwrap_or("")
-    }
+    pub const EMPTY: Proc = Proc { pid: 0, cpu_pct: 0, mem_kb: 0, run_ticks: 0 };
 }
 
 #[derive(Clone, Copy)]

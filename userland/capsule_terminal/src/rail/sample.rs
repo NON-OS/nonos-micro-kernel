@@ -51,8 +51,6 @@ pub fn poll(prev: &Sample) -> Sample {
         let last = prev.live().iter().find(|p| p.pid == e.pid).map(|p| p.run_ticks).unwrap_or(0);
         out.procs[out.n] = Proc {
             pid: e.pid,
-            name: e.name,
-            name_len: e.name_len,
             cpu_pct: cpu_pct(e.run_ticks.saturating_sub(last), dt),
             mem_kb: e.mem_kb,
             run_ticks: e.run_ticks,
