@@ -119,6 +119,9 @@ help:
 	@echo "  make menuconfig      pick your own components, then: make from-config"
 	@echo
 	@echo "Trust the result:"
+	@echo "  make verify          re-prove the built image: trust ledger, dual"
+	@echo "                       signatures, declared caps, STARK membership with"
+	@echo "                       the kernel's own gate, root embedding + receipt"
 	@echo "  make test            the boot-and-verify harness CI gates on"
 	@echo "  make bench           measured performance, recorded with provenance"
 	@echo "  make doctor          check this host can build and boot NONOS"

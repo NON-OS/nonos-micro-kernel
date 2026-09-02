@@ -34,7 +34,7 @@ include $(sort $(wildcard mk/*.mk))
 # `make` with no target builds the shipping image, never nothing.
 .DEFAULT_GOAL := nonos
 
-.PHONY: nonos qemu qemu-serial usb hardware test bench doctor clean clean-all distclean fmt
+.PHONY: nonos qemu qemu-serial usb hardware verify test bench doctor clean clean-all distclean fmt
 
 # ── The image that ships ─────────────────────────────────────────────────────
 # The full ZeroState system: every capsule and driver, TPM-measured boot, a
@@ -42,13 +42,39 @@ include $(sort $(wildcard mk/*.mk))
 # ML-DSA-65 signatures, and an anti-rollback floor. Fail-closed: without an
 # enrolled identity it stops rather than shipping a forgeable one. NONOS_DEV=1
 # mints a clearly marked throwaway identity for evaluation (mk/00-config.mk).
+#
+# The build does not end at packaging: it ends by verifying itself. Five
+# independent checks (ledger, signatures, declared caps, STARK membership with
+# the same gate the kernel enforces, root embedding) run against the artifacts
+# just written, and the build receipt records the measured result. A build
+# that cannot prove what it produced does not get to say it is ready.
 nonos: nonos-mk-zerostate nonos-mk-esp nonos-mk-iso
+	@$(MAKE) --no-print-directory nonos-mk-trust-ledger
+	@$(MAKE) --no-print-directory nonos-mk-verify-image
 	@echo
-	@echo "  Production image ready."
+	@echo "  Production image ready, and proven:"
 	@echo "    bootable ESP : $(ESP_DIR)"
 	@echo "    ISO          : $(TARGET_DIR)/nonos.iso"
+	@echo "    receipt      : $(TARGET_DIR)/attestation/build-receipt.json"
 	@echo "    boot in QEMU : make qemu"
 	@echo "    to hardware  : make usb DISK=/dev/..."
+
+# ── Verify an already-built image ────────────────────────────────────────────
+# The same five checks the default build ends with, standalone. Anyone holding
+# the tree can re-run them and diff the receipt; that is the point.
+verify: nonos-mk-verify-image
+
+# ── The fast loop ────────────────────────────────────────────────────────────
+# Proving is a release cost, never an iteration cost. One changed capsule
+# invalidates every membership proof (the policy tree commits to the set), so
+# the edit-compile-boot loop must not pay ten minutes of STARK grinding per
+# keystroke. `make dev` rebuilds and signs what changed and boots with stale
+# proofs tolerated in rollout mode, labelled as such at build and at every
+# spawn. `make` stays the only path that proves; `make verify` will correctly
+# refuse a dev tree, which is the system working.
+dev: nonos-mk-dev
+dev-qemu: nonos-mk-run-from-config
+.PHONY: dev dev-qemu
 
 # ── Boot it under emulation ──────────────────────────────────────────────────
 # Same kernel, signing, attestation, and rollback path as the shipped ISO; the
