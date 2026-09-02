@@ -19,26 +19,36 @@ use alloc::vec::Vec;
 use super::assembly::Assembly;
 use crate::message::parse;
 
+/// How many part-built messages may wait at once. A browser fetches
+/// concurrently, so replies interleave; with a single slot two interleaved
+/// messages evicted each other on every fragment and neither ever finished,
+/// which read as the page hanging while frames kept arriving. The pool is
+/// bounded so a flood of fabricated set ids cannot grow memory without
+/// limit; past the cap the oldest part-built message is the one abandoned.
+pub const MAX_PENDING: usize = 8;
+
 /// Take one fragment, and hand back the message once it completes one.
 ///
 /// The mixnet does not preserve order, so a fragment is placed by the
 /// position in its own header rather than by when it turned up. A repeat is
 /// dropped rather than counted twice, which would otherwise let a replayed
 /// fragment complete a message that is still missing a piece.
-pub fn collect(slot: &mut Option<Assembly>, fragment: &[u8]) -> Option<Vec<u8>> {
+pub fn collect(pending: &mut Vec<Assembly>, fragment: &[u8]) -> Option<Vec<u8>> {
     let (header, payload) = parse(fragment)?;
 
-    // A fragment of a different message means the one in progress will never
-    // complete, so the newer one takes the slot rather than being dropped.
-    let start_over = match slot {
-        Some(assembly) => !assembly.holds(header.set_id) || assembly.total != header.total,
-        None => true,
+    let found = pending.iter().position(|a| a.holds(header.set_id) && a.total == header.total);
+    let idx = match found {
+        Some(i) => i,
+        None => {
+            if pending.len() >= MAX_PENDING {
+                pending.remove(0);
+            }
+            pending.push(Assembly::new(header.set_id, header.total));
+            pending.len() - 1
+        }
     };
-    if start_over {
-        *slot = Some(Assembly::new(header.set_id, header.total));
-    }
 
-    let assembly = slot.as_mut()?;
+    let assembly = &mut pending[idx];
     let at = header.current as usize - 1;
     let place = assembly.pieces.get_mut(at)?;
     if place.is_some() {
@@ -50,10 +60,10 @@ pub fn collect(slot: &mut Option<Assembly>, fragment: &[u8]) -> Option<Vec<u8>> 
     if assembly.held < assembly.total {
         return None;
     }
+    let done = pending.remove(idx);
     let mut out = Vec::new();
-    for piece in assembly.pieces.iter() {
+    for piece in done.pieces.iter() {
         out.extend_from_slice(piece.as_ref()?);
     }
-    *slot = None;
     Some(out)
 }

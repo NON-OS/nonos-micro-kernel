@@ -81,6 +81,8 @@ pub enum IrqBindError {
     UnknownDevice,
     NotDeviceIrq,
     AlreadyBound,
+    /// The line is one the kernel routes to itself.
+    ReservedGsi,
     NoVector,
     UnsupportedFlags,
     NotIntx,

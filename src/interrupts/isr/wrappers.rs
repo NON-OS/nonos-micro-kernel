@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Plain `extern "x86-interrupt"` entries. Only NMI, #DF and #MC are installed
+//! from here: none is capsule-reachable, and the latter two end the machine
+//! rather than return to it. The rest duplicate trampolined vectors.
+
 use x86_64::structures::idt::{InterruptStackFrame, PageFaultErrorCode};
 
 use crate::interrupts::handlers;
@@ -46,36 +50,12 @@ pub extern "x86-interrupt" fn isr_invalid_opcode(frame: InterruptStackFrame) {
     handlers::invalid_opcode(frame);
 }
 
-pub extern "x86-interrupt" fn isr_device_na(frame: InterruptStackFrame) {
-    handlers::device_not_available(frame);
-}
-
 pub extern "x86-interrupt" fn isr_double_fault(frame: InterruptStackFrame, code: u64) -> ! {
     handlers::double_fault(frame, code)
 }
 
-pub extern "x86-interrupt" fn isr_invalid_tss(frame: InterruptStackFrame, code: u64) {
-    handlers::invalid_tss(frame, code);
-}
-
-pub extern "x86-interrupt" fn isr_segment_not_present(frame: InterruptStackFrame, code: u64) {
-    handlers::segment_not_present(frame, code);
-}
-
-pub extern "x86-interrupt" fn isr_stack_segment_fault(frame: InterruptStackFrame, code: u64) {
-    handlers::stack_segment_fault(frame, code);
-}
-
-pub extern "x86-interrupt" fn isr_gpf(frame: InterruptStackFrame, code: u64) {
-    handlers::general_protection_fault(frame, code);
-}
-
 pub extern "x86-interrupt" fn isr_page_fault(frame: InterruptStackFrame, code: PageFaultErrorCode) {
     handlers::page_fault(frame, code.bits());
-}
-
-pub extern "x86-interrupt" fn isr_x87_fp(frame: InterruptStackFrame) {
-    handlers::x87_floating_point(frame);
 }
 
 pub extern "x86-interrupt" fn isr_alignment_check(frame: InterruptStackFrame, _error_code: u64) {
@@ -90,22 +70,6 @@ pub extern "x86-interrupt" fn isr_simd_fp(frame: InterruptStackFrame) {
     handlers::simd_floating_point(frame);
 }
 
-pub extern "x86-interrupt" fn isr_virtualization(frame: InterruptStackFrame) {
-    handlers::virtualization(frame);
-}
-
 pub extern "x86-interrupt" fn irq_timer(_frame: InterruptStackFrame) {
     handlers::timer();
-}
-
-pub extern "x86-interrupt" fn irq_keyboard(_frame: InterruptStackFrame) {
-    handlers::keyboard();
-}
-
-pub extern "x86-interrupt" fn irq_mouse(_frame: InterruptStackFrame) {
-    handlers::mouse();
-}
-
-pub extern "x86-interrupt" fn irq_syscall(_frame: InterruptStackFrame) {
-    handlers::syscall();
 }

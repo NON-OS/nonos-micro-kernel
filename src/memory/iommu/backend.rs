@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(all(target_arch = "x86_64", feature = "nonos-arch-iommu"))]
-#[path = "backend_x86_64.rs"]
+#[path = "backend_x86_64/mod.rs"]
 mod inner;
 #[cfg(not(all(target_arch = "x86_64", feature = "nonos-arch-iommu")))]
 #[path = "backend_unsupported.rs"]

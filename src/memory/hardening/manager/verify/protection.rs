@@ -14,27 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::super::constants::*;
-use crate::memory::paging;
+//! Bringing the ring-0 restrictions up from the hardening side.
+//!
+//! This used to write CR4 and CR0 itself, in parallel with `memory::mmu`,
+//! which meant two pieces of code owned the same registers and neither read
+//! back what it had set. There is one owner now and this delegates to it, so
+//! however this path is reached the machine ends up in the state the boot log
+//! reported rather than in whichever state ran last.
 
+use crate::memory::mmu;
+
+/// Idempotent: `init_mmu` returns having touched nothing if the bring-up
+/// already ran from the boot path, which is the usual case.
 pub fn init_module_memory_protection() {
-    paging::enable_write_protection();
-// SMEP and SMAP are CR4 bits. The same two properties, that the kernel
-// cannot execute or read user pages by accident, come from PAN and the
-// PXN and UXN table bits on aarch64, and those are set where the tables
-// are built rather than from a control register here.
-#[cfg(target_arch = "x86_64")]
-// SAFETY: reading CR4 has no side effect, and setting SMEP or SMAP only
-// tightens what ring 0 may touch.
-unsafe {
-    let mut cr4: u64;
-    core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nostack, preserves_flags));
-    if cr4 & CR4_SMEP == 0 {
-        cr4 |= CR4_SMEP;
-    }
-    if cr4 & CR4_SMAP == 0 {
-        cr4 |= CR4_SMAP;
-    }
-    core::arch::asm!("mov cr4, {}", in(reg) cr4, options(nostack, preserves_flags));
-}
+    let _ = mmu::init_mmu();
 }

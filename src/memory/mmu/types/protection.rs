@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Which ring-0 restrictions are in force, as read back from the hardware.
+//!
+//! Every field starts false and is only ever written from a register read, so
+//! an uninitialised MMU reports no protection rather than the protection it
+//! was going to ask for. That direction matters: a caller gating on these
+//! flags is deciding whether it is safe to proceed, and the answer it must
+//! never get wrong is a false yes.
+
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ProtectionFlags {
     pub smep_enabled: bool,
@@ -27,12 +35,13 @@ pub struct ProtectionFlags {
 }
 
 impl ProtectionFlags {
+    /// The state before bring-up has run: nothing claimed, nothing proven.
     pub const fn new() -> Self {
         Self {
             smep_enabled: false,
             smap_enabled: false,
             nx_enabled: false,
-            wp_enabled: true,
+            wp_enabled: false,
             umip_enabled: false,
         }
     }

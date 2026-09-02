@@ -20,6 +20,7 @@ mod init;
 mod limit;
 mod message;
 mod run;
+mod verdict;
 
 pub use init::init;
 pub use run::bring_up;

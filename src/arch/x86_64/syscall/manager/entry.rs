@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::security::hardening::speculation::kernel_entry;
 use crate::syscall::contract::{dispatch as contract_dispatch, SyscallArgs};
 use crate::syscall::numbers::SyscallNumber;
 use crate::syscall::types::errnos;
@@ -28,6 +29,13 @@ pub(super) extern "C" fn syscall_handler(
     arg5: u64,
     arg6: u64,
 ) -> u64 {
+    // A capsule reaching this point last controlled the branch predictors and
+    // the return stack. Refilling the RSB and re-asserting IBRS before any
+    // kernel branch runs is the whole point of the entry side, and it was the
+    // side with no caller: `kernel_exit` was wired on the return path, so
+    // mitigations were being applied leaving the kernel but not entering it.
+    kernel_entry();
+
     let Some(sc) = SyscallNumber::from_u64(number) else {
         return (-(errnos::ENOSYS as i64)) as u64;
     };
