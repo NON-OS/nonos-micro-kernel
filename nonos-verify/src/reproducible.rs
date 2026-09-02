@@ -65,6 +65,15 @@ fn build_lane(
     if !add.status.success() {
         return Ok(missing_hashes(artifacts));
     }
+    // A worktree starts with empty submodule mounts; the build needs them.
+    let sub = Command::new("git")
+        .current_dir(&dir)
+        .args(["submodule", "update", "--init", "--recursive"])
+        .output()?;
+    std::fs::write(out.join(format!("submodules-{lane}.log")), join(&sub.stdout, &sub.stderr))?;
+    if !sub.status.success() {
+        return Ok(missing_hashes(artifacts));
+    }
     let mut cmd = Command::new("make");
     cmd.current_dir(&dir).arg(target).env("SOURCE_DATE_EPOCH", epoch).env("CARGO_INCREMENTAL", "0");
     if let Some(signing) = signing_key()? {
