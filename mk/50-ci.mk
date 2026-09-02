@@ -143,3 +143,11 @@ help:
 # headless and saves a framebuffer screenshot + a bounded serial log.
 .PHONY: nonos-mk-run-gui-demo
 nonos-mk-run-gui-demo: nonos-mk-run-nat
+
+# The enrolled set as machine readable rows, one capsule per line:
+# slug, handle, capability mask, binary path, trailer path. This is the
+# contract between the build and the attestation surface generator; the
+# fixture tool consumes it in enrollment order, which is slot order.
+.PHONY: nonos-mk-enrolled-tsv
+nonos-mk-enrolled-tsv:
+	@$(foreach s,$(NONOS_ENROLLED_CAPSULES),printf '%s\t%s\t%s\t%s\t%s\n' '$(s)' '$(s)' '$($(s)_REQUIRED_CAPS)' '$($(s)_BIN)' '$($(s)_ATTESTATION)';)
