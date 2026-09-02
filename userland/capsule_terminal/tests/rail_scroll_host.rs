@@ -98,7 +98,7 @@ fn visibility_covers_exactly_the_bands_that_touch_the_rail() {
 
 #[test]
 fn the_section_heights_compose_into_the_telemetry_block() {
-    assert_eq!(sys_h(), 34 + lh() * 5 + 3 + RAIL_GAP * 2 + 44);
+    assert_eq!(sys_h(), 34 + lh() * 5 + 3 + RAIL_GAP * 2 + 30);
     assert_eq!(net_h(), 34 + lh() * 4);
     assert_eq!(disk_h(), 34 + lh() * 2);
     let want = sys_h() + net_h() + disk_h() + RAIL_GAP * 2 + RAIL_PAD;

@@ -26,6 +26,9 @@ pub const RAIL_PAD: u32 = 12;
 pub const RAIL_GAP: u32 = 8;
 pub const BAR_H: u32 = 3;
 
+/// Opacity the filled share is carried at, short of the accent's own.
+const BAR_ALPHA: u32 = 0xB4_00_00_00;
+
 pub fn lh() -> u32 {
     line_height(RAIL_PX).max(1) as u32
 }
@@ -64,10 +67,14 @@ pub fn head(fb: &mut PaintBuffer, x: u32, y: i32, w: u32, label: &str, t: &Theme
 
 /// A track with the filled share drawn over it. Both are blends: the rail sits
 /// on pixels the frame already painted, so a raw write would punch through.
+///
+/// The track barely lifts off the background and the fill is carried at less
+/// than full opacity, so the bar reads as a level rather than a hard rule cut
+/// across the rail.
 pub fn bar(fb: &mut PaintBuffer, x: u32, y: i32, w: u32, pct: u32, t: &Theme) {
-    band_rect(fb, x, y, w, BAR_H, elevate(t.bg, 12));
+    band_rect(fb, x, y, w, BAR_H, elevate(t.bg, 6));
     let fill = w * pct.min(100) / 100;
     if fill > 0 {
-        band_rect(fb, x, y, fill, BAR_H, t.accent);
+        band_rect(fb, x, y, fill, BAR_H, (t.accent & 0x00FF_FFFF) | BAR_ALPHA);
     }
 }

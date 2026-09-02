@@ -16,7 +16,7 @@
 use super::rail_left_geom::head_h;
 use super::rail_text::{lh, BAR_H, RAIL_GAP, RAIL_PAD};
 
-pub const SPARK_H: u32 = 44;
+pub const SPARK_H: u32 = 30;
 
 /// The heights the telemetry painters advance by, kept apart from the painters
 /// themselves so the scroll offset and the composer read one set of numbers and

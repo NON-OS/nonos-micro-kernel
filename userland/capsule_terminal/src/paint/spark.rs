@@ -16,17 +16,23 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
+use super::spark_smooth::smooth;
 use crate::layout::Rect;
 use crate::rail::ring::SPARK_SAMPLES;
 
 const DOT_R: u32 = 2;
-const AREA_ALPHA: u32 = 0x38_00_00_00;
+const AREA_ALPHA: u32 = 0x20_00_00_00;
 
 /// A trend line over the CPU window with the area beneath it tinted and the
 /// newest sample marked. One point has no shape and a flat line would read as
 /// a real idle stretch, so the plot stays empty until two can be joined.
+///
+/// The plotted series is the smoothed one: the tint is a light wash under a
+/// curve rather than a comb of raw columns, and the anti-aliased trace over it
+/// is what the eye actually follows. The ring keeps its unsmoothed readings.
 pub fn draw_spark(fb: &mut PaintBuffer, r: Rect, data: &[u8], head: usize, colour: u32) {
-    let n = data.len().min(SPARK_SAMPLES);
+    let mut curve = [0u8; SPARK_SAMPLES];
+    let n = smooth(&data[..data.len().min(SPARK_SAMPLES)], head, &mut curve);
     if n < 2 || r.w < 2 || r.h < 2 {
         return;
     }
@@ -34,7 +40,7 @@ pub fn draw_spark(fb: &mut PaintBuffer, r: Rect, data: &[u8], head: usize, colou
     let mut pts = [(0i32, 0i32); SPARK_SAMPLES];
     for i in 0..n {
         let px = col(r.x, r.w, i, n);
-        let v = (data[(head + i) % n].min(100) as u32) * (r.h - 1) / 100;
+        let v = (curve[i].min(100) as u32) * (r.h - 1) / 100;
         let py = r.y + r.h - 1 - v;
         let next = if i + 1 < n { col(r.x, r.w, i + 1, n) } else { px + 1 };
         fb.blend_rect(px, py, (next - px).max(1), (r.y + r.h).saturating_sub(py), fill);

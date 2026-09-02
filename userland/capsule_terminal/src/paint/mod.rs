@@ -55,6 +55,7 @@ mod rail_telemetry;
 mod rail_text;
 mod shade;
 mod spark;
+mod spark_smooth;
 mod suggestion;
 mod syntax;
 pub mod tab_bar;
