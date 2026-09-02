@@ -16,14 +16,10 @@
 
 //! Memory Hardening Constants
 
-/// CR4 bit for SMEP (Supervisor Mode Execution Prevention).
-pub const CR4_SMEP: u64 = 1 << 20;
-
-/// CR4 bit for SMAP (Supervisor Mode Access Prevention).
-pub const CR4_SMAP: u64 = 1 << 21;
-
-/// Required CR4 bits for kernel hardening.
-pub const CR4_REQUIRED_BITS: u64 = CR4_SMEP | CR4_SMAP;
+// The control-register bits are defined once, by the module that writes them.
+// A second definition here is how the check ends up testing a different bit
+// than the bring-up set.
+pub use crate::memory::mmu::CR4_REQUIRED_BITS;
 
 /// Pattern used for heap corruption detection.
 pub const CORRUPTION_PATTERN: u64 = 0xDEADBEEFCAFEBABE;

@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::roots::{chunk0, chunk1, chunk2, chunk3};
+use crate::roots::{chunk0, chunk1, chunk2, chunk3, extra};
 
 pub fn is_trusted_spki_hash(h: &[u8; 32]) -> bool {
     chunk0::ROOTS_0.iter().any(|r| r == h)
         || chunk1::ROOTS_1.iter().any(|r| r == h)
         || chunk2::ROOTS_2.iter().any(|r| r == h)
         || chunk3::ROOTS_3.iter().any(|r| r == h)
+        || extra::EXTRA_ROOTS.iter().any(|r| r == h)
 }

@@ -19,8 +19,6 @@
 // aarch64 counterpart lives in `arch::aarch64::context`. Only the layouts and
 // the address-space constants below are common.
 #[cfg(target_arch = "x86_64")]
-pub mod api;
-#[cfg(target_arch = "x86_64")]
 pub mod asm;
 pub mod constants;
 #[cfg(target_arch = "x86_64")]
@@ -29,21 +27,19 @@ pub mod context;
 pub mod transitions;
 pub mod types;
 
-#[cfg(target_arch = "x86_64")]
-pub use api::*;
 pub use constants::{
     KERNEL_CS, KERNEL_DS, KERNEL_STACK_SIZE, USER_CODE_START, USER_CS, USER_DS, USER_HEAP_START,
     USER_RFLAGS, USER_STACK_BASE, USER_STACK_SIZE,
 };
 #[cfg(target_arch = "x86_64")]
 pub use context::{
-    clac, enable_smap, enable_smep, read_fs_base, stac, switch_context, switch_to_new_thread,
-    write_fs_base, write_gs_base, write_kernel_gs_base,
+    read_fs_base, switch_context, switch_to_new_thread, write_fs_base, write_gs_base,
+    write_kernel_gs_base,
 };
 #[cfg(target_arch = "x86_64")]
 pub use transitions::{
-    enable_smap as transitions_enable_smap, enable_smep as transitions_enable_smep, exec_process,
-    jump_to_usermode, restore_user_context_iretq, return_to_usermode, sysret_to_usermode,
+    exec_process, jump_to_usermode, restore_user_context_iretq, return_to_usermode,
+    sysret_to_usermode,
 };
 
 /// The window in which the kernel may touch user memory. Unlike everything

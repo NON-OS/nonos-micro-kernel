@@ -27,6 +27,13 @@ use crate::tunnel::{decode_response, encode_send};
 /// A mixnet round trip is seconds, far longer than this, and a client that
 /// gets nothing simply asks again. Waiting out the whole round trip inside
 /// one call would hold the capsule against every other connection for it.
+///
+/// A mixnet round trip is seconds, so this is the window a single relay call
+/// waits for the exit's answer before handing back to the browser to poll
+/// again. It has to be long enough that a reply arriving mid-flight is caught
+/// here rather than missed between polls: a very short wait returned empty
+/// before the answer came back and the page never rendered. Responsiveness of
+/// the window is handled in the frame loop, not by starving this wait.
 const POLL_MS: i64 = 1_000;
 
 /// Room for the largest client write plus the request that carries it.

@@ -44,6 +44,13 @@ pub fn ioapic_set_irq(irq: u8, vector: u8, dest: u8, flags: u32) {
     }
     let local_pin = gsi - gsi_base;
 
+    // Every route programmed through here is one the kernel is taking for
+    // itself. Claim it before the entry is written, so a capsule binding INTx
+    // is refused this line rather than reprogramming the entry underneath us.
+    // Doing it at this choke point rather than at the call sites means a line
+    // added later is covered without anyone remembering to.
+    crate::hardware::broker::irq::reserved::reserve(gsi);
+
     unsafe {
         let reg_low = IOAPIC_REDTBL + local_pin * 2;
         let reg_high = reg_low + 1;

@@ -18,22 +18,12 @@ use super::state::{BSP_APIC_ID, CPU_COUNT, CPU_DESCRIPTORS};
 use super::types::CpuDescriptor;
 use core::sync::atomic::Ordering;
 
-#[inline]
-pub fn cpu_id() -> usize {
-    // Route through the arch facade so this works on every backend
-    // that implements ArchOps::current_cpu_id (x86_64 APIC id, aarch64
-    // MPIDR_EL1, riscv64 hart id).
-    let id = crate::arch::cpu::get_cpu_id();
-    apic_to_cpu_id(id).unwrap_or(0)
-}
+pub(super) use super::cpu_id::cpu_id;
 
+/// Descriptor index for an APIC id, for callers that hold an id rather than
+/// being the CPU in question, such as IPI targeting and topology reporting.
 pub fn apic_to_cpu_id(apic_id: u32) -> Option<usize> {
-    for i in 0..CPU_COUNT.load(Ordering::Acquire) {
-        if CPU_DESCRIPTORS[i].get_apic_id() == apic_id {
-            return Some(i);
-        }
-    }
-    None
+    (0..CPU_COUNT.load(Ordering::Acquire)).find(|&i| CPU_DESCRIPTORS[i].get_apic_id() == apic_id)
 }
 
 #[inline]

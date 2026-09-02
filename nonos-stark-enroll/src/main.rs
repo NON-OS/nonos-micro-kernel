@@ -233,7 +233,9 @@ fn usage() -> ! {
         "usage:\n  \
          nonos-stark-enroll selftest\n  \
          nonos-stark-enroll kernel <kernel-image> <root.bin> <trailer.bin>\n  \
-         nonos-stark-enroll capsules <root.bin> <CAPS:image:trailer-out> ..."
+         nonos-stark-enroll capsules <root.bin> <CAPS:image:trailer-out> ...\n  \
+         nonos-stark-enroll verify <root.bin> <CAPS:image:trailer> ...\n  \
+         nonos-stark-enroll verify-kernel <root.bin> <kernel-image> <trailer>"
     );
     exit(1)
 }
@@ -271,6 +273,75 @@ fn enroll_capsules(root_out: &str, specs: &[String]) {
     println!("enrolled {} capsules under root {}", images.len(), hex(&root));
 }
 
+/// Re-verify a shipped capsule set against its policy root, with the exact
+/// gate the kernel runs at spawn. Each spec is `CAPS:image:trailer`, the same
+/// shape enrollment takes, so the build can hand both steps one list. This is
+/// what lets `make verify` prove the artifacts in the tree rather than trust
+/// that enrollment once said yes.
+fn verify_capsules(root_path: &str, specs: &[String]) {
+    let started = std::time::Instant::now();
+    let root_bytes = read(root_path);
+    if root_bytes.len() != 32 {
+        eprintln!("root {root_path} is {} bytes, want 32", root_bytes.len());
+        exit(1);
+    }
+    let mut root = [0u8; 32];
+    root.copy_from_slice(&root_bytes);
+    let mut failed = 0usize;
+    for spec in specs {
+        let parts: Vec<&str> = spec.splitn(3, ':').collect();
+        if parts.len() != 3 {
+            eprintln!("bad spec {spec}, want CAPS:image:trailer");
+            exit(1);
+        }
+        let caps =
+            u64::from_str_radix(parts[0].trim_start_matches("0x"), 16).unwrap_or_else(|_| {
+                eprintln!("bad capability mask {}", parts[0]);
+                exit(1)
+            });
+        let image = read(parts[1]);
+        let trailer = read(parts[2]);
+        let ctx = capsule_context(&image, caps);
+        if gate_verify(&root, &trailer, &ctx) {
+            println!("  ok    {}", parts[1]);
+        } else {
+            println!("  FAIL  {}", parts[1]);
+            failed += 1;
+        }
+    }
+    if failed > 0 {
+        eprintln!("{failed} of {} capsule proofs failed under root {}", specs.len(), hex(&root));
+        exit(1);
+    }
+    println!(
+        "verified {} capsule proofs under root {} ({:.2?})",
+        specs.len(),
+        hex(&root),
+        started.elapsed()
+    );
+}
+
+/// Re-verify the kernel's own membership trailer against the enrolled root,
+/// the check the bootloader repeats before the jump.
+fn verify_kernel(root_path: &str, image_path: &str, trailer_path: &str) {
+    let root_bytes = read(root_path);
+    if root_bytes.len() != 32 {
+        eprintln!("root {root_path} is {} bytes, want 32", root_bytes.len());
+        exit(1);
+    }
+    let mut root = [0u8; 32];
+    root.copy_from_slice(&root_bytes);
+    let image = read(image_path);
+    let trailer = read(trailer_path);
+    let ctx = kernel_context(&image);
+    if gate_verify(&root, &trailer, &ctx) {
+        println!("verified kernel self-attestation under root {}", hex(&root));
+    } else {
+        eprintln!("kernel self-attestation FAILED under root {}", hex(&root));
+        exit(1);
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     match args.get(1).map(String::as_str) {
@@ -284,6 +355,8 @@ fn main() {
             println!("kernel enrolled under root {}", hex(&root));
         }
         Some("capsules") if args.len() >= 4 => enroll_capsules(&args[2], &args[3..]),
+        Some("verify") if args.len() >= 4 => verify_capsules(&args[2], &args[3..]),
+        Some("verify-kernel") if args.len() == 5 => verify_kernel(&args[2], &args[3], &args[4]),
         _ => usage(),
     }
 }

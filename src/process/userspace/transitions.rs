@@ -19,30 +19,11 @@ pub use super::asm::{
 };
 use super::types::ExecContext;
 
-const CR4_SMEP: u64 = 1 << 20;
-const CR4_SMAP: u64 = 1 << 21;
-
-pub fn enable_smep() {
-    unsafe {
-        let mut cr4: u64;
-        core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nostack, preserves_flags));
-        if cr4 & CR4_SMEP == 0 {
-            cr4 |= CR4_SMEP;
-            core::arch::asm!("mov cr4, {}", in(reg) cr4, options(nostack, preserves_flags));
-        }
-    }
-}
-
-pub fn enable_smap() {
-    unsafe {
-        let mut cr4: u64;
-        core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nostack, preserves_flags));
-        if cr4 & CR4_SMAP == 0 {
-            cr4 |= CR4_SMAP;
-            core::arch::asm!("mov cr4, {}", in(reg) cr4, options(nostack, preserves_flags));
-        }
-    }
-}
+// CR4 belongs to `memory::mmu`, which brings SMEP, SMAP and UMIP up once at
+// boot and reports what the hardware confirmed. This file used to carry its
+// own copy of that write; it is gone rather than delegated, because a second
+// place that can turn a protection on is a second place that can be reached
+// with a different idea of what is already on.
 
 pub fn exec_process(ctx: &ExecContext) -> ! {
     x86_64::instructions::interrupts::disable();

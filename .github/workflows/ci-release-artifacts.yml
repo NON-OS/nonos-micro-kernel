@@ -54,9 +54,13 @@ jobs:
         run: |
           set -euo pipefail
           bash nonos-ci/setup-signing-key.sh
-          for name in ZK_BOOT_INDEX ZK_BOOT_SECRET_X ZK_BOOT_SECRET_R ZK_BOOT_NONCE_SEED; do
-            test -n "${!name:-}" || { echo "::error::${name} is required for release artifacts"; exit 1; }
-          done
+              # The kernel self-attestation is transparent and needs no
+              # secrets. The ZK_BOOT values are the device binding's prover
+              # material: the opening of an enrolled device slot, which
+              # belongs to the machine's owner at install time and never to a
+              # vendor pipeline. A release therefore ships without a binding
+              # sidecar, and their absence here is the correct state, not a
+              # missing provisioning step.
           make nonos-mk-check-trust-manifest
       # The bootable artifact itself, built from the same tree the lanes above
       # checked. Capsules are attested before packaging so a capsule that
@@ -81,6 +85,27 @@ jobs:
           cp nonos-data/trust/policy/kernel_attest_root.bin release/
           cp nonos-data/trust/policy/nonos_trust_anchor.policy.bin release/
           ( cd release && sha256sum * > SHA256SUMS && cat SHA256SUMS )
+
+      - name: Build the attestation surface
+        run: |
+          set -euo pipefail
+          # The verify page's fixture set, generated from the artifacts this
+          # lane just built and refused unless every proof verifies and both
+          # roots reproduce from the binaries. What ships is what was proven.
+          rustup target add wasm32-unknown-unknown
+          cargo build --release --manifest-path stark-attest/cli/Cargo.toml             --bin gen-os-fixtures
+          cargo build --release --target wasm32-unknown-unknown             --manifest-path stark-attest/verifier-wasm/Cargo.toml
+          make -s nonos-mk-enrolled-tsv 2>/dev/null | grep -P '\t0x' > /tmp/enrolled.tsv
+          test "$(wc -l < /tmp/enrolled.tsv)" -ge 80
+          stark-attest/cli/target/release/gen-os-fixtures surface             --policy-root nonos-data/trust/policy/zk_capsule_policy_root.bin             --epoch 1             --kernel-elf target/kernel-attest/kernel.enrolled.elf             --kernel-root nonos-data/trust/policy/kernel_attest_root.bin             --kernel-trailer target/kernel-attest/kernel.zk_trailer.bin             --capsules /tmp/enrolled.tsv
+          cp stark-attest/web-os/index.html stark-attest/web-os/app.js              stark-attest/web-os/smoke.mjs stark-attest/web-os/chain.mjs surface/
+          cp stark-attest/verifier-wasm/target/wasm32-unknown-unknown/release/stark_attest_verifier_wasm.wasm              surface/verifier.wasm
+          cp target/kernel_attested.bin              nonos-bootloader/target/x86_64-unknown-uefi/release/nonos_boot.efi surface/
+          ( cd surface && node smoke.mjs )
+          tar -C surface -czf attestation-surface.tar.gz .
+          sha256sum attestation-surface.tar.gz
+          cp attestation-surface.tar.gz release/
+          ( cd release && sha256sum attestation-surface.tar.gz >> SHA256SUMS )
 
       - name: nonos-verify release
         env:

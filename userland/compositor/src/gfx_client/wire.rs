@@ -24,7 +24,10 @@ mod read_status;
 pub const NVGP_MAGIC: u32 = 0x4E56_4750;
 pub const NVGP_VERSION: u16 = 1;
 pub const NVGP_HDR_LEN: usize = 20;
-const CALL_REPLY_TIMEOUT_MS: u64 = 1000;
+// A present round-trip that misses is a dropped frame, not a reason to freeze
+// the whole desktop for a second. Bound it near a couple of frames: a slow or
+// lost driver reply costs one late frame instead of a visible full-UI stall.
+const CALL_REPLY_TIMEOUT_MS: u64 = 100;
 const BOOT_REPLY_TIMEOUT_MS: u64 = 250;
 
 pub use build_request::build_request;

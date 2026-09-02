@@ -25,7 +25,11 @@ use crate::state::Context;
 // would otherwise never heal. A periodic full pass rebuilds the whole scene
 // from current surface content, so any such staleness clears within about a
 // second at 60 Hz while normal frames keep the cheap partial-damage path.
-const HEAL_INTERVAL_FRAMES: u32 = 45;
+// A full recomposite roughly every four seconds is enough to clear the rare
+// staleness (a scanout size settling, a client that under-damaged) without
+// spending a full-screen transfer and flush more than once a second at idle,
+// which was a steady drain even on a desktop nobody was touching.
+const HEAL_INTERVAL_FRAMES: u32 = 240;
 
 pub fn run(mut ctx: Context) -> ! {
     let mut rx = [0u8; HDR_LEN + IPC_PAYLOAD_MAX];

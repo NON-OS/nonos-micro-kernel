@@ -37,6 +37,12 @@ pub(super) fn bind_intx(
     // mask and record everything by the resolved GSI so ack/unmask later
     // operate on the same redirection entry.
     let gsi = ioapic::gsi_for_irq(req.irq_source);
+    // Ahead of the grant records: those only describe lines other capsules
+    // hold. The kernel programs its own through a different module, so a line
+    // it listens on has to be refused here or a capsule reprograms it.
+    if super::super::reserved::is_reserved(gsi) {
+        return Err(IrqBindError::ReservedGsi);
+    }
     if records::vector_for_gsi(gsi).is_some() {
         return Err(IrqBindError::AlreadyBound);
     }

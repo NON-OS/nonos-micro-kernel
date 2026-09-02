@@ -18,6 +18,8 @@ use crate::arch::x86_64::gdt::constants::MAX_CPUS;
 use crate::arch::x86_64::gdt::percpu::PerCpuGdt;
 use core::sync::atomic::{AtomicBool, AtomicU64};
 
+pub(crate) use crate::arch::x86_64::gdt::percpu_stacks::{AP_STACKS, BSP_STACKS};
+
 pub(crate) static mut BSP_GDT: PerCpuGdt = PerCpuGdt::new();
 
 pub(crate) static mut AP_GDTS: [PerCpuGdt; MAX_CPUS] = {

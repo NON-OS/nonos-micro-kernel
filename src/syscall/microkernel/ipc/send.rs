@@ -19,6 +19,8 @@ extern crate alloc;
 use core::sync::atomic::{AtomicU32, Ordering};
 
 use crate::ipc::kernel_ipc::kernel_route_ipc_corr;
+use crate::ipc::nonos_channel::IpcMessage;
+use crate::ipc::nonos_inbox;
 use crate::process::current_pid;
 use crate::services::registry::{lookup_port, lookup_service};
 use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_PERM};
@@ -63,59 +65,88 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
         return ERRNO_FAULT;
     }
     let pid = current_pid().unwrap_or(0);
-    // An undeliverable reply reports success to the sender: from the server's
-    // side the reply was handed off, and there is nobody left to hand it to.
-    let Some((target, caller, redirect_token)) = redirect_reply(pid, resolve_send_target(endpoint))
-    else {
-        return 0;
-    };
-    if redirect_token.is_none() && !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
-        return ERRNO_PERM;
-    }
-    // A redirected reply carries the caller's per-call token so the caller can
-    // match it; a plain send keeps its own correlation (0 for `sys_ipc_send`,
-    // which is what a forged reply-injection is limited to).
-    let correlation = redirect_token.unwrap_or(correlation);
-    trace(pid, endpoint, &target, len);
-    match kernel_route_ipc_corr(pid, &target, &data, correlation) {
-        Ok(()) => {
-            if let Some(caller_pid) = caller {
-                crate::sched::wake_process(caller_pid);
+    let target = resolve_send_target(endpoint);
+    match redirect_reply(pid, &target) {
+        // A capsule replying to a request another capsule made with mk_ipc_call:
+        // hand the bytes to that caller's private inbox stamped with the token
+        // it waits on, and wake it since a reply inbox has no owner the router
+        // would wake on its own.
+        Redirect::ToCaller { caller_inbox, caller_pid, token } => {
+            if !super::send_caps::caller_satisfies_endpoint(endpoint, &caller_inbox) {
+                return ERRNO_PERM;
             }
-            0
+            trace(pid, endpoint, &caller_inbox, len);
+            // Enqueue straight into the caller's reply inbox, the exact inbox its
+            // blocked mk_ipc_call is draining, stamped with the token that call
+            // filters on. Going back through the service resolver would look the
+            // reply inbox up as a service and re-resolve it to the caller's proc
+            // inbox (the caller adopted this endpoint), where the caller's serve
+            // loop eats the reply and the call times out. That is why every
+            // userland call into a kernel-reply service (crypto, the block
+            // device, vfs) hung: the answer was delivered to the wrong inbox.
+            match IpcMessage::new(&alloc::format!("proc.{}", pid), &caller_inbox, &data) {
+                Ok(mut msg) => {
+                    msg.correlation = token;
+                    match nonos_inbox::try_enqueue_strict(&caller_inbox, msg) {
+                        Ok(()) => {
+                            crate::sched::wake_process(caller_pid);
+                            0
+                        }
+                        Err(_) => ERRNO_FAULT,
+                    }
+                }
+                Err(_) => ERRNO_FAULT,
+            }
         }
-        Err(e) => e as i64,
+        // A capsule replying to a kernel-mediated round trip (crypto_pool,
+        // entropy, vfs, the block device). The kernel drains this exact reply
+        // inbox, so put the bytes there directly. Routing it as addressed would
+        // send it to proc.<self>, where the serve loop reads its own reply as a
+        // request and self-mails a core to death; that is the loop the old drop
+        // guarded, and dropping instead stranded every kernel round trip.
+        Redirect::ToReplyInbox => match IpcMessage::new(&alloc::format!("proc.{}", pid), &target, &data) {
+            Ok(msg) => {
+                let _ = nonos_inbox::try_enqueue_strict(&target, msg);
+                0
+            }
+            Err(_) => 0,
+        },
+        // Any other send goes to its addressed target with its own correlation
+        // (0 for sys_ipc_send, all a forged reply injection can carry).
+        Redirect::AsAddressed => {
+            if !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
+                return ERRNO_PERM;
+            }
+            trace(pid, endpoint, &target, len);
+            match kernel_route_ipc_corr(pid, &target, &data, correlation) {
+                Ok(()) => 0,
+                Err(e) => e as i64,
+            }
+        }
     }
 }
 
-// When a service replies to its own fixed reply endpoint, hand the message to
-// the matching `mk_ipc_call` caller's private inbox instead, and surface that
-// caller's correlation token so the reply can be stamped with it. A non-reply
-// send is left as-is with no token. The caller pid rides along because a
-// kernel-owned reply inbox has no process owner for the router to wake, so the
-// blocked caller would otherwise sleep out its whole `mk_ipc_call` timeout.
-//
-// A reply with NO pending caller returns `None`: it is undeliverable. Since
-// endpoint adoption made a service own its reply endpoint, delivering it "as
-// addressed" routes it into the sender's own inbox, where the serve loop reads
-// it as a request and replies to the reply — a self-mail loop that pins a core
-// within seconds of one stray message. Dropping it is the only safe answer.
-fn redirect_reply(
-    sender_pid: u32,
-    target: alloc::string::String,
-) -> Option<(alloc::string::String, Option<u32>, Option<u64>)> {
+enum Redirect {
+    ToCaller { caller_inbox: alloc::string::String, caller_pid: u32, token: u64 },
+    ToReplyInbox,
+    AsAddressed,
+}
+
+// Classify a send. A capsule sending to its own fixed reply endpoint is
+// answering a request, and which request decides where the bytes go: a pending
+// mk_ipc_call caller takes them (ToCaller), otherwise the kernel is the one
+// waiting on this inbox for a round trip it drove, so they stay here for the
+// drain (ToReplyInbox). Every other send is addressed as written (AsAddressed).
+fn redirect_reply(sender_pid: u32, target: &str) -> Redirect {
     let own_reply = crate::process::get_process(sender_pid).and_then(|p| p.reply_inbox());
-    if own_reply == Some(target.as_str()) {
+    if own_reply == Some(target) {
         if let Some((caller_pid, caller_inbox, token)) = super::pending_reply::pop(sender_pid) {
-            return Some((caller_inbox, Some(caller_pid), Some(token)));
+            return Redirect::ToCaller { caller_inbox, caller_pid, token };
         }
-        BOOMERANG.reject(&target, "reply with no caller, dropped", sender_pid);
-        return None;
+        return Redirect::ToReplyInbox;
     }
-    Some((target, None, None))
+    Redirect::AsAddressed
 }
-
-static BOOMERANG: crate::sys::diag::Site = crate::sys::diag::Site::new(b"ipc.reply");
 
 fn resolve_send_target(endpoint: u64) -> alloc::string::String {
     let numeric = alloc::format!("endpoint.{}", endpoint);

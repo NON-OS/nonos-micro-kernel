@@ -17,7 +17,7 @@ CAPSULE_REPLY_ENDPOINT   := reply:4411:endpoint.desktop_shell.reply
 # The shell-frametime counter is the only consumer of Debug; re-add 0x100 here
 # and in spawn.rs when that build is enabled. Must stay in sync with
 # requested_caps in src/userspace/capsule_desktop_shell/spawn.rs.
-CAPSULE_REQUIRED_CAPS    := 0x100181d
+CAPSULE_REQUIRED_CAPS    := 0x100191D
 
 # Uncomment for a frame-time measurement build; leave off for release.
 # CAPSULE_CARGO_FEATURES := shell-frametime

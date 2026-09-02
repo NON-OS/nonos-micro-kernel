@@ -14,13 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_yield;
+use nonos_libc::{mk_debug, mk_yield};
 
 pub fn wait_for_setup() -> crate::state::Context {
+    let mut last: &'static str = "";
+    let mut rounds: u32 = 0;
     loop {
         match crate::setup::run() {
             Ok(ctx) => return ctx,
-            Err(_) => {
+            Err(step) => {
+                // A silent retry here reads as an empty desktop from outside.
+                // Say what failed, once per change and then every 64 rounds.
+                if step != last || rounds % 64 == 0 {
+                    let mut line = [0u8; 96];
+                    let tag = b"[SHELL] setup stuck: ";
+                    let n = tag.len().min(line.len());
+                    line[..n].copy_from_slice(&tag[..n]);
+                    let m = step.len().min(line.len() - n);
+                    line[n..n + m].copy_from_slice(&step.as_bytes()[..m]);
+                    let _ = mk_debug(line.as_ptr(), n + m);
+                    last = step;
+                }
+                rounds = rounds.wrapping_add(1);
                 for _ in 0..64 {
                     mk_yield();
                 }

@@ -25,6 +25,55 @@ nonos-mk-ensure-zk-keys: $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS)
 nonos-mk-verify-capsule-attest: nonos-mk-all-capsules-attested
 	@printf "\n  transparent capsule attestation is kernel-verified at spawn\n\n"
 
+# Self-verification of the shipped image. Five independent checks, each with a
+# different source of truth, so no single compromised input passes quietly:
+#   A  the trust artifact ledger, against the baked SHA-256 list
+#   B  every manifest signature, Ed25519 + ML-DSA-65 against the trust anchor
+#   C  every binary's .nonos.caps section, against the manifest it shipped with
+#   D  every STARK membership trailer, re-verified with the same nonos-stark
+#      gate the kernel runs at spawn and the bootloader runs before the jump
+#   E  the policy root proven in D, byte-embedded in the kernel that boots
+# Fail-closed: the first failure stops the build claiming to be verified.
+.PHONY: nonos-mk-verify-image
+nonos-mk-verify-image: $(NONOS_STARK_ENROLL) $(CAPSULE_SIGN_BIN)
+	@echo "Self-verifying the image..."
+	@echo "  [A] trust artifact ledger"
+	@$(MAKE) --no-print-directory nonos-mk-check-trust-manifest >/dev/null
+	@echo "        ok    baked SHA-256 ledger matches the tree"
+	@echo "  [B] manifest signatures (Ed25519 + ML-DSA-65, trust anchor policy)"
+	@t0=$$(date +%s); $(foreach s,$(NONOS_ENROLLED_CAPSULES),\
+		$(CAPSULE_SIGN_BIN) verify-manifest \
+			--manifest $($(s)_MANIFEST) --cert $($(s)_CERT) \
+			--policy $(NONOS_TRUST_ANCHOR_POLICY_BIN) >/dev/null || exit 1;) \
+	echo "        ok    $(words $(NONOS_ENROLLED_CAPSULES)) manifests verify ($$(($$(date +%s)-t0))s)"
+	@echo "  [C] declared capabilities (.nonos.caps vs the signed manifest)"
+	@t0=$$(date +%s); $(foreach s,$(NONOS_ENROLLED_CAPSULES),\
+		$(NONOS_CAPS_CHECK) $($(s)_BIN) \
+			--manifest-caps $($(s)_REQUIRED_CAPS) --allow-missing >/dev/null || exit 1;) \
+	echo "        ok    $(words $(NONOS_ENROLLED_CAPSULES)) binaries declare what their manifests grant ($$(($$(date +%s)-t0))s)"
+	@echo "  [D] STARK membership proofs (the gate the kernel runs at spawn)"
+	@# No output piping here: a pipe would let the pipeline's last command mask
+	@# the verifier's exit code, and a verifier that cannot fail the build is
+	@# decoration. The tool's own per-capsule lines are the evidence.
+	@$(NONOS_STARK_ENROLL) verify $(ZK_CAPSULE_ROOT) \
+		$(foreach s,$(NONOS_ENROLLED_CAPSULES),$($(s)_REQUIRED_CAPS):$($(s)_BIN):$($(s)_ATTESTATION))
+	@if [ -f "$(KERNEL_ATTEST_ROOT_BIN)" ] && [ -f "$(KERNEL_ATTEST_TRAILER)" ] && [ -f "$(dir $(KERNEL_ATTEST_TRAILER))kernel.enrolled.elf" ]; then \
+		$(NONOS_STARK_ENROLL) verify-kernel "$(KERNEL_ATTEST_ROOT_BIN)" \
+			"$(dir $(KERNEL_ATTEST_TRAILER))kernel.enrolled.elf" "$(KERNEL_ATTEST_TRAILER)" || exit 1; \
+	else \
+		echo "        --    kernel self-attestation artifacts not present in this profile"; \
+	fi
+	@echo "  [E] root embedding + build receipt"
+	@$(NONOS_PYTHON) scripts/build_receipt.py \
+		--policy-root "$(ZK_CAPSULE_ROOT)" \
+		--kernel-attest-root "$(KERNEL_ATTEST_ROOT_BIN)" \
+		--bootloader "$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi" \
+		--enrolled-elf "$(dir $(KERNEL_ATTEST_TRAILER))kernel.enrolled.elf" \
+		--kernel "$(TARGET_DIR)/kernel_attested.bin" \
+		--artifact "$(TARGET_DIR)/nonos.iso" \
+		--artifact "$(ESP_DIR)/EFI/nonos/kernel.bin" \
+		--out "$(TARGET_DIR)/attestation/build-receipt.json"
+
 nonos-mk-zk-report: $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS)
 	@printf "\n  transparent enrolled-secret root   %s\n\n" "$(NONOS_ZK_ROOT_FPR)"
 
@@ -121,7 +170,6 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),$(NONOS_TRUST_ANCHOR_PUBKEY),$(SIGNING_KEY)) \
 		$(KERNEL_MLDSA65_PUB) \
 		$(ZK_BOOT_ROOT) \
-		$(if $(NONOS_STARK_KERNEL_ATTEST_ON),$(KERNEL_ATTEST_ROOT_BIN)) \
 		$(GOP_PREF_STAMP) \
 		$(TARGET_DIR)/.nonos-toolchain.stamp
 	@echo "Building UEFI bootloader (policy: $(BOOTLOADER_POLICY))..."
@@ -372,6 +420,18 @@ nonos-mk-check-trust-manifest:
 	@echo "Verifying baked trust artifact SHA-256 ledger..."
 	@cd $(NONOS_TRUST_DIR) && $(SHA256) -c MANIFEST.sha256
 
+# Re-stamp the ledger over the current trust tree. A local rebuild legitimately
+# regenerates trailers and signatures (STARK grinding is randomized), so the
+# build refreshes the ledger it will then verify against; publishing commits
+# the refreshed ledger, and from that point the check pins the shipped set.
+# Deterministic order, so two stamps of one tree are byte-identical.
+.PHONY: nonos-mk-trust-ledger
+nonos-mk-trust-ledger:
+	@cd $(NONOS_TRUST_DIR) && \
+		find capsules keys policy zk -type f ! -name MANIFEST.sha256 2>/dev/null \
+		| LC_ALL=C sort | xargs $(SHA256) > MANIFEST.sha256
+	@echo "Trust ledger re-stamped over $$(wc -l < $(NONOS_TRUST_DIR)/MANIFEST.sha256 | tr -d ' ') artifacts."
+
 nonos-mk-verify-trust: nonos-mk-desktop-gui-prod
 	@$(MAKE) nonos-mk-host-trust-verify
 	@$(MAKE) nonos-mk-check-trust-manifest
@@ -538,13 +598,35 @@ nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 # trailer. The bootloader embeds the root (NONOS_KERNEL_ATTEST_ROOT) and verifies
 # the trailer, carried in the kernel image footer, before jumping. The tool
 # re-checks the trailer against the same verifier the bootloader runs.
-$(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER): $(KERNEL_ATTEST_ELF) $(NONOS_STARK_ENROLL)
+# One rule, one run. A multi-target rule executes its recipe once per demanded
+# target, so under -j the root and the trailer were enrolled by two concurrent
+# processes writing the same files, and the interleaved trailer verified
+# against nothing. The stamp makes the enrollment a single grouped step the
+# portable way (macOS ships make 3.81, which has no `&:` grouped targets).
+KERNEL_ATTEST_STAMP := $(TARGET_DIR)/kernel-attest/.enrolled
+$(KERNEL_ATTEST_STAMP): $(KERNEL_ATTEST_ELF) $(NONOS_STARK_ENROLL)
 	@echo "Enrolling the kernel self-attestation..."
 	@mkdir -p $(dir $(KERNEL_ATTEST_ROOT_BIN)) $(dir $(KERNEL_ATTEST_TRAILER))
-	@$(NONOS_STARK_ENROLL) kernel $(KERNEL_ATTEST_ELF) \
+	@# Snapshot first, enroll the snapshot: the loose ELF path is shared by
+	@# several kernel profiles and can be relinked mid-build, so the proof is
+	@# issued over frozen bytes, verify-kernel runs against the same frozen
+	@# bytes, and the receipt ties them to kernel_attested.bin by byte prefix.
+	@cp $(KERNEL_ATTEST_ELF) $(dir $(KERNEL_ATTEST_TRAILER))kernel.enrolled.elf
+	@$(NONOS_STARK_ENROLL) kernel $(dir $(KERNEL_ATTEST_TRAILER))kernel.enrolled.elf \
 		$(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
+	@touch $@
 
-nonos-mk-kernel-attest: $(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
+# The stamp says enrollment ran; the byproducts live in two directories with
+# more than one historical cleaner. If either file is gone the stamp is stale
+# by definition, so invalidate it and re-drive rather than trust it.
+.PHONY: nonos-mk-kernel-attest-ensure
+nonos-mk-kernel-attest-ensure:
+	@if [ ! -f "$(KERNEL_ATTEST_ROOT_BIN)" ] || [ ! -f "$(KERNEL_ATTEST_TRAILER)" ]; then \
+		rm -f $(KERNEL_ATTEST_STAMP); \
+	fi
+	@$(MAKE) --no-print-directory $(KERNEL_ATTEST_STAMP)
+
+nonos-mk-kernel-attest: $(KERNEL_ATTEST_STAMP)
 	@echo "Kernel self-attestation enrolled: root $(KERNEL_ATTEST_ROOT_BIN)"
 
 NONOS_DESKTOP_GUI_CAPSULE_CHECKS = \
@@ -986,6 +1068,24 @@ nonos-mk-desktop-gui-prod: $(DESKTOP_GUI_CAPSULE_ARTIFACTS) \
 		nonos-mk-check-deps nonos-mk-ensure-signing-key
 	$(call nonos_kernel_build,microkernel-desktop-gui + nonos-stark-attest,microkernel-desktop-gui$(_boot_comma)nonos-stark-attest)
 
+# The fast loop. Proving is a release cost, never an iteration cost: the policy
+# tree commits to the whole capsule set, so one changed capsule re-proves all of
+# them (~10 minutes of STARK grinding), which no edit-compile-boot loop should
+# ever pay. This target builds and signs exactly what changed and the kernel in
+# rollout mode (`nonos-zk-rollout`: a stale proof is logged at spawn, not
+# fatal), reusing the trailers already on disk. Signing still runs, capability
+# checks still run; only the membership proofs are allowed to be stale, and the
+# boot log says so on every spawn. `make` remains the only path that proves.
+.PHONY: nonos-mk-dev
+nonos-mk-dev: $(filter-out %.zk_trailer.bin,$(DESKTOP_GUI_CAPSULE_ARTIFACTS)) \
+		nonos-mk-check-deps nonos-mk-ensure-signing-key
+	@ls $(NONOS_BAKED_TRUST_DIR)/capsules/*.zk_trailer.bin >/dev/null 2>&1 || { \
+		echo "no trailers on disk yet; run 'make' once so dev builds have proofs to carry"; exit 1; }
+	@echo "DEV BUILD: membership proofs may be stale by design; 'make' is the proving path."
+	$(call nonos_kernel_build,microkernel-desktop-gui + rollout (DEV),microkernel-desktop-gui$(_boot_comma)nonos-stark-attest$(_boot_comma)nonos-zk-rollout)
+	@$(MAKE) --no-print-directory nonos-mk-esp
+	@echo "Dev image ready: make dev-qemu boots it."
+
 # The desktop for aarch64. The capsule pass runs as a sub-make so
 # NONOS_USER_TARGET reaches the artefact paths, which are expanded when the
 # rules are read and so cannot be redirected by a target-specific variable.
@@ -1079,7 +1179,7 @@ ifeq ($(NONOS_STARK_KERNEL_ATTEST),1)
 # Kernel self-attestation: embed the transparent STARK trailer the bootloader
 # verifies against the enrolled kernel root before jump, in place of the curve
 # boot proof. The trailer is bound to the kernel measurement by nonos-stark-enroll.
-$(TARGET_DIR)/kernel_attested.bin: $(TARGET_DIR)/kernel_signed.bin $(EMBED_TOOL) $(KERNEL_ATTEST_TRAILER)
+$(TARGET_DIR)/kernel_attested.bin: $(TARGET_DIR)/kernel_signed.bin $(EMBED_TOOL) $(KERNEL_ATTEST_STAMP)
 	@echo "Embedding kernel STARK self-attestation trailer..."
 	@$(EMBED_TOOL) --input $< --output $@ --proof-file $(KERNEL_ATTEST_TRAILER) --verbose
 else
@@ -1131,6 +1231,31 @@ nonos-mk-boot-zk-sidecar: $(ZK_BOOT_SIDECAR)
 nonos-mk-esp: \
 		$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi \
 		$(TARGET_DIR)/kernel_attested.bin
+	@# Re-drive the whole attested-kernel chain at pack time. Recursive
+	@# sub-makes relink the kernel after this target's prerequisites were
+	@# resolved. If the ELF moved after its self-attestation was enrolled, the
+	@# embedded trailer measures a kernel that no longer exists and the kernel
+	@# refuses to boot. Deleting the enrollment forces it to bind the final
+	@# ELF, then the sign and embed follow; re-statting here cannot be raced by
+	@# an earlier resolution.
+	@# Sequential re-drive. Recursive sub-makes may have relinked the kernel
+	@# after this rule's prerequisites were resolved, so re-stat and re-run the
+	@# chain in order: enrollment binds the final ELF, the bootloader bakes the
+	@# root that enrollment produced, and the embed carries the trailer that
+	@# matches both. One recipe, three ordered steps, no window in which a
+	@# parallel job can observe a half-rebuilt chain; the old approach deleted
+	@# the enrollment here, which shot any bootloader compile already in flight.
+	@# Enrol, then rebuild the bootloader against the root that enrolment
+	@# produced, then embed. Sequenced here rather than as a prerequisite of
+	@# the bootloader: a bootloader built on its own, with the attest gate off
+	@# or with no kernel to enrol, must not be made to demand an enrolment it
+	@# has no way to perform.
+ifeq ($(NONOS_STARK_KERNEL_ATTEST_ON),1)
+	@$(MAKE) --no-print-directory nonos-mk-kernel-attest-ensure
+	@rm -f $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
+	@$(MAKE) --no-print-directory $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
+endif
+	@$(MAKE) --no-print-directory $(TARGET_DIR)/kernel_attested.bin
 	@echo "Packaging EFI System Partition..."
 	@mkdir -p $(ESP_DIR)/EFI/Boot $(ESP_DIR)/EFI/nonos
 	@cp $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi $(ESP_DIR)/EFI/Boot/BOOTX64.EFI

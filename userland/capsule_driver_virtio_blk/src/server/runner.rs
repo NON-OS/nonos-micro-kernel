@@ -22,17 +22,26 @@ use crate::server::error::{reply_decode_failed, reply_with_status};
 use crate::server::handlers;
 use crate::setup::Driver;
 use alloc::vec;
-use nonos_libc::{mk_ipc_recv_from, mk_yield};
+use nonos_libc::{mk_getpid, mk_ipc_recv_from, mk_yield};
 pub fn run(driver: &mut Driver) -> ! {
     let rx_len = HDR_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let tx_len = RESP_HDR_LEN + STATUS_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
+    // This same loop drains the reply endpoint we answer on, so a reply that
+    // finds no waiting caller comes straight back to us as an undecodable
+    // message. Answering that failure sends another reply, which loops again:
+    // one stray reply becomes a self-sustaining flood that buries every real
+    // request. Drop anything we sent to ourselves before it can start the loop.
+    let self_pid = mk_getpid();
     loop {
         let mut sender_pid: u32 = 0;
         let n = mk_ipc_recv_from(0, rx.as_mut_ptr(), rx_len, 0, &mut sender_pid);
         if n <= 0 {
             mk_yield();
+            continue;
+        }
+        if sender_pid == self_pid {
             continue;
         }
         let len = n as usize;

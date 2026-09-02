@@ -69,9 +69,13 @@ jobs:
               ;;
             production)
               bash nonos-ci/setup-signing-key.sh
-              for name in ZK_BOOT_INDEX ZK_BOOT_SECRET_X ZK_BOOT_SECRET_R ZK_BOOT_NONCE_SEED; do
-                test -n "${!name:-}" || { echo "::error::${name} is required for production runtime"; exit 1; }
-              done
+              # The kernel self-attestation is transparent and needs no
+              # secrets. The ZK_BOOT values are the device binding's prover
+              # material: the opening of an enrolled device slot, which
+              # belongs to the machine's owner at install time and never to a
+              # vendor pipeline. A release therefore ships without a binding
+              # sidecar, and their absence here is the correct state, not a
+              # missing provisioning step.
               make nonos-mk-check-trust-manifest
               ;;
             *)

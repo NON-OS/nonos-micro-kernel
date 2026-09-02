@@ -38,19 +38,14 @@ mod time_counter;
 pub mod trap;
 pub mod user_access;
 pub mod wall_clock;
-
 #[cfg(target_arch = "x86_64")]
 pub mod nonos_boot;
-
 #[cfg(target_arch = "x86_64")]
 pub mod x86_64;
-
 #[cfg(target_arch = "aarch64")]
 pub mod aarch64;
-
 #[cfg(target_arch = "riscv64")]
 pub mod riscv64;
-
 pub use abi::ArchOps;
 pub(crate) use active_page_table_root::active_page_table_root;
 #[cfg(target_arch = "x86_64")]
@@ -64,22 +59,17 @@ pub(crate) use remap_pci_windows::remap_pci_windows;
 pub(crate) use run_without_interrupts::run_without_interrupts;
 pub(crate) use stack_pointer::stack_pointer;
 pub(crate) use time_counter::{read_time_counter, time_counter_hz};
-
 #[cfg(target_arch = "x86_64")]
 pub type Arch = x86_64::abi::X86_64;
 #[cfg(target_arch = "aarch64")]
 pub type Arch = aarch64::abi::Aarch64;
 #[cfg(target_arch = "riscv64")]
 pub type Arch = riscv64::abi::Riscv64;
-
 #[cfg(target_arch = "x86_64")]
 pub use nonos_boot as boot;
-
 #[cfg(target_arch = "x86_64")]
 pub use x86_64::*;
-
 #[cfg(target_arch = "aarch64")]
 pub use aarch64::*;
-
 #[cfg(target_arch = "riscv64")]
 pub use riscv64::*;

@@ -30,8 +30,16 @@ pub fn run() -> ! {
     let mut store = Store::new();
     store.seed();
     let mut seeder = PackageSeeder::new();
-    let ready = b"[VFSD] loop\n";
-    let _ = mk_debug(ready.as_ptr(), ready.len());
+    // Seeding blocks on the package store, up to one blk timeout per call,
+    // and a failure leaves /capsules silently empty. One line says how the
+    // seed ended, so a missing desktop names its layer instead of reading as
+    // a shell timeout two layers up.
+    let status = crate::blk::status::current();
+    let mut line = *b"[VFS] serving, store status 00";
+    let n = line.len();
+    line[n - 2] = b'0' + ((status / 10) % 10) as u8;
+    line[n - 1] = b'0' + (status % 10) as u8;
+    let _ = mk_debug(line.as_ptr(), n);
     loop {
         let mut sender_pid: u32 = 0;
         let n = mk_ipc_recv_from(0, buf.as_mut_ptr(), MAX_MSG, seeder.poll_ms(), &mut sender_pid);
@@ -41,6 +49,8 @@ pub fn run() -> ! {
         }
         seeder.saw_request();
         let n = n as usize;
+        let started = nonos_libc::mk_uptime_ms();
+        let op = if n >= 8 { u16::from_le_bytes([buf[6], buf[7]]) } else { 0 };
         let resp = match decode_request(&buf[..n]) {
             Ok(req) => dispatch(&mut store, req, sender_pid),
             Err(_) => encode_response(0, 0, 0, EINVAL, &[]),
@@ -49,6 +59,22 @@ pub fn run() -> ! {
             let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, resp.as_ptr(), resp.len());
         } else {
             let _ = mk_ipc_reply(sender_pid, resp.as_ptr(), resp.len());
+        }
+        // A handler that outlives its caller's timeout turns every reply into
+        // a drop and reads as a dead service. Name the op and the cost.
+        let spent = nonos_libc::mk_uptime_ms().saturating_sub(started);
+        if spent > 1000 {
+            let mut line = *b"[VFS] slow op 0000 ms 000000";
+            for (i, shift) in [(14usize, 12u32), (15, 8), (16, 4), (17, 0)] {
+                line[i] = b"0123456789abcdef"[((op as usize) >> shift) & 0xF];
+            }
+            let ms = spent.min(999_999) as u32;
+            let mut v = ms;
+            for i in (22..28).rev() {
+                line[i] = b'0' + (v % 10) as u8;
+                v /= 10;
+            }
+            let _ = mk_debug(line.as_ptr(), line.len());
         }
     }
 }

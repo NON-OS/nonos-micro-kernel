@@ -18,6 +18,7 @@ mod chunk0;
 mod chunk1;
 mod chunk2;
 mod chunk3;
+mod extra;
 mod lookup;
 mod store;
 

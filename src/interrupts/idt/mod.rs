@@ -19,6 +19,9 @@ mod entry;
 mod init;
 mod load;
 mod table;
+mod table_irqs;
+mod table_ist;
+mod table_trampolines;
 pub mod vectors;
 
 pub use constants::{

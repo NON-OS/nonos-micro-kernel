@@ -30,13 +30,17 @@ pub(super) fn start_aps() -> Result<usize, &'static str> {
 
     let boot = super::boot_inputs::prepare()?;
 
-    // The trampoline loads the BSP CR3 whose low half is already cleared, so
-    // it needs the trampoline region identity-mapped to survive the switch to
-    // long mode. Install it before the first SIPI and remove it once the APs
-    // are up, so the low half is cleared again before any userspace runs.
+    // The trampoline loads a CR3 whose low half is cleared, so it needs the
+    // trampoline region identity-mapped to survive the switch to long mode.
+    // Removed once the APs are up, before any userspace runs.
     super::ap_identity::install()?;
 
     let mut started = 0;
+    // Handed out once each and never reused, unlike `started`, which does not
+    // advance when an AP fails. An AP that missed its deadline was not stopped
+    // and may still be walking the trampoline; reusing its number would point
+    // two live CPUs at one descriptor and one per-CPU block.
+    let mut next_cpu_id = 1;
     let bsp_apic = BSP_APIC_ID.load(Ordering::Acquire);
     let ap_list = topology::get_ap_list();
 
@@ -45,16 +49,17 @@ pub(super) fn start_aps() -> Result<usize, &'static str> {
             continue;
         }
 
-        let cpu_id = started + 1;
+        let cpu_id = next_cpu_id;
         if cpu_id >= MAX_CPUS {
+            crate::log_warn!("[SMP] CPU limit {} reached, rest left offline", MAX_CPUS);
             break;
         }
+        next_cpu_id += 1;
 
         if super::ap_unit::start(cpu_id, apic_id, &boot).unwrap_or(false) {
             started += 1;
         }
     }
-
     super::ap_identity::remove();
 
     CPUS_ONLINE.store(started + 1, Ordering::Release);
