@@ -63,6 +63,8 @@ pub mod capsule_socks5;
 pub mod capsule_net_sockets;
 pub mod capsule_net_tcp;
 pub mod capsule_net_udp;
+#[cfg(feature = "nonos-capsule-nonos-install")]
+pub mod capsule_nonos_install;
 pub mod capsule_policy;
 pub mod capsule_process_manager;
 pub mod capsule_proof_io;
