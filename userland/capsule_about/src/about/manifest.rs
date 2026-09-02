@@ -16,24 +16,25 @@
 
 use nonos_app_skeleton::{AppManifest, WindowKind};
 
-use super::theme::{WINDOW_HEIGHT, WINDOW_INITIAL_X, WINDOW_INITIAL_Y, WINDOW_WIDTH};
+use super::ui::metrics::{WIN_H, WIN_W, WIN_X, WIN_Y};
 
 const WINDOW_ID: u32 = 0x4142_4F55;
+
+// Keys drive the sidebar and the scroll; the buttons select a section by click,
+// and the absolute pointer keeps those coordinates current.
 const INPUT_KEY_DOWN_BIT: u32 = 1 << 0;
-const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
 const INPUT_POINTER_ABS_BIT: u32 = 1 << 3;
-const INPUT_MASK: u32 = INPUT_KEY_DOWN_BIT | INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT;
-const TITLE: &[u8] = b"About NONOS";
+const INPUT_BUTTON_DOWN_BIT: u32 = 1 << 5;
 
 pub fn manifest() -> AppManifest {
     AppManifest {
-        title: TITLE,
+        title: "NØNOS About".as_bytes(),
         window_id: WINDOW_ID,
         kind: WindowKind::Normal,
-        initial_x: WINDOW_INITIAL_X,
-        initial_y: WINDOW_INITIAL_Y,
-        width: WINDOW_WIDTH,
-        height: WINDOW_HEIGHT,
-        input_kind_mask: INPUT_MASK,
+        initial_x: WIN_X,
+        initial_y: WIN_Y,
+        width: WIN_W,
+        height: WIN_H,
+        input_kind_mask: INPUT_KEY_DOWN_BIT | INPUT_BUTTON_DOWN_BIT | INPUT_POINTER_ABS_BIT,
     }
 }

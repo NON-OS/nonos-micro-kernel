@@ -16,39 +16,14 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::about::section::SECTIONS;
 use crate::about::state::State;
-use crate::about::theme::{
-    HEADER_HEIGHT, TAB_BAR_HEIGHT, TAB_HORIZONTAL_PADDING,
-};
+use crate::about::ui::hit;
 
-const TAB_CELL_WIDTH: u32 = 8;
-
+// The router owns no geometry of its own: it asks the same functions the frame
+// painted with, so a click can only ever select a section the rail drew.
 pub fn on_pointer_button(state: &mut State, x: i32, y: i32) -> EventOutcome {
-    if x < 0 || y < 0 {
-        return EventOutcome::Idle;
+    match hit::at(x, y) {
+        Some(section) if state.select(section) => EventOutcome::Repaint,
+        _ => EventOutcome::Idle,
     }
-    let x = x as u32;
-    let y = y as u32;
-    let tab_top = HEADER_HEIGHT;
-    let tab_bottom = HEADER_HEIGHT.saturating_add(TAB_BAR_HEIGHT);
-    if y < tab_top || y >= tab_bottom {
-        return EventOutcome::Idle;
-    }
-    let mut cursor = TAB_HORIZONTAL_PADDING;
-    for section in SECTIONS {
-        let label_w = section.title().len() as u32 * TAB_CELL_WIDTH;
-        let tab_w = label_w.saturating_add(TAB_HORIZONTAL_PADDING * 2);
-        let end = cursor.saturating_add(tab_w);
-        if x >= cursor && x < end {
-            if state.section == section {
-                return EventOutcome::Idle;
-            }
-            state.section = section;
-            state.scroll = 0;
-            return EventOutcome::Repaint;
-        }
-        cursor = end;
-    }
-    EventOutcome::Idle
 }

@@ -16,38 +16,43 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use super::row;
 use crate::about::data::uptime::{read_millis, split_dhms};
 use crate::about::format::u64_decimal;
 
-pub const LINE_COUNT: u32 = 5;
+use super::super::card::{self, titled};
+use super::super::kv::{kv, ROW_H};
+use super::super::metrics::CARD_PAD;
 
-pub fn render(scroll: u32, visible: u32, top: u32, fb: &mut PaintBuffer) {
-    let mut buf_ms = [0u8; 20];
-    let mut buf_d = [0u8; 20];
-    let mut buf_h = [0u8; 20];
-    let mut buf_m = [0u8; 20];
-    let mut buf_s = [0u8; 20];
+pub const HEIGHT: u32 = card::OVERHEAD + ROW_H * 5;
+
+// The clock is one reading split five ways, so every row comes from the same
+// millisecond: sampling per row would let the seconds disagree with the minutes
+// on the frame where it ticks.
+pub fn paint(fb: &mut PaintBuffer, x: u32, y: i32, w: u32) {
+    let top = titled(fb, x, y, w, HEIGHT, b"Uptime");
     let ms = read_millis();
     let (d, h, m, s) = match ms {
         Some(v) => split_dhms(v),
         None => (0, 0, 0, 0),
     };
-    let ms_str: &[u8] = match ms {
-        Some(v) => u64_decimal(v, &mut buf_ms),
+    let mut raw = [0u8; 20];
+    let mut bd = [0u8; 20];
+    let mut bh = [0u8; 20];
+    let mut bm = [0u8; 20];
+    let mut bs = [0u8; 20];
+    let wall: &[u8] = match ms {
+        Some(v) => u64_decimal(v, &mut raw),
         None => b"unavailable",
     };
     let rows: [(&[u8], &[u8]); 5] = [
-        (b"Wall ms", ms_str),
-        (b"Days", u64_decimal(d, &mut buf_d)),
-        (b"Hours", u64_decimal(h, &mut buf_h)),
-        (b"Minutes", u64_decimal(m, &mut buf_m)),
-        (b"Seconds", u64_decimal(s, &mut buf_s)),
+        (b"Wall ms", wall),
+        (b"Days", u64_decimal(d, &mut bd)),
+        (b"Hours", u64_decimal(h, &mut bh)),
+        (b"Minutes", u64_decimal(m, &mut bm)),
+        (b"Seconds", u64_decimal(s, &mut bs)),
     ];
-    let end = scroll.saturating_add(visible).min(LINE_COUNT);
-    let visible_count = end.saturating_sub(scroll);
-    for offset in 0..visible_count {
-        let (label, value) = rows[(scroll + offset) as usize];
-        row::pair(label, value, row::line_y(offset, top), fb);
+    for (i, (label, value)) in rows.into_iter().enumerate() {
+        let row_y = top + (i as u32 * ROW_H) as i32;
+        kv(fb, x + CARD_PAD, row_y, card::inner(w), label, value, ms.is_some());
     }
 }

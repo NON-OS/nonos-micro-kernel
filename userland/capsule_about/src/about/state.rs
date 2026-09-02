@@ -15,54 +15,59 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::section::{Section, SECTIONS};
-use super::theme::{HEADER_HEIGHT, LINE_HEIGHT, SECTION_TOP_PADDING, STATUS_BAR_HEIGHT, TAB_BAR_HEIGHT};
+use super::ui::metrics::SCROLL_STEP;
 
-pub const VISIBLE_BODY_LINES: u32 = 14;
-
+// Scroll is in pixels, not rows: the screens are cards and gauges of differing
+// heights, so a row index no longer names a position on any of them. The frame
+// funnel records the pane height and the active screen's content height on the
+// way through, which is the only place both are known at once.
 pub struct State {
     pub section: Section,
     pub scroll: u32,
-    pub painted: bool,
-    pub last_visible_lines: u32,
+    pub fb_w: u32,
+    pub fb_h: u32,
+    pub view_h: u32,
+    pub content_h: u32,
 }
 
 impl State {
     pub fn new() -> Self {
-        State { section: Section::Identity, scroll: 0, painted: false, last_visible_lines: VISIBLE_BODY_LINES }
+        State { section: Section::Overview, scroll: 0, fb_w: 0, fb_h: 0, view_h: 0, content_h: 0 }
     }
-    pub fn record_visible_lines(&mut self, lines: u32) {
-        self.last_visible_lines = lines.max(1);
+    pub fn record_extent(&mut self, view_h: u32, content_h: u32) {
+        self.view_h = view_h;
+        self.content_h = content_h;
+        self.scroll = self.scroll.min(self.max_scroll());
+    }
+    pub fn max_scroll(&self) -> u32 {
+        self.content_h.saturating_sub(self.view_h)
+    }
+    pub fn select(&mut self, section: Section) -> bool {
+        if self.section == section {
+            return false;
+        }
+        self.section = section;
+        self.scroll = 0;
+        true
     }
     pub fn select_next_section(&mut self) {
         let next = (self.section.index() + 1) % SECTIONS.len();
-        self.section = SECTIONS[next];
-        self.scroll = 0;
+        self.select(SECTIONS[next]);
     }
     pub fn select_prev_section(&mut self) {
         let prev = (self.section.index() + SECTIONS.len() - 1) % SECTIONS.len();
-        self.section = SECTIONS[prev];
-        self.scroll = 0;
+        self.select(SECTIONS[prev]);
     }
     pub fn scroll_line_up(&mut self) {
-        self.scroll = self.scroll.saturating_sub(1);
+        self.scroll = self.scroll.saturating_sub(SCROLL_STEP);
     }
-    pub fn scroll_line_down(&mut self, total_lines: u32) {
-        let max = total_lines.saturating_sub(self.last_visible_lines);
-        if self.scroll < max {
-            self.scroll += 1;
-        }
+    pub fn scroll_line_down(&mut self) {
+        self.scroll = (self.scroll + SCROLL_STEP).min(self.max_scroll());
     }
     pub fn scroll_page_up(&mut self) {
-        self.scroll = self.scroll.saturating_sub(self.last_visible_lines);
+        self.scroll = self.scroll.saturating_sub(self.view_h.max(SCROLL_STEP));
     }
-    pub fn scroll_page_down(&mut self, total_lines: u32) {
-        let max = total_lines.saturating_sub(self.last_visible_lines);
-        self.scroll = (self.scroll + self.last_visible_lines).min(max);
+    pub fn scroll_page_down(&mut self) {
+        self.scroll = (self.scroll + self.view_h.max(SCROLL_STEP)).min(self.max_scroll());
     }
-}
-
-pub fn visible_lines_for(height: u32) -> u32 {
-    let body_top = HEADER_HEIGHT.saturating_add(TAB_BAR_HEIGHT).saturating_add(SECTION_TOP_PADDING);
-    let body_height = height.saturating_sub(body_top).saturating_sub(STATUS_BAR_HEIGHT);
-    (body_height / LINE_HEIGHT).max(1)
 }

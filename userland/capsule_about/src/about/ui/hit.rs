@@ -14,22 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use crate::about::section::Section;
 
-use crate::about::theme::{BODY, HEADLINE, LINE_HEIGHT, TEXT_LEFT};
+use super::nav_geom;
 
-pub const LABEL_X: u32 = TEXT_LEFT;
-pub const VALUE_X: u32 = TEXT_LEFT + 152;
-
-pub fn pair(label: &[u8], value: &[u8], y: u32, fb: &mut PaintBuffer) {
-    fb.text(LABEL_X, y, label, BODY);
-    fb.text(VALUE_X, y, value, HEADLINE);
-}
-
-pub fn single(text: &[u8], y: u32, fb: &mut PaintBuffer) {
-    fb.text(TEXT_LEFT, y, text, BODY);
-}
-
-pub fn line_y(index: u32, top: u32) -> u32 {
-    top + index * LINE_HEIGHT
+// The one routing surface. About has a single interactive region — the sidebar
+// rail — so the pane is deliberately inert: every screen is evidence to read,
+// not controls to press. Keeping the router here anyway means Phase B adds a
+// target by extending one match, not by teaching the event layer geometry.
+pub fn at(x: i32, y: i32) -> Option<Section> {
+    nav_geom::at(x, y)
 }

@@ -14,40 +14,64 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_toolkit::icons::IconId;
+
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Section {
-    Identity,
-    Authority,
+    Overview,
+    System,
+    Trust,
     Display,
-    Uptime,
-    License,
+    Licenses,
 }
 
+// Sidebar order. The nav painter and the click router both walk this slice, so
+// the rail can never draw an entry the hit test does not know about.
 pub const SECTIONS: [Section; 5] = [
-    Section::Identity,
-    Section::Authority,
+    Section::Overview,
+    Section::System,
+    Section::Trust,
     Section::Display,
-    Section::Uptime,
-    Section::License,
+    Section::Licenses,
 ];
 
 impl Section {
-    pub fn title(self) -> &'static [u8] {
+    pub fn nav_label(self) -> &'static [u8] {
         match self {
-            Section::Identity => b"Identity",
-            Section::Authority => b"Authority",
+            Section::Overview => b"Overview",
+            Section::System => b"System",
+            Section::Trust => b"Trust",
             Section::Display => b"Display",
-            Section::Uptime => b"Uptime",
-            Section::License => b"License",
+            Section::Licenses => b"Licenses",
+        }
+    }
+    // The muted line on the right of the head band: what this screen is evidence
+    // of, not a restatement of its name.
+    pub fn head_meta(self) -> &'static [u8] {
+        match self {
+            Section::Overview => b"identity and terms",
+            Section::System => b"build and address space",
+            Section::Trust => b"signing chain and capabilities",
+            Section::Display => b"surface and present path",
+            Section::Licenses => b"this image and its third parties",
+        }
+    }
+    pub fn icon(self) -> IconId {
+        match self {
+            Section::Overview => IconId::PmOverview,
+            Section::System => IconId::SettingsDeveloper,
+            Section::Trust => IconId::PmAuthority,
+            Section::Display => IconId::SettingsAppearance,
+            Section::Licenses => IconId::FsFile,
         }
     }
     pub fn index(self) -> usize {
         match self {
-            Section::Identity => 0,
-            Section::Authority => 1,
-            Section::Display => 2,
-            Section::Uptime => 3,
-            Section::License => 4,
+            Section::Overview => 0,
+            Section::System => 1,
+            Section::Trust => 2,
+            Section::Display => 3,
+            Section::Licenses => 4,
         }
     }
 }
