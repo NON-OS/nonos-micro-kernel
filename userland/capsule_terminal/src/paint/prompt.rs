@@ -38,7 +38,12 @@ pub fn draw_prompt(
     room: usize,
     t: &Theme,
 ) -> usize {
-    let cwd = state.cwd.as_bytes();
+    let mut home_buf = [0u8; 160];
+    let cwd = crate::term::cwd::shorten(
+        state.cwd.as_bytes(),
+        crate::term::cwd::home_var(state),
+        &mut home_buf,
+    );
     let take = cwd.len().min(room.max(1));
 
     if let Some(search) = &state.search {

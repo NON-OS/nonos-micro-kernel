@@ -34,8 +34,10 @@
 mod term {
     pub mod cwd {
         mod home;
+        mod shorten;
         mod strip_home;
         pub use home::HOME;
+        pub use shorten::shorten;
         pub use strip_home::strip_home;
     }
 
@@ -58,7 +60,7 @@ mod term {
 
 use nonos_policy_proto::{Header, E_OK, HDR_LEN, KIND_STR, OP_GET};
 use term::context::context_line;
-use term::cwd::{strip_home, HOME};
+use term::cwd::{shorten, strip_home, HOME};
 use term::identity::{choose, decode_str, hostname_len, request, HOST_FALLBACK, REQ_LEN, USER};
 
 const HOSTNAME: u32 = 0x0301;
@@ -186,4 +188,20 @@ fn the_prompt_shows_the_folder_under_the_tilde() {
     let mut out = [0u8; 128];
     let n = context_line(USER, b"station", &cwd, HOME, &mut out);
     assert_eq!(&out[..n], b"nonos@station:~/workspace");
+}
+
+#[test]
+fn shorten_agrees_with_the_block_header() {
+    let mut b = [0u8; 160];
+    assert_eq!(shorten(HOME, HOME, &mut b), b"~");
+    let mut c = Vec::from(HOME);
+    c.extend_from_slice(b"/workspace");
+    let mut b2 = [0u8; 160];
+    assert_eq!(shorten(&c, HOME, &mut b2), b"~/workspace");
+}
+
+#[test]
+fn shorten_leaves_a_path_outside_the_home_alone() {
+    let mut b = [0u8; 160];
+    assert_eq!(shorten(b"/etc/keys", HOME, &mut b), b"/etc/keys");
 }

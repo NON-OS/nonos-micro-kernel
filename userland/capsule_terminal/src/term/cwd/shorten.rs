@@ -14,21 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod as_bytes;
-mod dir_prefix;
-mod home;
-mod home_var;
-mod new;
-mod resolve;
-mod shorten;
-mod set;
-mod strip_home;
-mod types;
+use super::strip_home::strip_home;
 
-pub use dir_prefix::dir_prefix;
-pub use home::HOME;
-pub use home_var::home_var;
-pub use resolve::resolve;
-pub use shorten::shorten;
-pub use strip_home::strip_home;
-pub use types::Cwd;
+/// The display form of a path: `~` in place of the home prefix, or the path
+/// unchanged when it lies outside. Callers share this so the prompt, the tab
+/// label and the block header cannot name one directory three ways.
+pub fn shorten<'a>(cwd: &'a [u8], home: &[u8], out: &'a mut [u8]) -> &'a [u8] {
+    match strip_home(cwd, home) {
+        Some(tail) => {
+            let n = tail.len().min(out.len().saturating_sub(1));
+            out[0] = b'~';
+            out[1..1 + n].copy_from_slice(&tail[..n]);
+            &out[..1 + n]
+        }
+        None => cwd,
+    }
+}
