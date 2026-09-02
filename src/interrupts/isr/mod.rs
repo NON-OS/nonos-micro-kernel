@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod page_fault_trampoline;
 mod timer_trampoline;
 mod trampolines;
 mod wrappers;
@@ -22,11 +21,9 @@ mod wrappers;
 pub use trampolines::{
     ac_trampoline, bp_trampoline, br_trampoline, db_trampoline, de_trampoline, gpf_trampoline,
     int80_trampoline, keyboard_trampoline, mf_trampoline, mouse_trampoline, nm_trampoline,
-    np_trampoline, of_trampoline, ss_trampoline, ts_trampoline, ud_trampoline, ve_trampoline,
-    xf_trampoline,
+    np_trampoline, of_trampoline, page_fault_trampoline, ss_trampoline, timer_trampoline,
+    ts_trampoline, ud_trampoline, ve_trampoline, xf_trampoline,
 };
-pub use page_fault_trampoline::page_fault_trampoline;
-pub use timer_trampoline::timer_trampoline;
 pub use wrappers::{
     irq_timer, isr_alignment_check, isr_bound_range, isr_breakpoint, isr_debug, isr_divide_error,
     isr_double_fault, isr_invalid_opcode, isr_machine_check, isr_nmi, isr_overflow, isr_page_fault,

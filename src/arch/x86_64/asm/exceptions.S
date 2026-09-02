@@ -158,6 +158,65 @@
     iretq
 .endm
 
+/* Body for the timer: identical save/restore, but the shim receives
+ * the base of the saved register block itself. The 15 GPRs plus the
+ * iretq frame are the leading 160 bytes of UserContext, and the
+ * handler snapshots them onto the PCB when the tick preempted CPL=3. */
+.macro TRAMP_CTX name shim
+.global \name
+.p2align 4
+\name:
+    test    byte ptr [rsp + 8], 3
+    jz      1f
+    swapgs
+1:
+    cld
+    push    rax
+    push    rcx
+    push    rdx
+    push    rbx
+    push    rbp
+    push    rsi
+    push    rdi
+    push    r8
+    push    r9
+    push    r10
+    push    r11
+    push    r12
+    push    r13
+    push    r14
+    push    r15
+    mov     rbp, rsp
+    mov     rdi, rbp
+    sub     rsp, 528
+    and     rsp, -16
+    fxsave  [rsp]
+    mov     rbx, rsp
+    call    \shim
+    fxrstor [rbx]
+    mov     rsp, rbp
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    pop     rdi
+    pop     rsi
+    pop     rbp
+    pop     rbx
+    pop     rdx
+    pop     rcx
+    pop     rax
+    test    byte ptr [rsp + 8], 3
+    jz      2f
+    swapgs
+2:
+    iretq
+.endm
+
 /* faults and traps without an error code */
 TRAMP_NOERR de_trampoline        nonos_trap_de
 TRAMP_NOERR db_trampoline        nonos_trap_db
@@ -176,8 +235,10 @@ TRAMP_ERR   np_trampoline        nonos_trap_np
 TRAMP_ERR   ss_trampoline        nonos_trap_ss
 TRAMP_ERR   gpf_trampoline       nonos_trap_gpf
 TRAMP_ERR   ac_trampoline        nonos_trap_ac
+TRAMP_ERR   page_fault_trampoline nonos_trap_pf
 
 /* interrupts */
 TRAMP_NOERR keyboard_trampoline  nonos_trap_keyboard
 TRAMP_NOERR mouse_trampoline     nonos_trap_mouse
 TRAMP_NOERR int80_trampoline     nonos_trap_int80
+TRAMP_CTX   timer_trampoline     timer_trap_handler

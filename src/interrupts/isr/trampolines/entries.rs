@@ -41,4 +41,6 @@ extern "C" {
     pub fn keyboard_trampoline();
     pub fn mouse_trampoline();
     pub fn int80_trampoline();
+    pub fn page_fault_trampoline();
+    pub fn timer_trampoline();
 }

@@ -46,3 +46,8 @@ extern "C" fn nonos_trap_gpf(f: *const InterruptStackFrame, error_code: u64) {
 extern "C" fn nonos_trap_ac(f: *const InterruptStackFrame, _error_code: u64) {
     handlers::alignment_check(frame(f));
 }
+
+#[no_mangle]
+extern "C" fn nonos_trap_pf(f: *const InterruptStackFrame, error_code: u64) {
+    handlers::page_fault(frame(f), error_code);
+}

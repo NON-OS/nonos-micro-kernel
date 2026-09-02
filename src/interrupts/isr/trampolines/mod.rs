@@ -31,6 +31,6 @@ mod shims;
 pub use entries::{
     ac_trampoline, bp_trampoline, br_trampoline, db_trampoline, de_trampoline, gpf_trampoline,
     int80_trampoline, keyboard_trampoline, mf_trampoline, mouse_trampoline, nm_trampoline,
-    np_trampoline, of_trampoline, ss_trampoline, ts_trampoline, ud_trampoline, ve_trampoline,
-    xf_trampoline,
+    np_trampoline, of_trampoline, page_fault_trampoline, ss_trampoline, timer_trampoline,
+    ts_trampoline, ud_trampoline, ve_trampoline, xf_trampoline,
 };
