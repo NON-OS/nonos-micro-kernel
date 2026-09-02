@@ -10,10 +10,18 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     let target = std::env::var("NONOS_REPRO_TARGET").unwrap_or_else(|_| "nonos-mk-esp".to_string());
     std::fs::create_dir_all(&out)?;
     std::fs::create_dir_all(&work)?;
+    let dirt = capture("git", &["status", "--porcelain"]).1.trim().to_string();
     let clean =
-        clean_tree() || std::env::var("NONOS_REPRO_ALLOW_DIRTY").ok().as_deref() == Some("1");
-    rpt.check("clean-tree", st(clean), "git tree clean or explicitly allowed");
-    if !clean {
+        dirt.is_empty() || std::env::var("NONOS_REPRO_ALLOW_DIRTY").ok().as_deref() == Some("1");
+    if clean {
+        rpt.check("clean-tree", st(true), "git tree clean or explicitly allowed");
+    } else {
+        // Name the dirt in the report; a bare refusal costs a whole CI
+        // round trip per offending path.
+        std::fs::write(out.join("dirty-tree.txt"), &dirt)?;
+        let first = dirt.lines().next().unwrap_or("");
+        let detail = format!("tree dirty ({} paths, first: {first})", dirt.lines().count());
+        rpt.check("clean-tree", st(false), detail);
         return rpt.finish(root);
     }
 
@@ -32,10 +40,6 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         "two clean worktree builds have identical artifact hashes",
     );
     rpt.finish(root)
-}
-
-fn clean_tree() -> bool {
-    capture("git", &["status", "--porcelain"]).1.trim().is_empty()
 }
 
 fn artifacts() -> Vec<String> {
