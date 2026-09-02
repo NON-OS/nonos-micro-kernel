@@ -23,6 +23,7 @@ mod draw_grid;
 mod draw_input_line;
 mod fetch;
 pub(crate) mod fetch_banner;
+mod fetch_version;
 mod fetch_palette;
 mod fetch_uptime;
 mod fit_text;

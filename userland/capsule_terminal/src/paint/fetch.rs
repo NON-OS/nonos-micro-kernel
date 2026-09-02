@@ -54,14 +54,23 @@ pub fn draw_fetch(
 
     let mut y = after + 34;
     let _ = fb.text_ttf_mono(ix, y, "nonos", t.accent, INFO_PX);
-    let _ = fb.text_ttf_mono(ix + 54, y, "@capsule", t.dim, INFO_PX);
+    let mut host = [0u8; 40];
+    host[0] = b'@';
+    let hn = crate::term::identity::hostname();
+    let hl = hn.len().min(host.len() - 1);
+    host[1..1 + hl].copy_from_slice(&hn[..hl]);
+    let at = core::str::from_utf8(&host[..1 + hl]).unwrap_or("@");
+    let gap = fb.measure_ttf_mono("nonos", INFO_PX);
+    let _ = fb.text_ttf_mono(ix + gap, y, at, t.dim, INFO_PX);
     y += 8;
     fb.fill_rect(ix as u32, (y + 8) as u32, (edge - ix).clamp(0, RULE_W) as u32, 1, t.dim);
     y += 24;
 
     row(fb, ix, y, "os", "NONOS RAM-resident", t);
     y += ROW;
-    row(fb, ix, y, "kernel", concat!("microkernel ", include_str!("../../../../VERSION")), t);
+    let mut kb = [0u8; 48];
+    let kn = super::fetch_version::kernel_line(&mut kb);
+    row(fb, ix, y, "kernel", core::str::from_utf8(&kb[..kn]).unwrap_or(""), t);
     y += ROW;
     row(fb, ix, y, "shell", "nox   (type 'help')", t);
     y += ROW;
