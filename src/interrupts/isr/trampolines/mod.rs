@@ -14,21 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod page_fault_trampoline;
-mod timer_trampoline;
-mod trampolines;
-mod wrappers;
+//! The exception and interrupt trampolines, as assembly.
+//!
+//! Every entry from a running context into the kernel used to be a
+//! macro-generated naked function; the instructions now live written out in
+//! `src/arch/x86_64/asm/exceptions.S`, one explicit entry per vector, so the
+//! code that decides swapgs and saves the interrupted state is a single file
+//! read top to bottom with no generation in between. `entries` declares the
+//! trampoline symbols the IDT installs; `shims` holds the C functions each
+//! trampoline calls, which do nothing but read the frame and forward to the
+//! handler.
 
-pub use trampolines::{
+mod entries;
+mod shims;
+
+pub use entries::{
     ac_trampoline, bp_trampoline, br_trampoline, db_trampoline, de_trampoline, gpf_trampoline,
     int80_trampoline, keyboard_trampoline, mf_trampoline, mouse_trampoline, nm_trampoline,
     np_trampoline, of_trampoline, ss_trampoline, ts_trampoline, ud_trampoline, ve_trampoline,
     xf_trampoline,
-};
-pub use page_fault_trampoline::page_fault_trampoline;
-pub use timer_trampoline::timer_trampoline;
-pub use wrappers::{
-    irq_timer, isr_alignment_check, isr_bound_range, isr_breakpoint, isr_debug, isr_divide_error,
-    isr_double_fault, isr_invalid_opcode, isr_machine_check, isr_nmi, isr_overflow, isr_page_fault,
-    isr_simd_fp,
 };
