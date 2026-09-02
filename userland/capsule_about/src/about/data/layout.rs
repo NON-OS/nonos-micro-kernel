@@ -14,14 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod abi;
-pub mod build;
-pub mod caps;
-pub mod display;
-pub mod layout;
-pub mod license;
-pub mod product;
-pub mod runtime;
-pub mod third_party;
-pub mod trust;
-pub mod uptime;
+pub const KERNEL_BASE: &[u8] = b"0xffff_ffff_8000_0000";
+pub const DIRECTMAP: &[u8] = b"0xffff_8000_0000_0000";
+pub const DIRECTMAP_SIZE: &[u8] = b"256 GiB";
+pub const IMAGE_KIND: &[u8] = b"ET_EXEC, upper-half";
+pub const CAPSULE_RING: &[u8] = b"CPL 3, own ASID";
