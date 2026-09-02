@@ -23,57 +23,9 @@ use crate::arch::x86_64::idt::state::{
     EXCEPTION_COUNT, INTERRUPT_COUNTS, IRQ_COUNT, TOTAL_INTERRUPTS,
 };
 
-#[unsafe(naked)]
-#[no_mangle]
-unsafe extern "C" fn interrupt_common() {
-    core::arch::naked_asm!(
-        "push rax",
-        "push rbx",
-        "push rcx",
-        "push rdx",
-        "push rsi",
-        "push rdi",
-        "push rbp",
-        "push r8",
-        "push r9",
-        "push r10",
-        "push r11",
-        "push r12",
-        "push r13",
-        "push r14",
-        "push r15",
-        // User RFLAGS may carry DF=1; Rust handlers require forward string ops.
-        "cld",
-        "mov ax, ds",
-        "push rax",
-        "mov ax, 0x10",
-        "mov ds, ax",
-        "mov es, ax",
-        "mov rdi, rsp",
-        "call interrupt_dispatch",
-        "pop rax",
-        "mov ds, ax",
-        "mov es, ax",
-        "pop r15",
-        "pop r14",
-        "pop r13",
-        "pop r12",
-        "pop r11",
-        "pop r10",
-        "pop r9",
-        "pop r8",
-        "pop rbp",
-        "pop rdi",
-        "pop rsi",
-        "pop rdx",
-        "pop rcx",
-        "pop rbx",
-        "pop rax",
-        "add rsp, 16",
-        "iretq",
-    );
-}
-
+// The shared entry body lives in src/arch/x86_64/asm/vectors.S; every
+// numbered gate normalises its frame and falls through to it. This is
+// the function that body calls with the saved frame.
 #[no_mangle]
 extern "C" fn interrupt_dispatch(frame: &mut InterruptFrame) {
     let vector = frame.vector as usize;
