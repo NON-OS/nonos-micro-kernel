@@ -24,34 +24,38 @@ concurrency:
 jobs:
   build:
     uses: ./.github/workflows/ci-build.yml
+    secrets: inherit
     with:
       trust-mode: production
-    secrets: inherit
 
   trust-chain:
     uses: ./.github/workflows/ci-trust-chain.yml
+    secrets: inherit
 
   adversarial:
     uses: ./.github/workflows/ci-adversarial.yml
+    secrets: inherit
 
   supply-chain:
     uses: ./.github/workflows/ci-supply-chain.yml
+    secrets: inherit
 
   evidence:
     uses: ./.github/workflows/ci-evidence.yml
+    secrets: inherit
 
   reproducible:
     uses: ./.github/workflows/ci-reproducible.yml
+    secrets: inherit
     with:
       trust-mode: production
-    secrets: inherit
 
   runtime:
     needs: build
     uses: ./.github/workflows/ci-runtime.yml
+    secrets: inherit
     with:
       trust-mode: production
-    secrets: inherit
 
   release-artifacts:
     needs: [build, trust-chain, adversarial, supply-chain, evidence]
@@ -62,6 +66,7 @@ jobs:
     needs: [build, trust-chain, adversarial, supply-chain, evidence, reproducible, runtime, release-artifacts]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml
+    secrets: inherit
     with:
       required-modules: build,trust-chain,adversarial,supply-chain,evidence,reproducible,runtime,release
 
