@@ -46,7 +46,6 @@ pub mod rail_left;
 pub mod rail_left_geom;
 mod rail_metric;
 mod rail_net;
-mod rail_procs;
 pub mod rail_row;
 mod rail_row_draw;
 pub mod rail_scroll;

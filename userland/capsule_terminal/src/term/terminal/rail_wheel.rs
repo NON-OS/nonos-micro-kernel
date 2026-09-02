@@ -32,7 +32,6 @@ impl Terminal {
             sessions: self.tabs.len() as u32,
             projects: self.prefs.project_count as u32,
             telemetry: self.prefs.rails & 1 == 0,
-            procs: self.rail.sample.n as u32,
         }
     }
 

@@ -25,7 +25,6 @@ pub struct RailFit {
     pub sessions: u32,
     pub projects: u32,
     pub telemetry: bool,
-    pub procs: u32,
 }
 
 pub fn content_h(f: RailFit) -> u32 {
@@ -33,7 +32,7 @@ pub fn content_h(f: RailFit) -> u32 {
     if !f.telemetry {
         return nav;
     }
-    nav + RAIL_GAP + telemetry_h(f.procs)
+    nav + RAIL_GAP + telemetry_h()
 }
 
 pub fn clamp(offset: u32, f: RailFit, viewport: u32) -> u32 {

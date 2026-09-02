@@ -17,7 +17,7 @@ use nonos_app_skeleton::PaintBuffer;
 
 use super::rail_band::{visible, Band};
 use super::rail_text::RAIL_GAP;
-use super::{rail_disk, rail_net, rail_procs, rail_sys};
+use super::{rail_disk, rail_net, rail_sys};
 use crate::rail::Rail;
 use crate::term::theme::types::Theme;
 
@@ -38,9 +38,5 @@ pub fn draw(fb: &mut PaintBuffer, x: u32, y: i32, w: u32, vh: u32, rail: &Rail, 
     y += rail_net::height() as i32 + gap;
     if visible(&Band { x, y, w, h: rail_disk::height() }, vh) {
         rail_disk::draw(fb, x, y, w, &rail.sample.disk, t);
-    }
-    y += rail_disk::height() as i32 + gap;
-    if visible(&Band { x, y, w, h: rail_procs::height(rail.sample.n as u32) }, vh) {
-        rail_procs::draw(fb, x, y, w, &rail.sample, t);
     }
 }

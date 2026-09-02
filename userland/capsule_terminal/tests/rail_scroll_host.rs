@@ -64,7 +64,7 @@ mod paint {
 
 use layout::Rect;
 use paint::rail_band::{clip, hits, visible, Band};
-use paint::rail_geom::{disk_h, net_h, procs_h, sys_h, telemetry_h};
+use paint::rail_geom::{disk_h, net_h, sys_h, telemetry_h};
 use paint::rail_left_geom::{nav_h, nav_sections, sections};
 use paint::rail_row::{inside, row_h};
 use paint::rail_scroll::{clamp, content_h, telemetry_top, RailFit};
@@ -72,8 +72,8 @@ use paint::rail_text::{lh, RAIL_GAP, RAIL_PAD};
 
 const RAIL: Rect = Rect { x: 0, y: 40, w: 240, h: 900 };
 
-fn fit(sessions: u32, projects: u32, procs: u32) -> RailFit {
-    RailFit { sessions, projects, telemetry: true, procs }
+fn fit(sessions: u32, projects: u32) -> RailFit {
+    RailFit { sessions, projects, telemetry: true }
 }
 #[test]
 fn a_band_is_cut_at_the_top_and_dropped_once_it_is_wholly_above() {
@@ -101,16 +101,14 @@ fn the_section_heights_compose_into_the_telemetry_block() {
     assert_eq!(sys_h(), 34 + lh() * 5 + 3 + RAIL_GAP * 2 + 44);
     assert_eq!(net_h(), 34 + lh() * 4);
     assert_eq!(disk_h(), 34 + lh() * 2);
-    assert_eq!(procs_h(0), 34 + lh() + RAIL_GAP / 2);
-    assert_eq!(procs_h(7), procs_h(0) + 7 * lh());
-    let want = sys_h() + net_h() + disk_h() + procs_h(5) + RAIL_GAP * 3 + RAIL_PAD;
-    assert_eq!(telemetry_h(5), want, "the composer steps by exactly these heights");
+    let want = sys_h() + net_h() + disk_h() + RAIL_GAP * 2 + RAIL_PAD;
+    assert_eq!(telemetry_h(), want, "the composer steps by exactly these heights");
 }
 
 #[test]
 fn content_height_is_the_navigation_lists_plus_the_telemetry_block() {
-    let f = fit(4, 3, 6);
-    assert_eq!(content_h(f), nav_h(4, 3) + RAIL_GAP + telemetry_h(6));
+    let f = fit(4, 3);
+    assert_eq!(content_h(f), nav_h(4, 3) + RAIL_GAP + telemetry_h());
     let off = RailFit { telemetry: false, ..f };
     assert_eq!(content_h(off), nav_h(4, 3), "no telemetry, no telemetry height");
     assert_eq!(telemetry_top(0, f), (nav_h(4, 3) + RAIL_GAP) as i32);
@@ -119,13 +117,13 @@ fn content_height_is_the_navigation_lists_plus_the_telemetry_block() {
 
 #[test]
 fn the_offset_is_clamped_at_both_ends() {
-    let f = fit(4, 3, 40);
+    let f = fit(30, 20);
     let content = content_h(f);
     assert!(content > RAIL.h, "the fixture must actually overflow the rail");
     assert_eq!(clamp(0, f, RAIL.h), 0);
     assert_eq!(clamp(u32::MAX, f, RAIL.h), content - RAIL.h);
     assert_eq!(clamp(content - RAIL.h + 1, f, RAIL.h), content - RAIL.h);
-    let short = fit(1, 0, 0);
+    let short = fit(1, 0);
     assert_eq!(clamp(500, short, 4000), 0, "content shorter than the rail never scrolls");
 }
 

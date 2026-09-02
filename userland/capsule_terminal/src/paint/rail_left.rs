@@ -53,7 +53,6 @@ pub fn draw(
         sessions: tabs.len() as u32,
         projects: projects.len() as u32,
         telemetry,
-        procs: rail.sample.n as u32,
     };
     let mut fb = fb.sub(r.x, r.y, r.w, r.h);
     let fb = &mut fb;
