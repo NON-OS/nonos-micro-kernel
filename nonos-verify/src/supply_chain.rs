@@ -3,7 +3,7 @@
 // tooling and the heavy repro lane become explicit gaps.
 
 use crate::report::{Report, Status};
-use crate::sh::{capture, have, run_logged};
+use crate::sh::{capture, capture_stdout, have, run_logged};
 use std::path::Path;
 
 pub fn run(root: &str) -> std::io::Result<Status> {
@@ -35,7 +35,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     rpt.check("dep-duplicates", Status::Pass, "duplicate dependency report captured");
 
     // submodule pin integrity
-    let (_, status) = capture("git", &["submodule", "status", "--recursive"]);
+    let (_, status) = capture_stdout("git", &["submodule", "status", "--recursive"]);
     let mut bad = false;
     let mut subs: Vec<serde_json::Value> = Vec::new();
     for line in status.lines() {
