@@ -51,6 +51,12 @@ pub(super) fn build(
     if let Some(signing) = signing_key()? {
         cmd.env("SIGNING_KEY", signing);
     }
+    // Both lanes must sign under the same ML-DSA keypair; left to the
+    // Makefile default each lane mints its own and the baked public key
+    // makes the two bootloaders differ.
+    if let Some(prefix) = mldsa_prefix()? {
+        cmd.env("KERNEL_MLDSA65_PREFIX", prefix);
+    }
     for key in
         ["NONOS_DEV", "ZK_BOOT_INDEX", "ZK_BOOT_SECRET_X", "ZK_BOOT_SECRET_R", "ZK_BOOT_NONCE_SEED"]
     {
@@ -73,6 +79,24 @@ fn signing_key() -> std::io::Result<Option<PathBuf>> {
     }
     let path = std::env::current_dir()?.join(".keys/signing_key_v1.bin");
     Ok(path.exists().then_some(path))
+}
+
+fn mldsa_prefix() -> std::io::Result<Option<PathBuf>> {
+    if let Ok(prefix) = std::env::var("KERNEL_MLDSA65_PREFIX") {
+        return Ok(Some(PathBuf::from(prefix)));
+    }
+    let prefix = std::env::current_dir()?.join("nonos-bootloader/keys/kernel_mldsa65");
+    let seeded = prefix.with_extension("seed").exists();
+    Ok(seeded.then_some(prefix))
+}
+
+// The shared ML-DSA keypair lives in the main checkout under a
+// gitignored path; minting it here keeps the tree clean and gives both
+// lanes the same input.
+pub(super) fn ensure_shared_keys(out: &Path) -> std::io::Result<()> {
+    let run = Command::new("make").arg("nonos-mk-ensure-signing-key").output()?;
+    std::fs::write(out.join("ensure-keys.log"), join(&run.stdout, &run.stderr))?;
+    Ok(())
 }
 
 fn join(stdout: &[u8], stderr: &[u8]) -> Vec<u8> {
