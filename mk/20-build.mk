@@ -199,8 +199,15 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 		$(if $(NONOS_STARK_KERNEL_ATTEST_ON),NONOS_KERNEL_ATTEST_ROOT=$(abspath $(KERNEL_ATTEST_ROOT_BIN))) \
 		$(if $(NONOS_GOP_PREF),NONOS_GOP_PREF=$(NONOS_GOP_PREF)) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		RUSTFLAGS='-C panic=abort -C target-feature=+crt-static --cfg curve25519_dalek_backend="serial" --remap-path-prefix=$(abspath .)=/nonos -C link-arg=/DEBUG:NONE' \
 		$(CARGO) build --target x86_64-unknown-uefi --release \
 			--features zk-transparent,$(BOOTLOADER_POLICY)$(BOOT_STARK_FEATURE)
+# The RUSTFLAGS line above is authoritative and mirrors the target
+# flags in nonos-bootloader/.cargo/config.toml, which cargo ignores
+# whenever the env var is set. The two additions make the loader
+# byte-reproducible: checkout paths would otherwise reach the binary
+# through panic locations, and the linker's debug directory carries a
+# PDB record no UEFI release has any use for.
 
 nonos-mk-bootloader: $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
 
@@ -633,6 +640,17 @@ $(KERNEL_ATTEST_STAMP): $(KERNEL_ATTEST_ELF) $(NONOS_STARK_ENROLL)
 	@$(NONOS_STARK_ENROLL) kernel $(dir $(KERNEL_ATTEST_TRAILER))kernel.enrolled.elf \
 		$(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
 	@touch $@
+
+# With the attest gate on, the loader bakes the root that enrollment
+# produces, so a fresh tree must enroll before the loader compiles;
+# under -j the two otherwise race and the loader's build script
+# refuses, correctly. Gate off, a standalone loader build stays free
+# of any enrollment. Declared here because the stamp path is assigned
+# just above; earlier in the file it would expand empty and bind
+# nothing.
+ifeq ($(NONOS_STARK_KERNEL_ATTEST_ON),1)
+$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: $(KERNEL_ATTEST_STAMP)
+endif
 
 # The stamp says enrollment ran; the byproducts live in two directories with
 # more than one historical cleaner. If either file is gone the stamp is stale
