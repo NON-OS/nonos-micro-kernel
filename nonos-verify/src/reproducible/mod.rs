@@ -53,8 +53,9 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     }
 
     let commit = capture_stdout("git", &["rev-parse", "HEAD"]).1.trim().to_string();
-    let epoch = std::env::var("SOURCE_DATE_EPOCH")
-        .unwrap_or_else(|_| capture_stdout("git", &["log", "-1", "--format=%ct"]).1.trim().to_string());
+    let epoch = std::env::var("SOURCE_DATE_EPOCH").unwrap_or_else(|_| {
+        capture_stdout("git", &["log", "-1", "--format=%ct"]).1.trim().to_string()
+    });
     lane::ensure_shared_keys(&out)?;
     let a_dir = lane::build("A", &work, &out, &commit, &epoch, &target)?;
     let b_dir = lane::build("B", &work, &out, &commit, &epoch, &target)?;
