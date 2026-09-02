@@ -25,7 +25,7 @@ mod compare;
 mod lane;
 
 use crate::report::{Report, Status};
-use crate::sh::capture;
+use crate::sh::capture_stdout;
 use compare::{artifacts, measure};
 use std::path::Path;
 
@@ -37,7 +37,7 @@ pub fn run(root: &str) -> std::io::Result<Status> {
     std::fs::create_dir_all(&out)?;
     std::fs::create_dir_all(&work)?;
 
-    let dirt = capture("git", &["status", "--porcelain"]).1.trim().to_string();
+    let dirt = capture_stdout("git", &["status", "--porcelain"]).1.trim().to_string();
     let clean =
         dirt.is_empty() || std::env::var("NONOS_REPRO_ALLOW_DIRTY").ok().as_deref() == Some("1");
     if clean {
@@ -52,9 +52,9 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         return rpt.finish(root);
     }
 
-    let commit = capture("git", &["rev-parse", "HEAD"]).1.trim().to_string();
+    let commit = capture_stdout("git", &["rev-parse", "HEAD"]).1.trim().to_string();
     let epoch = std::env::var("SOURCE_DATE_EPOCH")
-        .unwrap_or_else(|_| capture("git", &["log", "-1", "--format=%ct"]).1.trim().to_string());
+        .unwrap_or_else(|_| capture_stdout("git", &["log", "-1", "--format=%ct"]).1.trim().to_string());
     lane::ensure_shared_keys(&out)?;
     let a_dir = lane::build("A", &work, &out, &commit, &epoch, &target)?;
     let b_dir = lane::build("B", &work, &out, &commit, &epoch, &target)?;

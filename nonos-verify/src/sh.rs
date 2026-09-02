@@ -21,6 +21,16 @@ pub fn run_logged(program: &str, args: &[&str], log: &Path) -> bool {
     }
 }
 
+/// Run a command and capture stdout alone. For output that gets parsed;
+/// git prints advisory warnings on stderr and a combined capture turns
+/// them into phantom data.
+pub fn capture_stdout(program: &str, args: &[&str]) -> (bool, String) {
+    match Command::new(program).args(args).output() {
+        Ok(o) => (o.status.success(), String::from_utf8_lossy(&o.stdout).into_owned()),
+        Err(e) => (false, format!("failed to spawn {program}: {e}")),
+    }
+}
+
 /// Run a command and capture combined output plus success.
 pub fn capture(program: &str, args: &[&str]) -> (bool, String) {
     match Command::new(program).args(args).output() {
