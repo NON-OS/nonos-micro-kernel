@@ -21,9 +21,12 @@ const SERVICE: &[u8] = b"net.dns";
 const MAGIC_NDNS: u32 = 0x4E44_4E53;
 const OP_RESOLVE_A: u16 = 2;
 const HDR: usize = 20;
-/// A lookup runs on the serve loop, so it is bounded by what a caller waits
-/// for a reply rather than by what a resolver might eventually manage.
-const TIMEOUT_MS: u64 = 2_000;
+/// A lookup runs on the idle directory tick, so it can afford to wait out a
+/// full recursive resolve. This must stay above the resolver's own per-query
+/// deadline (3s in net.core); at 2s the client gave up first and a cold lookup
+/// of the directory host aborted every sync with a false "unresolvable", so the
+/// gateway list never installed.
+const TIMEOUT_MS: u64 = 6_000;
 
 /// Resolve `host` to one IPv4 address through `net.dns`.
 ///

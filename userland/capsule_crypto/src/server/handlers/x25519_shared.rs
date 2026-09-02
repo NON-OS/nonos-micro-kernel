@@ -31,6 +31,14 @@ pub fn x25519_shared(req: Request<'_>) -> Vec<u8> {
     let secret = StaticSecret::from(private);
     let peer = PublicKey::from(public);
     let shared = secret.diffie_hellman(&peer);
+    // A low-order peer point drives the shared secret to all-zero, which RFC
+    // 7748 requires be rejected: it is a value the peer forced, not one the
+    // exchange agreed on. Refuse it rather than feed a predictable secret into
+    // a key schedule.
+    if !shared.was_contributory() {
+        wipe(&mut private);
+        return encode_response(OP_X25519_SHARED, req.flags, req.request_id, EINVAL, &[]);
+    }
     let resp = encode_response(OP_X25519_SHARED, req.flags, req.request_id, 0, shared.as_bytes());
     wipe(&mut private);
     resp

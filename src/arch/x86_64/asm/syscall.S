@@ -84,11 +84,18 @@ syscall_entry_asm:
     movabs  rax, 0xffffffffffe08aff
     and     r11, rax
     or      r11, 0x202
-    pop     rax
 
-    /* SYSRETQ requires canonical user RIP. */
-    bt      rcx, 47
-    jc      .L_iret
+    /* SYSRETQ takes its #GP for a non-canonical RCX in ring 0, after RSP has
+       already been loaded from the user value, so a bad RIP here is an
+       escalation primitive and not a fault. Testing bit 47 on its own let
+       through anything with bit 47 clear and a higher bit set, which is
+       non-canonical; require all of bits 63:47 to be zero, which is also the
+       only shape an address in the user half can have. POP does not touch
+       flags, so the test survives restoring rax. */
+    mov     rax, rcx
+    shr     rax, 47
+    pop     rax
+    jnz     .L_iret
 
     mov     rsp, gs:PCPU_USER_STACK
     swapgs

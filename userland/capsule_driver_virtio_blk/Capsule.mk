@@ -13,6 +13,8 @@ CAPSULE_NAMESPACE        := systems.nonos.driver.virtio_blk0
 CAPSULE_SERVICE_ENDPOINT := service:4202:driver.virtio_blk0
 CAPSULE_REPLY_ENDPOINT   := reply:4203:endpoint.4294967304
 # IPC|Memory|Debug|Driver|DeviceEnum|Mmio|Irq|Dma|Pio = 0x1F8119
+# Debug so the setup retry loop can say which step it is stuck on; a silent
+# store driver reads as a vfs timeout two layers up.
 CAPSULE_REQUIRED_CAPS    := 0x1F8119
 CAPSULE_KERNEL_MIRROR    := src/hardware/virtio_blk_capsule
 

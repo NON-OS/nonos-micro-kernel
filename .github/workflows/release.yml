@@ -92,13 +92,5 @@ jobs:
           files: release/*
           fail_on_unmatched_files: true
           generate_release_notes: true
-          body: |
-            Signed, STARK-attested ZeroState image.
-
-            The kernel carries its own attestation trailer, every capsule is
-            enrolled under the policy root published beside it, and the trust
-            chain was verified on this artifact before it was uploaded. A tag
-            that fails any gate publishes nothing.
-
-            Check what you downloaded against `SHA256SUMS`, and check the
-            policy roots here against the ones your running image reports.
+          prerelease: true
+          body_path: .github/RELEASE_NOTES.md

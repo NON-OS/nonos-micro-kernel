@@ -48,7 +48,7 @@ structure irq.types.IrqBindRequest where
   vector_count : Std.U32
 
 /-- [nonos_irq::irq::types::IrqBindError]
-    Source: 'src/irq/../../../../../src/hardware/broker/irq/types.rs', lines 78:0-93:1
+    Source: 'src/irq/../../../../../src/hardware/broker/irq/types.rs', lines 78:0-95:1
     Visibility: public -/
 @[discriminant isize]
 inductive irq.types.IrqBindError where
@@ -57,6 +57,7 @@ inductive irq.types.IrqBindError where
 | UnknownDevice : irq.types.IrqBindError
 | NotDeviceIrq : irq.types.IrqBindError
 | AlreadyBound : irq.types.IrqBindError
+| ReservedGsi : irq.types.IrqBindError
 | NoVector : irq.types.IrqBindError
 | UnsupportedFlags : irq.types.IrqBindError
 | NotIntx : irq.types.IrqBindError

@@ -53,3 +53,13 @@ pub fn directory_gateway_count() -> usize {
         Err(_) => 0,
     }
 }
+
+/// How many exit gateways the directory offers. A directory with gateways but
+/// no exit can build a route home yet has nowhere to leave the mixnet, so the
+/// sync is not done until this is non-zero.
+pub fn directory_exit_count() -> usize {
+    match topology::snapshot() {
+        Ok(nodes) => nodes.iter().filter(|n| n.role == Role::ExitGateway).count(),
+        Err(_) => 0,
+    }
+}

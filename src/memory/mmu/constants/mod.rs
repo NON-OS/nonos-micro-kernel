@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod cr4_cpuid;
+mod control_regs;
 mod helpers;
 mod pte;
 
-pub use cr4_cpuid::*;
+pub use control_regs::*;
 pub use helpers::*;
 pub use pte::*;

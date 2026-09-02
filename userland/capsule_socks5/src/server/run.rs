@@ -44,12 +44,15 @@ pub fn run() -> ! {
         // answered yet, which is the only way to collect a reply that arrives
         // seconds after the request. It is a request like any other, and the
         // marker is what lets it be sent at all.
-        let Some(asked) = ask(&rx[..n as usize]) else {
-            continue;
-        };
-        let out = match asked {
-            Ask::Stream(body) => feed(sender, body),
-            Ask::Reset => super::feed::reset_client(sender),
+        // An unrecognized ask still gets an answer, for the same reason the
+        // comment below gives: the caller is blocked on this reply, and a
+        // silent continue here makes it wait out its whole timeout and tear
+        // the session down for what was one malformed frame. Close it
+        // explicitly instead, so the caller fails fast and reconnects.
+        let out = match ask(&rx[..n as usize]) {
+            Some(Ask::Stream(body)) => feed(sender, body),
+            Some(Ask::Reset) => super::feed::reset_client(sender),
+            None => super::feed::reset_client(sender),
         }
         .encode();
         // Every request is answered, including with nothing. A caller blocks

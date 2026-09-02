@@ -14,22 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! What this part is vulnerable to.
+//!
+//! Everything starts vulnerable and is only ever cleared by a positive
+//! statement from the hardware. A CPU too old to have ARCH_CAPABILITIES says
+//! nothing, and the honest reading of silence is "assume affected" — the
+//! opposite default would report an unknown part as safe.
+
 use super::constants::{
     ARCH_CAP_MDS_NO, ARCH_CAP_RDCL_NO, ARCH_CAP_SBDR_SSDP_NO, ARCH_CAP_SSB_NO, ARCH_CAP_TAA_NO,
     MSR_IA32_ARCH_CAPABILITIES,
 };
 use super::cpuid;
-use super::ibrs::ibrs_enable;
 use super::msr::rdmsr;
-use super::ssbd::ssbd_enable;
-use super::stibp::stibp_enable;
-use super::types::{CpuVulnerabilities, MitigationStatus};
+use super::types::CpuVulnerabilities;
 
 pub fn detect_vulnerabilities() -> CpuVulnerabilities {
     let mut vulns = CpuVulnerabilities::default();
 
     if cpuid::has_arch_capabilities() {
-        // SAFETY: ARCH_CAPABILITIES MSR read is valid when feature is supported.
+        // SAFETY: ek@nonos.systems - CPUID reported ARCH_CAPABILITIES, so this
+        // MSR exists on this part and reading it has no side effect.
         let caps = unsafe { rdmsr(MSR_IA32_ARCH_CAPABILITIES) };
 
         if caps & ARCH_CAP_RDCL_NO != 0 {
@@ -49,52 +54,12 @@ pub fn detect_vulnerabilities() -> CpuVulnerabilities {
         }
     }
 
+    // Neither Meltdown nor MDS has ever affected an AMD part, and AMD does not
+    // report the ARCH_CAPABILITIES bits that would say so above.
     if cpuid::is_amd() {
         vulns.meltdown = false;
         vulns.mds = false;
     }
 
     vulns
-}
-
-pub fn enable_mitigations() -> MitigationStatus {
-    let mut status = MitigationStatus::default();
-
-    if cpuid::has_ibrs_ibpb() {
-        ibrs_enable();
-        status.ibrs_enabled = true;
-        status.ibpb_enabled = true;
-    }
-
-    if cpuid::has_stibp() {
-        stibp_enable();
-        status.stibp_enabled = true;
-    }
-
-    if cpuid::has_ssbd() {
-        ssbd_enable();
-        status.ssbd_enabled = true;
-    }
-
-    if cpuid::has_md_clear() {
-        status.mds_clear_enabled = true;
-    }
-
-    if cpuid::has_l1d_flush() {
-        status.l1d_flush_enabled = true;
-    }
-
-    status.rsb_stuffing_enabled = true;
-
-    // Status query: PCIDE bit in CR4. Note that PCIDE is
-    // process-context-IDs, not KPTI; the field name is preserved for
-    // now to keep this migration semantic-preserving.
-    const CR4_PCIDE: u64 = 1 << 17;
-    let cr4: u64;
-    unsafe {
-        core::arch::asm!("mov {}, cr4", out(reg) cr4, options(nomem, nostack, preserves_flags));
-    }
-    status.kpti_enabled = (cr4 & CR4_PCIDE) != 0;
-
-    status
 }

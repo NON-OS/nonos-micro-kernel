@@ -29,7 +29,11 @@ pub fn init() -> Result<(), GdtError> {
     }
     unsafe {
         let gdt = addr_of_mut!(BSP_GDT);
-        (*gdt).init(0);
+        // SAFETY: ek@nonos.systems - `BSP_STACKS` is a static that lives for
+        // the whole run and belongs to this CPU alone; the compare-exchange
+        // above makes this the only path that reaches it.
+        let stacks = &*addr_of_mut!(BSP_STACKS);
+        (*gdt).init(0, stacks);
         (*gdt).load()?;
         GDT_LOADS.fetch_add(1, Ordering::Relaxed);
         TSS_LOADS.fetch_add(1, Ordering::Relaxed);
@@ -47,7 +51,10 @@ pub unsafe fn init_ap(cpu_id: u32) -> Result<(), GdtError> {
     unsafe {
         let idx = cpu_id as usize - 1;
         let gdts = addr_of_mut!(AP_GDTS);
-        (*gdts)[idx].init(cpu_id);
+        // SAFETY: ek@nonos.systems - `idx` is this AP's own slot, handed out
+        // once by the BSP and never reused, so no other CPU touches it.
+        let stacks = &(*addr_of_mut!(AP_STACKS))[idx];
+        (*gdts)[idx].init(cpu_id, stacks);
         (*gdts)[idx].load()?;
         GDT_LOADS.fetch_add(1, Ordering::Relaxed);
         TSS_LOADS.fetch_add(1, Ordering::Relaxed);

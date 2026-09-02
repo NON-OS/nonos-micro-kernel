@@ -29,6 +29,10 @@ pub(super) fn bind_errno(e: IrqBindError) -> i64 {
         | IrqBindError::NoMsixCap
         | IrqBindError::BadMsixBar
         | IrqBindError::BadVectorCount => ERRNO_INVAL,
+        // Held by the kernel, not by another capsule, and it is never
+        // released. Reported apart from AlreadyBound so a driver is not told
+        // to wait for a line that will not come free.
+        IrqBindError::ReservedGsi => ERRNO_PERM,
         IrqBindError::AlreadyBound => ERRNO_BUSY,
         IrqBindError::NoVector => ERRNO_NOMEM,
         IrqBindError::UnsupportedFlags => ERRNO_NOTSUP,

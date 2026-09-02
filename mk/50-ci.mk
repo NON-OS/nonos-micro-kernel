@@ -110,23 +110,32 @@ nonos-mk-fmt:
 help:
 	@echo "NONOS microkernel build"
 	@echo
-	@echo "Three ways to build:"
+	@echo "Build and boot:"
 	@echo "  make                 the production image: full OS, all drivers, TPM,"
 	@echo "                       STARK attestation, dual-signed, anti-rollback"
-	@echo "  make qemu            build and boot it under QEMU + OVMF + TPM"
+	@echo "  make qemu            build and boot it under QEMU + OVMF + software TPM"
+	@echo "  make qemu-serial     headless boot, serial console to a log"
+	@echo "  make usb             real-hardware GPT image; DISK=/dev/... writes it"
 	@echo "  make menuconfig      pick your own components, then: make from-config"
 	@echo
-	@echo "Also:"
-	@echo "  make qemu-serial     headless boot, serial console to a log"
-	@echo "  make nonos-mk-clean  remove build artefacts (add -all / distclean for more)"
-	@echo "  make nonos-mk-fmt    cargo fmt across kernel + bootloader"
+	@echo "Trust the result:"
+	@echo "  make test            the boot-and-verify harness CI gates on"
+	@echo "  make bench           measured performance, recorded with provenance"
+	@echo "  make doctor          check this host can build and boot NONOS"
 	@echo
-	@echo "Everything the build does internally is still available as nonos-mk-*"
-	@echo "targets in mk/*.mk; the three above are all most people need."
+	@echo "Housekeeping:"
+	@echo "  make clean           remove build artefacts (clean-all, distclean for more)"
+	@echo "  make fmt             cargo fmt across kernel + bootloader"
+	@echo
+	@echo "Native hosts are macOS and Linux; on Windows use WSL2. Everything the"
+	@echo "build does internally is a nonos-mk-* target in mk/*.mk; the surface"
+	@echo "above is all a person needs, and CI drives the rest."
 	@echo
 	@echo "Environment:"
+	@echo "  NONOS_DEV=1          throwaway dev identity so a fresh clone boots"
 	@echo "  SIGNING_KEY=<path>   override signing key (default auto-gen)"
 	@echo "  OVMF=<path>          override OVMF firmware discovery"
+	@echo "  NONOS_JOBS=<n>       cap build fan-out (default sized to cores + ram)"
 
 # ---------------------------------------------------------------------------
 # Live GUI demo. One command boots the desktop image to a virtio-vga window

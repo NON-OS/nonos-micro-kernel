@@ -69,7 +69,10 @@ nonos-mk-dev-run:
 	@$(MAKE) --no-print-directory NONOS_DEV=1 \
 		NONOS_GOP_PREF=$(QEMU_XRES)x$(QEMU_YRES) nonos-mk-run
 
-nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof nonos-mk-zerostate nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
+# The kernel link and the ESP resolve last, in that order. Everything
+# before them can refresh capsule ELFs and trailers the kernel embeds, and
+# an ESP packed earlier shipped a kernel one generation behind the tree.
+nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW) nonos-mk-zerostate nonos-mk-esp
 	@echo "Booting NONOS in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  TPM: swtpm CRB"
@@ -288,9 +291,14 @@ nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) 
 
 # Capability parity runs first and on its own. A capsule that declares a bit
 # the kernel means differently is granted the wrong permission with every layer
-# below agreeing, so this fails before anything is built or signed.
+# below agreeing, so this fails before anything is built or signed. The
+# attestation parameters are the same class of invariant: a prover and a
+# verifier reading different round or query counts agree on nothing, and the
+# only symptom is a kernel that refuses its own boot, so the guard that pins
+# those constants to one file runs in the same lane.
 nonos-mk-check-caps:
 	@$(NONOS_PYTHON) scripts/check_cap_parity.py
+	@$(NONOS_PYTHON) scripts/check_attest_params.py
 
 nonos-mk-static: nonos-mk-check-caps
 	@./nonos-ci/run-static-checks.sh

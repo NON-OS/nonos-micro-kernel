@@ -40,13 +40,16 @@ pub fn handle(
     let Some(height) = super::u32_at(body, 12) else {
         return respond::status(sender_pid, req, E_INVAL, tx);
     };
-    if width == 0
-        || height == 0
-        || x.saturating_add(width) > ctx.width
-        || y.saturating_add(height) > ctx.height
-    {
+    // Reject only a degenerate or fully off-screen rect. A rect that merely
+    // runs past the edge is clipped to the display, not refused: the WM clamps
+    // windows to its own display size, which can sit a pixel off the
+    // compositor's, and a hard reject there left an app's very first paint
+    // refused and its window blank.
+    if width == 0 || height == 0 || x >= ctx.width || y >= ctx.height {
         return respond::status(sender_pid, req, E_INVAL, tx);
     }
+    let width = width.min(ctx.width - x);
+    let height = height.min(ctx.height - y);
     ctx.damage.accumulate(Rect { x, y, width, height });
     respond::status(sender_pid, req, 0, tx)
 }

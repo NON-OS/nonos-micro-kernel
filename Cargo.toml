@@ -229,6 +229,7 @@ microkernel-core = [
   "sha3",
   "crypto-ed25519-int",
   "nonos-arch-iommu",
+  "nonos-iommu-enforce",
 ]
 
 # Runtime baseline: core + the three live capsule embeds.
@@ -800,6 +801,16 @@ microkernel = ["microkernel-capsules"]
 
 # Mid-refactor cfg gates referenced from src.
 nonos-arch-iommu     = []   # src/arch/x86_64/iommu/*
+
+# Program the DMA remapping unit at boot and turn translation on. Without it
+# the VT-d tree still probes and reports what the firmware described, but every
+# device keeps unrestricted access to physical memory, which is the posture a
+# machine has with no IOMMU at all. Split from `nonos-arch-iommu` because that
+# flag only decides whether the code compiles; this one decides whether the
+# hardware is put in charge. Part of `microkernel-core`: a build that omits it
+# says so on the console at boot, and the DMA API refuses to hand out a
+# device address it cannot back with a translation.
+nonos-iommu-enforce  = ["nonos-arch-iommu"]
 
 # In-tree crypto, audit-anchored constant-time implementations.
 crypto-ed25519-int   = []

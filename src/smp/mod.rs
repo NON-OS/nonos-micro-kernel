@@ -20,6 +20,7 @@ extern crate alloc;
 mod ap;
 mod constants;
 mod cpu;
+mod cpu_id;
 mod init;
 mod ipi_dispatch;
 mod ipi_handler;
@@ -37,6 +38,7 @@ pub mod trampoline;
 
 pub use constants::*;
 pub use cpu::*;
+pub use cpu_id::cpu_id;
 pub use sole_cpu::sole_cpu_apic_id;
 pub(crate) use state::{cpu_count, cpus_online};
 pub use types::*;

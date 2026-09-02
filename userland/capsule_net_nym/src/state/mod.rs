@@ -41,7 +41,7 @@ pub use credential::{
     install as install_credential, material as credential_material, CredentialError,
 };
 pub use directory::{get as directory_source, install as install_directory_source};
-pub use directory_gateway::{directory_gateway, directory_gateway_count};
+pub use directory_gateway::{directory_gateway, directory_gateway_count, directory_exit_count};
 pub use gateway::{Gateway, Transport};
 pub use identity::{client_identity, set_client_identity, Identity as ClientIdentity};
 pub use session::Session;

@@ -14,45 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Probing the remapping units at boot and saying on the console what was
-//! found. Read-only. Nothing here enables translation, and the line printed
-//! says so, because a machine that reports an IOMMU it is not using should not
-//! read as a machine that is protected.
+//! One line describing the unit as the hardware reports it. Facts only. What
+//! the kernel then does about them is bring-up's line to print, not this one,
+//! because this code runs before anything has been decided.
 
-use spin::Once;
-
-use super::probe::{probe_first, unit_count, ProbeError, UnitInfo};
+use super::super::probe::UnitInfo;
 use crate::sys::serial;
 
-static PROBED: Once<UnitInfo> = Once::new();
-
-/// What the first remapping unit reported, once probed.
-pub fn probed() -> Option<&'static UnitInfo> {
-    PROBED.get()
-}
-
-/// Probe and report. Called once, after ACPI parsing.
-pub fn init() {
-    let count = unit_count();
-    if count == 0 {
-        serial::println(b"[VT-D] no remapping units in DMAR; DMA is unrestricted");
-        return;
-    }
-
-    let info = match probe_first() {
-        Ok(info) => info,
-        Err(e) => {
-            serial::print(b"[VT-D] probe failed (");
-            serial::print(match e {
-                ProbeError::NoUnits => b"no units".as_slice(),
-                ProbeError::MapFailed => b"register window not mappable".as_slice(),
-                ProbeError::NoUsableAgaw => b"no supported paging depth".as_slice(),
-            });
-            serial::println(b"); DMA is unrestricted");
-            return;
-        }
-    };
-
+pub(super) fn unit(count: usize, info: &UnitInfo) {
     serial::print(b"[VT-D] units=");
     serial::print_hex(count as u64);
     serial::print(b" ver=");
@@ -71,11 +40,9 @@ pub fn init() {
     }
     if info.translation_enabled {
         // Firmware left it on with its own tables. We do not own them, so this
-        // is not protection we can reason about.
+        // is not protection we can reason about, and bring-up will refuse the
+        // unit rather than swap a root table out from under live transfers.
         serial::print(b" te=firmware");
     }
     serial::println(b"");
-    serial::println(b"[VT-D] translation not programmed by this kernel; DMA is unrestricted");
-
-    PROBED.call_once(|| info);
 }

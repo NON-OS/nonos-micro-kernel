@@ -47,7 +47,13 @@ pub fn fetch_tls(tcp_port: u32, host: &str, path: &str) -> Result<Vec<u8>, u16> 
         path, host
     );
     let mut io = TcpIo::new(tcp_port, stream);
-    let raw = exchange(&mut io, host, request.as_bytes(), rtc_now(), MAX_RESPONSE);
+    // The clock the chain is judged against, as YYYYMMDDhhmmss. Zero means the
+    // wall clock was never set and every certificate reads as expired, which is
+    // indistinguishable at the error code from a genuinely bad chain; logging
+    // the value tells the two apart without a second boot.
+    let now = rtc_now();
+    crate::trace::say_num(b"fetch: now", now);
+    let raw = exchange(&mut io, host, request.as_bytes(), now, MAX_RESPONSE);
     let stage = match &raw {
         Ok(body) => 0u64 + body.len() as u64,
         Err(nonos_tls::SessionError::Init) => 1,

@@ -32,6 +32,8 @@ mod records;
 #[cfg(target_arch = "x86_64")]
 mod release;
 #[cfg(target_arch = "x86_64")]
+pub mod reserved;
+#[cfg(target_arch = "x86_64")]
 mod slots;
 #[cfg(target_arch = "x86_64")]
 mod validate;

@@ -27,7 +27,7 @@ use crate::trace;
 /// One at a time is enough because a reply is answered before the next
 /// request goes out, and holding several would mean deciding which of them a
 /// fragment belongs to on nothing but its set id, which anyone could forge.
-static PENDING: Mutex<Option<Assembly>> = Mutex::new(None);
+static PENDING: Mutex<Vec<Assembly>> = Mutex::new(Vec::new());
 
 /// Take a message the gateway pushed and deliver what it turns out to be.
 ///
