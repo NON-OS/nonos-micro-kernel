@@ -14,19 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod as_bytes;
-mod dir_prefix;
-mod home;
-mod home_var;
-mod new;
-mod resolve;
-mod set;
-mod strip_home;
-mod types;
-
-pub use dir_prefix::dir_prefix;
-pub use home::HOME;
-pub use home_var::home_var;
-pub use resolve::resolve;
-pub use strip_home::strip_home;
-pub use types::Cwd;
+/// The part of `cwd` that sits under `home`, so a caller can print it behind
+/// a `~`. `None` when there is no home to speak of or the path is not inside
+/// it -- a bare prefix match is not enough, because `/homework` starts with
+/// `/home` and is nowhere near it.
+pub fn strip_home<'a>(cwd: &'a [u8], home: &[u8]) -> Option<&'a [u8]> {
+    if home.is_empty() || home == b"/" || !cwd.starts_with(home) {
+        return None;
+    }
+    let tail = &cwd[home.len()..];
+    (tail.is_empty() || tail[0] == b'/').then_some(tail)
+}

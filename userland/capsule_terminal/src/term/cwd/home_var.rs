@@ -14,19 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod as_bytes;
-mod dir_prefix;
-mod home;
-mod home_var;
-mod new;
-mod resolve;
-mod set;
-mod strip_home;
-mod types;
+use crate::term::state::State;
 
-pub use dir_prefix::dir_prefix;
-pub use home::HOME;
-pub use home_var::home_var;
-pub use resolve::resolve;
-pub use strip_home::strip_home;
-pub use types::Cwd;
+/// The tab's `$HOME`. `State::new` seeds the variable with `cwd::HOME`, so this
+/// normally answers that; a script that unsets it gets an empty slice back and
+/// the prompt falls through to the absolute path rather than inventing a home.
+pub fn home_var(state: &State) -> &[u8] {
+    for (k, v) in state.vars.iter() {
+        if k.as_slice() == b"HOME" {
+            return v.as_slice();
+        }
+    }
+    b""
+}

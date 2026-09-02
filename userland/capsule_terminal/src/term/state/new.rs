@@ -18,7 +18,7 @@ use nonos_libc::mk_getpid;
 
 use super::types::State;
 use crate::jobs::JobTable;
-use crate::term::cwd::Cwd;
+use crate::term::cwd::{Cwd, HOME};
 use crate::term::history::History;
 use crate::term::line::Line;
 use crate::term::scrollback::Scrollback;
@@ -33,7 +33,7 @@ impl State {
             owner_pid: mk_getpid(),
             fresh: true,
             start_ms: 0,
-            vars: alloc::vec::Vec::new(),
+            vars: alloc::vec![(alloc::vec::Vec::from(&b"HOME"[..]), alloc::vec::Vec::from(HOME))],
             last_status: 0,
             aliases: alloc::vec::Vec::new(),
             hist_prefix: alloc::vec::Vec::new(),
