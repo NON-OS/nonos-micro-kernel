@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::term::cwd::{home_var, strip_home};
 use crate::term::state::State;
 
 /// Bytes a tab label is built into. The bar owns one buffer for the whole
@@ -51,23 +52,6 @@ pub fn tab_label(i: usize, tab: &State, out: &mut [u8; LABEL_CAP]) -> (usize, us
         None => n += copy(&mut out[n..], cwd),
     }
     (name_len, n)
-}
-
-fn home_var(tab: &State) -> &[u8] {
-    for (k, v) in tab.vars.iter() {
-        if k.as_slice() == b"HOME" {
-            return v.as_slice();
-        }
-    }
-    b""
-}
-
-fn strip_home<'a>(cwd: &'a [u8], home: &[u8]) -> Option<&'a [u8]> {
-    if home.is_empty() || home == b"/" || !cwd.starts_with(home) {
-        return None;
-    }
-    let tail = &cwd[home.len()..];
-    (tail.is_empty() || tail[0] == b'/').then_some(tail)
 }
 
 fn copy(out: &mut [u8], src: &[u8]) -> usize {

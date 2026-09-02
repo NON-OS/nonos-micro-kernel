@@ -14,26 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod banner;
-pub mod block;
-pub mod context;
-pub mod cwd;
-pub mod dimensions;
-pub mod dur;
-pub mod grid;
-pub mod history;
-pub mod identity;
-pub mod line;
-pub mod manifest;
-pub mod prefs;
-pub mod prompt;
-pub mod rtc;
-pub mod scrollback;
-pub mod search;
-pub mod state;
-pub mod terminal;
-pub mod theme;
-pub mod util;
-pub mod vt;
+/// The user half of `user@host`. NONOS has no user table and policy has no
+/// `Username` field, so this is the system's one identity, spelled the same
+/// way `git commit` already spells it.
+pub const USER: &[u8] = b"nonos";
 
-pub use terminal::Terminal;
+/// Shown when policy cannot be reached or answers with nothing usable.
+///
+/// This is the literal `capsule_policy` itself defaults `Field::Hostname` to,
+/// so an unreachable server and an unconfigured one read identically. Neither
+/// case claims a name anybody chose.
+pub const HOST_FALLBACK: &[u8] = b"nonos";
+
+pub fn choose(fetched: &[u8]) -> &[u8] {
+    if fetched.is_empty() {
+        HOST_FALLBACK
+    } else {
+        fetched
+    }
+}

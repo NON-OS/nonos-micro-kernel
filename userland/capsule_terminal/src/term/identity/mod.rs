@@ -14,26 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod banner;
-pub mod block;
-pub mod context;
-pub mod cwd;
-pub mod dimensions;
-pub mod dur;
-pub mod grid;
-pub mod history;
-pub mod identity;
-pub mod line;
-pub mod manifest;
-pub mod prefs;
-pub mod prompt;
-pub mod rtc;
-pub mod scrollback;
-pub mod search;
-pub mod state;
-pub mod terminal;
-pub mod theme;
-pub mod util;
-pub mod vt;
+mod choose;
+mod fetch;
+mod host;
+mod sanitize;
+mod wire;
 
-pub use terminal::Terminal;
+pub use choose::USER;
+pub use host::hostname;

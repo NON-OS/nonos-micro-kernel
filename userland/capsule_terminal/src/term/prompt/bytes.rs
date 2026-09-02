@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-/// The mark that opens an echoed command line, as UTF-8.
+/// The mark that opens an echoed command line.
 ///
-/// This was a bare 0xD8, which is what the character looks like in Latin-1
-/// and is not a character at all in UTF-8: it is the first byte of one. It
-/// rendered while the grid held bytes and became a replacement mark the
-/// moment the grid held characters.
-pub const PROMPT_BYTES: &[u8] = "\u{00D8} ".as_bytes();
+/// The same mark `draw_prompt` puts in front of the line being typed, so what
+/// a command looked like while it was entered is what it looks like once it is
+/// history. It sits under the `user@host:path` line the block opens with.
+pub const PROMPT_BYTES: &[u8] = b"> ";

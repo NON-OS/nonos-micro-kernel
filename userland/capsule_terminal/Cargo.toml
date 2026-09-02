@@ -31,6 +31,7 @@ nonos_inflate = { path = "../inflate" }
 nonos_base64 = { path = "../base64" }
 nonos_git = { path = "../nonos_git" }
 nonos_http = { path = "../nonos_http" }
+nonos_policy_proto = { path = "../policy_proto" }
 nonos_socket = { path = "../nonos_socket" }
 nonos_tls = { path = "../nonos_tls" }
 nonos_toolkit = { path = "../toolkit", default-features = false }

@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::term::block::Block;
+use crate::term::block::{Block, Status};
 use crate::term::theme::types::Theme;
 
 /// Size the meta is drawn at. Below the body, because it annotates a command
@@ -25,6 +25,10 @@ const META_PX: f32 = 11.0;
 
 /// Space between the run marks and the fields they sit beside.
 const GAP: i32 = 8;
+
+/// Side of the square the outcome mark is drawn inside, near the cap height of
+/// the text it sits beside.
+const MARK: i32 = 9;
 
 /// What a command did, at the right hand end of the line that started it.
 ///
@@ -40,7 +44,7 @@ pub(super) fn draw_meta(
     t: &Theme,
 ) {
     let baseline = (y + 1) as i32;
-    let mut right = max_x as i32;
+    let mut right = status_mark(fb, b.status, max_x as i32, baseline, t);
 
     if let Ok(ts) = core::str::from_utf8(&b.ts) {
         right -= fb.measure_ttf(ts, META_PX);
@@ -50,15 +54,37 @@ pub(super) fn draw_meta(
 
     let (dbuf, dlen) = crate::term::dur::fmt_dur(b.dur_ms);
     if let Ok(dur) = core::str::from_utf8(&dbuf[..dlen]) {
-        right -= fb.measure_ttf(dur, META_PX);
-        let _ = fb.text_ttf(right, baseline, dur, stripe, META_PX);
-        right -= GAP;
+        let x = right - fb.measure_ttf(dur, META_PX);
+        let _ = fb.text_ttf(x, baseline, dur, stripe, META_PX);
     }
+}
 
-    // No separate status glyph. The faces here do not carry a tick or a
-    // cross, so one drew as a missing-glyph box, which says less than
-    // nothing. The duration takes the stripe colour instead: the outcome is
-    // already stated by the stripe down the left of the block, and this
-    // repeats it where the eye is reading.
-    let _ = stripe;
+/// The outcome, as strokes rather than a character, and the left edge it
+/// leaves behind.
+///
+/// The UI face carries no tick and no cross, so asking it for one drew a
+/// missing-glyph box. Two lines say the same thing and are legible at a size
+/// no font in the tree renders well at. A running command has no outcome yet
+/// and gets nothing, which is why the column is empty while it works.
+fn status_mark(fb: &mut PaintBuffer, s: Status, right: i32, top: i32, t: &Theme) -> i32 {
+    let x = right - MARK;
+    let mid = top + MARK / 2;
+    match s {
+        Status::Running => return right,
+        Status::Ok => {
+            for d in 0..2 {
+                let pts = [
+                    (x, mid + d),
+                    (x + MARK / 3, mid + MARK / 3 + d),
+                    (x + MARK, mid - MARK / 2 + d),
+                ];
+                fb.polyline_aa(&pts, t.ok);
+            }
+        }
+        Status::Err => {
+            fb.line_aa(x, mid - MARK / 2, x + MARK, mid + MARK / 2, t.err);
+            fb.line_aa(x, mid + MARK / 2, x + MARK, mid - MARK / 2, t.err);
+        }
+    }
+    x - GAP
 }

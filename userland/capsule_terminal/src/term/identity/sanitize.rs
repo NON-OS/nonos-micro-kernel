@@ -14,26 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod banner;
-pub mod block;
-pub mod context;
-pub mod cwd;
-pub mod dimensions;
-pub mod dur;
-pub mod grid;
-pub mod history;
-pub mod identity;
-pub mod line;
-pub mod manifest;
-pub mod prefs;
-pub mod prompt;
-pub mod rtc;
-pub mod scrollback;
-pub mod search;
-pub mod state;
-pub mod terminal;
-pub mod theme;
-pub mod util;
-pub mod vt;
+/// How much of `b` is usable as a hostname, counting from the front.
+///
+/// The bytes come off an IPC reply, so they are sanitized before they are
+/// drawn: the count stops at the first byte a hostname cannot contain, which
+/// also trims the NUL padding a fixed-width store sends back.
+pub fn hostname_len(b: &[u8]) -> usize {
+    let mut n = 0;
+    while n < b.len() && usable(b[n]) {
+        n += 1;
+    }
+    n
+}
 
-pub use terminal::Terminal;
+fn usable(c: u8) -> bool {
+    c.is_ascii_alphanumeric() || c == b'-' || c == b'.'
+}
