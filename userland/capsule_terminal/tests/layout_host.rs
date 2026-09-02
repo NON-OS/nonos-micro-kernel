@@ -47,7 +47,6 @@ mod layout {
         #[derive(Clone, Copy)]
         pub struct Rails {
             pub left: u32,
-            pub right: u32,
         }
 
         #[derive(Clone, Copy)]
@@ -55,7 +54,6 @@ mod layout {
             pub titlebar: Rect,
             pub tabstrip: Rect,
             pub left_rail: Rect,
-            pub right_rail: Rect,
             pub body: Rect,
             pub input: Rect,
             pub footer: Rect,
@@ -71,7 +69,7 @@ mod layout {
 mod rows;
 
 use layout::compute::compute;
-use layout::limits::{LEFT_RAIL_MIN_W, MIN_BODY_W, RIGHT_RAIL_MIN_W};
+use layout::limits::{LEFT_RAIL_MIN_W, LEFT_RAIL_W, MIN_BODY_W};
 use layout::types::{Chrome, Layout, Rails};
 
 const CHROME: Chrome = Chrome {
@@ -83,8 +81,8 @@ const CHROME: Chrome = Chrome {
     row_h: 20,
 };
 
-const NO_RAILS: Rails = Rails { left: 0, right: 0 };
-const BOTH_RAILS: Rails = Rails { left: 232, right: 250 };
+const NO_RAILS: Rails = Rails { left: 0 };
+const BOTH_RAILS: Rails = Rails { left: LEFT_RAIL_W };
 
 fn lay(w: u32, h: u32, r: Rails) -> Layout {
     compute(w, h, &CHROME, r)
@@ -123,33 +121,60 @@ fn the_body_spans_the_full_width_without_rails() {
     assert_eq!(l.body.x, 0);
     assert_eq!(l.body.w, 1440);
     assert_eq!(l.left_rail.w, 0);
-    assert_eq!(l.right_rail.w, 0);
 }
 
-/// The three content columns must account for the whole width, or the
+/// The two content columns must account for the whole width, or the
 /// rightmost pixels of the window are never painted by anyone.
 #[test]
 fn the_rails_and_the_body_sum_to_the_width() {
     let l = lay(1440, 900, BOTH_RAILS);
-    assert_eq!(l.left_rail.w + l.body.w + l.right_rail.w, 1440);
+    assert_eq!(l.left_rail.w + l.body.w, 1440);
     assert_eq!(l.body.x, l.left_rail.w);
-    assert_eq!(l.right_rail.x, l.left_rail.w + l.body.w);
+    assert_eq!(l.body.x + l.body.w, 1440);
 }
 
-/// Shrinking the window sheds the less important column first: the right
-/// rail goes before the left one.
+/// The rail hosts a four-column process table drawn at ttf::MIN_UI_PX, so its
+/// width is a hard requirement, not a taste: PID 40 + CPU 46 + MEM 46 + one
+/// 8px gutter + 12px padding either side leaves 156px for the capsule name.
 #[test]
-fn the_right_rail_drops_first() {
-    let l = lay(800, 900, BOTH_RAILS);
-    assert_eq!(l.right_rail.w, 0);
-    assert!(l.left_rail.w > 0, "the left rail still fits at 800");
+fn the_left_rail_fits_the_process_table() {
+    const PID_W: u32 = 40;
+    const CPU_W: u32 = 46;
+    const MEM_W: u32 = 46;
+    const RAIL_GAP: u32 = 8;
+    const RAIL_PAD: u32 = 12;
+    let content = LEFT_RAIL_W - RAIL_PAD * 2;
+    let name_w = content - (PID_W + CPU_W + MEM_W + RAIL_GAP);
+    assert!(name_w >= 150, "name column starved at {}", name_w);
+    let l = lay(1280, 720, BOTH_RAILS);
+    assert_eq!(l.left_rail.w, LEFT_RAIL_W, "the rail is not clipped at 1280");
+    assert_eq!(l.left_rail.x, 0);
+}
+
+/// The rail and the body may never share a pixel column: the body starts where
+/// the rail ends, at every width the rail survives.
+#[test]
+fn the_body_never_overlaps_the_left_rail() {
+    for w in [640u32, 700, 900, 1024, 1280, 1440, 2560] {
+        let l = lay(w, 720, BOTH_RAILS);
+        assert_eq!(l.body.x, l.left_rail.x + l.left_rail.w, "overlap at {}", w);
+        assert_eq!(l.input.x, l.body.x, "input drifted from the body at {}", w);
+        assert_eq!(l.left_rail.w + l.body.w, w, "width unaccounted at {}", w);
+    }
+}
+
+/// The body has to stay a usable terminal at the shipping 1280x720 guest.
+#[test]
+fn the_body_stays_wide_at_the_guest_resolution() {
+    let l = lay(1280, 720, BOTH_RAILS);
+    assert_eq!(l.body.w, 1280 - LEFT_RAIL_W);
+    assert!(l.body.w >= 900, "body squeezed to {}", l.body.w);
 }
 
 #[test]
-fn both_rails_drop_on_a_narrow_window() {
+fn the_rail_drops_on_a_narrow_window() {
     let l = lay(520, 300, BOTH_RAILS);
     assert_eq!(l.left_rail.w, 0);
-    assert_eq!(l.right_rail.w, 0);
     assert_eq!(l.body.w, 520);
 }
 
@@ -180,7 +205,6 @@ fn degenerate_windows_do_not_underflow() {
             ("titlebar", l.titlebar),
             ("tabstrip", l.tabstrip),
             ("left_rail", l.left_rail),
-            ("right_rail", l.right_rail),
             ("body", l.body),
             ("input", l.input),
             ("footer", l.footer),
@@ -207,7 +231,8 @@ fn the_input_shares_the_body_column() {
 fn the_thresholds_match_the_spec() {
     assert_eq!(MIN_BODY_W, 320);
     assert_eq!(LEFT_RAIL_MIN_W, 640);
-    assert_eq!(RIGHT_RAIL_MIN_W, 900);
+    assert_eq!(LEFT_RAIL_W, 320);
+    assert_eq!(LEFT_RAIL_MIN_W, LEFT_RAIL_W + MIN_BODY_W);
 }
 
 /// The regression guard for the block-chrome drift bug: one painter stepped
@@ -226,4 +251,15 @@ fn row_top_advances_by_the_measured_line_height() {
             );
         }
     }
+}
+
+/// The rail is one scrolling column, so a section stack taller than the rail
+/// must scroll exactly its overflow, and a short stack must not scroll at all.
+#[test]
+fn the_rail_scroll_extent_is_the_overflow_only() {
+    assert_eq!(rows::scroll_max(900, 600), 300);
+    assert_eq!(rows::scroll_max(400, 600), 0);
+    assert_eq!(rows::scroll_clamp(999, 900, 600), 300);
+    assert_eq!(rows::scroll_clamp(120, 900, 600), 120);
+    assert_eq!(rows::scroll_clamp(5, 400, 600), 0);
 }

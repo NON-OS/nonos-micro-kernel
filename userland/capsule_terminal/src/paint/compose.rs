@@ -25,7 +25,7 @@ use super::footer::{draw_footer, footer_h};
 use super::header::draw_header;
 use super::metrics::Metrics;
 use super::rail_left;
-use super::rail_right;
+use crate::layout::limits::LEFT_RAIL_W;
 use crate::layout::{compute, Chrome, Layout, Rails};
 use crate::palette::{Index, Palette};
 use crate::rail::Rail;
@@ -33,8 +33,6 @@ use crate::term::prefs::types::Project;
 use crate::term::state::State;
 use crate::term::theme::types::Theme;
 
-const RAIL_W: u32 = 256;
-const RAIL_L: u32 = 240;
 
 pub fn paint_tabs(
     tabs: &[State],
@@ -45,11 +43,12 @@ pub fn paint_tabs(
     rail: &Rail,
     projects: &[Project],
     monitor: bool,
+    scroll: u32,
     pal: &Palette,
 ) -> Layout {
-    let l = paint(&tabs[active], fb, t, font_scale, rail, monitor);
+    let l = paint(&tabs[active], fb, t, font_scale);
     if l.left_rail.w > 0 {
-        rail_left::draw(fb, l.left_rail, tabs, active, projects, t);
+        rail_left::draw(fb, l.left_rail, tabs, active, projects, rail, monitor, scroll, t);
     }
     if pal.open {
         let ix = Index::build(tabs, active, projects);
@@ -63,8 +62,6 @@ pub fn paint(
     fb: &mut PaintBuffer,
     t: &Theme,
     font_scale: u32,
-    rail: &Rail,
-    monitor: bool,
 ) -> Layout {
     fb.clear(t.bg);
     draw_header(state, fb, t);
@@ -77,8 +74,7 @@ pub fn paint(
         text_left: TEXT_LEFT,
         row_h: m.lh,
     };
-    let right = if monitor { RAIL_W } else { 0 };
-    let l = compute(fb.width, fb.height, &chrome, Rails { left: RAIL_L, right });
+    let l = compute(fb.width, fb.height, &chrome, Rails { left: LEFT_RAIL_W });
     let text_x = l.body.x + chrome.text_left;
     let text_r = (l.body.x + l.body.w).saturating_sub(chrome.text_left);
     let alt = state.scrollback.grid.alternate;
@@ -93,9 +89,6 @@ pub fn paint(
     }
     if !alt {
         draw_input_line(state, fb, l.input, m, t);
-    }
-    if l.right_rail.w > 0 {
-        rail_right::draw(fb, l.right_rail, rail, t);
     }
     draw_footer(fb, t);
     l

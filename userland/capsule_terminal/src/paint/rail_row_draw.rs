@@ -13,14 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 use nonos_app_skeleton::PaintBuffer;
 
 use super::fit_text::width_of;
-use super::rail_row::row_h;
-use super::rail_text::{clipped, left, lh, RAIL_GAP, RAIL_PX};
+use super::rail_band::Band;
+use super::rail_text::{band_rect, clipped, left, lh, RAIL_GAP, RAIL_PX};
 use super::shade::elevate;
-use crate::layout::Rect;
 use crate::term::theme::types::Theme;
 
 const DOT: u32 = 7;
@@ -31,22 +29,23 @@ const PILL: &str = "ACTIVE";
 /// pixels the frame already painted.
 pub fn draw_row(
     fb: &mut PaintBuffer,
-    r: Rect,
+    r: Band,
     dot: u32,
     name: &str,
     sub: &str,
     active: bool,
     t: &Theme,
 ) {
-    if r.h < row_h() || r.w == 0 {
+    if r.w == 0 {
         return;
     }
     if active {
-        fb.blend_rect(r.x, r.y, r.w, r.h, elevate(t.bg, 14));
-        fb.blend_rect(r.x, r.y, 2, r.h, t.accent);
+        band_rect(fb, r.x, r.y, r.w, r.h, elevate(t.bg, 14));
+        band_rect(fb, r.x, r.y, 2, r.h, t.accent);
     }
-    let top = r.y + RAIL_GAP / 2;
-    fb.blend_rect(r.x + RAIL_GAP, top + (lh().saturating_sub(DOT)) / 2, DOT, DOT, dot);
+    let top = r.y + (RAIL_GAP / 2) as i32;
+    let dy = top + ((lh().saturating_sub(DOT)) / 2) as i32;
+    band_rect(fb, r.x + RAIL_GAP, dy, DOT, DOT, dot);
     let tx = r.x + RAIL_GAP * 2 + DOT;
     let edge = r.x + r.w;
     let mut avail = edge.saturating_sub(tx + RAIL_GAP);
@@ -56,5 +55,5 @@ pub fn draw_row(
         avail = avail.saturating_sub(pw + RAIL_GAP);
     }
     clipped(fb, tx, top, avail, name, t.fg);
-    clipped(fb, tx, top + lh(), edge.saturating_sub(tx + RAIL_GAP), sub, t.dim);
+    clipped(fb, tx, top + lh() as i32, edge.saturating_sub(tx + RAIL_GAP), sub, t.dim);
 }

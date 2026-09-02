@@ -25,8 +25,12 @@
 #[path = "../src/rail"]
 mod rail {
     pub mod derive;
+    pub mod disk;
+    pub mod mem;
     pub mod metrics;
+    pub mod net;
     pub mod ring;
+    pub mod value;
 }
 
 use rail::derive::{cpu_pct, mem_pct};

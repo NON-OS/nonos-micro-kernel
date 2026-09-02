@@ -14,6 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::disk::Disk;
+use super::mem::Mem;
+use super::net::Net;
+use super::value::Metric;
+
 pub const MAX_PROCS: usize = 64;
 pub const PROC_NAME_LEN: usize = 24;
 
@@ -45,6 +50,12 @@ pub struct Sample {
     pub mem_total_kb: u64,
     pub cpu_pct: u32,
     pub uptime_ms: u64,
+    pub mem: Mem,
+    pub net: Net,
+    pub disk: Disk,
+    /// The scheduler keeps no runnable-queue average, so a load figure would be
+    /// invented rather than measured.
+    pub load_avg: Metric<u32>,
 }
 
 impl Sample {
@@ -55,6 +66,10 @@ impl Sample {
         mem_total_kb: 0,
         cpu_pct: 0,
         uptime_ms: 0,
+        mem: Mem::UNKNOWN,
+        net: Net::DOWN,
+        disk: Disk::UNSUPPORTED,
+        load_avg: Metric::Unsupported,
     };
 
     pub fn live(&self) -> &[Proc] {

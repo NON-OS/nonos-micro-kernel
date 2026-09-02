@@ -29,7 +29,6 @@ pub struct Chrome {
 #[derive(Clone, Copy)]
 pub struct Rails {
     pub left: u32,
-    pub right: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -37,7 +36,6 @@ pub struct Layout {
     pub titlebar: Rect,
     pub tabstrip: Rect,
     pub left_rail: Rect,
-    pub right_rail: Rect,
     pub body: Rect,
     pub input: Rect,
     pub footer: Rect,

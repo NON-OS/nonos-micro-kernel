@@ -38,6 +38,7 @@ impl Terminal {
             prefs_dirty: false,
             prefs_ticks: 0,
             rail: Rail::new(),
+            rail_scroll: 0,
             layout: None,
             palette: Palette::new(),
         }

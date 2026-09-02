@@ -28,6 +28,9 @@ impl Terminal {
         if let Some(outcome) = self.tab_command(event) {
             return outcome;
         }
+        if let Some(outcome) = self.rail_wheel(event) {
+            return outcome;
+        }
         if let Some(outcome) = self.rail_click(event) {
             return outcome;
         }

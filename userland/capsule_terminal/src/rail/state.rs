@@ -15,6 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::metrics::Sample;
+use super::net_query::query;
 use super::ring::SparkRing;
 use super::sample::poll;
 
@@ -22,17 +23,23 @@ use super::sample::poll;
 /// the process table and the rail never samples at frame rate.
 const POLL_TICKS: u32 = 34;
 
+/// The lease query is an IPC round trip that can spend its whole timeout, so it
+/// runs once in every `NET_POLLS` reads of the process table and the previous
+/// answer is carried forward in between.
+const NET_POLLS: u32 = 8;
+
 #[derive(Clone, Copy)]
 pub struct Rail {
     pub sample: Sample,
     pub spark: SparkRing,
     ticks: u32,
+    net_polls: u32,
     warm: bool,
 }
 
 impl Rail {
     pub const fn new() -> Self {
-        Rail { sample: Sample::EMPTY, spark: SparkRing::new(), ticks: 0, warm: false }
+        Rail { sample: Sample::EMPTY, spark: SparkRing::new(), ticks: 0, net_polls: 0, warm: false }
     }
 
     pub fn tick(&mut self) -> bool {
@@ -41,7 +48,9 @@ impl Rail {
             return false;
         }
         self.ticks = 0;
-        let next = poll(&self.sample);
+        let mut next = poll(&self.sample);
+        next.net = if self.net_polls == 0 { query() } else { self.sample.net };
+        self.net_polls = (self.net_polls + 1) % NET_POLLS;
         if self.warm {
             self.spark.push(next.cpu_pct.min(100) as u8);
         }

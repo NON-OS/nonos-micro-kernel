@@ -13,17 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+use nonos_app_skeleton::PaintBuffer;
 
-pub mod derive;
-pub mod disk;
-pub mod mem;
-pub mod metrics;
-pub mod net;
-pub mod net_decode;
-pub mod net_query;
-pub mod ring;
-pub mod sample;
-pub mod state;
-pub mod value;
+use super::rail_text::{left, lh, right};
+use crate::term::theme::types::Theme;
 
-pub use state::Rail;
+/// One telemetry row: the key on the rail's left edge, the figure measured back
+/// from its right. Returns the next row's top so a section reads as a stack.
+pub fn stat(fb: &mut PaintBuffer, x: u32, y: i32, w: u32, k: &str, v: &str, t: &Theme) -> i32 {
+    left(fb, x, y, k, t.dim);
+    right(fb, x + w, y, v, t.fg);
+    y + lh() as i32
+}

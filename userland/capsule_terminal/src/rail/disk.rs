@@ -14,16 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod derive;
-pub mod disk;
-pub mod mem;
-pub mod metrics;
-pub mod net;
-pub mod net_decode;
-pub mod net_query;
-pub mod ring;
-pub mod sample;
-pub mod state;
-pub mod value;
+use super::value::Metric;
 
-pub use state::Rail;
+/// NONOS mounts no filesystem to measure: there is no statfs syscall and the
+/// capsule store is a raw signed region of the block device, not a volume with
+/// a capacity. Every figure here is a standing gap, kept so the panel can say
+/// so rather than the rail quietly omitting a row.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Disk {
+    pub total_kb: Metric<u64>,
+    pub used_kb: Metric<u64>,
+}
+
+impl Disk {
+    pub const UNSUPPORTED: Disk =
+        Disk { total_kb: Metric::Unsupported, used_kb: Metric::Unsupported };
+}

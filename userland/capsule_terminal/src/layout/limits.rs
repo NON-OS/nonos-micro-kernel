@@ -16,4 +16,4 @@
 
 pub const MIN_BODY_W: u32 = 320;
 pub const LEFT_RAIL_MIN_W: u32 = 640;
-pub const RIGHT_RAIL_MIN_W: u32 = 900;
+pub const LEFT_RAIL_W: u32 = 320;

@@ -20,6 +20,7 @@ use nonos_app_skeleton::{EventOutcome, InputEvent, InputKind};
 use super::types::Terminal;
 use crate::paint::rail_left_geom::{hit, LeftHit};
 use crate::paint::rail_row::inside;
+use crate::paint::rail_scroll::clamp;
 
 impl Terminal {
     /// The first body-area hit-test in this window. The rail rects come from
@@ -35,7 +36,8 @@ impl Terminal {
             return None;
         }
         let projects = self.prefs.project_count as u32;
-        Some(match hit(rail, self.tabs.len() as u32, projects, x, y) {
+        let off = clamp(self.rail_scroll, self.rail_fit(), rail.h);
+        Some(match hit(rail, self.tabs.len() as u32, projects, off, x, y) {
             Some(LeftHit::NewSession) => {
                 self.open_tab();
                 EventOutcome::Repaint

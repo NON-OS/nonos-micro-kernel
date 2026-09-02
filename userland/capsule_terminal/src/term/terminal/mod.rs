@@ -26,6 +26,7 @@ mod palette_act;
 mod palette_key;
 mod palette_pick;
 mod rail_click;
+mod rail_wheel;
 #[cfg(feature = "nonos-autorun-selftest")]
 pub mod selftest;
 mod tabs;

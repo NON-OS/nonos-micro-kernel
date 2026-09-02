@@ -41,9 +41,13 @@ pub struct Terminal {
     // the tick that writes the record.
     pub(crate) prefs_dirty: bool,
     pub(crate) prefs_ticks: u32,
-    // Live system telemetry for the right rail, polled on its own tick budget
+    // Live system telemetry for the rail, polled on its own tick budget
     // so the table never re-reads the kernel once per frame.
     pub(crate) rail: Rail,
+    // How far the rail column has been scrolled, in pixels. Clamped against the
+    // content height by whichever of the painter or the hit-test reads it, both
+    // through `rail_scroll::clamp`, so the two never disagree.
+    pub(crate) rail_scroll: u32,
     // The band solve from the last paint. The event path needs the rail rects
     // and cannot re-solve them: `Metrics` reads the frame buffer, which only
     // exists during paint.

@@ -31,7 +31,7 @@ pub fn draw_row(fb: &mut PaintBuffer, r: Rect, e: &Entry, sel: bool, t: &Theme) 
     if sel {
         fb.fill_round(r.x, r.y, r.w, r.h, RADIUS, TAB_ACTIVE);
     }
-    let y = r.y + r.h.saturating_sub(lh()) / 2;
+    let y = (r.y + r.h.saturating_sub(lh()) / 2) as i32;
     left(fb, r.x + RAIL_PAD, y, e.kind.tag(), t.dim);
     let hint_w = super::fit_text::width_of(fb, e.hint, super::rail_text::RAIL_PX);
     let x = r.x + RAIL_PAD + TAG_W;

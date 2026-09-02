@@ -29,13 +29,23 @@ pub fn pct(buf: &mut [u8], v: u32) -> &str {
 
 /// Resident kilobytes as mebibytes with one decimal, so a rail column shows a
 /// number that moves without ever widening past four glyphs plus its unit.
-pub fn mib(buf: &mut [u8], kb: u64) -> &str {
+pub fn mib_into(buf: &mut [u8], kb: u64) -> usize {
     let tenths = kb.saturating_mul(10) / 1024;
     let mut n = format_u64(tenths / 10, buf);
     n += copy_into(&mut buf[n..], b".");
     n += format_u64(tenths % 10, &mut buf[n..]);
-    n += copy_into(&mut buf[n..], b" MB");
-    core::str::from_utf8(&buf[..n]).unwrap_or("")
+    n + copy_into(&mut buf[n..], b" MB")
+}
+
+pub fn u32_into(buf: &mut [u8], v: u32) -> usize {
+    format_u64(v as u64, buf)
+}
+
+/// A byte rate. NONOS's virtio-net driver publishes no counters, so this is the
+/// shape a rate would take, never a rate this build has ever measured.
+pub fn bps_into(buf: &mut [u8], v: u64) -> usize {
+    let n = format_u64(v, buf);
+    n + copy_into(&mut buf[n..], b" B/s")
 }
 
 pub fn uptime(buf: &mut [u8], ms: u64) -> &str {

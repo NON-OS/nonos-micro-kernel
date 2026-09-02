@@ -19,6 +19,7 @@ use core::mem::size_of;
 use nonos_libc::{mk_proc_stat, mk_uptime_ms, ProcStatEntry, ProcStatHeader};
 
 use super::derive::cpu_pct;
+use super::mem::summarize;
 use super::metrics::{Proc, Sample, MAX_PROCS};
 
 const HEADER_LEN: usize = size_of::<ProcStatHeader>();
@@ -62,5 +63,6 @@ pub fn poll(prev: &Sample) -> Sample {
     out.procs[..out.n]
         .sort_unstable_by(|a, b| b.cpu_pct.cmp(&a.cpu_pct).then(b.mem_kb.cmp(&a.mem_kb)));
     out.cpu_pct = out.live().iter().map(|p| p.cpu_pct).sum::<u32>().min(100);
+    out.mem = summarize(out.live());
     out
 }

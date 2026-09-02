@@ -17,3 +17,11 @@
 pub fn row_top(i: u32, body_y: u32, lh: u32) -> u32 {
     body_y + i * lh
 }
+
+pub fn scroll_max(content_h: u32, viewport_h: u32) -> u32 {
+    content_h.saturating_sub(viewport_h)
+}
+
+pub fn scroll_clamp(offset: u32, content_h: u32, viewport_h: u32) -> u32 {
+    offset.min(scroll_max(content_h, viewport_h))
+}

@@ -37,6 +37,7 @@ impl Terminal {
             &self.rail,
             self.prefs.project_slice(),
             self.prefs.rails & 1 == 0,
+            self.rail_scroll,
             &self.palette,
         );
         self.layout = Some(l);

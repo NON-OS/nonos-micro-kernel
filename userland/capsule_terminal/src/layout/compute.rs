@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::limits::{LEFT_RAIL_MIN_W, MIN_BODY_W, RIGHT_RAIL_MIN_W};
+use super::limits::{LEFT_RAIL_MIN_W, MIN_BODY_W};
 use super::types::{Chrome, Layout, Rails, Rect};
 
 pub fn compute(w: u32, h: u32, c: &Chrome, r: Rails) -> Layout {
@@ -27,30 +27,25 @@ pub fn compute(w: u32, h: u32, c: &Chrome, r: Rails) -> Layout {
     let input_h = c.row_h.min(content_h);
     let body_h = content_h - input_h;
 
-    let (lw, rw) = rail_widths(w, r);
-    let body_w = w.saturating_sub(lw + rw);
+    let lw = rail_width(w, r);
+    let body_w = w.saturating_sub(lw);
 
     Layout {
         titlebar: Rect { x: 0, y: 0, w, h: titlebar_h },
         tabstrip: Rect { x: 0, y: tab_y, w, h: tabstrip_h },
         left_rail: Rect { x: 0, y: content_y, w: lw, h: content_h },
-        right_rail: Rect { x: lw + body_w, y: content_y, w: rw, h: content_h },
         body: Rect { x: lw, y: content_y, w: body_w, h: body_h },
         input: Rect { x: lw, y: content_y + body_h, w: body_w, h: input_h },
         footer: Rect { x: 0, y: content_y + content_h, w, h: footer_h },
     }
 }
 
-fn rail_widths(w: u32, r: Rails) -> (u32, u32) {
-    let mut left = if w >= LEFT_RAIL_MIN_W { r.left } else { 0 };
-    let mut right = if w >= RIGHT_RAIL_MIN_W { r.right } else { 0 };
+fn rail_width(w: u32, r: Rails) -> u32 {
+    let left = if w >= LEFT_RAIL_MIN_W { r.left } else { 0 };
     let floor = MIN_BODY_W.min(w);
-
-    if w.saturating_sub(left + right) < floor {
-        right = w.saturating_sub(left + floor).min(right);
+    if w.saturating_sub(left) < floor {
+        w.saturating_sub(floor).min(left)
+    } else {
+        left
     }
-    if w.saturating_sub(left + right) < floor {
-        left = w.saturating_sub(right + floor).min(left);
-    }
-    (left, right)
 }

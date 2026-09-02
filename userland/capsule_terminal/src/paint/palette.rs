@@ -48,7 +48,7 @@ pub fn draw(fb: &mut PaintBuffer, body: Rect, pal: &Palette, ix: &Index, t: &The
 }
 
 fn draw_query(fb: &mut PaintBuffer, q: Rect, pal: &Palette, t: &Theme) {
-    let y = q.y + (q.h.saturating_sub(lh())) / 2;
+    let y = (q.y + (q.h.saturating_sub(lh())) / 2) as i32;
     let w = left(fb, q.x + RAIL_PAD, y, ">", t.accent);
     let text = core::str::from_utf8(pal.needle()).unwrap_or("");
     let x = q.x + RAIL_PAD + w + RAIL_GAP;
@@ -58,5 +58,5 @@ fn draw_query(fb: &mut PaintBuffer, q: Rect, pal: &Palette, t: &Theme) {
     }
     clipped(fb, x, y, q.x + q.w - x, text, t.fg);
     let cw = super::fit_text::width_of(fb, text, RAIL_PX);
-    fb.blend_rect(x + cw + 2, y, 2, lh(), t.accent);
+    fb.blend_rect(x + cw + 2, y as u32, 2, lh(), t.accent);
 }
