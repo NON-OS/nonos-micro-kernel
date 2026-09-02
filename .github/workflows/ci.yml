@@ -38,6 +38,18 @@ jobs:
           persist-credentials: false
       - name: Verify the baked trust artifact ledger
         run: cd nonos-data/trust && sha256sum -c MANIFEST.sha256
+      # The unbound sentinel is what a release bakes when no owner device
+      # slots exist; pin the recipe to its published value on every change
+      # instead of discovering a drift on the next tag.
+      - name: Verify the unbound device sentinel recipe
+        run: |
+          set -euo pipefail
+          make NONOS_DEVICE_BINDING=unbound \
+               ZK_BOOT_ROOT=/tmp/unbound/device_root.bin \
+               ZK_BOOT_COMMITMENTS=/tmp/unbound/device_commitments.bin \
+               nonos-mk-ensure-zk-keys
+          test "$(xxd -p /tmp/unbound/device_root.bin | tr -d '\n')" = \
+               "$(printf '%s' 'NONOS-DEVICE-SLOT-UNBOUND-v1' | sha256sum | cut -c1-64)"
 
   # Same reasoning for the double-build lane: it only ever ran on tags,
   # so its own defects surfaced as release failures. Scratch mode here;
