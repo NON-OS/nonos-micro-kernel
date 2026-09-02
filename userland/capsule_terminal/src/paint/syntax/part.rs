@@ -16,7 +16,7 @@
 
 //! What a byte of a command line belongs to, and what colour that makes it.
 
-use crate::term::theme::{ACCENT, DIM, FOREGROUND, PATH};
+use crate::term::theme::types::Theme;
 
 /// What a byte of the line belongs to.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -36,16 +36,16 @@ pub enum Part {
 }
 
 impl Part {
-    pub fn colour(self) -> u32 {
+    pub fn colour(self, t: &Theme) -> u32 {
         match self {
             // The command carries the accent because it is the one word that
             // decides what the rest of the line means.
-            Part::Command => ACCENT,
-            Part::Flag => DIM,
-            Part::Quoted => PATH,
-            Part::Path => PATH,
-            Part::Operator => ACCENT,
-            Part::Plain => FOREGROUND,
+            Part::Command => t.accent,
+            Part::Flag => t.dim,
+            Part::Quoted => t.path,
+            Part::Path => t.path,
+            Part::Operator => t.accent,
+            Part::Plain => t.fg,
         }
     }
 }

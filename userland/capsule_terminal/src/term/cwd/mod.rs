@@ -16,11 +16,19 @@
 
 mod as_bytes;
 mod dir_prefix;
+mod home;
+mod home_var;
 mod new;
 mod resolve;
+mod shorten;
 mod set;
+mod strip_home;
 mod types;
 
 pub use dir_prefix::dir_prefix;
+pub use home::HOME;
+pub use home_var::home_var;
 pub use resolve::resolve;
+pub use shorten::shorten;
+pub use strip_home::strip_home;
 pub use types::Cwd;

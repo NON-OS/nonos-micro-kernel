@@ -16,7 +16,6 @@
 
 use alloc::vec::Vec;
 use nonos_app_skeleton::clients::vfs::{read_file, write_file};
-use nonos_app_skeleton::discover::lookup_service;
 
 use crate::term::cwd::resolve;
 use crate::term::state::State;
@@ -28,9 +27,6 @@ const MAX_APPEND: u32 = 65536;
 // resolved once and cached on the state, the same way the file commands
 // do it.
 pub(super) fn write_redirect(state: &mut State, lines: &[Vec<u8>], append: bool, path_arg: &[u8]) {
-    if state.owner_pid == 0 {
-        state.owner_pid = lookup_service(b"app.terminal").map(|p| p.pid).unwrap_or(0);
-    }
     let pid = state.owner_pid;
     let path = resolve(state.cwd.as_bytes(), path_arg);
     let mut data = Vec::new();

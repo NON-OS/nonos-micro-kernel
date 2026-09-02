@@ -65,6 +65,9 @@ pub struct ProcStatHeader {
     pub total_ticks: u64,
     pub count: u32,
     pub _pad: u32,
+    pub mem_total_kb: u64,
+    // 1/5/15-minute load averages in Q11 fixed point: 2048 reads as 1.00.
+    pub load_avg_fixed: [u64; 3],
 }
 
 pub extern "C" fn mk_proc_stat(buf: *mut u8, max_entries: u32) -> i64 {

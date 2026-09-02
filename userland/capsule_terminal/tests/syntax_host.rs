@@ -10,10 +10,20 @@
 
 mod term {
     pub mod theme {
-        pub const ACCENT: u32 = 1;
-        pub const DIM: u32 = 2;
-        pub const FOREGROUND: u32 = 3;
-        pub const PATH: u32 = 4;
+        pub mod types {
+            #[derive(Clone, Copy)]
+            pub struct Theme {
+                pub bg: u32,
+                pub fg: u32,
+                pub accent: u32,
+                pub path: u32,
+                pub dim: u32,
+                pub ok: u32,
+                pub err: u32,
+                pub run: u32,
+                pub chrome_edge: u32,
+            }
+        }
     }
 }
 use term as crate_term;

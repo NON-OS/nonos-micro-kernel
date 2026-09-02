@@ -34,6 +34,19 @@ pub fn base_unix_ms() -> u64 {
     BOOT_UNIX_MS.load(Ordering::Relaxed) + elapsed_ms
 }
 
+pub fn since_boot_ms() -> u64 {
+    let tsc_hz = TSC_HZ.load(Ordering::Relaxed);
+    if tsc_hz == 0 {
+        return crate::time::timestamp_millis().saturating_sub(BOOT_UNIX_MS.load(Ordering::Relaxed));
+    }
+
+    let boot_tsc = BOOT_TSC.load(Ordering::Relaxed);
+    let current_tsc = rdtsc();
+    let elapsed_tsc = current_tsc.saturating_sub(boot_tsc);
+
+    (elapsed_tsc * 1000) / tsc_hz
+}
+
 pub fn unix_ms() -> u64 {
     let adjusted = base_unix_ms() as i64 + NTP_OFFSET_MS.load(Ordering::Relaxed);
     if adjusted < 0 {

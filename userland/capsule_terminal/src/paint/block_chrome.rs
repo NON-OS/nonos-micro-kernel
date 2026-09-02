@@ -17,21 +17,30 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use super::block_meta::draw_meta;
-use super::constants::LINE_HEIGHT;
+use super::metrics::Metrics;
 use super::shade::elevate;
 use crate::term::block::Status;
 use crate::term::dimensions::VISIBLE_ROWS;
 use crate::term::state::State;
-use crate::term::theme::{BLOCK_ERR, BLOCK_OK, BLOCK_RUN};
+use crate::term::theme::types::Theme;
 
 const STRIPE_W: u32 = 3;
 const STRIPE_GAP: u32 = 8;
 
-pub fn draw_block_chrome(state: &State, fb: &mut PaintBuffer, ox: u32, oy: u32, max_y: u32) {
+pub fn draw_block_chrome(
+    state: &State,
+    fb: &mut PaintBuffer,
+    ox: u32,
+    oy: u32,
+    max_y: u32,
+    max_x: u32,
+    m: &Metrics,
+    t: &Theme,
+) {
     let g = &state.scrollback.grid;
     for row in 0..VISIBLE_ROWS {
-        let y = oy + row as u32 * LINE_HEIGHT;
-        if y + LINE_HEIGHT > max_y {
+        let y = crate::layout::row_top(row as u32, oy, m.lh);
+        if y + m.lh > max_y {
             break;
         }
         let abs = g.abs_of_visible_row(row);
@@ -41,17 +50,17 @@ pub fn draw_block_chrome(state: &State, fb: &mut PaintBuffer, ox: u32, oy: u32, 
         };
         // Alternating block shades derived from the theme background, so the
         // command zebra stays subtle on any profile instead of a fixed dark.
-        let tint = if idx % 2 == 0 { elevate(state.bg, 5) } else { elevate(state.bg, 13) };
-        fb.fill_rect(ox, y, fb.width.saturating_sub(ox * 2), LINE_HEIGHT, tint);
+        let tint = if idx % 2 == 0 { elevate(t.bg, 5) } else { elevate(t.bg, 13) };
+        fb.fill_rect(ox, y, max_x.saturating_sub(ox), m.lh, tint);
         let stripe = match status {
-            Status::Ok => BLOCK_OK,
-            Status::Err => BLOCK_ERR,
-            Status::Running => BLOCK_RUN,
+            Status::Ok => t.ok,
+            Status::Err => t.err,
+            Status::Running => t.run,
         };
-        fb.fill_rect(ox.saturating_sub(STRIPE_GAP), y, STRIPE_W, LINE_HEIGHT, stripe);
+        fb.fill_rect(ox.saturating_sub(STRIPE_GAP), y, STRIPE_W, m.lh, stripe);
         if let Some(b) = state.block_at(abs) {
             if b.start_abs == abs {
-                draw_meta(fb, b, stripe, y);
+                draw_meta(fb, b, stripe, y, max_x, t);
             }
         }
     }

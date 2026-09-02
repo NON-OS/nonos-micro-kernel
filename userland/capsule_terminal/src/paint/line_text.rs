@@ -21,6 +21,7 @@ use nonos_app_skeleton::PaintBuffer;
 use super::line_chars::chars_of;
 use super::syntax::Part;
 use crate::term::grid::width::char_width;
+use crate::term::theme::types::Theme;
 
 // Draw text as crisp monospace, advancing by the columns each character
 // occupies. What is typed has to render the same as what the grid shows, or a
@@ -46,12 +47,13 @@ pub fn text_parts(
     parts: &[Part],
     adv: u32,
     px: f32,
+    t: &Theme,
 ) {
     let mut buf = [0u8; 4];
     let mut at = 0usize;
     for ch in chars_of(bytes) {
         if ch != ' ' && (ch as u32) >= 0x20 && ch as u32 != 0x7f {
-            let argb = parts.get(at).copied().unwrap_or(Part::Plain).colour();
+            let argb = parts.get(at).copied().unwrap_or(Part::Plain).colour(t);
             let s = ch.encode_utf8(&mut buf);
             let _ = fb.text_ttf_mono(x as i32, y as i32, s, argb, px);
         }

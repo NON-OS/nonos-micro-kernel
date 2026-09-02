@@ -20,7 +20,8 @@ const SERVICE: &[u8] = b"net.dhcp.client";
 const MAGIC: u32 = 0x4E44_4843;
 const VERSION: u16 = 1;
 const HDR_LEN: usize = 20;
-const BODY_LEN: usize = 18;
+const BODY_LEN: usize = 22;
+const BODY_MIN: usize = 18;
 const OP_LEASE_STATUS: u16 = 3;
 const STATE_BOUND: u8 = 3;
 const REPLY_TIMEOUT_MS: u64 = 64;
@@ -50,7 +51,7 @@ pub fn online() -> bool {
         rx.len(),
         REPLY_TIMEOUT_MS,
     );
-    if n < (HDR_LEN + BODY_LEN) as i64 {
+    if n < (HDR_LEN + BODY_MIN) as i64 {
         return false;
     }
     let magic = u32::from_le_bytes([rx[0], rx[1], rx[2], rx[3]]);
@@ -61,7 +62,7 @@ pub fn online() -> bool {
     if magic != MAGIC || version != VERSION || op != OP_LEASE_STATUS {
         return false;
     }
-    if errno != 0 || body_len < BODY_LEN as u32 {
+    if errno != 0 || body_len < BODY_MIN as u32 {
         return false;
     }
     rx[HDR_LEN] >= STATE_BOUND

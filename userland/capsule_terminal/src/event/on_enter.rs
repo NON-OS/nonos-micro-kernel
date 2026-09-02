@@ -19,7 +19,10 @@ use nonos_libc::mk_time_millis;
 
 use crate::command;
 use crate::jobs;
+use crate::term::context::context_line;
+use crate::term::cwd::home_var;
 use crate::term::dimensions::COLS;
+use crate::term::identity::{hostname, USER};
 use crate::term::prompt::PROMPT_BYTES;
 use crate::term::state::State;
 use crate::term::util::{copy_into, format_u64};
@@ -31,6 +34,9 @@ pub fn on_enter(state: &mut State) -> EventOutcome {
     state.fresh = false;
     let started = mk_time_millis();
     state.open_block(crate::term::rtc::rtc_hms());
+    let mut ctx = [0u8; COLS];
+    let cn = context_line(USER, hostname(), state.cwd.as_bytes(), home_var(state), &mut ctx);
+    state.scrollback.push_line(&ctx[..cn]);
     let body = state.line.as_bytes();
     let mut entered = [0u8; COLS];
     let n = body.len();

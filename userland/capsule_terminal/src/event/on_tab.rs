@@ -16,7 +16,6 @@
 
 use alloc::vec::Vec;
 use nonos_app_skeleton::clients::vfs::list_paths;
-use nonos_app_skeleton::discover::lookup_service;
 use nonos_app_skeleton::EventOutcome;
 
 use super::complete::{command_candidates, common_prefix};
@@ -34,9 +33,6 @@ pub fn on_tab(state: &mut State) -> EventOutcome {
     let (cands, base): (Vec<Vec<u8>>, Vec<u8>) = if start == 0 {
         (command_candidates(word).iter().map(|c| c.to_vec()).collect(), word.to_vec())
     } else {
-        if state.owner_pid == 0 {
-            state.owner_pid = lookup_service(b"app.terminal").map(|p| p.pid).unwrap_or(0);
-        }
         let resolved = resolve(state.cwd.as_bytes(), word);
         match list_paths(state.owner_pid, &resolved) {
             Ok(paths) => (paths.iter().map(|s| s.as_bytes().to_vec()).collect(), resolved),

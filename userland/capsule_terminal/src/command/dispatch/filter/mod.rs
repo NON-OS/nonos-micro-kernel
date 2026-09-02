@@ -24,7 +24,7 @@ use alloc::vec::Vec;
 pub(super) fn apply(seg: &[&[u8]], input: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
     match seg.first().copied().unwrap_or(b"") {
         b"grep" => text::grep(&seg[1..], input),
-        b"sort" => text::sort(input),
+        b"sort" => text::sort(&seg[1..], input),
         b"uniq" => text::uniq(input),
         b"cut" => text::cut(&seg[1..], input),
         b"nl" => text::nl(input),

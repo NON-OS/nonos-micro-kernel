@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
+use alloc::vec::Vec;
 
+use super::home::HOME;
 use super::types::Cwd;
 
 impl Cwd {
     pub fn new() -> Self {
-        Cwd { path: vec![b'/'] }
+        Cwd { path: Vec::from(HOME) }
     }
 }

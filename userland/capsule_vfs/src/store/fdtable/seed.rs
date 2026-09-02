@@ -29,6 +29,7 @@ impl Store {
         // Scratch space; std's env::temp_dir() on NONOS points here.
         let _ = self.mkdir("/tmp");
         let _ = self.mkdir("/capsules");
+        let _ = self.mkdir("/home/nonos/workspace");
         self.seed_file("/readme.txt", README);
         self.seed_file("/docs/about.txt", ABOUT);
         self.seed_file("/docs/demo.txt", DEMO);

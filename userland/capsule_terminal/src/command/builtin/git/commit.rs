@@ -64,9 +64,7 @@ fn author() -> Signature {
     Signature {
         name: String::from("nonos"),
         email: String::from("user@nonos.systems"),
-        // Uptime, not wall clock: a NONOS session has no trusted epoch source
-        // here, and the field must still be monotonic across commits.
-        when: nonos_libc::mk_uptime_ms().max(0) as u64 / 1000,
+        when: nonos_libc::mk_time_millis().max(0) as u64 / 1000,
         offset_minutes: 0,
     }
 }

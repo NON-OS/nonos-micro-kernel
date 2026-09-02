@@ -14,15 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+mod accessory;
+mod accessory_click;
 mod app_impl;
 mod app_impl_manifest;
 mod app_impl_on_event;
 mod app_impl_on_tick;
 mod app_impl_paint;
 mod new;
+mod palette_act;
+mod palette_key;
+mod palette_pick;
+mod rail_click;
+mod rail_wheel;
 #[cfg(feature = "nonos-autorun-selftest")]
 pub mod selftest;
-mod tab_click;
 mod tabs;
 mod types;
 

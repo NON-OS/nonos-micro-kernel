@@ -80,6 +80,10 @@ name = "nonos_inflate"
 version = "0.3.0"
 
 [[package]]
+name = "nonos_policy_proto"
+version = "0.3.0"
+
+[[package]]
 name = "nonos_socket"
 version = "0.2.0"
 dependencies = [
@@ -95,8 +99,10 @@ dependencies = [
  "nonos_git",
  "nonos_http",
  "nonos_inflate",
+ "nonos_policy_proto",
  "nonos_socket",
  "nonos_tls",
+ "nonos_toolkit",
  "nonos_userland_libc",
 ]
 

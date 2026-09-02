@@ -14,53 +14,62 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! List a directory. Shows the immediate children of the target (the working
+//! List a directory. Shows the immediate children of each target (the working
 //! directory by default), directories suffixed with a slash, one per line.
+//! Flags take the usual short-option shape: `-l -a -h -1 -R -t -S`, clustered
+//! or separate, with `--` ending the flag run.
 
 use alloc::vec::Vec;
 
-use nonos_app_skeleton::clients::vfs;
-
-use super::{abspath, pid};
+use super::ls_emit::emit;
+use super::ls_flags::{parse, LsFlags};
+use super::ls_list::{children, visible};
+use super::abspath;
 use crate::command::output::Output;
 use crate::term::state::State;
 
 pub fn ls(state: &mut State, argv: &[&[u8]]) {
-    let arg = argv.get(1).copied().unwrap_or(b".");
+    let (flags, operands) = match parse(argv) {
+        Ok(parsed) => parsed,
+        Err(c) => {
+            let mut msg = Vec::from(&b"ls: unrecognized option -- "[..]);
+            msg.push(c);
+            Output::new(&mut state.scrollback).writeln(&msg);
+            return;
+        }
+    };
+    let mut queue: Vec<Vec<u8>> = Vec::new();
+    if operands.is_empty() {
+        queue.push(dirpath(state, b"."));
+    } else {
+        for operand in &operands {
+            queue.push(dirpath(state, operand));
+        }
+    }
+    let header = flags.recurse || queue.len() > 1;
+    walk(state, queue, &flags, header);
+}
+
+fn dirpath(state: &State, arg: &[u8]) -> Vec<u8> {
     let mut dir = abspath(state, arg);
     if dir.last() != Some(&b'/') {
         dir.push(b'/');
     }
-    let owner = pid(state);
-    let paths = match vfs::list_paths(owner, &dir) {
-        Ok(p) => p,
-        Err(e) => {
-            Output::new(&mut state.scrollback).writeln(e.as_bytes());
-            return;
+    dir
+}
+
+fn walk(state: &mut State, mut queue: Vec<Vec<u8>>, flags: &LsFlags, header: bool) {
+    let mut i = 0;
+    while i < queue.len() {
+        let dir = queue[i].clone();
+        i += 1;
+        if header && i > 1 {
+            Output::new(&mut state.scrollback).writeln(b"");
         }
-    };
-    let mut seen: Vec<Vec<u8>> = Vec::new();
-    for p in &paths {
-        let bytes = p.as_bytes();
-        let Some(rest) = bytes.strip_prefix(dir.as_slice()) else { continue };
-        if rest.is_empty() {
-            continue;
+        let Some(names) = children(state, &dir).map(|n| visible(n, flags.all)) else { continue };
+        let subs = emit(state, &dir, names, flags, header);
+        if flags.recurse {
+            queue.extend(subs);
         }
-        // First path segment under the directory is the direct child.
-        let cut = rest.iter().position(|&c| c == b'/').unwrap_or(rest.len());
-        let mut name = rest[..cut].to_vec();
-        if cut < rest.len() || bytes.last() == Some(&b'/') {
-            name.push(b'/');
-        }
-        if !name.is_empty() && !seen.contains(&name) {
-            seen.push(name);
-        }
-    }
-    if seen.is_empty() {
-        return;
-    }
-    let mut out = Output::new(&mut state.scrollback);
-    for name in &seen {
-        out.writeln(name);
     }
 }

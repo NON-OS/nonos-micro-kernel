@@ -47,11 +47,11 @@ pub struct State {
     /// An in-progress reverse search, or nothing when not searching.
     pub search: Option<crate::term::search::Search>,
     pub blocks: Vec<Block>,
-    // Body font zoom, adjusted with Ctrl+= / Ctrl+-. 1 = base bitmap size.
-    pub font_scale: u32,
-    // Terminal background, chosen by the active profile. May carry alpha below
-    // 0xFF, which the compositor blends so the desktop shows through.
-    pub bg: u32,
+    // Theme and zoom belong to the window, not the tab, so the deep command
+    // and key paths post a request here and Terminal drains it into the state
+    // it owns. None / 0 mean nothing was asked for.
+    pub theme_req: Option<u16>,
+    pub zoom_req: i32,
     pub jobs: JobTable,
     // Set when a statement is submitted as a foreground job: on_enter
     // stops consuming the line (v1 limit: statements after a foreground

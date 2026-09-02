@@ -38,4 +38,16 @@ impl App for Terminal {
     fn tick_interval_ms(&self) -> i64 {
         30
     }
+
+    fn titlebar_accessory_w(&self) -> u32 {
+        self.accessory_w()
+    }
+
+    fn paint_accessory(&mut self, fb: &mut PaintBuffer) {
+        self.paint_accessory_inner(fb)
+    }
+
+    fn on_accessory_event(&mut self, event: InputEvent) -> EventOutcome {
+        self.accessory_event(event)
+    }
 }

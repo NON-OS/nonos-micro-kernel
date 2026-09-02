@@ -32,6 +32,5 @@ pub(crate) mod search;
 pub(crate) mod search_edit;
 mod search_place;
 
-#[cfg(feature = "nonos-autorun-selftest")]
 pub use on_enter::on_enter;
 pub use on_event::on_event;

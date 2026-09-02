@@ -16,6 +16,7 @@
 
 pub mod builtin;
 pub mod dispatch;
+pub mod flags;
 pub mod output;
 pub mod parse;
 pub mod wire;

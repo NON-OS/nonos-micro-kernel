@@ -14,10 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::device::budget;
 use crate::device::rx;
 use crate::device::types::{NicRxToken, NicTxToken};
 
 pub fn receive(port: u32) -> Option<(NicRxToken, NicTxToken)> {
+    if !budget::poll_open() {
+        return None;
+    }
     let frame = rx::poll_frame(port)?;
     Some((NicRxToken(frame), NicTxToken { port }))
 }

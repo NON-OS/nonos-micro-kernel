@@ -14,9 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_libc::mk_getpid;
+
 use super::types::State;
 use crate::jobs::JobTable;
-use crate::term::cwd::Cwd;
+use crate::term::cwd::{Cwd, HOME};
 use crate::term::history::History;
 use crate::term::line::Line;
 use crate::term::scrollback::Scrollback;
@@ -28,17 +30,17 @@ impl State {
             history: History::new(),
             scrollback: Scrollback::new(),
             cwd: Cwd::new(),
-            owner_pid: 0,
+            owner_pid: mk_getpid(),
             fresh: true,
             start_ms: 0,
-            vars: alloc::vec::Vec::new(),
+            vars: alloc::vec![(alloc::vec::Vec::from(&b"HOME"[..]), alloc::vec::Vec::from(HOME))],
             last_status: 0,
             aliases: alloc::vec::Vec::new(),
             hist_prefix: alloc::vec::Vec::new(),
             search: None,
             blocks: alloc::vec::Vec::new(),
-            font_scale: 2,
-            bg: crate::term::theme::BACKGROUND,
+            theme_req: None,
+            zoom_req: 0,
             jobs: JobTable::new(),
             fg_running: false,
             fg_started_ms: 0,

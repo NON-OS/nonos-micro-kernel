@@ -27,6 +27,19 @@ impl Terminal {
             }
         }
         self.width = fb.width;
-        crate::paint::paint_tabs(&self.tabs, self.active, fb);
+        let theme = crate::term::theme::profiles::by_index(self.theme);
+        let l = crate::paint::paint_tabs(
+            &self.tabs,
+            self.active,
+            fb,
+            theme,
+            self.font_scale,
+            &self.rail,
+            self.prefs.project_slice(),
+            self.prefs.rails & 1 == 0,
+            self.rail_scroll,
+            &self.palette,
+        );
+        self.layout = Some(l);
     }
 }

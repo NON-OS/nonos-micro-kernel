@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
 
 use nonos_libc::mk_service_lookup;
 
@@ -36,6 +36,13 @@ const WIRED_NICS: &[&str] =
 // coming up after boot) should replace the one bound at startup.
 static BOUND_PORT: AtomicU32 = AtomicU32::new(0);
 
+/// How many NIC drivers one discovery pass may block on.
+const MAX_PROBES_PER_PASS: usize = 2;
+
+/// Where the next discovery pass resumes, so a long candidate list is swept
+/// across passes instead of inside one.
+static PROBE_CURSOR: AtomicUsize = AtomicUsize::new(0);
+
 /// The broker port of the interface the stack is bound to, or zero before the
 /// first bind. Read by the lease-status reply so a panel can see which NIC the
 /// stack chose when no address ever binds.
@@ -53,28 +60,56 @@ pub fn bound_port() -> u32 {
 // connects, while still preferring a wired NIC that genuinely has carrier. A
 // racing, dying wired capsule answers link_up with `None`, which is treated as
 // not-up and skipped rather than taking net_core down.
+// Each probe is a driver round trip the serve loop is blocked on, so a pass
+// spends at most MAX_PROBES_PER_PASS of them and resumes at the next candidate
+// a second later. Every real configuration registers one or two NIC drivers and
+// so still sweeps the whole list in a single pass.
+//
 // Last logged verdict per candidate: 0 unseen, 1 down, 2 no-answer. Indexed by
 // position in the WiFi-then-wired order, so a change logs once, not per tick.
 static PROBE_SEEN: [AtomicU32; 8] = [const { AtomicU32::new(0) }; 8];
 
 fn discover_nic() -> Option<u32> {
-    for (i, name) in WIFI_NICS.iter().chain(WIRED_NICS.iter()).enumerate() {
+    let count = WIFI_NICS.len() + WIRED_NICS.len();
+    let start = PROBE_CURSOR.load(Ordering::Relaxed);
+    let mut probes = 0usize;
+    for step in 0..count {
+        let idx = (start + step) % count;
+        let name = candidate(idx);
         let mut port: u32 = 0;
         let mut pid: u32 = 0;
         if mk_service_lookup(name.as_ptr(), name.len(), &mut port, &mut pid) != 0 {
             continue;
         }
+        probes += 1;
         match device::link_up(port) {
-            Some(true) => return Some(port),
+            Some(true) => {
+                PROBE_CURSOR.store(idx, Ordering::Relaxed);
+                return Some(port);
+            }
             verdict => {
                 let code = if verdict.is_none() { 2 } else { 1 };
-                if i < PROBE_SEEN.len() && PROBE_SEEN[i].swap(code, Ordering::Relaxed) != code {
+                if idx < PROBE_SEEN.len() && PROBE_SEEN[idx].swap(code, Ordering::Relaxed) != code {
                     probe_log(name, verdict);
                 }
             }
         }
+        if probes == MAX_PROBES_PER_PASS {
+            PROBE_CURSOR.store((idx + 1) % count, Ordering::Relaxed);
+            return None;
+        }
     }
+    PROBE_CURSOR.store(0, Ordering::Relaxed);
     None
+}
+
+/// The NIC name at `idx`, counting WiFi candidates before wired ones.
+fn candidate(idx: usize) -> &'static str {
+    if idx < WIFI_NICS.len() {
+        WIFI_NICS[idx]
+    } else {
+        WIRED_NICS[idx - WIFI_NICS.len()]
+    }
 }
 
 // Which NIC was found and why it was not bound. A silent None here reads as a

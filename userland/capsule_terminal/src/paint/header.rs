@@ -19,21 +19,21 @@ use nonos_app_skeleton::PaintBuffer;
 use super::constants::{HEADER_H, TEXT_LEFT};
 use super::shade::elevate;
 use crate::term::state::State;
-use crate::term::theme::{ACCENT, PATH};
+use crate::term::theme::types::Theme;
 
-pub fn draw_header(state: &State, fb: &mut PaintBuffer) {
-    fb.fill_rect(0, 0, fb.width, HEADER_H, elevate(state.bg, 10));
+pub fn draw_header(state: &State, fb: &mut PaintBuffer, t: &Theme) {
+    fb.fill_rect(0, 0, fb.width, HEADER_H, elevate(t.bg, 10));
     // A hairline under the header, and a short accent run at the left edge of
     // it. The mark sits where the eye starts a line, so the window says whose
     // it is without a bar of colour across the whole width.
-    fb.fill_rect(0, HEADER_H, fb.width, 1, elevate(state.bg, 22));
-    fb.fill_rect(0, HEADER_H, TEXT_LEFT * 4, 1, ACCENT);
-    let _ = fb.text_ttf(TEXT_LEFT as i32, 5, "\u{00D8} NONOS", ACCENT, 15.0);
+    fb.fill_rect(0, HEADER_H, fb.width, 1, elevate(t.bg, 22));
+    fb.fill_rect(0, HEADER_H, TEXT_LEFT * 4, 1, t.accent);
+    let _ = fb.text_ttf(TEXT_LEFT as i32, 5, "\u{00D8} NONOS", t.accent, 15.0);
     let cwd = state.cwd.as_bytes();
     let take = cwd.len().min(48);
     let start = cwd.len() - take;
     let cwd_str = core::str::from_utf8(&cwd[start..]).unwrap_or("");
     let width = fb.measure_ttf(cwd_str, 13.0).max(0) as u32;
     let x = fb.width.saturating_sub(width + TEXT_LEFT);
-    let _ = fb.text_ttf(x as i32, 7, cwd_str, PATH, 13.0);
+    let _ = fb.text_ttf(x as i32, 7, cwd_str, t.path, 13.0);
 }

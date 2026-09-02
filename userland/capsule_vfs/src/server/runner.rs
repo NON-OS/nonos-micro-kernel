@@ -16,7 +16,7 @@
 
 use alloc::vec;
 
-use nonos_libc::{mk_debug, mk_ipc_recv_from, mk_ipc_send};
+use nonos_libc::{mk_debug, mk_ipc_recv_from, mk_ipc_reply, mk_ipc_send};
 
 use super::dispatch::dispatch;
 use super::seeder::PackageSeeder;
@@ -55,7 +55,11 @@ pub fn run() -> ! {
             Ok(req) => dispatch(&mut store, req, sender_pid),
             Err(_) => encode_response(0, 0, 0, EINVAL, &[]),
         };
-        let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, resp.as_ptr(), resp.len());
+        if sender_pid == 0 {
+            let _ = mk_ipc_send(KERNEL_REPLY_ENDPOINT, resp.as_ptr(), resp.len());
+        } else {
+            let _ = mk_ipc_reply(sender_pid, resp.as_ptr(), resp.len());
+        }
         // A handler that outlives its caller's timeout turns every reply into
         // a drop and reads as a dead service. Name the op and the cost.
         let spent = nonos_libc::mk_uptime_ms().saturating_sub(started);

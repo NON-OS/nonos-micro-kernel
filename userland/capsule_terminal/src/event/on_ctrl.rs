@@ -110,11 +110,11 @@ pub fn on_ctrl(state: &mut State, code: u32, flags: u16) -> Option<EventOutcome>
         }
         // Ctrl+= / Ctrl++ zoom the body font in, Ctrl+- / Ctrl+_ out (1..=4).
         ZOOM_IN_EQ | ZOOM_IN_PLUS => {
-            state.font_scale = (state.font_scale + 1).min(MAX_FONT_SCALE);
+            state.zoom_req += 1;
             Some(EventOutcome::Repaint)
         }
         ZOOM_OUT_MINUS | ZOOM_OUT_USCORE => {
-            state.font_scale = state.font_scale.saturating_sub(1).max(1);
+            state.zoom_req -= 1;
             Some(EventOutcome::Repaint)
         }
         _ => None,
@@ -125,4 +125,3 @@ const ZOOM_IN_EQ: u32 = 0x3D; // '='
 const ZOOM_IN_PLUS: u32 = 0x2B; // '+'
 const ZOOM_OUT_MINUS: u32 = 0x2D; // '-'
 const ZOOM_OUT_USCORE: u32 = 0x5F; // '_'
-const MAX_FONT_SCALE: u32 = 6;
