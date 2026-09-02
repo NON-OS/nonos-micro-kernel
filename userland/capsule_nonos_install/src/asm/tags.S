@@ -28,3 +28,5 @@
 .set SYS_VERIFY,       0x4656434D     # "MCVF" capsule verify: req, out
 .set SYS_DEVICE_LIST,  0x534C444D     # "MDLS" enumerate: class, buf, count
 .set SYS_ATTEST_STATUS,0x5453414D     # "MAST" boot attestation: out
+.set SYS_SERVICE_LOOKUP,0x4C56534D    # "MSVL" resolve: name, len, port, pid
+.set SYS_IPC_CALL,     0x4C43494D     # "MICL" call: ep, req, len, resp, cap, ms

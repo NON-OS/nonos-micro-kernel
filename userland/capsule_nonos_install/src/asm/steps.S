@@ -34,7 +34,6 @@
     ret
 .endm
 
-STEP step_compose
 STEP step_mint_root
 STEP step_enroll
 STEP step_write_esp
