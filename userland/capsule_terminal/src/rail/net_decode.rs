@@ -18,15 +18,17 @@ use super::net::Net;
 use super::value::Metric;
 
 pub const HDR_LEN: usize = 20;
-pub const BODY_LEN: usize = 18;
+pub const BODY_LEN: usize = 22;
+pub const BODY_MIN: usize = 18;
 pub const REPLY_LEN: usize = HDR_LEN + BODY_LEN;
+pub const REPLY_MIN: usize = HDR_LEN + BODY_MIN;
 
 const BOUND_STATE: u8 = 3;
 
 /// A reply short of a whole lease body, or one carrying a pre-bound state, is
 /// an interface with no address rather than an address of zero.
 pub fn decode_lease(rx: &[u8]) -> Net {
-    if rx.len() < REPLY_LEN || rx[HDR_LEN] < BOUND_STATE {
+    if rx.len() < REPLY_MIN || rx[HDR_LEN] < BOUND_STATE {
         return Net::DOWN;
     }
     Net {

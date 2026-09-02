@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+pub mod budget;
 pub mod capabilities;
 pub mod link_up;
 pub mod mac;
@@ -29,12 +30,7 @@ pub mod tx_seq;
 pub mod tx_token;
 pub mod types;
 
+pub use budget::DEVICE_CALL_MS;
 pub use link_up::link_up;
 pub use read_mac::mac;
 pub use types::NicDevice;
-
-/// The timeout for a single request to a NIC driver. Bounded and short so a slow
-/// or dead interface (a cable-less wired NIC that answers link-up but never
-/// carries traffic) can never stall the poll loop, keeping the stack responsive
-/// and free to re-evaluate onto the WiFi link the moment it associates.
-pub const DEVICE_CALL_MS: u64 = 250;

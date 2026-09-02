@@ -17,7 +17,7 @@
 use nonos_libc::{mk_ipc_call_timeout, mk_service_lookup};
 
 use super::net::Net;
-use super::net_decode::{decode_lease, HDR_LEN, REPLY_LEN};
+use super::net_decode::{decode_lease, HDR_LEN, REPLY_LEN, REPLY_MIN};
 
 const SERVICE: &[u8] = b"net.dhcp.client";
 const MAGIC: u32 = 0x4E44_4843;
@@ -52,8 +52,8 @@ pub fn query() -> Net {
         rx.len(),
         TIMEOUT_MS,
     );
-    if n < REPLY_LEN as i64 {
+    if n < REPLY_MIN as i64 {
         return Net::DOWN;
     }
-    decode_lease(&rx)
+    decode_lease(&rx[..n as usize])
 }
