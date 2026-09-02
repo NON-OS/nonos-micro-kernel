@@ -94,6 +94,12 @@ pub struct ProcStatHeader {
     pub total_ticks: u64,
     pub count: u32,
     pub _pad: u32,
+    // Physical memory the boot memory map handed the allocator, so a monitor
+    // can size a usage bar without a second syscall.
+    pub mem_total_kb: u64,
+    // 1/5/15-minute load averages in Q11 fixed point: 2048 reads as 1.00.
+    // Integer-only so the syscall ABI never carries a float.
+    pub load_avg_fixed: [u64; 3],
 }
 
 pub fn sys_proc_stat(buf_ptr: u64, max_entries: u64) -> i64 {
@@ -110,6 +116,8 @@ pub fn sys_proc_stat(buf_ptr: u64, max_entries: u64) -> i64 {
         total_ticks: crate::interrupts::timer::state::get_ticks(),
         count: to_write as u32,
         _pad: 0,
+        mem_total_kb: crate::memory::phys::allocator::phys_total_memory() / 1024,
+        load_avg_fixed: crate::fs::procfs::load_averages_fixed(),
     };
     if write_user_value(buf_ptr, &header).is_err() {
         return ERRNO_FAULT;
