@@ -92,7 +92,7 @@ jobs:
           sha256sum -c SHA256SUMS
           ls -l
 
-      - uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228
         with:
           files: release/*
           fail_on_unmatched_files: true
