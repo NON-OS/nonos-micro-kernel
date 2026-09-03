@@ -650,6 +650,13 @@ endif
 nonos-mk-stark-enroll-capsules: $(ZK_CAPSULE_ROOT)
 	@echo "Enrolled the capsule set under the STARK policy root $(ZK_CAPSULE_ROOT)"
 
+# Every verified capsule binary, the exact set the trust chain covers.
+# The enrollment builder uses this so no capsule can be silently absent
+# from what gets enrolled; the hand-listed host-trust subset is not it.
+.PHONY: nonos-mk-verified-elfs
+nonos-mk-verified-elfs: $(foreach s,$(NONOS_VERIFIED_CAPSULES),$($(s)_BIN))
+	@echo "Built $(words $(NONOS_VERIFIED_CAPSULES)) verified capsule binaries."
+
 # One capsule binary path per line, for tooling that mirrors the set:
 # the enrollment builder packages exactly this list, nothing inferred.
 .PHONY: nonos-mk-print-verified-bins

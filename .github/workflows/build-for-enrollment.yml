@@ -37,7 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           bash nonos-ci/setup-signing-key.sh
-          make nonos-mk-host-trust-elfs
+          make nonos-mk-verified-elfs
 
       - name: Package with a measurement manifest
         run: |
