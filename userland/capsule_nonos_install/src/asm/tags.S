@@ -25,7 +25,7 @@
 .set SYS_DEBUG,        0x4742444D     # "MDBG" serial trace:  ptr, len
 .set SYS_EXIT,         0x5458454D     # "MEXT" terminate:     code
 .set SYS_YIELD,        0x444C594D     # "MYLD"
-.set SYS_VERIFY,       0x4656434D     # "MCVF" capsule verify: req, out
+.set SYS_CAPSULE_VERIFY,0x4656434D    # "MCVF" capsule verify: req, out
 .set SYS_DEVICE_LIST,  0x534C444D     # "MDLS" enumerate: class, buf, count
 .set SYS_ATTEST_STATUS,0x5453414D     # "MAST" boot attestation: out
 .set SYS_SERVICE_LOOKUP,0x4C56534D    # "MSVL" resolve: name, len, port, pid

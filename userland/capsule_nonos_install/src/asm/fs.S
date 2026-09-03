@@ -44,7 +44,7 @@ fs_resp: .skip FS_RESP_CAP + 8
 .p2align 4
 fs_locate:
     lea     rdi, [rip + fs_name]
-    mov     esi, fs_name_len
+    mov     esi, dword ptr [rip + fs_name_len_w]
     lea     rdx, [rip + fs_port]
     xor     r10d, r10d
     mov     eax, SYS_SERVICE_LOOKUP

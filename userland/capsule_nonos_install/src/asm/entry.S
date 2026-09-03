@@ -23,6 +23,8 @@
 .section .data
 step_no: .ascii "[0/7] "
 .set step_no_len, . - step_no
+.p2align 2
+step_no_len_w: .long step_no_len
 
 # The capsule links position independent, so the table stores offsets
 # from its own base rather than addresses; the walker adds the base
@@ -42,7 +44,7 @@ steps:
 .global _start
 _start:
     lea     rdi, [rip + banner]
-    mov     esi, banner_len
+    mov     esi, dword ptr [rip + banner_len_w]
     call    console_write
     xor     ebx, ebx                    # step index
 1:
@@ -52,7 +54,7 @@ _start:
     add     cl, '0'
     mov     byte ptr [rax + 1], cl
     mov     rdi, rax
-    mov     esi, step_no_len
+    mov     esi, dword ptr [rip + step_no_len_w]
     call    console_write
     lea     rax, [rip + steps]
     imul    rcx, rbx, 24
@@ -71,7 +73,7 @@ _start:
     cmp     rbx, 7
     jb      1b
     lea     rdi, [rip + done]
-    mov     esi, done_len
+    mov     esi, dword ptr [rip + done_len_w]
     call    console_write
     xor     edi, edi
     jmp     3f

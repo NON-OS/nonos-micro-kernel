@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-# Step 3: read the boot chain's own verdict. MkAttestStatus hands back
+# The boot chain's own verdict, printed ahead of the capsule set.
+# MkAttestStatus hands back
 # the measurements the bootloader recorded before the kernel ran: the
 # STARK verification bit, the kernel signature bit, secure boot, and the
 # two 32-byte roots. Nothing is recomputed here; an installer that
@@ -24,9 +25,9 @@
 attbuf: .skip 68                        # AttestStatusAbi: 4 flags + 2 hashes
 
 .text
-.global step_prove
+.global boot_verdict
 .p2align 4
-step_prove:
+boot_verdict:
     push    rbx
     lea     rdi, [rip + attbuf]
     mov     eax, SYS_ATTEST_STATUS
@@ -46,11 +47,11 @@ step_prove:
     pop     rcx
     push    rcx
     lea     rdi, [rip + t_yes]
-    mov     esi, t_yes_len
+    mov     esi, dword ptr [rip + t_yes_len_w]
     cmp     byte ptr [rbx + rcx], 0
     jne     3f
     lea     rdi, [rip + t_no]
-    mov     esi, t_no_len
+    mov     esi, dword ptr [rip + t_no_len_w]
 3:
     call    console_write
     pop     rcx
@@ -58,19 +59,19 @@ step_prove:
     cmp     rcx, 4
     jb      1b
     lea     rdi, [rip + t_kroot]
-    mov     esi, t_kroot_len
+    mov     esi, dword ptr [rip + t_kroot_len_w]
     call    console_write
     lea     rdi, [rbx + 4]
     mov     esi, 32
     call    print_hex_bytes
     lea     rdi, [rip + t_proot]
-    mov     esi, t_proot_len
+    mov     esi, dword ptr [rip + t_proot_len_w]
     call    console_write
     lea     rdi, [rbx + 36]
     mov     esi, 32
     call    print_hex_bytes
     lea     rdi, [rip + nl]
-    mov     esi, nl_len
+    mov     esi, dword ptr [rip + nl_len_w]
     call    console_write
     xor     eax, eax
 2:

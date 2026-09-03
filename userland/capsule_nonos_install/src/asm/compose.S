@@ -25,6 +25,7 @@
 
 .section .bss
 set_buf: .skip SET_CAP
+set_len: .skip 4
 
 .text
 .global step_compose
@@ -35,7 +36,7 @@ step_compose:
     test    rax, rax
     js      5f
     lea     rdi, [rip + set_path]
-    mov     esi, set_path_len
+    mov     esi, dword ptr [rip + set_path_len_w]
     call    fs_open
     test    rax, rax
     js      5f
@@ -52,22 +53,23 @@ step_compose:
     test    rax, rax
     js      5f
     jz      5f                          # an empty set installs nothing
+    mov     [rip + set_len], eax
     push    rax
     lea     rdi, [rip + t_set]
-    mov     esi, t_set_len
+    mov     esi, dword ptr [rip + t_set_len_w]
     call    console_write
     pop     rsi
     lea     rdi, [rip + set_buf]
     call    console_write
     lea     rdi, [rip + nl]
-    mov     esi, nl_len
+    mov     esi, dword ptr [rip + nl_len_w]
     call    console_write
     xor     eax, eax
     pop     rbx
     ret
 5:
     lea     rdi, [rip + t_noset]
-    mov     esi, t_noset_len
+    mov     esi, dword ptr [rip + t_noset_len_w]
     call    console_write
     mov     eax, 1
     pop     rbx

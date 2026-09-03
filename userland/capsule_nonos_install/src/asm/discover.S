@@ -41,20 +41,20 @@ step_discover:
     js      3f                          # refusal propagates to the ritual
     mov     r12, rax                    # rows written
     lea     rdi, [rip + t_devcount]
-    mov     esi, t_devcount_len
+    mov     esi, dword ptr [rip + t_devcount_len_w]
     call    console_write
     mov     rdi, r12
     mov     esi, 2
     call    print_hex
     lea     rdi, [rip + nl]
-    mov     esi, nl_len
+    mov     esi, dword ptr [rip + nl_len_w]
     call    console_write
     xor     ebx, ebx
 1:
     cmp     rbx, r12
     jae     2f
     lea     rdi, [rip + t_dev]
-    mov     esi, t_dev_len
+    mov     esi, dword ptr [rip + t_dev_len_w]
     call    console_write
     imul    rax, rbx, DEV_STRIDE
     lea     rcx, [rip + devtab]
@@ -62,7 +62,7 @@ step_discover:
     mov     esi, 16
     call    print_hex
     lea     rdi, [rip + t_pci]
-    mov     esi, t_pci_len
+    mov     esi, dword ptr [rip + t_pci_len_w]
     call    console_write
     imul    rax, rbx, DEV_STRIDE
     lea     rcx, [rip + devtab]
@@ -73,7 +73,7 @@ step_discover:
     mov     esi, 8
     call    print_hex
     lea     rdi, [rip + nl]
-    mov     esi, nl_len
+    mov     esi, dword ptr [rip + nl_len_w]
     call    console_write
     inc     rbx
     jmp     1b

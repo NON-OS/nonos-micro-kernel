@@ -28,7 +28,7 @@
 .p2align 4
 \name:
     lea     rdi, [rip + pending]
-    mov     esi, pending_len
+    mov     esi, dword ptr [rip + pending_len_w]
     call    console_write
     xor     eax, eax
     ret

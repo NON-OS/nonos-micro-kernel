@@ -23,6 +23,8 @@
 .macro STR name, text:vararg
 \name: .ascii \text
 .set \name\()_len, . - \name
+.p2align 2
+\name\()_len_w: .long \name\()_len
 .endm
 
 STR banner,  "NONOS install\n==============\n"
@@ -44,11 +46,19 @@ STR fs_name,    "ramfs"
 STR set_path,   "/install/set"
 STR t_set,      "  install set on this medium:\n"
 STR t_noset,    "  no install set on this medium; not an installer image\n"
+STR set_prefix, "/install/"
+STR e_elf,      "elf"
+STR e_cert,     "cert"
+STR e_man,      "manifest"
+STR e_trl,      "trailer"
+STR t_capsule,  "  "
+STR t_proved,   " proved, caps 0x"
+STR t_refusal,  " REFUSED; the medium cannot prove its set\n"
 STR t_proot,    "\n  program hash   "
 
 STR s1, "survey the machine\n"
 STR s2, "compose the system image\n"
-STR s3, "read the boot chain verdict\n"
+STR s3, "prove the boot chain and every capsule\n"
 STR s4, "mint the machine attestation root\n"
 STR s5, "enroll and sign the composed image\n"
 STR s6, "write the boot partition\n"
