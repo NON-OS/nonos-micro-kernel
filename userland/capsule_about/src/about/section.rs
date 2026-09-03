@@ -45,8 +45,8 @@ impl Section {
             Section::Licenses => b"Licenses",
         }
     }
-    // The muted line on the right of the head band: what this screen is evidence
-    // of, not a restatement of its name.
+    /// The muted line on the right of the head band: what this screen is evidence
+    /// of, not a restatement of its name.
     pub fn head_meta(self) -> &'static [u8] {
         match self {
             Section::Overview => b"identity and terms",
