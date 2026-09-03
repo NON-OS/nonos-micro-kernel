@@ -1,8 +1,8 @@
 // NONOS Operating System (AGPL-3.0-or-later)
 use crate::constants::{MAX_SECTORS_PER_REQUEST, SECTOR_SIZE};
 use crate::protocol::{
-    decode_request, encode_response_header, read_u32_le, read_u64_le, Request, E_INVAL,
-    E_MSGSIZE, E_NXIO, HDR_LEN, RW_HEADER_LEN,
+    decode_request, encode_response_header, read_u32_le, read_u64_le, Request, E_INVAL, E_MSGSIZE,
+    E_NXIO, HDR_LEN, RW_HEADER_LEN,
 };
 
 const MAGIC: u32 = 0x4E42_4C4B; // "NBLK", the wire tag from protocol/header.rs
@@ -125,8 +125,7 @@ fn write_parse_never_panics_and_accepts_only_exact_frames() {
             }
             _ => {}
         }
-        let payload_len =
-            if seed % 2 == 0 { body.len() as u32 } else { xorshift(&mut s) as u32 };
+        let payload_len = if seed % 2 == 0 { body.len() as u32 } else { xorshift(&mut s) as u32 };
         let d = driver(capacity);
 
         if let Ok((plba, pn, bytes_n)) = parse_write(&d, &req(payload_len), &body) {
@@ -158,10 +157,7 @@ fn write_parse_enforces_the_exact_boundaries() {
     short.pop();
     assert_eq!(parse_write(&d, &hdr, &short).err(), Some(E_MSGSIZE));
     assert_eq!(parse_write(&d, &hdr, &rw_body(cap, 1, n1)).err(), Some(E_NXIO));
-    assert_eq!(
-        parse_write(&d, &req(RW_HEADER_LEN as u32), &rw_body(0, 0, 0)).err(),
-        Some(E_INVAL)
-    );
+    assert_eq!(parse_write(&d, &req(RW_HEADER_LEN as u32), &rw_body(0, 0, 0)).err(), Some(E_INVAL));
     let m = MAX_SECTORS_PER_REQUEST;
     let over = rw_body(0, m + 1, (m + 1) as usize * SECTOR_SIZE);
     assert_eq!(parse_write(&d, &req(over.len() as u32), &over).err(), Some(E_INVAL));
@@ -224,4 +220,40 @@ fn encoded_response_headers_decode_back_to_the_request_fields() {
         assert_eq!(back.request_id, request.request_id);
         assert_eq!(back.payload_len, payload_len);
     }
+}
+
+// Write authority.
+
+#[test]
+fn mutating_ops_answer_only_the_kernel_or_the_attested_installer() {
+    use crate::protocol::{OP_CAPACITY, OP_FLUSH, OP_HEALTHCHECK, OP_READ_BLOCKS, OP_WRITE_BLOCKS};
+    use crate::server::acl::rule::allows;
+    for op in [OP_WRITE_BLOCKS, OP_FLUSH] {
+        assert!(allows(op, 0, false), "the kernel client must never be refused");
+        assert!(!allows(op, 7, false), "an unattested capsule reached a mutating op");
+        assert!(allows(op, 7, true), "the attested installer was refused");
+    }
+    for op in [OP_CAPACITY, OP_READ_BLOCKS, OP_HEALTHCHECK, 0xffff] {
+        assert!(allows(op, 7, false), "the read side must stay open as before");
+    }
+}
+
+#[test]
+fn the_installer_name_matches_exactly_or_not_at_all() {
+    use crate::server::acl::rule::{entry_names_installer, INSTALLER_NAME};
+    let want = INSTALLER_NAME.len() as u8;
+    let mut name = [0u8; 24];
+    name[..INSTALLER_NAME.len()].copy_from_slice(INSTALLER_NAME);
+    assert!(entry_names_installer(&name, want));
+
+    let mut longer = name;
+    longer[INSTALLER_NAME.len()] = b'x';
+    assert!(!entry_names_installer(&longer, want + 1), "a prefix extension passed");
+    assert!(!entry_names_installer(&name, want - 1), "a truncation passed");
+
+    let mut off = name;
+    off[0] ^= 1;
+    assert!(!entry_names_installer(&off, want), "a one-bit name change passed");
+
+    assert!(!entry_names_installer(&name[..4], want), "a length past the buffer passed");
 }
