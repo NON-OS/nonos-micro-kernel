@@ -415,7 +415,12 @@ $(foreach t,$(NONOS_TOOL_BINS),$(eval $(call nonos_upstream_tool_rule,$(t))))
 .PHONY: nonos-mk-upstream-tools
 nonos-mk-upstream-tools: $(foreach t,$(NONOS_TOOL_BINS),$(TARGET_DIR)/upstream-$(t)/bin/$(t))
 
-$(CAPSULE_SIGN_BIN):
+# Real source prerequisites, same shape as BOOTLOADER_SRCS: a restored
+# cache can hand back a stale binary, and a bare file target would then
+# never consult cargo again, so a submodule bump never reached the tool.
+CAPSULE_SIGN_SRCS := $(shell find nonos-sign/src -type f -name '*.rs' 2>/dev/null) \
+                     nonos-sign/Cargo.toml nonos-sign/Cargo.lock
+$(CAPSULE_SIGN_BIN): $(CAPSULE_SIGN_SRCS)
 	@echo "Building capsule-sign host tool..."
 	@cd nonos-sign && cargo build --release --bin capsule-sign
 
