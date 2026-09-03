@@ -37,7 +37,9 @@ jobs:
         run: |
           set -euo pipefail
           bash nonos-ci/setup-signing-key.sh
-          make nonos-mk-verified-elfs
+          # The builder is a production-mode actor: under reuse no rule
+          # may demand a seed, and the ELF build graph needs none.
+          NONOS_TRUST_REUSE=1 make nonos-mk-verified-elfs
 
       - name: Package with a measurement manifest
         run: |
