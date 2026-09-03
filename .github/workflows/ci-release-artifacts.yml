@@ -46,6 +46,9 @@ jobs:
       - uses: ./.github/actions/nonos-setup
         with:
           targets: x86_64-nonos,x86_64-unknown-uefi
+          # qemu=true is what installs gdisk and mtools; the usb image rule
+          # (sgdisk, mformat, mcopy) dies with a bare 127 without them.
+          qemu: "true"
           module: release
       - name: Provision production trust material
         env:
