@@ -282,7 +282,15 @@ nonos-mk-boot-terminal:
 		$(MAKE) -B nonos-mk-terminal-sign >/dev/null 2>&1; \
 		exit $$rc
 
-nonos-mk-plan-a-runtime: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
+# The kernel build and the ESP pack are sequential sub-makes, never sibling
+# prerequisites: under -j the ESP chain wins the race on a clean tree, finds
+# no kernel ELF, and the default rule builds the featureless microkernel-core
+# image into the same output path. The ESP then boots a kernel whose capsule
+# embeds are all empty stubs, and every spawn refuses with a cert EOF. Dev
+# trees never see it because a feature kernel is already newer than the rule.
+nonos-mk-plan-a-runtime: $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
+	@$(MAKE) --no-print-directory nonos-mk-desktop-gui-prod
+	@$(MAKE) --no-print-directory nonos-mk-esp
 	@QEMU="$(QEMU)" OVMF="$(OVMF)" OVMF_VARS="$(OVMF_VARS)" \
 		QEMU_OVMF_VARS_RW="$(QEMU_OVMF_VARS_RW)" QEMU_BLK_IMG="$(QEMU_BLK_IMG)" \
 		ESP_DIR="$(ESP_DIR)" ./nonos-ci/plan-a-runtime.sh
