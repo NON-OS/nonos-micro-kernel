@@ -59,10 +59,16 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${SIGNING_KEY_BASE64:-}" ]; then
+            # Production image: the committed trust set is the truth. The
+            # bootstrap would regenerate it under scratch anchors and the
+            # ledger check would then refuse its own tree.
             mkdir -p nonos-bootloader/keys
             echo "$SIGNING_KEY_BASE64" | base64 -d > nonos-bootloader/keys/signing_key_v1.bin
+            echo "NONOS_TRUST_REUSE=1" >> "$GITHUB_ENV"
+            echo "NONOS_DEVICE_BINDING=unbound" >> "$GITHUB_ENV"
+          else
+            bash nonos-ci/scratch-trust-bootstrap.sh
           fi
-          bash nonos-ci/scratch-trust-bootstrap.sh
           make nonos-mk-check-trust-manifest
 
       # The enrolled ZK device root the bootloader binds (transparent boot path).

@@ -7,7 +7,12 @@
 
 # ZK attestation: transparent enrolled-secret tools
 
-$(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(ZK_CAPSULE_PROOF_TOOL): nonos-mk-check-deps
+# Every host tool tracks its sources. A restored cache hands back old
+# binaries, and a rule with no file prerequisites would treat them as
+# final; the sources keep cargo the authority on staleness.
+ZK_TOOL_SRCS := $(shell find $(ZK_CIRCUIT_DIR)/src -type f -name '*.rs' 2>/dev/null) \
+                $(ZK_CIRCUIT_DIR)/Cargo.toml
+$(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(ZK_CAPSULE_PROOF_TOOL): nonos-mk-check-deps $(ZK_TOOL_SRCS)
 	@echo "Building transparent ZK attestation tools..."
 	@cd $(ZK_CIRCUIT_DIR) && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --bin transparent-enroll --bin transparent-prove --bin transparent-verify --bin capsule-attest-proof --target $(HOST_TARGET)
@@ -15,7 +20,9 @@ $(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(Z
 nonos-mk-zk-tools: $(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(ZK_CAPSULE_PROOF_TOOL)
 
 # Transparent STARK enrollment tool, the production capsule attestation prover.
-$(NONOS_STARK_ENROLL): nonos-mk-check-deps
+STARK_ENROLL_SRCS := $(shell find nonos-stark-enroll/src -type f -name '*.rs' 2>/dev/null) \
+                     nonos-stark-enroll/Cargo.toml
+$(NONOS_STARK_ENROLL): nonos-mk-check-deps $(STARK_ENROLL_SRCS)
 	@echo "Building transparent STARK enrollment tool..."
 	@cd nonos-stark-enroll && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
@@ -92,12 +99,16 @@ nonos-mk-attestation-receipt: $(TARGET_DIR)/kernel_attested.bin
 		"$(NONOS_ZK_ROOT_FPR)" "$(TARGET_DIR)/kernel_attested.bin" > $(NONOS_RECEIPT)
 	@cat $(NONOS_RECEIPT)
 
-$(EMBED_TOOL): nonos-mk-check-deps
+EMBED_TOOL_SRCS := $(shell find $(BOOTLOADER_DIR)/tools/embed-zk-proof/src -type f -name '*.rs' 2>/dev/null) \
+                   $(BOOTLOADER_DIR)/tools/embed-zk-proof/Cargo.toml
+$(EMBED_TOOL): nonos-mk-check-deps $(EMBED_TOOL_SRCS)
 	@echo "Building ZK embed tool..."
 	@cd $(BOOTLOADER_DIR)/tools/embed-zk-proof && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
 
-$(SIGN_TOOL): nonos-mk-check-deps
+SIGN_TOOL_SRCS := $(shell find $(BOOTLOADER_DIR)/tools/sign-kernel/src -type f -name '*.rs' 2>/dev/null) \
+                  $(BOOTLOADER_DIR)/tools/sign-kernel/Cargo.toml
+$(SIGN_TOOL): nonos-mk-check-deps $(SIGN_TOOL_SRCS)
 	@echo "Building kernel signing tool..."
 	@cd $(BOOTLOADER_DIR)/tools/sign-kernel && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
@@ -415,7 +426,12 @@ $(foreach t,$(NONOS_TOOL_BINS),$(eval $(call nonos_upstream_tool_rule,$(t))))
 .PHONY: nonos-mk-upstream-tools
 nonos-mk-upstream-tools: $(foreach t,$(NONOS_TOOL_BINS),$(TARGET_DIR)/upstream-$(t)/bin/$(t))
 
-$(CAPSULE_SIGN_BIN):
+# Real source prerequisites, same shape as BOOTLOADER_SRCS: a restored
+# cache can hand back a stale binary, and a bare file target would then
+# never consult cargo again, so a submodule bump never reached the tool.
+CAPSULE_SIGN_SRCS := $(shell find nonos-sign/src -type f -name '*.rs' 2>/dev/null) \
+                     nonos-sign/Cargo.toml nonos-sign/Cargo.lock
+$(CAPSULE_SIGN_BIN): $(CAPSULE_SIGN_SRCS)
 	@echo "Building capsule-sign host tool..."
 	@cd nonos-sign && cargo build --release --bin capsule-sign
 
@@ -461,6 +477,14 @@ nonos-mk-verify-trust: nonos-mk-desktop-gui-prod
 	@$(MAKE) nonos-mk-host-trust-verify
 	@$(MAKE) nonos-mk-check-trust-manifest
 
+# Nothing signs in a reuse build, so no seed is required to exist.
+ifeq ($(NONOS_TRUST_REUSE),1)
+nonos-mk-check-trust-keys:
+	@true
+
+$(NONOS_TRUST_ANCHOR_POLICY_BIN):
+	@test -f $@ || { echo "::error::$@ is not committed; a reuse build cannot seal it"; exit 1; }
+else
 nonos-mk-check-trust-keys:
 	@for f in $(NONOS_TA_ED25519_SEED) $(NONOS_TA_ED25519_PUB) \
 	          $(NONOS_TA_MLDSA65_SEED) $(NONOS_TA_MLDSA65_PUB); do \
@@ -479,6 +503,7 @@ $(NONOS_TRUST_ANCHOR_POLICY_BIN): $(NONOS_TA_ED25519_PUB) $(NONOS_TA_MLDSA65_PUB
 		--valid-from-ms  $(NONOS_CERT_VALID_FROM_MS) \
 		--valid-until-ms $(NONOS_CERT_VALID_UNTIL_MS) \
 		--out $@
+endif
 
 nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 
@@ -605,16 +630,31 @@ $(ZK_CAPSULE_LABELS): $(NONOS_VERIFIED_CAPSULE_MKS) Makefile
 # a binary that has to exist for that architecture.
 NONOS_ENROLLED_CAPSULES ?= $(NONOS_VERIFIED_CAPSULES)
 
+# A reuse build never re-enrolls: the committed root and trailers are
+# the enrolled truth, and the per-capsule manifest checks already pin
+# every fresh ELF to its enrolled measurement. Re-running the grinder
+# here would replace owner-enrolled artifacts with pipeline ones.
+ifeq ($(NONOS_TRUST_REUSE),1)
+$(ZK_CAPSULE_ROOT):
+	@test -f $@ || { echo "::error::$@ is not committed; a reuse build cannot enroll"; exit 1; }
+else
 $(ZK_CAPSULE_ROOT): $(NONOS_STARK_ENROLL) \
 		$(foreach s,$(NONOS_ENROLLED_CAPSULES),$($(s)_BIN) $($(s)_MANIFEST))
 	@echo "Enrolling $(words $(NONOS_ENROLLED_CAPSULES)) capsules under one transparent STARK policy root..."
 	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(NONOS_BAKED_TRUST_DIR)/capsules
 	@$(NONOS_STARK_ENROLL) capsules $(ZK_CAPSULE_ROOT) \
 		$(foreach s,$(NONOS_ENROLLED_CAPSULES),$($(s)_REQUIRED_CAPS):$($(s)_BIN):$($(s)_ATTESTATION))
+endif
 
 .PHONY: nonos-mk-stark-enroll-capsules
 nonos-mk-stark-enroll-capsules: $(ZK_CAPSULE_ROOT)
 	@echo "Enrolled the capsule set under the STARK policy root $(ZK_CAPSULE_ROOT)"
+
+# One capsule binary path per line, for tooling that mirrors the set:
+# the enrollment builder packages exactly this list, nothing inferred.
+.PHONY: nonos-mk-print-verified-bins
+nonos-mk-print-verified-bins:
+	@$(foreach s,$(NONOS_VERIFIED_CAPSULES),echo $($(s)_BIN);)
 
 nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."

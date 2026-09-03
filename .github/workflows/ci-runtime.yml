@@ -78,6 +78,7 @@ jobs:
               # missing provisioning step.
               make nonos-mk-check-trust-manifest
               echo "NONOS_DEVICE_BINDING=unbound" >> "$GITHUB_ENV"
+              echo "NONOS_TRUST_REUSE=1" >> "$GITHUB_ENV"
               ;;
             *)
               echo "::error::unknown trust-mode '${NONOS_CI_TRUST_MODE}'"
