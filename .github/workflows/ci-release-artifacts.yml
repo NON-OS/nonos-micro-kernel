@@ -102,9 +102,9 @@ jobs:
           cargo build --release --target wasm32-unknown-unknown             --manifest-path stark-attest/verifier-wasm/Cargo.toml
           make -s nonos-mk-enrolled-tsv 2>/dev/null | grep -P '\t0x' > /tmp/enrolled.tsv
           test "$(wc -l < /tmp/enrolled.tsv)" -ge 80
-          stark-attest/cli/target/release/gen-os-fixtures surface             --policy-root nonos-data/trust/policy/zk_capsule_policy_root.bin             --epoch 1             --kernel-elf target/kernel-attest/kernel.enrolled.elf             --kernel-root nonos-data/trust/policy/kernel_attest_root.bin             --kernel-trailer target/kernel-attest/kernel.zk_trailer.bin             --capsules /tmp/enrolled.tsv
-          cp stark-attest/web-os/index.html stark-attest/web-os/app.js              stark-attest/web-os/smoke.mjs stark-attest/web-os/chain.mjs surface/
-          cp stark-attest/verifier-wasm/target/wasm32-unknown-unknown/release/stark_attest_verifier_wasm.wasm              surface/verifier.wasm
+          stark-attest/target/release/gen-os-fixtures surface             --policy-root nonos-data/trust/policy/zk_capsule_policy_root.bin             --epoch 1             --kernel-elf target/kernel-attest/kernel.enrolled.elf             --kernel-root nonos-data/trust/policy/kernel_attest_root.bin             --kernel-trailer target/kernel-attest/kernel.zk_trailer.bin             --capsules /tmp/enrolled.tsv
+          cp stark-attest/web-os/index.html stark-attest/web-os/app.js              stark-attest/web-os/smoke.mjs surface/
+          cp stark-attest/target/wasm32-unknown-unknown/release/stark_attest_verifier_wasm.wasm              surface/verifier.wasm
           cp target/kernel_attested.bin              nonos-bootloader/target/x86_64-unknown-uefi/release/nonos_boot.efi surface/
           ( cd surface && node smoke.mjs )
           tar -C surface -czf attestation-surface.tar.gz .

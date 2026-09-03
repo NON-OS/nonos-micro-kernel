@@ -56,7 +56,12 @@ pub fn run(root: &str) -> std::io::Result<Status> {
         joined.contains("[INIT] Capsules spawned") || joined.contains("Capsules spawned");
     rpt.check("capsules-spawned", st(capsules), "capsule spawn readiness marker observed");
 
-    let desktop = joined.contains("[desktop_shell]")
+    // The kernel's boot log prints these uppercase; the lowercase forms are
+    // kept for older serial logs so the check reads both eras.
+    let desktop = joined.contains("[COMPOSITOR] capsule spawned")
+        || joined.contains("[WM] capsule spawned")
+        || joined.contains("name=desktop_shell")
+        || joined.contains("[desktop_shell]")
         || joined.contains("[wm] boot")
         || joined.contains("[compositor]");
     rpt.check("desktop-substrate", st(desktop), "desktop/compositor marker observed");
