@@ -1133,12 +1133,12 @@ DESKTOP_STD_TOOL_ARTIFACTS := $(std-proof_ARTIFACTS) $(ripgrep_ARTIFACTS) \
 DESKTOP_BASE_SLUGS := proof-io ramfs keyring entropy crypto vfs \
 		driver-virtio-rng driver-virtio-blk driver-virtio-gpu \
 		driver-virtio-net driver-ps2-input driver-xhci driver-usb-hid \
-		net-core net-sockets net-nym policy wallpaper_catalog installer \
-		input-router compositor wm desktop-shell image-codec \
+		net-core net-sockets net-nym socks5 policy wallpaper_catalog \
+		installer input-router compositor wm desktop-shell image-codec \
 		clipboard login wallpaper toolkit about boot-splash calculator \
 		browser wallet-nonos terminal file-manager text-editor \
 		settings process-manager attest power \
-		audio driver-hda
+		audio driver-hda audio_player video-player
 
 DESKTOP_BASE_CAPSULE_ARTIFACTS := \
 		$(foreach s,$(DESKTOP_BASE_SLUGS),$($(s)_ARTIFACTS))
