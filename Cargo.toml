@@ -871,7 +871,7 @@ smoltcp = { version = "0.11", default-features = false, features = ["alloc", "so
 
 # Zero-knowledge — halo2.
 halo2_proofs = { version = "0.3", default-features = false, optional = true }
-halo2curves  = { version = "0.6", default-features = false, optional = true }
+halo2curves  = { version = "0.10", default-features = false, optional = true }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 x86_64 = { version = "0.14", default-features = false, features = ["abi_x86_interrupt", "instructions"] }
