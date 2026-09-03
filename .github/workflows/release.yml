@@ -80,6 +80,13 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The release body reads from the tree; without a checkout the job has
+      # only the downloaded artifact and body_path dies on ENOENT.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          sparse-checkout: .github
+          persist-credentials: false
+
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: nonos-image
