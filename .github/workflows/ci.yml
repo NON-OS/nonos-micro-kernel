@@ -60,6 +60,15 @@ jobs:
     with:
       trust-mode: scratch
 
+  # The exact build a release tag runs: no seeds, the committed trust
+  # set verified against every rebuilt capsule. Tag-only gates hid every
+  # release failure so far; this one runs here first.
+  production-build:
+    uses: ./.github/workflows/ci-build.yml
+    secrets: inherit
+    with:
+      trust-mode: production
+
   supply-chain:
     uses: ./.github/workflows/ci-supply-chain.yml
 

@@ -461,6 +461,14 @@ nonos-mk-verify-trust: nonos-mk-desktop-gui-prod
 	@$(MAKE) nonos-mk-host-trust-verify
 	@$(MAKE) nonos-mk-check-trust-manifest
 
+# Nothing signs in a reuse build, so no seed is required to exist.
+ifeq ($(NONOS_TRUST_REUSE),1)
+nonos-mk-check-trust-keys:
+	@true
+
+$(NONOS_TRUST_ANCHOR_POLICY_BIN):
+	@test -f $@ || { echo "::error::$@ is not committed; a reuse build cannot seal it"; exit 1; }
+else
 nonos-mk-check-trust-keys:
 	@for f in $(NONOS_TA_ED25519_SEED) $(NONOS_TA_ED25519_PUB) \
 	          $(NONOS_TA_MLDSA65_SEED) $(NONOS_TA_MLDSA65_PUB); do \
@@ -479,6 +487,7 @@ $(NONOS_TRUST_ANCHOR_POLICY_BIN): $(NONOS_TA_ED25519_PUB) $(NONOS_TA_MLDSA65_PUB
 		--valid-from-ms  $(NONOS_CERT_VALID_FROM_MS) \
 		--valid-until-ms $(NONOS_CERT_VALID_UNTIL_MS) \
 		--out $@
+endif
 
 nonos-mk-trust-policy: $(NONOS_TRUST_ANCHOR_POLICY_BIN)
 
@@ -605,12 +614,21 @@ $(ZK_CAPSULE_LABELS): $(NONOS_VERIFIED_CAPSULE_MKS) Makefile
 # a binary that has to exist for that architecture.
 NONOS_ENROLLED_CAPSULES ?= $(NONOS_VERIFIED_CAPSULES)
 
+# A reuse build never re-enrolls: the committed root and trailers are
+# the enrolled truth, and the per-capsule manifest checks already pin
+# every fresh ELF to its enrolled measurement. Re-running the grinder
+# here would replace owner-enrolled artifacts with pipeline ones.
+ifeq ($(NONOS_TRUST_REUSE),1)
+$(ZK_CAPSULE_ROOT):
+	@test -f $@ || { echo "::error::$@ is not committed; a reuse build cannot enroll"; exit 1; }
+else
 $(ZK_CAPSULE_ROOT): $(NONOS_STARK_ENROLL) \
 		$(foreach s,$(NONOS_ENROLLED_CAPSULES),$($(s)_BIN) $($(s)_MANIFEST))
 	@echo "Enrolling $(words $(NONOS_ENROLLED_CAPSULES)) capsules under one transparent STARK policy root..."
 	@mkdir -p $(dir $(ZK_CAPSULE_ROOT)) $(NONOS_BAKED_TRUST_DIR)/capsules
 	@$(NONOS_STARK_ENROLL) capsules $(ZK_CAPSULE_ROOT) \
 		$(foreach s,$(NONOS_ENROLLED_CAPSULES),$($(s)_REQUIRED_CAPS):$($(s)_BIN):$($(s)_ATTESTATION))
+endif
 
 .PHONY: nonos-mk-stark-enroll-capsules
 nonos-mk-stark-enroll-capsules: $(ZK_CAPSULE_ROOT)

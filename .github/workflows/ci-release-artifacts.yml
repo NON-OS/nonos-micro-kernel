@@ -63,6 +63,7 @@ jobs:
               # missing provisioning step.
           make nonos-mk-check-trust-manifest
           echo "NONOS_DEVICE_BINDING=unbound" >> "$GITHUB_ENV"
+          echo "NONOS_TRUST_REUSE=1" >> "$GITHUB_ENV"
       # The bootable artifact itself, built from the same tree the lanes above
       # checked. Capsules are attested before packaging so a capsule that
       # cannot be enrolled stops the release rather than shipping unenforced.
