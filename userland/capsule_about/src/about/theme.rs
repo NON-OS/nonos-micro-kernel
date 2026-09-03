@@ -14,27 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const BACKGROUND: u32 = 0xFF101418;
-pub const HEADER: u32 = 0xFF1F6FEB;
-pub const TAB_BAR: u32 = 0xFF161B22;
-pub const TAB_SELECTED: u32 = 0xFF1F6FEB;
-pub const HEADLINE: u32 = 0xFFE6EDF3;
-pub const BODY: u32 = 0xFF9DA7B3;
-pub const HINT: u32 = 0xFF6E7681;
-pub const SCROLLBAR_TRACK: u32 = 0xFF161B22;
-pub const SCROLLBAR_THUMB: u32 = 0xFF30363D;
-
-pub const WINDOW_WIDTH: u32 = 560;
-pub const WINDOW_HEIGHT: u32 = 400;
-pub const WINDOW_INITIAL_X: u32 = 188;
-pub const WINDOW_INITIAL_Y: u32 = 52;
-
-pub const HEADER_HEIGHT: u32 = 48;
-pub const TAB_BAR_HEIGHT: u32 = 28;
-pub const STATUS_BAR_HEIGHT: u32 = 22;
-pub const SCROLLBAR_WIDTH: u32 = 6;
-
-pub const TEXT_LEFT: u32 = 18;
-pub const LINE_HEIGHT: u32 = 18;
-pub const SECTION_TOP_PADDING: u32 = 12;
-pub const TAB_HORIZONTAL_PADDING: u32 = 14;
+// The house palette the Settings and Processes restyles established, so About
+// reads as one system tool alongside them rather than a third visual language.
+// Layout sizes are not here: they live in ui/metrics.rs.
+// Grounds: the window, the sidebar, the cards and the chips.
+pub const BACKGROUND: u32 = 0xFF0B1319;
+pub const SIDEBAR_BG: u32 = 0xFF0A1218;
+pub const SIDEBAR_LINE: u32 = 0xFF16262F;
+pub const CARD_BG: u32 = 0xFF101C24;
+pub const CARD_BORDER: u32 = 0xFF16262F;
+pub const STATUS_BG: u32 = 0xFF0D171E;
+// Hairlines.
+pub const RULE: u32 = 0xFF16262F;
+pub const RULE_SOFT: u32 = 0xFF122029;
+// Text, brightest to dimmest.
+pub const TITLE: u32 = 0xFFEAF4F8;
+pub const FOREGROUND: u32 = 0xFFCDDDE5;
+pub const LABEL: u32 = 0xFFDBE8EE;
+pub const MUTED: u32 = 0xFF6D818C;
+// Brand teal and the sidebar states derived from it.
+pub const ACCENT: u32 = 0xFF35C4E2;
+pub const NAV_FG: u32 = 0xFF93A7B2;
+pub const NAV_FG_ACTIVE: u32 = 0xFFA8E7F6;
+pub const NAV_BG_ACTIVE: u32 = 0x2035C4E2;
+pub const NAV_BORDER_ACTIVE: u32 = 0x5935C4E2;
+// Chips and meter tracks.
+pub const PILL_BG: u32 = 0xFF14232C;
+pub const PILL_BORDER: u32 = 0xFF1D323D;
+pub const TRACK_BG: u32 = 0xFF25373F;
+// Status hues and their translucent fills. Every tint carries alpha: draw them
+// with blend_rect / fill_round only, never fill_rect.
+pub const OK: u32 = 0xFF33CF7D;
+pub const DANGER: u32 = 0xFFE06C75;
+pub const OK_TINT: u32 = 0x2033CF7D;

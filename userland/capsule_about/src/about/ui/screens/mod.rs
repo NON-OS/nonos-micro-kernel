@@ -14,13 +14,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+mod chain;
+mod prose;
+mod prose_wrap;
+mod runtime_meter;
+mod runtime_text;
+mod tile_text;
 
-use crate::about::section_render::render_section;
-use crate::about::state::State;
-use crate::about::theme::{HEADER_HEIGHT, SECTION_TOP_PADDING, TAB_BAR_HEIGHT};
+mod display_surface;
+mod licenses_banner;
+mod licenses_cols;
+mod licenses_table;
+mod licenses_text;
+mod overview_cards;
+mod overview_hero;
+mod overview_mark;
+mod overview_tiles;
+mod system_build;
+mod system_runtime;
+mod system_space;
+mod system_uptime;
+mod trust_caps;
+mod trust_caps_list;
+mod trust_chain;
+mod trust_hops;
 
-pub fn paint(state: &State, fb: &mut PaintBuffer) {
-    let body_top = HEADER_HEIGHT + TAB_BAR_HEIGHT + SECTION_TOP_PADDING;
-    render_section(state.section, state.scroll, state.last_visible_lines, body_top, fb);
-}
+pub mod display;
+pub mod licenses;
+pub mod overview;
+pub mod system;
+pub mod trust;
+
+mod extent;
+pub use extent::content_h;

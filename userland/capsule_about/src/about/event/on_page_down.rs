@@ -16,11 +16,9 @@
 
 use nonos_app_skeleton::EventOutcome;
 
-use crate::about::section_render::section_line_count;
 use crate::about::state::State;
 
 pub fn on_page_down(state: &mut State) -> EventOutcome {
-    let total = section_line_count(state.section);
-    state.scroll_page_down(total);
+    state.scroll_page_down();
     EventOutcome::Repaint
 }

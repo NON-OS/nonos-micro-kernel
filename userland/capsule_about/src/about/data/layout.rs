@@ -14,23 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
-
-use super::body;
-use super::header;
-use super::scrollbar;
-use super::status_bar;
-use super::tabs;
-use crate::about::state::{visible_lines_for, State};
-use crate::about::theme::BACKGROUND;
-
-pub fn paint(state: &mut State, fb: &mut PaintBuffer) {
-    state.record_visible_lines(visible_lines_for(fb.height));
-    fb.clear(BACKGROUND);
-    header::paint(state, fb);
-    tabs::paint(state, fb);
-    body::paint(state, fb);
-    scrollbar::paint(state, fb);
-    status_bar::paint(fb);
-    state.painted = true;
-}
+pub const KERNEL_BASE: &[u8] = b"0xffff_ffff_8000_0000";
+pub const DIRECTMAP: &[u8] = b"0xffff_8000_0000_0000";
+pub const DIRECTMAP_SIZE: &[u8] = b"256 GiB";
+pub const IMAGE_KIND: &[u8] = b"ET_EXEC, upper-half";
+pub const CAPSULE_RING: &[u8] = b"CPL 3, own ASID";

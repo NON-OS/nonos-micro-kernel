@@ -17,5 +17,6 @@
 pub const NAME: &[u8] = b"GNU Affero General Public License";
 pub const VERSION: &[u8] = b"v3 or later (AGPL-3.0)";
 pub const URL: &[u8] = b"https://www.gnu.org/licenses/agpl-3.0.html";
+pub const SPDX: &[u8] = b"AGPL-3.0-or-later";
 
 pub const TEXT: &str = include_str!("../../../../../LICENSE");

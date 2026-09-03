@@ -18,7 +18,7 @@ use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer
 
 use super::event::on_event;
 use super::manifest::manifest;
-use super::paint::frame;
+use super::ui::frame;
 use super::state::State;
 
 pub struct About {
@@ -39,6 +39,6 @@ impl App for About {
         on_event(&mut self.state, event)
     }
     fn paint(&mut self, fb: &mut PaintBuffer) {
-        frame::paint(&mut self.state, fb);
+        frame(&mut self.state, fb);
     }
 }
