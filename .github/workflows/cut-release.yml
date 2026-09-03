@@ -21,7 +21,7 @@ on:
 
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 defaults:
   run:
@@ -61,4 +61,17 @@ jobs:
           git config user.email "release@nonos.systems"
           git tag -f "${{ inputs.version }}" "${sha}"
           git push origin "refs/tags/${{ inputs.version }}" --force
-          echo "tag ${{ inputs.version }} -> ${sha}; the release workflow takes it from here"
+          echo "tag ${{ inputs.version }} -> ${sha}"
+
+      # A tag pushed with the workflow's own token fires no push event; that
+      # suppression is GitHub's recursion guard, and it silently swallowed a
+      # whole release once. Dispatch events are exempt from it, so the tag is
+      # followed by an explicit start of the release pipeline on that tag.
+      - name: Start the release pipeline on the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run release.yml --repo "${GITHUB_REPOSITORY}" \
+            --ref "refs/tags/${{ inputs.version }}"
+          echo "release pipeline dispatched on ${{ inputs.version }}"
