@@ -535,7 +535,7 @@ dependencies = [
  "smallvec",
  "smoltcp",
  "spin",
- "volatile",
+ "volatile 0.6.1",
  "x25519-dalek",
  "x86_64",
 ]
@@ -970,6 +970,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "442887c63f2c839b346c192d047a7c87e73d0689c9157b00b53dcc27dd5ea793"
 
 [[package]]
+name = "volatile"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af8ca9a5d4debca0633e697c88269395493cebf2e10db21ca2dbde37c1356452"
+
+[[package]]
 name = "wasi"
 version = "0.11.1+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1003,7 +1009,7 @@ dependencies = [
  "bit_field",
  "bitflags 2.11.1",
  "rustversion",
- "volatile",
+ "volatile 0.4.6",
 ]
 
 [[package]]

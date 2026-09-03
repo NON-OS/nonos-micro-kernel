@@ -864,7 +864,7 @@ sha2   = { version = "0.10", default-features = false, features = ["force-soft"]
 
 # Core utilities used in the kernel tree.
 bitflags = { version = "2.4", default-features = false }
-volatile = { version = "0.4", default-features = false }
+volatile = { version = "0.6", default-features = false }
 
 # Network stack used by the virtio-net interface bridge.
 smoltcp = { version = "0.11", default-features = false, features = ["alloc", "socket-raw", "socket-udp", "socket-tcp", "proto-ipv4", "proto-ipv6", "medium-ethernet"] }
