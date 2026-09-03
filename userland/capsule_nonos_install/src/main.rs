@@ -31,6 +31,8 @@ core::arch::global_asm!(
     include_str!("asm/discover.S"),
     include_str!("asm/attest.S"),
     include_str!("asm/compose.S"),
+    include_str!("asm/prove.S"),
+    include_str!("asm/proveset.S"),
     include_str!("asm/steps.S"),
     include_str!("asm/entry.S"),
 );
