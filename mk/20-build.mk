@@ -7,7 +7,12 @@
 
 # ZK attestation: transparent enrolled-secret tools
 
-$(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(ZK_CAPSULE_PROOF_TOOL): nonos-mk-check-deps
+# Every host tool tracks its sources. A restored cache hands back old
+# binaries, and a rule with no file prerequisites would treat them as
+# final; the sources keep cargo the authority on staleness.
+ZK_TOOL_SRCS := $(shell find $(ZK_CIRCUIT_DIR)/src -type f -name '*.rs' 2>/dev/null) \
+                $(ZK_CIRCUIT_DIR)/Cargo.toml
+$(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(ZK_CAPSULE_PROOF_TOOL): nonos-mk-check-deps $(ZK_TOOL_SRCS)
 	@echo "Building transparent ZK attestation tools..."
 	@cd $(ZK_CIRCUIT_DIR) && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --bin transparent-enroll --bin transparent-prove --bin transparent-verify --bin capsule-attest-proof --target $(HOST_TARGET)
@@ -15,7 +20,9 @@ $(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(Z
 nonos-mk-zk-tools: $(ZK_ENROLL_TOOL) $(ZK_TRANSPARENT_PROVE_TOOL) $(ZK_TRANSPARENT_VERIFY_TOOL) $(ZK_CAPSULE_PROOF_TOOL)
 
 # Transparent STARK enrollment tool, the production capsule attestation prover.
-$(NONOS_STARK_ENROLL): nonos-mk-check-deps
+STARK_ENROLL_SRCS := $(shell find nonos-stark-enroll/src -type f -name '*.rs' 2>/dev/null) \
+                     nonos-stark-enroll/Cargo.toml
+$(NONOS_STARK_ENROLL): nonos-mk-check-deps $(STARK_ENROLL_SRCS)
 	@echo "Building transparent STARK enrollment tool..."
 	@cd nonos-stark-enroll && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
@@ -92,12 +99,16 @@ nonos-mk-attestation-receipt: $(TARGET_DIR)/kernel_attested.bin
 		"$(NONOS_ZK_ROOT_FPR)" "$(TARGET_DIR)/kernel_attested.bin" > $(NONOS_RECEIPT)
 	@cat $(NONOS_RECEIPT)
 
-$(EMBED_TOOL): nonos-mk-check-deps
+EMBED_TOOL_SRCS := $(shell find $(BOOTLOADER_DIR)/tools/embed-zk-proof/src -type f -name '*.rs' 2>/dev/null) \
+                   $(BOOTLOADER_DIR)/tools/embed-zk-proof/Cargo.toml
+$(EMBED_TOOL): nonos-mk-check-deps $(EMBED_TOOL_SRCS)
 	@echo "Building ZK embed tool..."
 	@cd $(BOOTLOADER_DIR)/tools/embed-zk-proof && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
 
-$(SIGN_TOOL): nonos-mk-check-deps
+SIGN_TOOL_SRCS := $(shell find $(BOOTLOADER_DIR)/tools/sign-kernel/src -type f -name '*.rs' 2>/dev/null) \
+                  $(BOOTLOADER_DIR)/tools/sign-kernel/Cargo.toml
+$(SIGN_TOOL): nonos-mk-check-deps $(SIGN_TOOL_SRCS)
 	@echo "Building kernel signing tool..."
 	@cd $(BOOTLOADER_DIR)/tools/sign-kernel && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
