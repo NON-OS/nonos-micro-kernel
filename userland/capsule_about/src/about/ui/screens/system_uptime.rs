@@ -40,12 +40,12 @@ pub fn paint(fb: &mut PaintBuffer, x: u32, y: i32, w: u32) {
     let mut bh = [0u8; 20];
     let mut bm = [0u8; 20];
     let mut bs = [0u8; 20];
-    let wall: &[u8] = match ms {
+    let elapsed: &[u8] = match ms {
         Some(v) => u64_decimal(v, &mut raw),
         None => b"unavailable",
     };
     let rows: [(&[u8], &[u8]); 5] = [
-        (b"Wall ms", wall),
+        (b"Monotonic ms", elapsed),
         (b"Days", u64_decimal(d, &mut bd)),
         (b"Hours", u64_decimal(h, &mut bh)),
         (b"Minutes", u64_decimal(m, &mut bm)),

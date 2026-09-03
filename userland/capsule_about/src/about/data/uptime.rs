@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::mk_time_millis;
+use nonos_libc::mk_uptime_ms;
 
 pub fn read_millis() -> Option<u64> {
-    let raw = mk_time_millis();
+    let raw = mk_uptime_ms();
     if raw < 0 {
         return None;
     }
