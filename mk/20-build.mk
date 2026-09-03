@@ -479,6 +479,15 @@ nonos-mk-verify-trust: nonos-mk-desktop-gui-prod
 
 # Nothing signs in a reuse build, so no seed is required to exist.
 ifeq ($(NONOS_TRUST_REUSE),1)
+# The about and settings capsules bake a commit id at compile time. The
+# enrolled binaries carry the commit the enrollment builder ran on, so a
+# verifying rebuild at any later commit must pin the same value or drift
+# by exactly that embedded string. The keystore records it at enrollment.
+NONOS_ENROLLED_COMMIT := $(strip $(shell cat nonos-data/trust/COMMIT 2>/dev/null))
+ifneq ($(NONOS_ENROLLED_COMMIT),)
+export NONOS_BUILD_SHA := $(NONOS_ENROLLED_COMMIT)
+endif
+
 nonos-mk-check-trust-keys:
 	@true
 
