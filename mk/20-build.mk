@@ -650,6 +650,12 @@ endif
 nonos-mk-stark-enroll-capsules: $(ZK_CAPSULE_ROOT)
 	@echo "Enrolled the capsule set under the STARK policy root $(ZK_CAPSULE_ROOT)"
 
+# One capsule binary path per line, for tooling that mirrors the set:
+# the enrollment builder packages exactly this list, nothing inferred.
+.PHONY: nonos-mk-print-verified-bins
+nonos-mk-print-verified-bins:
+	@$(foreach s,$(NONOS_VERIFIED_CAPSULES),echo $($(s)_BIN);)
+
 nonos-mk-all-capsules-attested: $(NONOS_VERIFIED_ARTIFACTS)
 	@echo "Signed and attested $(words $(NONOS_VERIFIED_CAPSULES)) included capsules."
 

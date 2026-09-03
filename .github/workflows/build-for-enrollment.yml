@@ -1,0 +1,67 @@
+name: build-for-enrollment
+
+# The reproducible builder half of the enrollment ceremony. It builds
+# the complete verified capsule set on the pinned Linux toolchain with
+# the deterministic environment and publishes the ELFs plus a BLAKE3
+# manifest. It signs nothing and holds nothing: the owner downloads the
+# artifact, verifies it, and runs the ceremony locally where the seeds
+# live. What gets enrolled is then exactly what every future production
+# lane and any third party on the same toolchain can rebuild and match.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: capsule set
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - uses: ./.github/actions/nonos-setup
+        with:
+          targets: x86_64-nonos
+          module: enrollment-build
+
+      - name: Build the verified capsule set
+        run: |
+          set -euo pipefail
+          bash nonos-ci/setup-signing-key.sh
+          make nonos-mk-host-trust-elfs
+
+      - name: Package with a measurement manifest
+        run: |
+          set -euo pipefail
+          out=enrollment-build
+          mkdir -p "${out}/elfs"
+          cargo install b3sum --locked --quiet
+          # One line per capsule: name, blake3, source path. The list is
+          # derived from the same make metadata the trust chain uses, so
+          # a capsule cannot be silently absent.
+          make -s nonos-mk-print-verified-bins | grep '^userland/' > "${out}/bins.list"
+          while IFS= read -r bin; do
+            [ -f "${bin}" ] || { echo "::error::missing ${bin}"; exit 1; }
+            cp "${bin}" "${out}/elfs/$(basename "${bin}")"
+          done < "${out}/bins.list"
+          (cd "${out}/elfs" && b3sum * | LC_ALL=C sort -k2) > "${out}/BLAKE3SUMS"
+          git rev-parse HEAD > "${out}/COMMIT"
+          rustc --version > "${out}/TOOLCHAIN"
+          wc -l < "${out}/BLAKE3SUMS" | tr -d ' ' > "${out}/COUNT"
+          echo "capsules: $(cat ${out}/COUNT), commit $(cut -c1-9 ${out}/COMMIT)"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: enrollment-build
+          path: enrollment-build/
+          retention-days: 30
+          if-no-files-found: error
