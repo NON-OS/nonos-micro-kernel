@@ -153,7 +153,10 @@ $(SIGNING_KEY):
 	@head -c 32 /dev/urandom > $@
 	@echo "Wrote $@"
 
-$(KERNEL_MLDSA65_KEY): $(CAPSULE_SIGN_BIN)
+# Order-only on the tool: a rebuilt capsule-sign must never invalidate
+# an existing keypair. A key regenerates when the key is missing, not
+# when the binary that mints it is newer.
+$(KERNEL_MLDSA65_KEY): | $(CAPSULE_SIGN_BIN)
 	@echo "Generating kernel signing key (ML-DSA-65)..."
 	@mkdir -p $(KEYS_DIR)
 	@$(CAPSULE_SIGN_BIN) keygen --alg mldsa65 --out $(KERNEL_MLDSA65_PREFIX)

@@ -55,6 +55,9 @@ jobs:
             production)
               bash nonos-ci/setup-signing-key.sh
               make nonos-mk-check-trust-manifest
+              # The vendor image bakes the public unbound sentinel; the
+              # installer enrolls the owner's device slots at install.
+              echo "NONOS_DEVICE_BINDING=unbound" >> "$GITHUB_ENV"
               ;;
             *)
               echo "::error::unknown trust-mode '${NONOS_CI_TRUST_MODE}'"

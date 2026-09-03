@@ -24,6 +24,42 @@ jobs:
   build:
     uses: ./.github/workflows/ci-build.yml
 
+  # The baked trust ledger must verify on every checkout, not only on a
+  # release tag. The keystore re-enrollment shipped with a stale ledger
+  # and nothing between merges and the tag ever looked, so the first
+  # honest check was the release gate itself. This closes that window.
+  trust-ledger:
+    name: trust-ledger
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Verify the baked trust artifact ledger
+        run: cd nonos-data/trust && sha256sum -c MANIFEST.sha256
+      # The unbound sentinel is what a release bakes when no owner device
+      # slots exist; pin the recipe to its published value on every change
+      # instead of discovering a drift on the next tag.
+      - name: Verify the unbound device sentinel recipe
+        run: |
+          set -euo pipefail
+          make NONOS_DEVICE_BINDING=unbound \
+               ZK_BOOT_ROOT=/tmp/unbound/device_root.bin \
+               ZK_BOOT_COMMITMENTS=/tmp/unbound/device_commitments.bin \
+               nonos-mk-ensure-zk-keys
+          test "$(xxd -p /tmp/unbound/device_root.bin | tr -d '\n')" = \
+               "$(printf '%s' 'NONOS-DEVICE-SLOT-UNBOUND-v1' | sha256sum | cut -c1-64)"
+
+  # Same reasoning for the double-build lane: it only ever ran on tags,
+  # so its own defects surfaced as release failures. Scratch mode here;
+  # the release keeps running it in production mode.
+  reproducible:
+    uses: ./.github/workflows/ci-reproducible.yml
+    secrets: inherit
+    with:
+      trust-mode: scratch
+
   supply-chain:
     uses: ./.github/workflows/ci-supply-chain.yml
 
@@ -40,6 +76,8 @@ jobs:
     uses: ./.github/workflows/ci-benchmark.yml
 
   attestation:
-    needs: [build, supply-chain, trust-chain, adversarial, evidence, benchmark]
+    needs: [build, trust-ledger, reproducible, supply-chain, trust-chain, adversarial, evidence, benchmark]
     if: always()
     uses: ./.github/workflows/ci-attestation.yml
+    with:
+      required-modules: build,supply-chain,trust-chain,adversarial,evidence,reproducible

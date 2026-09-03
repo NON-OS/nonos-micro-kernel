@@ -102,6 +102,23 @@ $(SIGN_TOOL): nonos-mk-check-deps
 	@cd $(BOOTLOADER_DIR)/tools/sign-kernel && RUSTFLAGS="" RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
 		$(CARGO) build --release --target $(HOST_TARGET)
 
+ifeq ($(NONOS_DEVICE_BINDING),unbound)
+# The vendor image carries no device slot set. The baked root is the
+# sha256 of a fixed public tag, so it is reproducible by anyone and
+# opens nothing: every runtime binding proof is refused until the
+# installer enrolls the owner's slots and writes an enrolled loader.
+# The boot gate itself is the kernel STARK self-attestation and does
+# not touch this root. Secrets have no rule here on purpose; a target
+# that wants them in an unbound build must fail loudly.
+$(ZK_BOOT_ROOT):
+	@mkdir -p $(dir $@)
+	@printf '%s' 'NONOS-DEVICE-SLOT-UNBOUND-v1' | $(SHA256) | cut -c1-64 | xxd -r -p > $@
+	@test "$$(wc -c < $@ | tr -d ' ')" = 32 || { echo "sentinel root malformed"; exit 1; }
+	@echo "Device slot: unbound (sentinel root baked)"
+
+$(ZK_BOOT_COMMITMENTS): $(ZK_BOOT_ROOT)
+	@: > $@
+else
 $(ZK_BOOT_LABELS):
 	@test "$(NONOS_DEV)" = 1 || { echo "$@ is required"; exit 1; }
 	@mkdir -p $(dir $@)
@@ -117,6 +134,7 @@ $(ZK_BOOT_ROOT) $(ZK_BOOT_COMMITMENTS) $(ZK_BOOT_SECRETS): $(ZK_BOOT_LABELS) $(Z
 		--root-out $(ZK_BOOT_ROOT) \
 		--secrets-out $(ZK_BOOT_SECRETS) \
 		--commitments-out $(ZK_BOOT_COMMITMENTS)
+endif
 
 # Bootloader
 #
@@ -176,13 +194,20 @@ $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: \
 	$(eval SIGNING_KEY_ABS := $(if $(filter /%,$(SIGNING_KEY)),$(SIGNING_KEY),$(shell pwd)/$(SIGNING_KEY)))
 	@cd $(BOOTLOADER_DIR) && \
 		$(if $(NONOS_TRUST_ANCHOR_PUBKEY),NONOS_TRUST_ANCHOR_PUBKEY=$(abspath $(NONOS_TRUST_ANCHOR_PUBKEY)),NONOS_SIGNING_KEY=$(SIGNING_KEY_ABS)) \
-		NONOS_MLDSA65_PUBKEY=$(shell pwd)/$(KERNEL_MLDSA65_PUB) \
-		NONOS_ZK_DEVICE_ROOT=$(shell pwd)/$(ZK_BOOT_ROOT) \
-		$(if $(NONOS_STARK_KERNEL_ATTEST_ON),NONOS_KERNEL_ATTEST_ROOT=$(shell pwd)/$(KERNEL_ATTEST_ROOT_BIN)) \
+		NONOS_MLDSA65_PUBKEY=$(abspath $(KERNEL_MLDSA65_PUB)) \
+		NONOS_ZK_DEVICE_ROOT=$(abspath $(ZK_BOOT_ROOT)) \
+		$(if $(NONOS_STARK_KERNEL_ATTEST_ON),NONOS_KERNEL_ATTEST_ROOT=$(abspath $(KERNEL_ATTEST_ROOT_BIN))) \
 		$(if $(NONOS_GOP_PREF),NONOS_GOP_PREF=$(NONOS_GOP_PREF)) \
 		RUSTUP_TOOLCHAIN=$(TOOLCHAIN) \
+		RUSTFLAGS='-C panic=abort -C target-feature=+crt-static --cfg curve25519_dalek_backend="serial" --remap-path-prefix=$(abspath .)=/nonos -C link-arg=/DEBUG:NONE' \
 		$(CARGO) build --target x86_64-unknown-uefi --release \
 			--features zk-transparent,$(BOOTLOADER_POLICY)$(BOOT_STARK_FEATURE)
+# The RUSTFLAGS line above is authoritative and mirrors the target
+# flags in nonos-bootloader/.cargo/config.toml, which cargo ignores
+# whenever the env var is set. The two additions make the loader
+# byte-reproducible: checkout paths would otherwise reach the binary
+# through panic locations, and the linker's debug directory carries a
+# PDB record no UEFI release has any use for.
 
 nonos-mk-bootloader: $(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi
 
@@ -615,6 +640,17 @@ $(KERNEL_ATTEST_STAMP): $(KERNEL_ATTEST_ELF) $(NONOS_STARK_ENROLL)
 	@$(NONOS_STARK_ENROLL) kernel $(dir $(KERNEL_ATTEST_TRAILER))kernel.enrolled.elf \
 		$(KERNEL_ATTEST_ROOT_BIN) $(KERNEL_ATTEST_TRAILER)
 	@touch $@
+
+# With the attest gate on, the loader bakes the root that enrollment
+# produces, so a fresh tree must enroll before the loader compiles;
+# under -j the two otherwise race and the loader's build script
+# refuses, correctly. Gate off, a standalone loader build stays free
+# of any enrollment. Declared here because the stamp path is assigned
+# just above; earlier in the file it would expand empty and bind
+# nothing.
+ifeq ($(NONOS_STARK_KERNEL_ATTEST_ON),1)
+$(BOOTLOADER_DIR)/target/x86_64-unknown-uefi/release/nonos_boot.efi: $(KERNEL_ATTEST_STAMP)
+endif
 
 # The stamp says enrollment ran; the byproducts live in two directories with
 # more than one historical cleaner. If either file is gone the stamp is stale

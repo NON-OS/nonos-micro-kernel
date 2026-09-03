@@ -1,5 +1,5 @@
 use crate::report::{Report, Status};
-use crate::sh::capture;
+use crate::sh::{capture, capture_stdout};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -120,7 +120,7 @@ fn sums(rows: &[serde_json::Value], field: &str) -> String {
 fn provenance(artifacts: &[serde_json::Value]) -> serde_json::Value {
     serde_json::json!({
         "schema": "nonos.release.provenance.v1",
-        "commit": capture("git", &["rev-parse", "HEAD"]).1.trim(),
+        "commit": capture_stdout("git", &["rev-parse", "HEAD"]).1.trim(),
         "ref": std::env::var("GITHUB_REF").unwrap_or_else(|_| "local".to_string()),
         "run_id": std::env::var("GITHUB_RUN_ID").unwrap_or_else(|_| "local".to_string()),
         "source_date_epoch": std::env::var("SOURCE_DATE_EPOCH").unwrap_or_else(|_| "unset".to_string()),
