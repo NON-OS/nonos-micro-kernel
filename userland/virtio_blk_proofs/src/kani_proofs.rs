@@ -123,3 +123,21 @@ fn decode_is_total_and_header_faithful() {
         assert_eq!(req.payload_len, u32::from_le_bytes([buf[16], buf[17], buf[18], buf[19]]));
     }
 }
+
+// For every op, sender and attestation verdict: a mutating operation passes
+// only for the kernel client or the attested installer, and nothing else is
+// ever refused.
+#[kani::proof]
+fn write_authority_is_exactly_the_kernel_or_the_installer() {
+    use crate::protocol::{OP_FLUSH, OP_WRITE_BLOCKS};
+    use crate::server::acl::rule::allows;
+    let op: u16 = kani::any();
+    let pid: u32 = kani::any();
+    let attested: bool = kani::any();
+    let verdict = allows(op, pid, attested);
+    if op == OP_WRITE_BLOCKS || op == OP_FLUSH {
+        assert_eq!(verdict, pid == 0 || attested);
+    } else {
+        assert!(verdict);
+    }
+}

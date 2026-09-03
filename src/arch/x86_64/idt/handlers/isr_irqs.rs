@@ -14,39 +14,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-macro_rules! irq_entry {
-    ($name:ident, $vector:expr) => {
-        #[unsafe(naked)]
-        #[no_mangle]
-        pub(crate) unsafe extern "C" fn $name() {
-            core::arch::naked_asm!("push 0", "push {}", "jmp interrupt_common", const $vector);
-        }
-    };
-}
+//! IRQ, IPI, and int 0x80 gates, defined in
+//! `src/arch/x86_64/asm/vectors.S`. Same uniform frame as the
+//! exception gates: a zero error code, the vector, the shared body.
 
-irq_entry!(isr_irq0, 32);
-irq_entry!(isr_irq1, 33);
-irq_entry!(isr_irq2, 34);
-irq_entry!(isr_irq3, 35);
-irq_entry!(isr_irq4, 36);
-irq_entry!(isr_irq5, 37);
-irq_entry!(isr_irq6, 38);
-irq_entry!(isr_irq7, 39);
-irq_entry!(isr_irq8, 40);
-irq_entry!(isr_irq9, 41);
-irq_entry!(isr_irq10, 42);
-irq_entry!(isr_irq11, 43);
-irq_entry!(isr_irq12, 44);
-irq_entry!(isr_irq13, 45);
-irq_entry!(isr_irq14, 46);
-irq_entry!(isr_irq15, 47);
-irq_entry!(isr_generic_48, 48);
-// Inter-processor interrupt vectors (0x40-0x44). Without these gates the first
-// IPI sent once SMP is enabled faults the target CPU; the handlers route
-// through the registered other-handlers and signal LAPIC EOI.
-irq_entry!(isr_ipi_64, 64);
-irq_entry!(isr_ipi_65, 65);
-irq_entry!(isr_ipi_66, 66);
-irq_entry!(isr_ipi_67, 67);
-irq_entry!(isr_ipi_68, 68);
-irq_entry!(isr_syscall, 0x80);
+extern "C" {
+    pub(crate) fn isr_irq0();
+    pub(crate) fn isr_irq1();
+    pub(crate) fn isr_irq2();
+    pub(crate) fn isr_irq3();
+    pub(crate) fn isr_irq4();
+    pub(crate) fn isr_irq5();
+    pub(crate) fn isr_irq6();
+    pub(crate) fn isr_irq7();
+    pub(crate) fn isr_irq8();
+    pub(crate) fn isr_irq9();
+    pub(crate) fn isr_irq10();
+    pub(crate) fn isr_irq11();
+    pub(crate) fn isr_irq12();
+    pub(crate) fn isr_irq13();
+    pub(crate) fn isr_irq14();
+    pub(crate) fn isr_irq15();
+    pub(crate) fn isr_generic_48();
+    pub(crate) fn isr_ipi_64();
+    pub(crate) fn isr_ipi_65();
+    pub(crate) fn isr_ipi_66();
+    pub(crate) fn isr_ipi_67();
+    pub(crate) fn isr_ipi_68();
+    pub(crate) fn isr_syscall();
+}
