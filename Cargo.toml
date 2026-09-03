@@ -25,7 +25,7 @@
 
 [package]
 name        = "nonos_kernel"
-version     = "0.9.1"
+version     = "0.9.2"
 edition     = "2021"
 publish     = false
 license     = "AGPL-3.0"
