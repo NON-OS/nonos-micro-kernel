@@ -1,0 +1,64 @@
+name: cut-release
+
+# The one deliberate act of a release: point the version tag at a
+# commit whose gates already passed. Everything after the tag is
+# automatic; this exists so the tag itself is a button, not a hand-run
+# git incantation, while still refusing to bless a commit whose own ci
+# did not finish green.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Tag to create or move, e.g. v0.9.2"
+        required: true
+        type: string
+      ref:
+        description: "Commit or branch to tag (default: main)"
+        required: false
+        default: "main"
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tag:
+    name: tag ${{ inputs.version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Require the ref's ci to be green
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          verdict="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${sha}/check-runs" \
+            --jq '[.check_runs[] | select(.conclusion != null and .conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")] | length')"
+          if [ "${verdict}" != "0" ]; then
+            gh api "repos/${GITHUB_REPOSITORY}/commits/${sha}/check-runs" \
+              --jq '.check_runs[] | select(.conclusion != null and .conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral") | "  \(.name): \(.conclusion)"'
+            echo "::error::${verdict} check(s) on ${sha} are not green; refusing to tag"
+            exit 1
+          fi
+          echo "all completed checks on ${sha} are green"
+
+      - name: Point the tag
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          git config user.name  "nonos-release"
+          git config user.email "release@nonos.systems"
+          git tag -f "${{ inputs.version }}" "${sha}"
+          git push origin "refs/tags/${{ inputs.version }}" --force
+          echo "tag ${{ inputs.version }} -> ${sha}; the release workflow takes it from here"
