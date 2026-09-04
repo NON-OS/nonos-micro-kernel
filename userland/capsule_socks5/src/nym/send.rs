@@ -63,7 +63,12 @@ pub fn send_through_mixnet(frame: &[u8]) -> Result<(), SendError> {
     // transport that never answered, and a reply that would not parse are
     // three unrelated faults, and one shared code names none of them.
     match crate::ipc::call(crate::ipc::OP_SEND, &body) {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            // Every send that leaves starts (or continues) the silence
+            // budget the exit watch measures deliveries against.
+            super::exit::note_sent();
+            Ok(())
+        }
         Err(crate::ipc::CallError::Remote(code)) => Err(SendError::Remote(code)),
         Err(crate::ipc::CallError::NoTransport) => Err(SendError::Remote(101)),
         Err(crate::ipc::CallError::Encode) => Err(SendError::Remote(102)),
