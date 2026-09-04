@@ -14,6 +14,8 @@ pub mod reply;
 pub mod request;
 #[path = "../../capsule_socks5/src/tunnel/mod.rs"]
 pub mod tunnel;
+#[path = "../../capsule_socks5/src/nym/watch.rs"]
+pub mod watch;
 #[path = "../../capsule_socks5/src/wire/mod.rs"]
 pub mod wire;
 
@@ -27,5 +29,7 @@ mod manager_tests;
 mod reply_tests;
 #[cfg(test)]
 mod tunnel_tests;
+#[cfg(test)]
+mod watch_tests;
 #[cfg(test)]
 mod wire_tests;
