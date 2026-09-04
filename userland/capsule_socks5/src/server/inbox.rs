@@ -75,6 +75,17 @@ impl Inbox {
         self.marks.retain(|m| m.0 != conn);
     }
 
+    /// End `conn` from this side, discarding whatever was still held.
+    ///
+    /// Used when the exit is rotated away: everything in flight was
+    /// addressed to a node that never answered, so the client is told the
+    /// stream is over and reconnects through the replacement instead of
+    /// waiting out a reply that cannot come.
+    pub fn close_now(&mut self, conn: u64) {
+        self.forget(conn);
+        self.held.push(Held { conn, seq: 0, closed: true, data: Vec::new() });
+    }
+
     fn mark(&self, conn: u64) -> u64 {
         self.marks.iter().find(|m| m.0 == conn).map(|m| m.1).unwrap_or(0)
     }
