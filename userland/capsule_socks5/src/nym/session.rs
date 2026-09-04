@@ -16,7 +16,7 @@
 
 use super::bind::bind_destination;
 use super::exit::exit;
-use crate::ipc::{call, OP_OPEN_SESSION};
+use crate::ipc::{call, OP_CLOSE, OP_OPEN_SESSION};
 use crate::setup::nym_port;
 use core::sync::atomic::{AtomicU32, Ordering};
 
@@ -46,6 +46,20 @@ pub fn session() -> Option<u32> {
         0 => None,
         id => Some(id),
     }
+}
+
+/// Close the mixnet session and forget it, so the next open builds a fresh
+/// one against the current exit.
+///
+/// Used when the exit is rotated. Closing on net.nym is not optional: it
+/// holds one destination at a time and refuses a second as busy, so an old
+/// session left open would make every rebind to the replacement exit fail
+/// and the rotation would fix nothing.
+pub fn reset_session() {
+    if let Some(id) = session() {
+        let _ = call(OP_CLOSE, &id.to_le_bytes());
+    }
+    SESSION.store(0, Ordering::Release);
 }
 
 /// Open a session and bind it to the configured exit.
