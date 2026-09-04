@@ -43,6 +43,12 @@ pub struct Watch {
     pub configured: bool,
 }
 
+impl Default for Watch {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Watch {
     pub const fn new() -> Self {
         Self { first_send_ms: 0, proven: false, configured: false }
