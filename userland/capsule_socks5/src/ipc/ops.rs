@@ -20,6 +20,8 @@ pub const OP_OPEN_SESSION: u16 = 3;
 pub const OP_SEND: u16 = 4;
 /// Collect anything the mixnet delivered.
 pub const OP_RECV: u16 = 5;
+/// Close a session, freeing the single destination slot it held.
+pub const OP_CLOSE: u16 = 7;
 /// Bind a session to the Nym address its traffic is sealed for.
 pub const OP_SET_DESTINATION: u16 = 17;
 
