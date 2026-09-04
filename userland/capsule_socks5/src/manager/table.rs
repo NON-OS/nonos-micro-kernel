@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+extern crate alloc;
+
+use alloc::vec::Vec;
+
 /// The most concurrent tunneled connections.
 pub const MAX_CONNS: usize = 64;
 
@@ -56,6 +60,11 @@ impl Manager {
         }
         self.slots[i] = Slot { id, socket, seq: 0, used: true };
         Some(id)
+    }
+
+    /// Every live connection id, for a caller that has to end them all.
+    pub fn open_ids(&self) -> Vec<u64> {
+        self.slots.iter().filter(|s| s.used).map(|s| s.id).collect()
     }
 
     /// The next send sequence for `id`, advancing its counter, or `None` if the
