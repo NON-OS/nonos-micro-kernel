@@ -27,6 +27,7 @@ mod run;
 mod state;
 mod trace;
 
+pub use reply::STREAM_CLOSED;
 pub use run::run;
 pub use trace::open_failed as trace_open;
 pub use trace::step as trace_step;
