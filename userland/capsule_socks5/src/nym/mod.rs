@@ -25,10 +25,11 @@ mod exit;
 mod recv;
 mod send;
 mod session;
+mod watch;
 
 pub use address::parse_address;
 pub use bootstrap::{bootstrap_exit, BOOTSTRAP_EXITS};
-pub use exit::{exit, set_exit, Exit};
+pub use exit::{exit, note_delivered, rotate_if_silent, set_exit, Exit};
 pub use recv::{recv_once, Delivery};
 pub use send::{connect_request, send_through_mixnet, SendError};
-pub use session::{open_session, session};
+pub use session::{open_session, reset_session, session};
