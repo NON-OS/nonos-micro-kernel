@@ -44,6 +44,7 @@ const FRAME_MAX: usize = 34 * 1024;
 /// An empty `data` is a read with nothing to send, which is how a client asks
 /// whether the far end has answered yet.
 pub fn relay(server: &mut Server, pid: u32, data: &[u8]) -> Vec<u8> {
+    rotate_if_stalled(server);
     let Some(conn) = server.manager.id_of_socket(pid) else {
         return Vec::new();
     };
@@ -51,6 +52,25 @@ pub fn relay(server: &mut Server, pid: u32, data: &[u8]) -> Vec<u8> {
         return Vec::new();
     }
     collect(server, conn)
+}
+
+/// Walk off an exit that has answered nothing since we started sending.
+///
+/// A directory lists exits whose requesters may not serve traffic, and one
+/// that answers the lookup but never a request wedges every connection bound
+/// to it. When the watch says the silence budget is spent, the exit and the
+/// session bound to it are dropped, and every live connection is ended from
+/// this side: the client reconnects immediately and the new connect opens a
+/// session against the next exit in the directory's list.
+fn rotate_if_stalled(server: &mut Server) {
+    if !crate::nym::rotate_if_silent() {
+        return;
+    }
+    crate::server::trace_open(b"exit silent, rotating to the next", 0);
+    crate::nym::reset_session();
+    for id in server.manager.open_ids() {
+        server.inbox.close_now(id);
+    }
 }
 
 fn forward(server: &mut Server, conn: u64, data: &[u8]) -> bool {
@@ -104,5 +124,12 @@ fn take(server: &mut Server, msg: &[u8]) {
         crate::server::trace_reply_kind(msg);
         return;
     };
+    // Only stream payload proves the exit. A requester can acknowledge a
+    // connect and still never carry a byte back; counting those control
+    // frames as delivery once pinned a session to exactly such a node and
+    // turned the rotation off for it.
+    if !response.data.is_empty() {
+        crate::nym::note_delivered();
+    }
     server.inbox.accept(response.conn_id, response.seq, response.closed, response.data);
 }
