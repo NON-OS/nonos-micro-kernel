@@ -21,4 +21,4 @@ mod ops;
 mod wire;
 
 pub use call::{call, CallError};
-pub use ops::{OP_GET_EXIT, OP_OPEN_SESSION, OP_RECV, OP_SEND, OP_SET_DESTINATION};
+pub use ops::{OP_CLOSE, OP_GET_EXIT, OP_OPEN_SESSION, OP_RECV, OP_SEND, OP_SET_DESTINATION};
