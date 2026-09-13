@@ -1,0 +1,28 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# The receipt reader. A NØNOS machine hands out a TPM-signed registry root and
+# the capsule entries behind it; this recomputes the root from those entries
+# and, when they match, says what was running and what each program was
+# permitted to do.
+#
+# Builds for the host because the reader is not the machine being checked. It
+# includes the kernel's own format sources via `#[path]` rather than restating
+# them, so a change to what the root folds breaks this build instead of
+# quietly producing receipts nobody can verify.
+[package]
+name = "attest_receipt"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "nonos-receipt"
+path = "src/bin/nonos-receipt.rs"
+
+[dependencies]
+blake3 = { version = "1.5", default-features = false }

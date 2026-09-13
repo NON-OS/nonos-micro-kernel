@@ -54,6 +54,8 @@ impl AttestedCapsule {
             Authority::Vendor => 0,
             // Slot is included: two developer keys are not interchangeable.
             Authority::Developer(slot) => 1 + slot,
+            // Well clear of any slot the table can hold.
+            Authority::Publisher => 255,
         };
         out
     }

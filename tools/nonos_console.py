@@ -64,7 +64,7 @@ CAPABILITIES = [
     (1 << 20, "Pio"), (1 << 21, "InputSource"), (1 << 22, "TimeSet"),
     (1 << 23, "SpawnBroker"), (1 << 24, "SpawnWindow"), (1 << 25, "ProcessControl"),
     (1 << 26, "StoreWrite"), (1 << 27, "EnrolDevRoot"), (1 << 28, "Keyring"),
-    (1 << 29, "Entropy"), (1 << 30, "AppInstall"),
+    (1 << 29, "Entropy"), (1 << 30, "AppInstall"), (1 << 31, "AttestRead"),
 ]
 SCARCE = {"Admin", "RegisterService", "GfxPresent", "TimeSet",
           "SpawnBroker", "SpawnWindow", "ProcessControl"}

@@ -52,6 +52,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkProcInput
             | MkStdinRead
             | MkAttestStatus
+            | MkAttestEntries
             | MkCapGrant
             | MkCapRevoke
             | MkCapCheck

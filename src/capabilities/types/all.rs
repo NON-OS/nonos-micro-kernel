@@ -17,7 +17,7 @@
 use super::Capability;
 
 impl Capability {
-    pub const fn all() -> [Capability; 31] {
+    pub const fn all() -> [Capability; 32] {
         [
             Self::CoreExec,
             Self::IO,
@@ -50,6 +50,7 @@ impl Capability {
             Self::Keyring,
             Self::Entropy,
             Self::AppInstall,
+            Self::AttestRead,
         ]
     }
 

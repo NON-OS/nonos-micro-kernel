@@ -23,6 +23,7 @@ const COMMANDS: &[&[u8]] = &[
     b"about",
     b"bench",
     b"version",
+    b"receipt",
     b"whoami",
     b"caps",
     b"capsules",

@@ -50,6 +50,7 @@ impl Capability {
             Self::Keyring => "Keyring",
             Self::Entropy => "Entropy",
             Self::AppInstall => "AppInstall",
+            Self::AttestRead => "AttestRead",
         }
     }
 }

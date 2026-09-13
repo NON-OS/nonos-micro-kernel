@@ -51,6 +51,7 @@ impl Capability {
             Self::Keyring => 268435456,
             Self::Entropy => 536870912,
             Self::AppInstall => 1073741824,
+            Self::AttestRead => 2147483648,
         }
     }
 }

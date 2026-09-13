@@ -60,6 +60,9 @@ pub const SYS_STORE_WRITE: u64 = tag4(b"MSWR");
 pub const SYS_ATTEST_STATUS: u64 = tag4(b"MAST");
 /// A signed attestation document, as opposed to the unsigned status above.
 pub const SYS_ATTEST_DOC: u64 = tag4(b"MADC");
+/// The capsule entries the document's registry root folds, so a verifier can
+/// recompute that root and read what each program was permitted to do.
+pub const SYS_ATTEST_ENTRIES: u64 = tag4(b"MAEN");
 /// Ask to enrol a signing root so software built here runs here. Prints a
 /// confirmation code; enrols nothing on its own.
 pub const SYS_DEV_ROOT_REQUEST: u64 = tag4(b"MDRQ");

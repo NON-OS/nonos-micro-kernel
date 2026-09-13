@@ -16,6 +16,7 @@
 
 pub mod attest;
 pub mod attest_doc;
+pub mod attest_entries;
 pub mod enrol_dev_root;
 pub mod battery;
 pub mod capability;
@@ -52,6 +53,7 @@ pub mod wait;
 
 pub use attest::sys_attest_status;
 pub use attest_doc::sys_attest_doc;
+pub use attest_entries::sys_attest_entries;
 pub use enrol_dev_root::{sys_dev_root_confirm, sys_dev_root_request};
 pub use battery::sys_battery_status;
 pub use capability::{sys_cap_check, sys_cap_grant, sys_cap_revoke};

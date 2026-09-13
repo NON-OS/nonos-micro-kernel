@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Bit i holds the name of the capability whose kernel bit is `1 << i`. A
-// hand-synced mirror of `src/capabilities/types/{defs,bit,as_str}.rs`: the
-// order is `bit.rs`'s and the strings are `as_str.rs`'s verbatim, so a new
-// capability must be appended here in the same position it takes there.
-pub(super) const CAP_NAMES: [&[u8]; 31] = [
+//! Bit i holds the name of the capability whose kernel bit is `1 << i`.
+//!
+//! A hand-synced mirror of `src/capabilities/types/{defs,bit,as_str}.rs`: the
+//! order is `bit.rs`'s and the strings are `as_str.rs`'s verbatim, so a new
+//! capability is appended here in the position it takes there. CI holds this
+//! table against the kernel's in `scripts/check_userland_caps.py`.
+
+pub(crate) const CAP_NAMES: [&[u8]; 32] = [
     b"CoreExec",
     b"IO",
     b"Network",
@@ -50,4 +53,5 @@ pub(super) const CAP_NAMES: [&[u8]; 31] = [
     b"Keyring",
     b"Entropy",
     b"AppInstall",
+    b"AttestRead",
 ];

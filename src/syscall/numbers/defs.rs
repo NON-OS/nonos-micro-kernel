@@ -79,6 +79,7 @@ pub enum SyscallNumber {
     MkStdoutWrite = tag4(b"MSOW"),
     MkStoreWrite = tag4(b"MSWR"),
     MkAttestStatus = tag4(b"MAST"),
+    MkAttestEntries = tag4(b"MAEN"),
     MkToolRun = tag4(b"MTRN"),
     MkCapGrant = tag4(b"MCGT"),
     MkCapRevoke = tag4(b"MCRV"),

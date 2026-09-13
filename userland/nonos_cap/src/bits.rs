@@ -57,3 +57,5 @@ pub const CAP_KEYRING: u64 = 268435456;
 pub const CAP_ENTROPY: u64 = 536870912;
 /// Reach the marketplace and install a capsule.
 pub const CAP_APP_INSTALL: u64 = 1073741824;
+/// Read the attestation registry's entries.
+pub const CAP_ATTEST_READ: u64 = 2147483648;

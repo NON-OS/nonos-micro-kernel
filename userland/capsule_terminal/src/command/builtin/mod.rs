@@ -16,6 +16,7 @@
 
 pub mod about;
 pub mod bench;
+pub mod cap_names;
 pub mod capsules;
 pub mod clear;
 pub mod display;
@@ -32,6 +33,7 @@ pub mod motd;
 pub mod neofetch;
 pub mod nox;
 pub mod ping;
+pub mod receipt;
 pub mod service;
 pub mod theme;
 pub mod tool;

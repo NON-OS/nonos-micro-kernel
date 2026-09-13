@@ -29,6 +29,11 @@ pub enum Authority {
     /// Present only in a session where enrolment happened, and never after a
     /// reboot: the machine forgets, like everything else.
     Developer(u8),
+    /// A third-party publisher's signature over the manifest and image, with
+    /// no proof behind it. Recorded so the registry stays complete: a capsule
+    /// that runs and is absent from the receipt is the one lie a remote party
+    /// cannot detect.
+    Publisher,
 }
 
 impl Authority {
@@ -36,6 +41,7 @@ impl Authority {
         match self {
             Self::Vendor => "vendor",
             Self::Developer(_) => "developer",
+            Self::Publisher => "publisher",
         }
     }
 

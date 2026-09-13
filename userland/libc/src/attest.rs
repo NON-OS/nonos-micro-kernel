@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::syscall::{call_raw, N_MK_ATTEST_DOC, N_MK_ATTEST_STATUS};
+use crate::syscall::{call_raw, N_MK_ATTEST_DOC, N_MK_ATTEST_ENTRIES, N_MK_ATTEST_STATUS};
 
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
@@ -48,4 +48,20 @@ pub fn mk_attest_doc(challenge: &[u8; 32], out: &mut [u8]) -> i64 {
         N_MK_ATTEST_DOC,
         [challenge.as_ptr() as u64, out.as_mut_ptr() as u64, out.len() as u64, 0, 0, 0],
     )
+}
+
+/// Bytes per entry: pid, measurement, capability mask, authority.
+pub const ATTEST_ENTRY_LEN: usize = 45;
+
+/// Read the capsule entries the attestation registry root folds.
+///
+/// A signed root is a digest of these, so a verifier recomputes it from them
+/// and, if it matches, knows which programs were running and what each was
+/// permitted to do. Without them the signature is over a number nobody can
+/// interpret. Carries no authority: altering an entry produces a set that no
+/// longer folds to the signed root, which is exactly what the verifier checks.
+/// Returns the bytes written, or a negative errno. A buffer too small is
+/// refused without saying how short, so size for the whole registry.
+pub fn mk_attest_entries(out: &mut [u8]) -> i64 {
+    call_raw(N_MK_ATTEST_ENTRIES, [out.as_mut_ptr() as u64, out.len() as u64, 0, 0, 0, 0])
 }

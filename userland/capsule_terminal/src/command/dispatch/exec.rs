@@ -31,6 +31,7 @@ pub(super) fn exec(state: &mut State, args: &[&[u8]]) -> Outcome {
         b"bench" => builtin::bench::run(&mut Output::new(&mut state.scrollback), args),
         b"version" => builtin::version::run(&mut Output::new(&mut state.scrollback), args),
         b"whoami" => builtin::whoami::run(&mut Output::new(&mut state.scrollback), args),
+        b"receipt" => builtin::receipt::run(&mut Output::new(&mut state.scrollback), args),
         b"capsules" | b"caps" => {
             builtin::capsules::run(&mut Output::new(&mut state.scrollback), args)
         }

@@ -38,8 +38,10 @@ pub fn sys_dev_root_request(root_ptr: u64) -> i64 {
     if crate::usercopy::copy_from_user(root_ptr, &mut root).is_err() {
         return ERRNO_FAULT;
     }
-    // Read from the live token: the caller does not get to describe its own
-    // authority.
+    /*
+     * Read from the live token: the caller does not get to describe its own
+     * authority.
+     */
     let caps = caps_to_bits(&current_caps_or_default().permissions);
     match request_dev_root(caps, root) {
         Ok(()) => 0,
@@ -55,13 +57,17 @@ pub fn sys_dev_root_request(root_ptr: u64) -> i64 {
 /// Returns the developer slot on success.
 pub fn sys_dev_root_confirm(answer: u64) -> i64 {
     let caps = caps_to_bits(&current_caps_or_default().permissions);
-    // Narrowed before use: a 64-bit argument cannot be allowed to compare
-    // equal to a 32-bit challenge by carrying bits the challenge never had.
+    /*
+     * Narrowed before use: a 64-bit argument cannot be allowed to compare
+     * equal to a 32-bit challenge by carrying bits the challenge never had.
+     */
     let answer = answer as u32;
     match confirm_dev_root(caps, answer) {
         Ok(Authority::Developer(slot)) => slot as i64,
-        // The vendor authority is never the result of an enrolment.
-        Ok(Authority::Vendor) => ERRNO_FAULT,
+        /*
+         * Neither the vendor nor a publisher is ever the result of an enrolment.
+         */
+        Ok(Authority::Vendor) | Ok(Authority::Publisher) => ERRNO_FAULT,
         Err(e) => {
             crate::sys::serial::print(b"[DEV-ROOT] confirm refused: ");
             crate::sys::serial::println(e.as_str().as_bytes());

@@ -28,6 +28,10 @@ pub(crate) struct Preflighted {
     /// exists. `None` when nothing was proved.
     pub proved: Option<Proved>,
     pub install_caps: u64,
+    /// The publisher-signed identity of manifest and image, checked by
+    /// `verify_with_publisher`. What the registry records when nothing was
+    /// proved, so an unproved capsule is still accounted for.
+    pub capsule_id: [u8; 32],
 }
 
 pub(crate) fn run(
@@ -62,6 +66,7 @@ pub(crate) fn run(
         &declared,
     )?;
     let install_caps = verification.1;
+    let capsule_id = verification.0.capsule_id;
     let required_caps = verification.0.manifest.required_caps;
     let namespace = verification.0.manifest.namespace_str();
     let proved = match super::tier::classify(namespace) {
@@ -71,5 +76,5 @@ pub(crate) fn run(
         }
     };
 
-    Ok(Preflighted { install_caps, proved })
+    Ok(Preflighted { install_caps, proved, capsule_id })
 }

@@ -34,6 +34,7 @@ ENROL_DEV_ROOT          = 0x0000_0000_0800_0000
 KEYRING                 = 0x0000_0000_1000_0000
 ENTROPY                 = 0x0000_0000_2000_0000
 APP_INSTALL             = 0x0000_0000_4000_0000
+ATTEST_READ             = 0x0000_0000_8000_0000
 
 [groups]
 BASIC   = ["LOG","YIELD","TIME"]

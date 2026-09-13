@@ -36,6 +36,7 @@ pub(crate) const N_MK_PROC_OUTPUT: i64 = tag4(b"MOUT");
 pub(crate) const N_MK_ATTEST_STATUS: i64 = tag4(b"MAST");
 pub(crate) const N_MK_ATTEST_DOC: i64 = tag4(b"MADC");
 pub(crate) const N_MK_FUTEX_WAIT: i64 = tag4(b"MFTW");
+pub(crate) const N_MK_ATTEST_ENTRIES: i64 = tag4(b"MAEN");
 pub(crate) const N_MK_SPAWN_INSTANCE: i64 = tag4(b"MSPI");
 pub(crate) const N_MK_TOOL_RUN: i64 = tag4(b"MTRN");
 pub(crate) const N_MK_WAIT: i64 = tag4(b"MWAT");

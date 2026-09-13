@@ -15,7 +15,7 @@ CAPSULE_INSTANCE_ENDPOINTS := \
 	service:4742:app.terminal.2 reply:4743:endpoint.app.terminal.2.reply \
 	service:4744:app.terminal.3 reply:4745:endpoint.app.terminal.3.reply
 # CoreExec|Network|IPC|Memory|Crypto|FileSystem|GraphicsDisplayQuery|GraphicsSurfaceCreate
-CAPSULE_REQUIRED_CAPS    := 0x187d
+CAPSULE_REQUIRED_CAPS    := 0x8000187d
 CAPSULE_KERNEL_MIRROR    := src/userspace/capsule_terminal
 
 include nonos-mk/capsule.mk

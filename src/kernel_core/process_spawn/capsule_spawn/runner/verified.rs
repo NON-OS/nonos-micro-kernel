@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::security::dev_roots::Authority;
 use crate::security::nonos_trust_anchor::NonosTrustAnchorPolicy;
 
 use super::super::attested_parent::AttestedParent;
@@ -60,15 +61,22 @@ pub(crate) fn spawn_verified_as(
         debug_tag: spec.debug_tag,
         on_behalf_of,
     })?;
-    // First point at which a pid exists. What goes in is the measurement the
-    // proof was checked against, never one recomputed from the image.
-    if let Some(proved) = preflighted.proved {
-        crate::security::attest_registry::record_attested(
-            pid,
-            proved.measurement,
-            preflighted.install_caps,
-            proved.authority,
-        );
-    }
+    /*
+     * First point at which a pid exists. What goes in is the measurement the
+     * gate checked, never one recomputed from the image. A capsule that ran
+     * on a publisher signature alone is recorded under that authority rather
+     * than left out: the registry claims to be complete, and a receipt that
+     * omits a running program is the one lie a verifier cannot catch.
+     */
+    let (measurement, authority) = match preflighted.proved {
+        Some(proved) => (proved.measurement, proved.authority),
+        None => (preflighted.capsule_id, Authority::Publisher),
+    };
+    crate::security::attest_registry::record_attested(
+        pid,
+        measurement,
+        preflighted.install_caps,
+        authority,
+    );
     Ok(pid)
 }

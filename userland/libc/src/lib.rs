@@ -44,7 +44,10 @@ pub mod transport;
 mod unistd;
 
 pub use admin::{mk_admin_policy_push, mk_admin_reboot, mk_admin_shutdown};
-pub use attest::{mk_attest_doc, mk_attest_status, AttestStatus, ATTEST_DOC_REFUSED};
+pub use attest::{
+    mk_attest_doc, mk_attest_entries, mk_attest_status, AttestStatus, ATTEST_DOC_REFUSED,
+    ATTEST_ENTRY_LEN,
+};
 pub use battery::mk_battery_status;
 pub use broker::{
     mk_device_claim, mk_device_list, mk_device_release, mk_dma_map, mk_dma_unmap, mk_irq_ack,

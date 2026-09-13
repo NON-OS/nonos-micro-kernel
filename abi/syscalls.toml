@@ -47,6 +47,7 @@ max_devices     = 256
 
 [numbers]
 MADC = 0x4344414D
+MAEN = 0x4E45414D
 MDRC = 0x4352444D
 MDRQ = 0x5152444D
 APPS = 0x53505041
@@ -679,6 +680,12 @@ ret  = {type="i64"}
 nr   = 0x4344414D
 caps = ["valid_token"]
 args = [{name="challenge_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MAEN]
+nr   = 0x4E45414D
+caps = ["AttestRead"]
+args = [{name="out_ptr",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MDRC]
