@@ -14,22 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Host proofs for the attestation key's public half and the document that
+//! carries it. The kernel's parser and encoder are included by `#[path]`, so
+//! the bytes under test are the bytes that ship.
 
-//! The key that signs attestations, and where this machine's identity comes
-//! from.
-//!
-//! Derived rather than stored. A primary key under the endorsement hierarchy
-//! is a function of the TPM's seed and a fixed template, so the same part
-//! reproduces the same key on every boot with nothing kept on disk. An
-//! amnesic machine therefore still has an identity a counterparty can pin.
+extern crate alloc;
 
-mod attributes;
-mod create;
-mod cursor;
-mod identity;
-mod load;
-mod public;
-mod template;
+pub mod security;
 
-pub use identity::ak_public;
-pub use load::{ak_handle, load_ak};
+#[cfg(test)]
+mod document_tests;
+#[cfg(test)]
+mod fixtures;
+#[cfg(test)]
+mod public_tests;

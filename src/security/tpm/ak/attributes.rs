@@ -14,22 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! The key that signs attestations, and where this machine's identity comes
-//! from.
+//! The object attributes every attestation key must carry.
 //!
-//! Derived rather than stored. A primary key under the endorsement hierarchy
-//! is a function of the TPM's seed and a fixed template, so the same part
-//! reproduces the same key on every boot with nothing kept on disk. An
-//! amnesic machine therefore still has an identity a counterparty can pin.
+//! `fixedTPM | fixedParent | sensitiveDataOrigin | userWithAuth | restricted
+//! | sign`. `restricted` is the one that matters: a restricted signing key
+//! will only sign digests the TPM itself produced, so it cannot be used to
+//! sign an attestation structure handed to it from outside. Without it a
+//! quote proves nothing, because anyone able to talk to the TPM could have
+//! it sign a fabricated `TPMS_ATTEST`. The template derives the key with
+//! these bits and the parser refuses a public area without them.
 
-mod attributes;
-mod create;
-mod cursor;
-mod identity;
-mod load;
-mod public;
-mod template;
-
-pub use identity::ak_public;
-pub use load::{ak_handle, load_ak};
+pub(super) const OBJECT_ATTRIBUTES: u32 = 0x0005_0072;

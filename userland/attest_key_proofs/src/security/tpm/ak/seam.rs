@@ -14,22 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! The one function the tests reach the kernel's private parser through.
 
-//! The key that signs attestations, and where this machine's identity comes
-//! from.
-//!
-//! Derived rather than stored. A primary key under the endorsement hierarchy
-//! is a function of the TPM's seed and a fixed template, so the same part
-//! reproduces the same key on every boot with nothing kept on disk. An
-//! amnesic machine therefore still has an identity a counterparty can pin.
+use super::super::error::TpmError;
 
-mod attributes;
-mod create;
-mod cursor;
-mod identity;
-mod load;
-mod public;
-mod template;
-
-pub use identity::ak_public;
-pub use load::{ak_handle, load_ak};
+/// The kernel keeps the parser private to its module; this is the seam.
+pub fn parse_public(resp: &[u8]) -> Result<[u8; 64], TpmError> {
+    super::public::parse_public(resp)
+}

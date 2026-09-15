@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host proofs for the attestation key's public half: the parser that lifts the
+# P-256 point out of a TPM2_CreatePrimary response, and the document layout
+# that carries it to a verifier. Both are the kernel's own files via #[path].
+[package]
+name = "attest_key_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"

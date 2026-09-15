@@ -20,7 +20,9 @@ use super::binding::qualifying_data;
 use super::document::AttestationDoc;
 use super::error::AttestDocError;
 use crate::security::attest_registry::{attested_count, registry_complete, registry_root};
+use crate::security::tpm::ak::ak_public;
 use crate::security::tpm::crb::transact;
+use crate::security::tpm::error::TpmError;
 use crate::security::tpm::quote::{build_quote, check_attest, parse_quote};
 
 /// PCRs covered by the quote: the firmware and boot chain measurements the
@@ -50,6 +52,8 @@ pub(super) fn produce(ak_handle: u32, challenge: &[u8; 32]) -> Result<Attestatio
     // creates no objects and changes no key material.
     let len = unsafe { transact(&cmd, &mut buf) }.map_err(AttestDocError::Tpm)?;
 
+    // Kept when the key was loaded; a handle without it is a driver fault.
+    let ak_public = ak_public().ok_or(AttestDocError::Tpm(TpmError::InvalidResponse))?;
     let quote = parse_quote(&buf[..len]).map_err(AttestDocError::Quote)?;
     // Checked here, not only by the verifier: a machine that would hand out a
     // quote whose nonce it never confirmed has no idea what it just signed.
@@ -62,5 +66,6 @@ pub(super) fn produce(ak_handle: u32, challenge: &[u8; 32]) -> Result<Attestatio
         registry_complete: true,
         attest: Vec::from(quote.attest),
         signature: Vec::from(quote.signature),
+        ak_public,
     })
 }

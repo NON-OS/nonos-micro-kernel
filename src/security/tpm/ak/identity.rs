@@ -15,21 +15,21 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! The key that signs attestations, and where this machine's identity comes
-//! from.
+//! The attestation key's public point, kept from the moment the key is loaded.
 //!
-//! Derived rather than stored. A primary key under the endorsement hierarchy
-//! is a function of the TPM's seed and a fixed template, so the same part
-//! reproduces the same key on every boot with nothing kept on disk. An
-//! amnesic machine therefore still has an identity a counterparty can pin.
+//! A verifier needs it to check a quote's signature, and the machine is the
+//! only place it exists. It is not secret: it is what the document carries so
+//! a counterparty can pin this machine across boots.
 
-mod attributes;
-mod create;
-mod cursor;
-mod identity;
-mod load;
-mod public;
-mod template;
+use spin::Mutex;
 
-pub use identity::ak_public;
-pub use load::{ak_handle, load_ak};
+static AK_PUBLIC: Mutex<Option<[u8; 64]>> = Mutex::new(None);
+
+pub(super) fn remember(point: [u8; 64]) {
+    *AK_PUBLIC.lock() = Some(point);
+}
+
+/// The loaded key's uncompressed P-256 point, or `None` before bring-up.
+pub fn ak_public() -> Option<[u8; 64]> {
+    *AK_PUBLIC.lock()
+}

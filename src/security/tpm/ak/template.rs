@@ -16,21 +16,14 @@
 
 use alloc::vec::Vec;
 
+use super::attributes::OBJECT_ATTRIBUTES;
+
 const TPM_ALG_ECC: u16 = 0x0023;
 const TPM_ALG_SHA256: u16 = 0x000B;
 const TPM_ALG_NULL: u16 = 0x0010;
 const TPM_ALG_ECDSA: u16 = 0x0018;
 const TPM_ECC_NIST_P256: u16 = 0x0003;
 
-/// `fixedTPM | fixedParent | sensitiveDataOrigin | userWithAuth | restricted
-/// | sign`.
-///
-/// `restricted` is the one that matters for attestation. A restricted signing
-/// key will only sign digests the TPM itself produced, so it cannot be used to
-/// sign an attestation structure handed to it from outside. Without it, a
-/// quote proves nothing: anyone able to talk to the TPM could have it sign a
-/// fabricated `TPMS_ATTEST`.
-const OBJECT_ATTRIBUTES: u32 = 0x0005_0072;
 
 /// The template whose derivation gives this machine its identity.
 ///

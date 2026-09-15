@@ -19,7 +19,7 @@ use alloc::vec::Vec;
 /// Wire format version. A verifier that does not recognise it must refuse
 /// rather than parse optimistically: a document it half understands is worse
 /// than one it rejects.
-pub const DOC_VERSION: u32 = 1;
+pub const DOC_VERSION: u32 = 2;
 
 pub const DOC_MAGIC: &[u8; 8] = b"NONOSATT";
 
@@ -40,6 +40,11 @@ pub struct AttestationDoc {
     /// The `TPMS_ATTEST` the TPM produced, byte for byte as signed.
     pub attest: Vec<u8>,
     pub signature: Vec<u8>,
+    /// The attestation key's uncompressed P-256 point, x then y. What a
+    /// verifier checks `signature` with. It is derived from the endorsement
+    /// seed and a fixed template, so a counterparty that has seen it once can
+    /// pin this machine; endorsing it back to the manufacturer is separate.
+    pub ak_public: [u8; 64],
 }
 
 impl AttestationDoc {
@@ -58,6 +63,8 @@ impl AttestationDoc {
         out.extend_from_slice(&self.attest);
         out.extend_from_slice(&(self.signature.len() as u32).to_be_bytes());
         out.extend_from_slice(&self.signature);
+        out.extend_from_slice(&(self.ak_public.len() as u32).to_be_bytes());
+        out.extend_from_slice(&self.ak_public);
         out
     }
 }

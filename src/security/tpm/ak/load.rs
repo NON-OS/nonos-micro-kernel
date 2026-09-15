@@ -17,6 +17,8 @@
 use core::sync::atomic::{AtomicU32, Ordering};
 
 use super::create::build_create_primary;
+use super::identity::remember;
+use super::public::parse_public;
 use crate::security::tpm::crb::transact;
 use crate::security::tpm::error::TpmError;
 
@@ -41,6 +43,7 @@ pub fn load_ak() -> Result<u32, TpmError> {
     // object. It writes no NV state and cannot displace an existing key.
     let len = unsafe { transact(&cmd, &mut buf) }?;
     let handle = parse_handle(&buf[..len])?;
+    remember(parse_public(&buf[..len])?);
     match AK_HANDLE.compare_exchange(0, handle, Ordering::AcqRel, Ordering::Acquire) {
         Ok(_) => Ok(handle),
         Err(winner) => Ok(winner),
