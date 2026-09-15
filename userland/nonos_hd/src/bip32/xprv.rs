@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::wipe::wipe;
+use nonos_hash::wipe;
 
 /// An extended private key: the secp256k1 secret plus the BIP32 chain code.
 /// Both halves are wiped on drop; derivation intermediates never outlive the

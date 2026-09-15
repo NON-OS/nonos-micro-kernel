@@ -35,16 +35,11 @@ pub(super) fn dispatch_syscall(
         | SyscallNumber::CryptoDecrypt
         | SyscallNumber::CryptoEncryptAad
         | SyscallNumber::CryptoDecryptAad
-        | SyscallNumber::CryptoEd25519Verify
-        | SyscallNumber::CryptoEd25519Sign
-        | SyscallNumber::CryptoEd25519Pubkey
         | SyscallNumber::CryptoX25519Public
         | SyscallNumber::CryptoX25519Shared
         | SyscallNumber::CryptoHmacSha256
         | SyscallNumber::CryptoHkdfSha256
-        | SyscallNumber::CryptoKeccak256
-        | SyscallNumber::CryptoSecp256k1Sign
-        | SyscallNumber::CryptoSecp256k1Pubkey => {
+        | SyscallNumber::CryptoKeccak256 => {
             crypto::dispatch_crypto(syscall, a0, a1, a2, a3, a4, a5)
         }
         nr if admin::matches(nr) => admin::handle(nr, a0, a1, a2, a3, a4, a5),

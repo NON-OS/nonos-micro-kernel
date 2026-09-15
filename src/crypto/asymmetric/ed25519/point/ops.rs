@@ -25,55 +25,47 @@ pub(crate) fn ge_identity() -> GeP3 {
 #[inline]
 pub(crate) fn ge_to_cached(p: &GeP3) -> GeCached {
     GeCached {
-        YplusX: fe_add(&p.Y, &p.X),
-        YminusX: fe_sub(&p.Y, &p.X),
-        Z: fe_copy(&p.Z),
-        T2d: fe_mul(&p.T, &D2),
+        y_plus_x: fe_add(&p.y, &p.x),
+        y_minus_x: fe_sub(&p.y, &p.x),
+        z: fe_copy(&p.z),
+        t2d: fe_mul(&p.t, &D2),
     }
 }
 
 pub(crate) fn ge_add(p: &GeP3, q: &GeCached) -> GeP1P1 {
-    let YplusX = fe_add(&p.Y, &p.X);
-    let YminusX = fe_sub(&p.Y, &p.X);
-    let PP = fe_mul(&YplusX, &q.YplusX);
-    let MM = fe_mul(&YminusX, &q.YminusX);
-    let TT2d = fe_mul(&p.T, &q.T2d);
-    let ZZ = fe_mul(&p.Z, &q.Z);
-    let ZZ2 = fe_add(&ZZ, &ZZ);
+    let y_plus_x = fe_add(&p.y, &p.x);
+    let y_minus_x = fe_sub(&p.y, &p.x);
+    let pp = fe_mul(&y_plus_x, &q.y_plus_x);
+    let mm = fe_mul(&y_minus_x, &q.y_minus_x);
+    let tt2d = fe_mul(&p.t, &q.t2d);
+    let zz = fe_mul(&p.z, &q.z);
+    let zz2 = fe_add(&zz, &zz);
     GeP1P1 {
-        X: fe_sub(&PP, &MM),
-        Y: fe_add(&PP, &MM),
-        Z: fe_add(&ZZ2, &TT2d),
-        T: fe_sub(&ZZ2, &TT2d),
+        x: fe_sub(&pp, &mm),
+        y: fe_add(&pp, &mm),
+        z: fe_add(&zz2, &tt2d),
+        t: fe_sub(&zz2, &tt2d),
     }
 }
 
 pub(crate) fn ge_double(p: &GeP2) -> GeP1P1 {
-    let XX = fe_sq(&p.X);
-    let YY = fe_sq(&p.Y);
-    let ZZ2 = fe_add(&fe_sq(&p.Z), &fe_sq(&p.Z));
-    let XpY = fe_add(&p.X, &p.Y);
-    let XpY2 = fe_sq(&XpY);
-    let YYpXX = fe_add(&YY, &XX);
-    let YYmXX = fe_sub(&YY, &XX);
-    let E = fe_sub(&XpY2, &YYpXX);
-    let F = fe_sub(&ZZ2, &YYmXX);
-    GeP1P1 { X: E, Y: YYpXX, Z: YYmXX, T: F }
+    let xx = fe_sq(&p.x);
+    let yy = fe_sq(&p.y);
+    let zz2 = fe_add(&fe_sq(&p.z), &fe_sq(&p.z));
+    let x_p_y = fe_add(&p.x, &p.y);
+    let x_p_y2 = fe_sq(&x_p_y);
+    let yy_p_xx = fe_add(&yy, &xx);
+    let yy_m_xx = fe_sub(&yy, &xx);
+    let e = fe_sub(&x_p_y2, &yy_p_xx);
+    let f = fe_sub(&zz2, &yy_m_xx);
+    GeP1P1 { x: e, y: yy_p_xx, z: yy_m_xx, t: f }
 }
 
 #[inline]
 pub(crate) fn ge_p1p1_to_p3(r: &GeP1P1) -> GeP3 {
-    let X = fe_mul(&r.X, &r.T);
-    let Y = fe_mul(&r.Y, &r.Z);
-    let Z = fe_mul(&r.Z, &r.T);
-    let T = fe_mul(&r.X, &r.Y);
-    GeP3 { X, Y, Z, T }
-}
-
-#[inline]
-pub(crate) fn ge_p1p1_to_p2(r: &GeP1P1) -> GeP2 {
-    let X = fe_mul(&r.X, &r.T);
-    let Y = fe_mul(&r.Y, &r.Z);
-    let Z = fe_mul(&r.Z, &r.T);
-    GeP2 { X, Y, Z }
+    let x = fe_mul(&r.x, &r.t);
+    let y = fe_mul(&r.y, &r.z);
+    let z = fe_mul(&r.z, &r.t);
+    let t = fe_mul(&r.x, &r.y);
+    GeP3 { x, y, z, t }
 }

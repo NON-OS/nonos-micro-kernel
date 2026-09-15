@@ -22,6 +22,7 @@ mod ethaddr;
 mod field32;
 mod handlers;
 mod hd;
+mod secp;
 mod rlp;
 mod runner;
 mod wallet_rail;

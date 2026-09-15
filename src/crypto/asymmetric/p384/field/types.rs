@@ -36,7 +36,4 @@ impl FieldElement {
     pub const ONE: Self = Self([1, 0, 0, 0, 0, 0]);
     pub(crate) const P: [u64; 6] = P384_P;
 
-    pub fn default() -> Self {
-        Self::ZERO.clone()
-    }
 }

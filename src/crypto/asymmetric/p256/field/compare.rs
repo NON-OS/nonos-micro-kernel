@@ -31,15 +31,24 @@ impl FieldElement {
         let mut result = [0u64; 4];
         let mut borrow = 0i128;
 
-        for i in 0..4 {
-            borrow += Self::P[i] as i128 - self.0[i] as i128;
+        for (out, (a, b)) in result.iter_mut().zip(Self::P.iter().zip(self.0.iter())) {
+
+            borrow += *a as i128 - *b as i128;
+
             if borrow < 0 {
-                result[i] = (borrow + (1i128 << 64)) as u64;
+
+                *out = (borrow + (1i128 << 64)) as u64;
+
                 borrow = -1;
+
             } else {
-                result[i] = borrow as u64;
+
+                *out = borrow as u64;
+
                 borrow = 0;
+
             }
+
         }
 
         let is_zero_mask = 0u64.wrapping_sub(self.ct_is_zero());

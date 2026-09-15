@@ -33,7 +33,7 @@ pub struct ProjectivePoint {
 impl AffinePoint {
     pub fn scalar_mul(&self, k: &Scalar) -> AffinePoint {
         let mut result =
-            AffinePoint { x: FieldElement::default(), y: FieldElement::default(), infinity: true };
+            AffinePoint { x: FieldElement::ZERO, y: FieldElement::ZERO, infinity: true };
 
         let k_bytes = k.to_bytes();
         for i in (0..32).rev() {

@@ -23,7 +23,7 @@ use crate::crypto::sha512::sha512;
 
 use crate::crypto::asymmetric::ed25519::field::ct_eq_32;
 use crate::crypto::asymmetric::ed25519::point::{
-    ensure_precomp, ge_add, ge_has_large_order, ge_p1p1_to_p3, ge_pack, ge_scalarmult_base_ct,
+    ge_add, ge_has_large_order, ge_p1p1_to_p3, ge_pack, ge_scalarmult_base_ct,
     ge_to_cached, ge_unpack, scalarmult_vartime,
 };
 use crate::crypto::asymmetric::ed25519::scalar::{
@@ -47,26 +47,26 @@ impl Drop for KeyPair {
 
 #[derive(Debug, Clone)]
 pub struct Signature {
-    pub R: [u8; 32],
-    pub S: [u8; 32],
+    pub r: [u8; 32],
+    pub s: [u8; 32],
 }
 
 impl Signature {
     #[inline]
     pub fn to_bytes(&self) -> [u8; 64] {
         let mut out = [0u8; 64];
-        out[..32].copy_from_slice(&self.R);
-        out[32..].copy_from_slice(&self.S);
+        out[..32].copy_from_slice(&self.r);
+        out[32..].copy_from_slice(&self.s);
         out
     }
 
     #[inline]
     pub fn from_bytes(b: &[u8; 64]) -> Self {
-        let mut R = [0u8; 32];
-        let mut S = [0u8; 32];
-        R.copy_from_slice(&b[..32]);
-        S.copy_from_slice(&b[32..]);
-        Self { R, S }
+        let mut r = [0u8; 32];
+        let mut s = [0u8; 32];
+        r.copy_from_slice(&b[..32]);
+        s.copy_from_slice(&b[32..]);
+        Self { r, s }
     }
 }
 
@@ -80,9 +80,8 @@ impl KeyPair {
         let mut a = [0u8; 32];
         a.copy_from_slice(&h[..32]);
         clamp_scalar(&mut a);
-        ensure_precomp();
-        let A = ge_scalarmult_base_ct(&a);
-        let public = ge_pack(&A);
+        let a_point = ge_scalarmult_base_ct(&a);
+        let public = ge_pack(&a_point);
         Self { public, private: seed }
     }
 }
@@ -99,57 +98,55 @@ pub fn sign(kp: &KeyPair, msg: &[u8]) -> Signature {
     r_in.extend_from_slice(msg);
     let mut r64 = sha512(&r_in);
     let r = sc_reduce_mod_l(&mut r64);
-
-    ensure_precomp();
-    let Rpt = ge_scalarmult_base_ct(&r);
-    let R = ge_pack(&Rpt);
+    let rpt = ge_scalarmult_base_ct(&r);
+    let r_bytes = ge_pack(&rpt);
 
     let mut kin = Vec::with_capacity(32 + 32 + msg.len());
-    kin.extend_from_slice(&R);
+    kin.extend_from_slice(&r_bytes);
     kin.extend_from_slice(&kp.public);
     kin.extend_from_slice(msg);
     let mut k64 = sha512(&kin);
     let k = sc_reduce_mod_l(&mut k64);
 
-    let S = sc_addmul_mod_l(&r, &k, &a);
+    let s = sc_addmul_mod_l(&r, &k, &a);
 
-    Signature { R, S }
+    Signature { r: r_bytes, s }
 }
 
 pub fn verify(public: &[u8; 32], msg: &[u8], sig: &Signature) -> bool {
-    if sc_ge(&sig.S, &L) {
+    if sc_ge(&sig.s, &L) {
         return false;
     }
 
-    let A = match ge_unpack(public) {
+    let a_point = match ge_unpack(public) {
         Some(p) => p,
         None => return false,
     };
-    let R = match ge_unpack(&sig.R) {
+    let r_point = match ge_unpack(&sig.r) {
         Some(p) => p,
         None => return false,
     };
 
-    if !ge_has_large_order(&A) {
+    if !ge_has_large_order(&a_point) {
         return false;
     }
-    if !ge_has_large_order(&R) {
+    if !ge_has_large_order(&r_point) {
         return false;
     }
 
     let mut kin = Vec::with_capacity(32 + 32 + msg.len());
-    kin.extend_from_slice(&sig.R);
+    kin.extend_from_slice(&sig.r);
     kin.extend_from_slice(public);
     kin.extend_from_slice(msg);
     let mut k64 = sha512(&kin);
     let k = sc_reduce_mod_l(&mut k64);
 
-    let SB = ge_scalarmult_base_ct(&sig.S);
-    let kA = scalarmult_vartime(&A, &k);
+    let sb = ge_scalarmult_base_ct(&sig.s);
+    let k_a = scalarmult_vartime(&a_point, &k);
 
-    let Rc = ge_to_cached(&kA);
-    let Rp = ge_add(&R, &Rc);
-    let Rp3 = ge_p1p1_to_p3(&Rp);
+    let rc = ge_to_cached(&k_a);
+    let rp = ge_add(&r_point, &rc);
+    let rp3 = ge_p1p1_to_p3(&rp);
 
-    ct_eq_32(&ge_pack(&SB), &ge_pack(&Rp3))
+    ct_eq_32(&ge_pack(&sb), &ge_pack(&rp3))
 }

@@ -15,14 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::bip32::{child_hardened, child_normal, compress_pubkey, master_from_seed, Xprv};
-use crate::wipe::wipe;
+use nonos_hash::wipe;
 
 /// Walk the standard Ethereum account path m/44'/60'/0'/0/0 from a BIP39
 /// seed and return the account private key. The two non-hardened steps need
 /// the parent public key, supplied by `pubkey`: given a 32-byte secret it
 /// returns the 65-byte uncompressed SEC1 public key, or None on failure. In
-/// the capsule that provider is the kernel `crypto_secp256k1_pubkey`
-/// syscall; on the host it is the audited k256 crate. Every intermediate
+/// the capsule that provider is `nonos_secp256k1`, and on the host it is the
+/// audited k256 crate. Every intermediate
 /// extended key wipes itself; on any failure the output is zeroed.
 pub fn derive_eth_key<F>(seed: &[u8; 64], mut pubkey: F, out: &mut [u8; 32]) -> bool
 where

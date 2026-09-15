@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::pbkdf2::pbkdf2_hmac_sha512;
-use crate::wipe::wipe;
+use nonos_hash::wipe;
 use crate::wordlist::ENGLISH_WORDLIST;
 
 use super::MAX_WORDS;

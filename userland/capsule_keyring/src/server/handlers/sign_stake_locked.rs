@@ -58,7 +58,7 @@ pub fn sign_stake_locked(store: &mut Store, req: Request<'_>, sender_pid: u32) -
         return encode_response(req.seq, EINVAL, &[]);
     }
     let mut sig = [0u8; 65];
-    let rc = nonos_libc::crypto_secp256k1_sign(secret.as_ptr(), digest.as_ptr(), sig.as_mut_ptr());
+    let rc = crate::server::secp::sign(&secret, &digest, &mut sig);
     zeroize32(&mut secret);
     if rc != 65 || sig[64] < 27 {
         return encode_response(req.seq, EINVAL, &[]);

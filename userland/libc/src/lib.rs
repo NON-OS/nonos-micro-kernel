@@ -61,9 +61,9 @@ pub use spawn_instance::mk_spawn_instance;
 pub use store_write::mk_store_write;
 pub use tool_run::mk_tool_run;
 pub use crypto::{
-    crypto_decrypt, crypto_decrypt_aad, crypto_ed25519_pubkey, crypto_ed25519_sign, crypto_ed25519_verify, crypto_encrypt,
+    crypto_decrypt, crypto_decrypt_aad, crypto_encrypt,
     crypto_encrypt_aad, crypto_hash, crypto_hkdf_sha256, crypto_hmac_sha256, crypto_keccak256,
-    crypto_random, crypto_secp256k1_pubkey, crypto_secp256k1_sign, crypto_x25519_public,
+    crypto_random, crypto_x25519_public,
     crypto_x25519_shared,
 };
 pub use debug::mk_debug;

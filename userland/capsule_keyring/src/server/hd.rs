@@ -23,11 +23,11 @@
 use nonos_hd::bip39::seed_from_words;
 use nonos_hd::{derive_eth_key, wipe};
 
-/// Uncompressed SEC1 public key for a secret, from the kernel syscall. None
-/// when the kernel rejects the scalar.
+/// Uncompressed SEC1 public key for a secret. `None` when the scalar is not
+/// on the curve's order, which the derivation retries past.
 pub(super) fn syscall_pubkey(sk: &[u8; 32]) -> Option<[u8; 65]> {
     let mut out = [0u8; 65];
-    if nonos_libc::crypto_secp256k1_pubkey(sk.as_ptr(), out.as_mut_ptr()) == 65 {
+    if crate::server::secp::pubkey(sk, &mut out) == 65 {
         Some(out)
     } else {
         None

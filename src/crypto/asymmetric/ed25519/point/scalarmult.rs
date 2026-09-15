@@ -16,19 +16,17 @@
 
 use super::ops::{ge_add, ge_double, ge_identity, ge_p1p1_to_p3, ge_to_cached};
 use super::pack::ge_basepoint;
-use super::precomp::PRECOMP;
 use super::types::GeP3;
 use crate::crypto::asymmetric::ed25519::field::{fe_cmov, fe_equal, fe_is_zero};
 
 pub(crate) fn ge_scalarmult_base_ct(a: &[u8; 32]) -> GeP3 {
-    let _ = PRECOMP.wait();
     let base = ge_basepoint();
     ge_scalarmult_ct(&base, a)
 }
 
-pub(crate) fn ge_scalarmult_ct(P: &GeP3, scalar: &[u8; 32]) -> GeP3 {
+pub(crate) fn ge_scalarmult_ct(p: &GeP3, scalar: &[u8; 32]) -> GeP3 {
     let mut result = ge_identity();
-    let mut temp = *P;
+    let mut temp = *p;
 
     for i in 0..256 {
         let byte_idx = i / 8;
@@ -56,16 +54,16 @@ pub(crate) fn ct_byte_mask(bit: u8) -> u8 {
 #[inline]
 pub(crate) fn ge_cmov(a: &GeP3, b: &GeP3, mask: u8) -> GeP3 {
     GeP3 {
-        X: fe_cmov(&a.X, &b.X, mask),
-        Y: fe_cmov(&a.Y, &b.Y, mask),
-        Z: fe_cmov(&a.Z, &b.Z, mask),
-        T: fe_cmov(&a.T, &b.T, mask),
+        x: fe_cmov(&a.x, &b.x, mask),
+        y: fe_cmov(&a.y, &b.y, mask),
+        z: fe_cmov(&a.z, &b.z, mask),
+        t: fe_cmov(&a.t, &b.t, mask),
     }
 }
 
-pub(crate) fn ge_scalarmult_vartime(P: &GeP3, scalar: &[u8; 32]) -> GeP3 {
+pub(crate) fn ge_scalarmult_vartime(p: &GeP3, scalar: &[u8; 32]) -> GeP3 {
     let mut result = ge_identity();
-    let mut temp = *P;
+    let mut temp = *p;
 
     for i in 0..256 {
         let byte_idx = i / 8;
@@ -89,8 +87,8 @@ pub(crate) fn ge_has_large_order(p: &GeP3) -> bool {
     let p4 = ge_p1p1_to_p3(&ge_double(&p2.to_p2()));
     let p8 = ge_p1p1_to_p3(&ge_double(&p4.to_p2()));
 
-    let x_is_zero = fe_is_zero(&p8.X);
-    let y_eq_z = fe_equal(&p8.Y, &p8.Z);
+    let x_is_zero = fe_is_zero(&p8.x);
+    let y_eq_z = fe_equal(&p8.y, &p8.z);
 
     !(x_is_zero && y_eq_z)
 }

@@ -22,16 +22,16 @@ name = "market"
 path = "src/main.rs"
 
 [dependencies]
+nonos_ed25519 = { path = "../nonos_ed25519" }
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
 nonos_marketplace_abi = { path = "../marketplace_abi" }
 
 [features]
 default = []
-# Replaces the default `CryptoVerifier` (which routes to
-# capsule_crypto through the kernel's `CryptoEd25519Verify`
-# syscall) with `RejectAll`. Useful when the kernel image does
-# not embed capsule_crypto; every signed index ends up refused,
-# which keeps install readiness honest in the offline build.
+# Replaces the default `CryptoVerifier`, which verifies in this
+# process with nonos_ed25519, with `RejectAll`. Every signed index
+# ends up refused, which keeps install readiness honest in a build
+# that is meant to accept nothing.
 offline-verify = []
 [profile.release]
 panic = "abort"
@@ -39,3 +39,11 @@ opt-level = 2
 lto = false
 debug = false
 strip = true
+
+# Matches every sibling capsule. Without it `cargo check` on the host fails
+# with "unwinding panics are not supported without std", so this crate could
+# not be checked outside a target build.
+[profile.dev]
+panic = "abort"
+opt-level = 0
+debug = true

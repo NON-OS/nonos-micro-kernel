@@ -36,7 +36,7 @@ pub fn wallet_address(store: &mut Store, req: Request<'_>, sender_pid: u32) -> V
         Err(_) => return encode_response(req.seq, EINVAL, &[]),
     };
     let mut pubkey = [0u8; 65];
-    let rc = nonos_libc::crypto_secp256k1_pubkey(secret.as_ptr(), pubkey.as_mut_ptr());
+    let rc = crate::server::secp::pubkey(&secret, &mut pubkey);
     for b in secret.iter_mut() {
         unsafe { core::ptr::write_volatile(b, 0) };
     }

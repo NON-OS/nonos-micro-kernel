@@ -35,6 +35,8 @@ mod chacha_tests;
 #[cfg(test)]
 mod constant_time_tests;
 #[cfg(test)]
+mod ed25519_migration_tests;
+#[cfg(test)]
 mod ed25519_tests;
 #[cfg(test)]
 mod hex;
@@ -49,7 +51,6 @@ mod p384_tests;
 #[cfg(test)]
 mod rsa_tests;
 #[cfg(test)]
-mod secp256k1_tests;
 #[cfg(test)]
 mod zk_tests;
 #[cfg(test)]

@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub use super::super::application::certification;
-pub use super::super::application::ethereum;
 pub use super::super::application::nonos_signing;
 pub use super::super::application::vault;
 

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hmac512::HmacSha512;
-use crate::wipe::wipe;
+use nonos_hash::HmacSha512;
+use nonos_hash::wipe;
 
 use super::scalar::{add_mod_n, is_valid_scalar};
 use super::xprv::Xprv;
@@ -54,8 +54,10 @@ fn split(parent: &Xprv, mut i: [u8; 64]) -> Option<Xprv> {
     chain.copy_from_slice(&i[32..]);
     wipe(&mut i);
 
-    // BIP32: reject the derivation when the tweak is out of range or the sum
-    // lands on zero; the caller moves to the next index. Never clamp.
+    /*
+     * BIP32: reject the derivation when the tweak is out of range or the sum
+     * lands on zero; the caller moves to the next index. Never clamp.
+     */
     if !is_valid_scalar(&tweak) {
         wipe(&mut tweak);
         wipe(&mut chain);

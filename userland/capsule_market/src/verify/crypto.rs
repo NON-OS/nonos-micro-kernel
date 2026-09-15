@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::crypto_ed25519_verify;
+use nonos_ed25519::{verify as ed25519_verify, Signature};
 
 use super::trait_def::{Verdict, Verifier};
 
@@ -28,13 +28,15 @@ impl Verifier for CryptoVerifier {
         if signature.len() != SIG_LEN {
             return Verdict::Refused;
         }
-        let rc = crypto_ed25519_verify(
-            pubkey.as_ptr(),
-            signature.as_ptr(),
-            signed_bytes.as_ptr(),
-            signed_bytes.len(),
-        );
-        if rc == 0 {
+        /*
+         * Verification is a library call now rather than a syscall. The
+         * kernel keeps ed25519 only for the boot chain, which decides whether
+         * a capsule loads at all; a market listing's signature is this
+         * capsule's own business and does not need ring 0 to check it.
+         */
+        let mut sig = [0u8; SIG_LEN];
+        sig.copy_from_slice(&signature[..SIG_LEN]);
+        if ed25519_verify(pubkey, signed_bytes, &Signature::from_bytes(&sig)) {
             Verdict::Accepted
         } else {
             Verdict::Refused

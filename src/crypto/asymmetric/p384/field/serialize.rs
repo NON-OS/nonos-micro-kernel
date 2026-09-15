@@ -23,9 +23,9 @@ const BYTES: usize = 48;
 impl FieldElement {
     pub fn from_bytes(bytes: &[u8; BYTES]) -> Option<Self> {
         let mut limbs = [0u64; LIMBS];
-        for i in 0..LIMBS {
+        for (i, limb) in limbs.iter_mut().enumerate() {
             let offset = (LIMBS - 1 - i) * 8;
-            limbs[i] = u64::from_be_bytes([
+            *limb = u64::from_be_bytes([
                 bytes[offset],
                 bytes[offset + 1],
                 bytes[offset + 2],

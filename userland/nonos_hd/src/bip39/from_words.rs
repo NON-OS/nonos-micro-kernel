@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::sha256::sha256;
-use crate::wipe::wipe;
+use nonos_hash::sha256;
+use nonos_hash::wipe;
 
 /// Rebuild entropy from BIP39 word indices and verify the checksum. Returns
 /// the entropy (front-filled) and its byte length, or None for a wrong word

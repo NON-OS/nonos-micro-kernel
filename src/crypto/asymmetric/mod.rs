@@ -20,4 +20,3 @@ pub mod ed25519;
 pub mod p256;
 pub mod p384;
 pub mod rsa;
-pub mod secp256k1;

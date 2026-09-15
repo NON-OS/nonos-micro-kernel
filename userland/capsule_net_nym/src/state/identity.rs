@@ -50,7 +50,7 @@ fn generate() -> Option<Identity> {
     let mut seed = [0u8; 32];
     crate::crypto::random::fill_random(&mut seed).ok()?;
     let mut public = [0u8; 32];
-    if nonos_libc::crypto_ed25519_pubkey(seed.as_ptr(), public.as_mut_ptr()) != 32 {
+    if crate::crypto::ed25519::pubkey(&seed, &mut public) != 32 {
         return None;
     }
     Some(Identity { seed, public })

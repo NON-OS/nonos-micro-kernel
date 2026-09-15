@@ -17,5 +17,9 @@ path = "src/lib.rs"
 # `spin::Mutex`. Same crate/version the kernel and net capsules pin.
 spin = { version = "0.9", default-features = false, features = ["once", "mutex", "spin_mutex"] }
 
+# The userland ed25519, so the migration is proved differentially before the
+# kernel keeps only its boot-chain verify.
+nonos_ed25519 = { path = "../nonos_ed25519" }
+
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

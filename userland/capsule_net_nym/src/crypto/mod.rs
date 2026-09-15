@@ -24,6 +24,8 @@ pub mod polyval;
 
 mod aead;
 pub mod ecdh;
+pub mod ed25519;
+pub mod ed25519_verify;
 pub mod hash;
 pub mod kdf;
 pub mod random;

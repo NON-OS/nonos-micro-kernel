@@ -20,27 +20,22 @@
 //! live in this crate, proven on the host against the official BIP39 and BIP32
 //! test vectors. The one primitive not implemented here is secp256k1 scalar
 //! multiplication: non-hardened derivation takes the parent public key from a
-//! caller-supplied provider, which inside the capsule is the kernel's proven
-//! `crypto_secp256k1_pubkey` syscall and in host tests is the audited k256
-//! crate. Secret intermediates are wiped with volatile writes on every path.
+//! caller-supplied provider, which inside the capsule is `nonos_secp256k1`
+//! and in host tests is the audited k256 crate. That provider used to be the
+//! kernel's `crypto_secp256k1_pubkey` syscall; the curve left ring 0, since it
+//! had no in-kernel caller and served only the wallet. Secret intermediates
+//! are wiped with volatile writes on every path.
 
 #![no_std]
 
-mod hmac512;
 mod pbkdf2;
-mod sha256;
-mod sha512;
-mod wipe;
 mod wordlist;
 
 pub mod bip32;
 pub mod bip39;
 mod path;
 
-pub use hmac512::{hmac_sha512, HmacSha512};
+pub use nonos_hash::{hmac_sha512, sha256, sha512, wipe, HmacSha512, Sha512};
 pub use path::derive_eth_key;
 pub use pbkdf2::pbkdf2_hmac_sha512;
-pub use sha256::sha256;
-pub use sha512::{sha512, Sha512};
-pub use wipe::wipe;
 pub use wordlist::ENGLISH_WORDLIST;

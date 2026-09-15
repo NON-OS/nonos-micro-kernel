@@ -130,11 +130,11 @@ fn verify_rejects_tampering() {
     assert!(!verify(&kp.public, b"nonos capsule manifest v2", &sig));
     // A flipped bit in S is rejected.
     let mut bad = sig.clone();
-    bad.S[0] ^= 0x01;
+    bad.s[0] ^= 0x01;
     assert!(!verify(&kp.public, msg, &bad));
     // A flipped bit in R is rejected.
     let mut bad_r = sig.clone();
-    bad_r.R[0] ^= 0x01;
+    bad_r.r[0] ^= 0x01;
     assert!(!verify(&kp.public, msg, &bad_r));
     // A different public key does not verify the signature.
     let other = KeyPair::from_seed([9u8; 32]);

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_libc::crypto_ed25519_verify;
+use crate::crypto::ed25519_verify::verify as ed25519_verify;
 
 use super::layout;
 use super::types::TopologyError;
@@ -29,7 +29,7 @@ pub fn check(body: &[u8]) -> Result<(), TopologyError> {
         None => return Err(TopologyError::NoAuthority),
     }
     let sig = &body[64..128];
-    if crypto_ed25519_verify(issuer.as_ptr(), sig.as_ptr(), msg.as_ptr(), msg.len()) != 0 {
+    if ed25519_verify(issuer, sig, &msg) != 0 {
         return Err(TopologyError::BadSignature);
     }
     Ok(())

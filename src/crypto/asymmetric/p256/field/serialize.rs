@@ -20,9 +20,9 @@ use super::types::FieldElement;
 impl FieldElement {
     pub fn from_bytes(bytes: &[u8; 32]) -> Option<Self> {
         let mut limbs = [0u64; 4];
-        for i in 0..4 {
+        for (i, limb) in limbs.iter_mut().enumerate() {
             let offset = (3 - i) * 8;
-            limbs[i] = u64::from_be_bytes([
+            *limb = u64::from_be_bytes([
                 bytes[offset],
                 bytes[offset + 1],
                 bytes[offset + 2],

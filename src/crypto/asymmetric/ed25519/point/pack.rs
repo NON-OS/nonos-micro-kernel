@@ -21,10 +21,10 @@ use crate::crypto::asymmetric::ed25519::field::{
     fe_tobytes, Fe,
 };
 
-pub(crate) fn ge_pack(P: &GeP3) -> [u8; 32] {
-    let Zinv = fe_invert(&P.Z);
-    let x = fe_mul(&P.X, &Zinv);
-    let y = fe_mul(&P.Y, &Zinv);
+pub(crate) fn ge_pack(p: &GeP3) -> [u8; 32] {
+    let z_inv = fe_invert(&p.z);
+    let x = fe_mul(&p.x, &z_inv);
+    let y = fe_mul(&p.y, &z_inv);
     let mut s = fe_tobytes(&y);
     let sign = (fe_is_odd(&x) as u8) & 1;
     s[31] |= sign << 7;
@@ -64,7 +64,7 @@ pub(crate) fn ge_unpack(s: &[u8; 32]) -> Option<GeP3> {
         x = fe_sub(&Fe::zero(), &x);
     }
 
-    Some(GeP3 { X: x, Y: y, Z: Fe::one(), T: fe_mul(&x, &y) })
+    Some(GeP3 { x, y, z: Fe::one(), t: fe_mul(&x, &y) })
 }
 
 pub(crate) fn ge_basepoint() -> GeP3 {
@@ -73,5 +73,5 @@ pub(crate) fn ge_basepoint() -> GeP3 {
         0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
         0x66, 0x66,
     ];
-    ge_unpack(&enc).unwrap_or_else(|| ge_identity())
+    ge_unpack(&enc).unwrap_or_else(ge_identity)
 }

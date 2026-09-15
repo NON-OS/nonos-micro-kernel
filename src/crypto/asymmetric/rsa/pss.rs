@@ -28,7 +28,7 @@ pub fn sign_pss(msg: &[u8], key: &RsaPrivateKey) -> Result<Vec<u8>, &'static str
     let salt = get_entropy(32);
 
     let em_bits = key.bits - 1;
-    let em_len = (em_bits + 7) / 8;
+    let em_len = em_bits.div_ceil(8);
     let hash_len = 32;
     let salt_len = 32;
 
@@ -78,7 +78,7 @@ pub fn verify_pss(msg: &[u8], sig: &[u8], key: &RsaPublicKey) -> bool {
     let hash = sha256(msg);
 
     let em_bits = key.bits - 1;
-    let em_len = (em_bits + 7) / 8;
+    let em_len = em_bits.div_ceil(8);
     let hash_len = 32;
     let salt_len = 32;
 
@@ -136,8 +136,8 @@ pub fn verify_pss(msg: &[u8], sig: &[u8], key: &RsaPublicKey) -> bool {
     // Constant-time padding verification
     let ps_len = em_len - hash_len - salt_len - 2;
     let mut padding_ok: u8 = 1;
-    for i in 0..ps_len {
-        padding_ok &= ct_eq_u8(db[i], 0x00);
+    for &byte in &db[..ps_len] {
+        padding_ok &= ct_eq_u8(byte, 0x00);
     }
     valid &= padding_ok;
 
@@ -191,7 +191,7 @@ pub fn verify_pss_sha384(msg: &[u8], sig: &[u8], key: &RsaPublicKey) -> bool {
     let hash = sha384(msg);
 
     let em_bits = key.bits - 1;
-    let em_len = (em_bits + 7) / 8;
+    let em_len = em_bits.div_ceil(8);
     let hash_len = 48;
     let salt_len = 48;
 
@@ -242,8 +242,8 @@ pub fn verify_pss_sha384(msg: &[u8], sig: &[u8], key: &RsaPublicKey) -> bool {
 
     let ps_len = em_len - hash_len - salt_len - 2;
     let mut padding_ok: u8 = 1;
-    for i in 0..ps_len {
-        padding_ok &= ct_eq_u8(db[i], 0x00);
+    for &byte in &db[..ps_len] {
+        padding_ok &= ct_eq_u8(byte, 0x00);
     }
     valid &= padding_ok;
 

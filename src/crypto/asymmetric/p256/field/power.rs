@@ -24,7 +24,7 @@ impl FieldElement {
         for &limb in exp.iter() {
             for bit in 0..64 {
                 let mul_result = result.mul(&base);
-                let mask = 0u64.wrapping_sub(((limb >> bit) & 1) as u64);
+                let mask = 0u64.wrapping_sub((limb >> bit) & 1);
                 result = Self::ct_select(mask, &mul_result, &result);
                 base = base.square();
             }

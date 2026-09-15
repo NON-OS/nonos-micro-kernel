@@ -122,7 +122,7 @@ pub fn verify(pk: &PublicKey, message_hash: &[u8; 32], sig: &Signature) -> bool 
     let mut valid: u64 = 1;
 
     // Parse public key - use identity point as dummy if invalid
-    let point = match AffinePoint::from_uncompressed(pk.try_into().unwrap_or(&[0u8; 65])) {
+    let point = match AffinePoint::from_uncompressed(pk) {
         Some(p) => p,
         None => {
             valid = 0;

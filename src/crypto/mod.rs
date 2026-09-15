@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(clippy::too_many_arguments)]
 
 extern crate alloc;
 
@@ -26,7 +25,6 @@ pub mod error;
 pub mod exports;
 pub mod hardware_accel;
 pub mod hash;
-pub mod kernel_keys;
 pub mod pqc;
 pub mod pqclean_support;
 pub mod random_api;
@@ -40,7 +38,6 @@ pub mod zk;
 pub mod zk_kernel;
 
 pub use asymmetric::ed25519;
-pub use asymmetric::secp256k1;
 pub use error::{CryptoError, CryptoResult};
 pub use hash::blake3;
 pub use hash::sha3;

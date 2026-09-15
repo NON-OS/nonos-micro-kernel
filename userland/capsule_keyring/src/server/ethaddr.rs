@@ -16,7 +16,7 @@
 
 pub fn address_of(secret: &[u8; 32]) -> Option<[u8; 20]> {
     let mut pubkey = [0u8; 65];
-    if nonos_libc::crypto_secp256k1_pubkey(secret.as_ptr(), pubkey.as_mut_ptr()) != 65 {
+    if crate::server::secp::pubkey(&secret, &mut pubkey) != 65 {
         return None;
     }
     let mut hash = [0u8; 32];

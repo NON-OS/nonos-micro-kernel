@@ -104,9 +104,9 @@ pub fn oaep_decrypt(private_key: &RsaPrivateKey, ciphertext: &[u8]) -> CryptoRes
     let mut found_sep: u8 = 0;
     let mut invalid_padding: u8 = 0;
 
-    for i in hash_len..db.len() {
-        let is_zero = ct_is_zero(db[i]);
-        let is_one = ct_is_eq(db[i], 0x01);
+    for (i, &byte) in db.iter().enumerate().skip(hash_len) {
+        let is_zero = ct_is_zero(byte);
+        let is_one = ct_is_eq(byte, 0x01);
 
         let should_update = (!found_sep) & is_one;
         sep_idx = ct_select_usize(should_update, i, sep_idx);
@@ -118,7 +118,7 @@ pub fn oaep_decrypt(private_key: &RsaPrivateKey, ciphertext: &[u8]) -> CryptoRes
     }
 
     error_mask |= invalid_padding;
-    error_mask |= !found_sep.wrapping_sub(1) & 0xFF;
+    error_mask |= !found_sep.wrapping_sub(1);
 
     if error_mask != 0 {
         return Err(CryptoError::InvalidLength);
@@ -170,11 +170,11 @@ fn pkcs1_v15_encrypt_pad(data: &[u8], key_size: usize) -> Result<Vec<u8>, &'stat
     padded[1] = 0x02;
 
     let padding_len = key_size - data.len() - 3;
-    for i in 2..(2 + padding_len) {
+    for slot in padded.iter_mut().take(2 + padding_len).skip(2) {
         loop {
             let random = get_entropy(1);
             if random[0] != 0 {
-                padded[i] = random[0];
+                *slot = random[0];
                 break;
             }
         }

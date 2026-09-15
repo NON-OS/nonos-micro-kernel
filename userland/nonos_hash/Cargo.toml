@@ -1,0 +1,18 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# The hash primitives the wallet, the signing crates and the key derivation
+# share: SHA-256, SHA-512, HMAC-SHA-512, and a wipe the compiler keeps. No
+# dependencies and no_std, so a crate that needs a digest does not link a
+# word list to get one.
+[package]
+name = "nonos_hash"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

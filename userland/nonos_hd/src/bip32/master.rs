@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::hmac512::hmac_sha512;
-use crate::wipe::wipe;
+use nonos_hash::hmac_sha512;
+use nonos_hash::wipe;
 
 use super::scalar::is_valid_scalar;
 use super::xprv::Xprv;

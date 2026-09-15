@@ -17,4 +17,4 @@
 pub use super::super::asymmetric::ed25519::{
     sign, verify, verify as verify_ed25519, KeyPair, Signature,
 };
-pub use super::super::asymmetric::{curve25519, ed25519, p256, rsa, secp256k1};
+pub use super::super::asymmetric::{curve25519, ed25519, p256, rsa};

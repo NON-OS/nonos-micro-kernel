@@ -19,7 +19,7 @@ use super::sizes::{EPHEMERAL_BYTES, NONCE_BYTES, SIGNATURE_BYTES};
 use crate::crypto::gcm_siv::seal;
 use crate::crypto::random::fill_random;
 use crate::crypto::types::CryptoError;
-use nonos_libc::crypto_ed25519_sign;
+use crate::crypto::ed25519::sign as ed25519_sign;
 
 /// Sign both ephemeral keys with our identity and seal under the derived key.
 ///
@@ -35,12 +35,7 @@ pub fn seal_material(
     signed[..EPHEMERAL_BYTES].copy_from_slice(own_ephemeral);
     signed[EPHEMERAL_BYTES..].copy_from_slice(remote_ephemeral);
     let mut signature = [0u8; SIGNATURE_BYTES];
-    let n = crypto_ed25519_sign(
-        identity_seed.as_ptr(),
-        signed.as_ptr(),
-        signed.len(),
-        signature.as_mut_ptr(),
-    );
+    let n = ed25519_sign(identity_seed, &signed, &mut signature);
     if n != SIGNATURE_BYTES as i64 {
         return Err(CryptoError::Mac);
     }

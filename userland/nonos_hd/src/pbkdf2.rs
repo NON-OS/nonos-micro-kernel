@@ -19,8 +19,8 @@
 // U1 = PRF(password, salt || 0x00000001). Allocation-free; every
 // intermediate U value is wiped before return.
 
-use crate::hmac512::{hmac_sha512, HmacSha512};
-use crate::wipe::wipe;
+use nonos_hash::{hmac_sha512, HmacSha512};
+use nonos_hash::wipe;
 
 pub fn pbkdf2_hmac_sha512(password: &[u8], salt: &[u8], iterations: u32, out: &mut [u8; 64]) {
     let mut mac = HmacSha512::new(password);

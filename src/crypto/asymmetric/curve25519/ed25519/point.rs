@@ -171,6 +171,6 @@ impl EdwardsPoint {
         let x_normalized = self.x.mul(&z_inv);
         let y_normalized = self.y.mul(&z_inv);
 
-        x_normalized.is_zero() && y_normalized.eq(&FieldElement::one())
+        x_normalized.is_zero() && y_normalized.equals(&FieldElement::one())
     }
 }

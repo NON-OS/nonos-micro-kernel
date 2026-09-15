@@ -74,15 +74,24 @@ impl Scalar {
         let mut result = [0u64; LIMBS];
         let mut borrow = 0i128;
 
-        for i in 0..LIMBS {
-            borrow += Self::N[i] as i128 - self.0[i] as i128;
+        for (out, (a, b)) in result.iter_mut().zip(Self::N.iter().zip(self.0.iter())) {
+
+            borrow += *a as i128 - *b as i128;
+
             if borrow < 0 {
-                result[i] = (borrow + (1i128 << 64)) as u64;
+
+                *out = (borrow + (1i128 << 64)) as u64;
+
                 borrow = -1;
+
             } else {
-                result[i] = borrow as u64;
+
+                *out = borrow as u64;
+
                 borrow = 0;
+
             }
+
         }
 
         Self(result)

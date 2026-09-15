@@ -24,9 +24,7 @@ pub(super) fn pkcs1_pad_type1(data: &[u8], em_len: usize) -> CryptoResult<Vec<u8
     let mut em = Vec::with_capacity(em_len);
     em.push(0x00);
     em.push(0x01);
-    for _ in 0..(em_len - data.len() - 3) {
-        em.push(0xFF);
-    }
+    em.extend(core::iter::repeat_n(0xFF, em_len - data.len() - 3));
     em.push(0x00);
     em.extend_from_slice(data);
     Ok(em)
@@ -42,9 +40,9 @@ pub(super) fn pkcs1_unpad_type1(em: &[u8]) -> CryptoResult<Vec<u8>> {
     let mut sep_idx: usize = 0;
     let mut found_sep: u8 = 0;
     let mut invalid_padding: u8 = 0;
-    for i in 2..em.len() {
-        let is_zero = ct_eq_u8(em[i], 0x00);
-        let is_ff = ct_eq_u8(em[i], 0xFF);
+    for (i, &byte) in em.iter().enumerate().skip(2) {
+        let is_zero = ct_eq_u8(byte, 0x00);
+        let is_ff = ct_eq_u8(byte, 0xFF);
         sep_idx = ct_select_usize(is_zero & (1 ^ found_sep), i, sep_idx);
         found_sep |= is_zero;
         invalid_padding |= (1 ^ found_sep) & (1 ^ is_ff) & (1 ^ is_zero);

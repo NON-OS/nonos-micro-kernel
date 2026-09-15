@@ -65,7 +65,7 @@ impl FieldElement {
         acc == 0
     }
 
-    pub fn eq(&self, other: &FieldElement) -> bool {
+    pub fn equals(&self, other: &FieldElement) -> bool {
         let a = self.to_bytes();
         let b = other.to_bytes();
         let mut diff = 0u8;

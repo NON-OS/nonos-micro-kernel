@@ -52,13 +52,9 @@ MDRQ = 0x5152444D
 APPS = 0x53505041
 CDAD = 0x44414443
 CEAD = 0x44414543
-CEDP = 0x50444543
-CEDS = 0x53444543
 CHKF = 0x464B4843
 CHMC = 0x434D4843
 CKEC = 0x43454B43
-CSKS = 0x534B5343
-CSPB = 0x42505343
 CXPK = 0x4B505843
 CXSH = 0x48535843
 MAST = 0x5453414D
@@ -95,7 +91,6 @@ CRND = 0x444E5243
 CHSH = 0x48534843
 CENC = 0x434E4543
 CDEC = 0x43454443
-CEDV = 0x56444543
 
 ARBT = 0x54425241
 ASDN = 0x4E445341
@@ -164,12 +159,6 @@ ret  = {type="i64"}
 nr   = 0x43454443
 caps = ["Crypto"]
 args = [{name="key_id",type="u64",dir="in"},{name="ct",type="u8*",dir="in"},{name="ct_len",type="usize",dir="in"},{name="pt_out",type="u8*",dir="out"},{name="pt_cap",type="usize",dir="in"}]
-ret  = {type="i64"}
-
-[desc.CEDV]
-nr   = 0x56444543
-caps = ["Crypto"]
-args = [{name="pubkey",type="[u8;32]",dir="in"},{name="msg",type="u8*",dir="in"},{name="msg_len",type="usize",dir="in"},{name="sig",type="[u8;64]",dir="in"}]
 ret  = {type="i64"}
 
 [desc.ARBT]
@@ -436,18 +425,6 @@ caps = ["valid_token"]
 args = [{name="algo",type="u64",dir="in"},{name="key_ptr",type="u64",dir="in"},{name="nonce_ptr",type="u64",dir="in"},{name="frame_ptr",type="u64",dir="in"},{name="frame_len",type="u64",dir="in"},{name="ciphertext_ptr",type="u64",dir="out"}]
 ret  = {type="i64"}
 
-[desc.CEDP]
-nr   = 0x50444543
-caps = ["valid_token"]
-args = [{name="seed_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
-ret  = {type="i64"}
-
-[desc.CEDS]
-nr   = 0x53444543
-caps = ["valid_token"]
-args = [{name="seed_ptr",type="u64",dir="in"},{name="msg_ptr",type="u64",dir="in"},{name="msg_len",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
-ret  = {type="i64"}
-
 [desc.CHKF]
 nr   = 0x464B4843
 caps = ["valid_token"]
@@ -464,18 +441,6 @@ ret  = {type="i64"}
 nr   = 0x43454B43
 caps = ["valid_token"]
 args = [{name="data",type="u64",dir="in"},{name="len",type="u64",dir="in"},{name="out",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
-ret  = {type="i64"}
-
-[desc.CSKS]
-nr   = 0x534B5343
-caps = ["valid_token"]
-args = [{name="sk_ptr",type="u64",dir="in"},{name="digest_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
-ret  = {type="i64"}
-
-[desc.CSPB]
-nr   = 0x42505343
-caps = ["valid_token"]
-args = [{name="sk_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CXPK]

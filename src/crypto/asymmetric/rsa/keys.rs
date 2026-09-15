@@ -56,7 +56,7 @@ pub fn generate_keypair() -> Result<(RsaPublicKey, RsaPrivateKey), CryptoError> 
 pub fn generate_keypair_with_bits(
     bits: usize,
 ) -> Result<(RsaPublicKey, RsaPrivateKey), CryptoError> {
-    if bits < 1024 || bits % 8 != 0 {
+    if bits < 1024 || !bits.is_multiple_of(8) {
         return Err(CryptoError::InvalidLength);
     }
 
@@ -97,7 +97,7 @@ fn generate_prime(bits: usize) -> Result<BigUint, CryptoError> {
         return Err(CryptoError::InvalidLength);
     }
 
-    let bytes = (bits + 7) / 8;
+    let bytes = bits.div_ceil(8);
 
     for _ in 0..1000 {
         let mut candidate_bytes = get_entropy(bytes);

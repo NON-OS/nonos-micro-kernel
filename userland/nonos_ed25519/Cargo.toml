@@ -1,0 +1,22 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# ed25519 for userland. The same arithmetic the kernel carried, moved out of
+# ring 0 for everything but boot-chain verification, which stays in the kernel
+# because it is the root of trust. no_std; SHA-512 comes from nonos_hash, which is
+# already proven against the standard vectors.
+[package]
+name = "nonos_ed25519"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_hash = { path = "../nonos_hash" }
+# The base-point comb table is built once behind a spin::Once, exactly as in
+# the kernel. Same crate and version the kernel and the net capsules pin.
+spin = { version = "0.9", default-features = false, features = ["once"] }

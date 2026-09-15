@@ -18,49 +18,43 @@ pub(crate) use crate::crypto::asymmetric::ed25519::field::Fe;
 
 #[derive(Copy, Clone)]
 pub(crate) struct GeP3 {
-    pub(crate) X: Fe,
-    pub(crate) Y: Fe,
-    pub(crate) Z: Fe,
-    pub(crate) T: Fe,
+    pub(crate) x: Fe,
+    pub(crate) y: Fe,
+    pub(crate) z: Fe,
+    pub(crate) t: Fe,
 }
 
 #[derive(Copy, Clone)]
 pub(crate) struct GeP2 {
-    pub(crate) X: Fe,
-    pub(crate) Y: Fe,
-    pub(crate) Z: Fe,
+    pub(crate) x: Fe,
+    pub(crate) y: Fe,
+    pub(crate) z: Fe,
 }
 
 #[derive(Copy, Clone)]
 pub(crate) struct GeCached {
-    pub(crate) YplusX: Fe,
-    pub(crate) YminusX: Fe,
-    pub(crate) Z: Fe,
-    pub(crate) T2d: Fe,
-}
-
-impl GeCached {
-    pub(crate) fn identity() -> Self {
-        Self { YplusX: Fe::one(), YminusX: Fe::one(), Z: Fe::one(), T2d: Fe::zero() }
-    }
+    pub(crate) y_plus_x: Fe,
+    pub(crate) y_minus_x: Fe,
+    pub(crate) z: Fe,
+    pub(crate) t2d: Fe,
 }
 
 impl GeP3 {
     pub(crate) fn identity() -> Self {
-        Self { X: Fe::zero(), Y: Fe::one(), Z: Fe::one(), T: Fe::zero() }
+        Self { x: Fe::zero(), y: Fe::one(), z: Fe::one(), t: Fe::zero() }
     }
 
-    pub(crate) fn to_p2(&self) -> GeP2 {
-        GeP2 { X: self.X, Y: self.Y, Z: self.Z }
+    pub(crate) fn to_p2(self) -> GeP2 {
+        GeP2 { x: self.x, y: self.y, z: self.z }
     }
 }
 
 #[derive(Copy, Clone)]
 pub(crate) struct GeP1P1 {
-    pub(crate) X: Fe,
-    pub(crate) Y: Fe,
-    pub(crate) Z: Fe,
-    pub(crate) T: Fe,
+    pub(crate) x: Fe,
+    pub(crate) y: Fe,
+    pub(crate) z: Fe,
+    pub(crate) t: Fe,
 }
 
 pub(crate) const D: Fe = Fe([

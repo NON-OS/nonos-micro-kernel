@@ -1,6 +1,11 @@
-//! Host stand-in for the two syscalls the handshake reaches for. Same
-//! signatures and same return conventions as the capsule's libc, so the
-//! handshake code under test is unmodified.
+//! Host stand-in for the two calls the handshake reaches for. Same signatures
+//! and same return conventions, so the handshake code under test is
+//! unmodified.
+//!
+//! These were syscalls. ed25519 left ring 0 for everything but boot-chain
+//! verification, so the capsule now calls `nonos_ed25519` through its own
+//! `crypto::ed25519` adapter, and this shim stands in for that instead. The
+//! names are kept because the live-gateway harness links against them.
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 
 /// Returns 64 on success, as the kernel wrapper does.

@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use alloc::vec::Vec;
-use nonos_libc::crypto_ed25519_verify;
+use crate::crypto::ed25519_verify::verify as ed25519_verify;
 
 use super::error::CredentialError;
 use super::types::StoredCredential;
@@ -42,7 +42,7 @@ pub fn parse(body: &[u8], now_ms: u64) -> Result<StoredCredential, CredentialErr
     let sig = &body[40..104];
     let payload = &body[104..];
     let msg = credential_message(&body[0..8], payload);
-    if crypto_ed25519_verify(issuer.as_ptr(), sig.as_ptr(), msg.as_ptr(), msg.len()) != 0 {
+    if ed25519_verify(issuer, sig, &msg) != 0 {
         return Err(CredentialError::BadSignature);
     }
     let mut material = [0u8; 32];

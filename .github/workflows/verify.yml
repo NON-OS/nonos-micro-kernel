@@ -184,6 +184,12 @@ jobs:
       - name: Crypto proof clippy
         run: cargo clippy --release -- -D warnings
         working-directory: userland/crypto_proofs
+      - name: secp256k1 in ring three
+        run: cargo test --release
+        working-directory: userland/nonos_secp256k1
+      - name: ed25519 in ring three
+        run: cargo test --release
+        working-directory: userland/nonos_ed25519
 
   kani:
     runs-on: ubuntu-latest
