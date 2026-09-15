@@ -1,7 +1,22 @@
 # Booting the image under QEMU (GUI, headless, serial, GDB, TPM), plus the
 # static and verification gates that run over the built kernel.
 
-.PHONY: nonos-mk-run-smp-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-check-caps nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast
+.PHONY: nonos-mk-boot-matrix nonos-mk-run-smp-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-check-caps nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast
+
+# Build a kernel profile, then pack the ESP from it.
+#
+# The two steps must never be sibling prerequisites of a boot target, and never
+# two goals on one command line. MAKEFLAGS carries -j unconditionally
+# (mk/00-config.mk), so in either shape make is free to start the pack chain
+# while the kernel is still compiling, and the ESP ships the link before this
+# one. The boot then reports the previous build's behaviour and the reader
+# attributes it to the tree in front of them, which is worse than a failure
+# because it passes. Two sub-makes is the only construction that orders them,
+# and nonos-mk-esp checks the result.
+define nonos_kernel_and_esp
+	@$(MAKE) --no-print-directory $(1)
+	@$(MAKE) --no-print-directory nonos-mk-esp
+endef
 
 # QEMU
 
@@ -69,10 +84,13 @@ nonos-mk-dev-run:
 	@$(MAKE) --no-print-directory NONOS_DEV=1 \
 		NONOS_GOP_PREF=$(QEMU_XRES)x$(QEMU_YRES) nonos-mk-run
 
-# The kernel link and the ESP resolve last, in that order. Everything
-# before them can refresh capsule ELFs and trailers the kernel embeds, and
-# an ESP packed earlier shipped a kernel one generation behind the tree.
-nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW) nonos-mk-zerostate nonos-mk-esp
+# The kernel link and the ESP come last, in that order, because everything
+# before them can refresh capsule ELFs and trailers the kernel embeds and an
+# ESP packed earlier ships a kernel one generation behind the tree. They sit
+# in the recipe rather than the prerequisite list: a prerequisite list states
+# no order, it only states a set.
+nonos-mk-run: nonos-mk-swtpm-start nonos-mk-live-production-proof $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
+	$(call nonos_kernel_and_esp,nonos-mk-zerostate)
 	@echo "Booting NONOS in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@echo "  TPM: swtpm CRB"
@@ -140,7 +158,8 @@ nonos-mk-run-wizard: nonos-mk-setup-wizard-esp $(QEMU_BLK_IMG) $(QEMU_OVMF_VARS_
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial mon:stdio -vga none -no-reboot
 
-nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF_VARS_RW)
+nonos-mk-terminal-only-run: $(QEMU_OVMF_VARS_RW)
+	$(call nonos_kernel_and_esp,nonos-mk-terminal-only-prod)
 	@echo "Booting NONOS terminal-only in QEMU..."
 	@echo "  Quit: Ctrl+A then X"
 	@$(QEMU) -m 1G -cpu $(QEMU_CPU) -smp 1 -machine q35 \
@@ -150,7 +169,8 @@ nonos-mk-terminal-only-run: nonos-mk-terminal-only-prod nonos-mk-esp $(QEMU_OVMF
 		$(QEMU_GPU) $(QEMU_RNG) \
 		-serial mon:stdio -no-reboot
 
-nonos-mk-run-serial: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
+nonos-mk-run-serial: $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
+	$(call nonos_kernel_and_esp,nonos-mk-desktop-gui-prod)
 	@echo "Booting NONOS serial console in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
 	@$(QEMU) -m $(QEMU_MEM) -accel hvf -cpu host,+rdrand,+rdseed -smp 1 -machine q35 \
@@ -165,7 +185,8 @@ nonos-mk-run-serial-net:
 nonos-mk-run-serial-nat:
 	@$(MAKE) --no-print-directory QEMU_NET_MODE=nat nonos-mk-run-serial
 
-nonos-mk-run-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
+nonos-mk-run-serial-log: $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
+	$(call nonos_kernel_and_esp,nonos-mk-desktop-gui-prod)
 	@mkdir -p $(dir $(QEMU_SERIAL_LOG))
 	@echo "Booting NONOS serial console in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
@@ -187,7 +208,8 @@ nonos-mk-run-input-probe-inject-serial-log: nonos-mk-input-probe-inject-esp $(QE
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial "file:$(QEMU_SERIAL_LOG)" -display none -no-reboot
 
-nonos-mk-debug: nonos-mk-desktop-gui-prod nonos-mk-esp
+nonos-mk-debug:
+	$(call nonos_kernel_and_esp,nonos-mk-desktop-gui-prod)
 	@echo "QEMU listening for GDB on :1234   (gdb -ex 'target remote :1234')"
 	@$(QEMU) -m $(QEMU_MEM) -cpu $(QEMU_CPU) -smp $(QEMU_SMP) -machine q35 \
 		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
@@ -289,8 +311,7 @@ nonos-mk-boot-terminal:
 # embeds are all empty stubs, and every spawn refuses with a cert EOF. Dev
 # trees never see it because a feature kernel is already newer than the rule.
 nonos-mk-plan-a-runtime: $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
-	@$(MAKE) --no-print-directory nonos-mk-desktop-gui-prod
-	@$(MAKE) --no-print-directory nonos-mk-esp
+	$(call nonos_kernel_and_esp,nonos-mk-desktop-gui-prod)
 	@QEMU="$(QEMU)" OVMF="$(OVMF)" OVMF_VARS="$(OVMF_VARS)" \
 		QEMU_OVMF_VARS_RW="$(QEMU_OVMF_VARS_RW)" QEMU_BLK_IMG="$(QEMU_BLK_IMG)" \
 		ESP_DIR="$(ESP_DIR)" ./nonos-ci/plan-a-runtime.sh
@@ -364,7 +385,8 @@ nonos-mk-test: nonos-mk-verify nonos-mk-boot-ramfs nonos-mk-boot-keyring nonos-m
 # The multiprocessor boot. Identical to nonos-mk-run-serial-log except that
 # QEMU is given more than one CPU and the kernel is built with nonos-smp, so
 # the [SMP-PROOF] line in the log is the AP bring-up reporting itself.
-nonos-mk-run-smp-serial-log: nonos-mk-smp-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
+nonos-mk-run-smp-serial-log: $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP)
+	$(call nonos_kernel_and_esp,nonos-mk-smp-prod)
 	@mkdir -p $(dir $(QEMU_SMP_SERIAL_LOG))
 	@echo "Booting NONOS on $(QEMU_SMP) CPUs in QEMU..."
 	@echo "  Network: $(QEMU_NET_DESC)"
@@ -374,3 +396,25 @@ nonos-mk-run-smp-serial-log: nonos-mk-smp-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QE
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial "file:$(QEMU_SMP_SERIAL_LOG)" -display none -no-reboot
+
+# The machine matrix. Both shipping images (single CPU, and the same tree with
+# nonos-smp) are packed into their own ESP copies, then scripts/boot_matrix.py
+# boots each cell of scripts/bootmatrix/cells.py BOOT_MATRIX_REPEAT times: q35
+# and i440fx, one to eight CPUs, with and without an IOMMU, and a kill during
+# store traffic followed by a reboot of the same disk. A cell fails on any boot
+# that misses readiness, reports a fault, brings up fewer CPUs than it was
+# given, or says DMA is unrestricted with an IOMMU present.
+BOOT_MATRIX_DIR ?= $(TARGET_DIR)/boot-matrix
+BOOT_MATRIX_REPEAT ?= 5
+BOOT_MATRIX_TIMEOUT ?= 300
+BOOT_MATRIX_CELLS ?=
+nonos-mk-boot-matrix: $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
+	$(call nonos_kernel_and_esp,nonos-mk-desktop-gui-prod)
+	@rm -rf $(BOOT_MATRIX_DIR)/esp-up && mkdir -p $(BOOT_MATRIX_DIR) && cp -R $(ESP_DIR) $(BOOT_MATRIX_DIR)/esp-up
+	$(call nonos_kernel_and_esp,nonos-mk-smp-prod)
+	@rm -rf $(BOOT_MATRIX_DIR)/esp-smp && cp -R $(ESP_DIR) $(BOOT_MATRIX_DIR)/esp-smp
+	@$(NONOS_PYTHON) scripts/boot_matrix.py \
+		--esp up=$(BOOT_MATRIX_DIR)/esp-up --esp smp=$(BOOT_MATRIX_DIR)/esp-smp \
+		--qemu "$(QEMU)" --ovmf "$(OVMF)" --ovmf-vars "$(QEMU_OVMF_VARS_RW)" --blk-img "$(QEMU_BLK_IMG)" \
+		--extra "$(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG)" \
+		--repeat $(BOOT_MATRIX_REPEAT) --timeout $(BOOT_MATRIX_TIMEOUT) --out $(BOOT_MATRIX_DIR) $(BOOT_MATRIX_CELLS)

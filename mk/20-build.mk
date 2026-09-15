@@ -1236,6 +1236,10 @@ nonos-mk-input-probe-inject-esp: $(NONOS_BOOT_EFI)
 	@cp $(TARGET_DIR)/kernel_attested.bin $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos/kernel.bin
 	@printf "timeout=0\ndefault=nonos\n" > $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos/boot.cfg
 	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(NONOS_INPUT_PROBE_INJECT_ESP)/startup.nsh
+	@# This target packs its own ESP instead of going through nonos-mk-esp, so
+	@# it needs the same check: the staged kernel is the one just linked.
+	@$(NONOS_PYTHON) scripts/check_staged_kernel.py --elf $(MICROKERNEL_BIN) \
+		--staged $(NONOS_INPUT_PROBE_INJECT_ESP)/EFI/nonos/kernel.bin
 
 nonos-mk-terminal-only-prod: $(proof-io_ARTIFACTS) $(ramfs_ARTIFACTS) $(keyring_ARTIFACTS) \
 		$(entropy_ARTIFACTS) $(crypto_ARTIFACTS) $(vfs_ARTIFACTS) \
@@ -1366,6 +1370,13 @@ endif
 	@cp $(TARGET_DIR)/kernel_attested.bin $(ESP_DIR)/EFI/nonos/kernel.bin
 	@printf "timeout=0\ndefault=nonos\n" > $(ESP_DIR)/EFI/nonos/boot.cfg
 	@echo 'fs0:\EFI\Boot\BOOTX64.EFI' > $(ESP_DIR)/startup.nsh
+	@# The ELF just linked is a byte prefix of what was staged, or the pack
+	@# chain raced the link and this ESP boots an older kernel. Checked here
+	@# rather than in each boot target, so nothing that consumes an ESP can
+	@# skip it and no boot verdict can describe a kernel that is not in the
+	@# tree.
+	@$(NONOS_PYTHON) scripts/check_staged_kernel.py \
+		--elf $(MICROKERNEL_BIN) --staged $(ESP_DIR)/EFI/nonos/kernel.bin
 	@echo "ESP ready at $(ESP_DIR)"
 
 # Produce a real, flashable GPT disk image with a FAT32 EFI System Partition.

@@ -1,0 +1,8 @@
+capsule_driver_bga
+capsule_driver_hda
+capsule_driver_i2c_hid
+capsule_driver_i2c_pci
+capsule_driver_ps2_input
+capsule_driver_rtl8169
+capsule_driver_virtio_gpu
+capsule_driver_virtio_rng

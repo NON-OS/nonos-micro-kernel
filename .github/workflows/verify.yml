@@ -36,6 +36,20 @@ jobs:
         run: cargo clippy --manifest-path nonos-verify/Cargo.toml --all-targets -- -D warnings
       - name: Production source hygiene
         run: cargo run --manifest-path nonos-verify/Cargo.toml -- hygiene
+      - name: No new admissions of unsupported work in shipping code
+        run: |
+          python3 scripts/check_stubs.py --self-test
+          python3 scripts/check_stubs.py
+      - name: No new lint switch in the tree
+        run: |
+          python3 scripts/check_allows.py --self-test
+          python3 scripts/check_allows.py
+      - name: No new exported function that nothing calls
+        run: |
+          python3 scripts/check_unreachable.py --self-test
+          python3 scripts/check_unreachable.py
+      - name: Every driver capsule carries a conformance proof crate
+        run: python3 scripts/check_driver_proofs.py
       # A feature no lane enables gates code nothing has compiled since a person
       # last built it by hand. The dark set is held against a baseline that may
       # only shrink.
