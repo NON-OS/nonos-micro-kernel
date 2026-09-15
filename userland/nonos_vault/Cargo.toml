@@ -1,0 +1,19 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# One way to keep something on an amnesic machine. Seals a record under a key
+# the TPM derives from its owner seed and the boot PCRs, with a separate key
+# per record so one recovered key does not open the rest. no_std.
+[package]
+name = "nonos_vault"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_hd = { path = "../nonos_hd" }
+nonos_seal = { path = "../nonos_seal" }

@@ -106,6 +106,7 @@ fn submit(state: &mut State) -> EventOutcome {
                 state.address_ready = true;
                 state.recover_active = false;
                 state.status = b"wallet recovered";
+                super::keep::keep(state);
                 super::probe_tick::probe_kick(state)
             }
             Err(_) => {

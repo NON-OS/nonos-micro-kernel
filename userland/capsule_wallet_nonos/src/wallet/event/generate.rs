@@ -47,9 +47,11 @@ pub fn generate(state: &mut State) -> EventOutcome {
     }
     if !ok {
         super::backup::wipe_backup(state);
-        // Name the real reason instead of always blaming entropy: the keyring
-        // returns EACCES (-13) when the caller identity does not match, ENOSPC
-        // (-28) when its slots are full, and -11 when it cannot be reached.
+        /*
+         * Name the real reason instead of always blaming entropy: the keyring
+         * returns EACCES (-13) when the caller identity does not match, ENOSPC
+         * (-28) when its slots are full, and -11 when it cannot be reached.
+         */
         state.status = match last_err {
             -13 => b"generate blocked: keyring rejected caller".as_slice(),
             -28 => b"keyring is full".as_slice(),
@@ -64,11 +66,14 @@ pub fn generate(state: &mut State) -> EventOutcome {
             state.address = addr;
             state.address_ready = true;
             state.view = crate::wallet::state::VIEW_RECEIVE;
-            // Show the one-time backup screen before anything else; the words
-            // are wiped the moment the user confirms they are written down.
+            /*
+             * Show the one-time backup screen before anything else; the words
+             * are wiped the moment the user confirms they are written down.
+             */
             state.backup_count = count;
             state.backup_active = true;
             state.status = b"wallet created, write down the phrase";
+            super::keep::keep(state);
             super::probe_tick::probe_kick(state)
         }
         Err(_) => {

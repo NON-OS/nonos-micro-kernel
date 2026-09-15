@@ -22,6 +22,8 @@ mod live_view;
 mod new;
 mod rail_allowed;
 mod record_tx;
+mod restore;
+mod restore_words;
 mod types;
 
 pub use default_net::default_net;

@@ -23,4 +23,5 @@
 pub mod ak;
 pub mod crb;
 pub mod error;
+pub mod machine_key;
 pub mod quote;

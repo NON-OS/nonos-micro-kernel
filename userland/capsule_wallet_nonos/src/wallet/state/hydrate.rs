@@ -18,6 +18,7 @@ use crate::wallet::ipc::{decode_rails, lookup_keyring, lookup_self_pid, read_rai
 use crate::wallet::state::State;
 
 use super::filter_rails::filter_rails;
+use super::restore::restore;
 
 pub fn hydrate(state: &mut State) {
     if state.keyring_port == 0 {
@@ -30,6 +31,7 @@ pub fn hydrate(state: &mut State) {
         state.status = b"keyring unavailable";
         return;
     }
+    restore(state);
     match read_rails(state.keyring_port).and_then(|rx| decode_rails(&rx, &mut state.rails)) {
         Ok(n) => {
             state.rail_count = filter_rails(&mut state.rails, n);

@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the TPM machine-key derivation. The command
+# builders and response parsers are the kernel's own files, included via
+# `#[path]`, driven against byte vectors written from the TPM 2.0 library
+# specification. When `swtpm` is on the PATH the whole six-command sequence
+# also runs against a real TPM 2.0 implementation over its socket interface.
+[package]
+name = "tpm_key_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+spin = "0.9"

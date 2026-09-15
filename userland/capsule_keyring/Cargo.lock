@@ -25,7 +25,9 @@ name = "nonos_capsule_keyring"
 version = "0.3.0"
 dependencies = [
  "nonos_hd",
+ "nonos_seal",
  "nonos_userland_libc",
+ "nonos_vault",
 ]
 
 [[package]]
@@ -33,10 +35,22 @@ name = "nonos_hd"
 version = "0.3.0"
 
 [[package]]
+name = "nonos_seal"
+version = "0.3.0"
+
+[[package]]
 name = "nonos_userland_libc"
 version = "0.3.0"
 dependencies = [
  "linked_list_allocator",
+]
+
+[[package]]
+name = "nonos_vault"
+version = "0.1.0"
+dependencies = [
+ "nonos_hd",
+ "nonos_seal",
 ]
 
 [[package]]

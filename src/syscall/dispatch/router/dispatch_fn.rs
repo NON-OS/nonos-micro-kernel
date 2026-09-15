@@ -43,6 +43,7 @@ pub(super) fn dispatch_syscall(
         | SyscallNumber::CryptoHmacSha256
         | SyscallNumber::CryptoHkdfSha256
         | SyscallNumber::CryptoKeccak256
+        | SyscallNumber::CryptoMachineKey
         | SyscallNumber::CryptoSecp256k1Sign
         | SyscallNumber::CryptoSecp256k1Pubkey => {
             crypto::dispatch_crypto(syscall, a0, a1, a2, a3, a4, a5)

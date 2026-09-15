@@ -30,7 +30,7 @@ pub(super) fn read_array<const N: usize>(ptr: u64) -> Result<[u8; N], SyscallRes
     Ok(out)
 }
 
-pub(super) fn read_vec(ptr: u64, len: u64, max: usize) -> Result<Vec<u8>, SyscallResult> {
+pub(in crate::syscall::dispatch::crypto) fn read_vec(ptr: u64, len: u64, max: usize) -> Result<Vec<u8>, SyscallResult> {
     if ptr == 0 || len == 0 || len as usize > max {
         return Err(errno(22));
     }
@@ -39,7 +39,7 @@ pub(super) fn read_vec(ptr: u64, len: u64, max: usize) -> Result<Vec<u8>, Syscal
     Ok(out)
 }
 
-pub(super) fn write(ptr: u64, bytes: &[u8]) -> SyscallResult {
+pub(in crate::syscall::dispatch::crypto) fn write(ptr: u64, bytes: &[u8]) -> SyscallResult {
     if ptr == 0 {
         return errno(22);
     }

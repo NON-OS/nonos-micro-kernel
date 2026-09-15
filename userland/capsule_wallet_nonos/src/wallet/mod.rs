@@ -23,6 +23,7 @@ mod net;
 mod nox;
 mod num;
 pub mod paint;
+pub mod vault;
 mod pool;
 mod rpc;
 mod shield;

@@ -72,6 +72,10 @@ name = "nonos_qr"
 version = "0.3.0"
 
 [[package]]
+name = "nonos_seal"
+version = "0.3.0"
+
+[[package]]
 name = "nonos_tls"
 version = "0.2.0"
 dependencies = [
@@ -101,6 +105,7 @@ dependencies = [
  "nonos_app_skeleton",
  "nonos_hd",
  "nonos_qr",
+ "nonos_seal",
  "nonos_tls",
  "nonos_userland_libc",
 ]

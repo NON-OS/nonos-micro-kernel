@@ -23,6 +23,7 @@ mod entropy;
 mod protocol;
 mod server;
 mod store;
+mod vault;
 
 use nonos_libc::{heap_init, mk_exit};
 

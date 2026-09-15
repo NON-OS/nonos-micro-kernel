@@ -20,14 +20,18 @@ use super::{
 };
 pub fn new_state() -> State {
     State {
-        // NOX out, USDC in: the asset this wallet is for is the one a reader
-        // most often pays with.
+        /*
+         * NOX out, USDC in: the asset this wallet is for is the one a reader
+         * most often pays with.
+         */
         swap_from: 0,
         swap_to: 2,
         swap_in: 0,
         swap_quote: crate::wallet::swap::Quote::default(),
-        // Half a percent, which is where a pool with real depth sits. A
-        // tolerance set high enough to always succeed protects nobody.
+        /*
+         * Half a percent, which is where a pool with real depth sits. A
+         * tolerance set high enough to always succeed protects nobody.
+         */
         swap_slippage_bps: 50,
         swap_step: 0,
         swap_digits: 0,
@@ -36,6 +40,8 @@ pub fn new_state() -> State {
         keyring_port: 0,
         owner_pid: 0,
         wallet_id: 0,
+        vault_saved: false,
+        vault_restore_tried: false,
         address: [0; 20],
         address_ready: false,
         balance_ready: false,
@@ -105,8 +111,10 @@ pub fn new_state() -> State {
         view_w: 1280,
         view_h: 0,
         notes: crate::wallet::shield::notes::NoteStore::new(),
-        // Not probed yet, which reads as unavailable until a lookup says
-        // otherwise. Absence is the default all the way down.
+        /*
+         * Not probed yet, which reads as unavailable until a lookup says
+         * otherwise. Absence is the default all the way down.
+         */
         shield: crate::wallet::shield::probe::Shield::Unknown,
     }
 }

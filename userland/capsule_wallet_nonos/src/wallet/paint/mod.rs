@@ -70,6 +70,8 @@ mod scale;
 mod swap;
 
 mod ui;
+mod account_custody;
+mod status_fit;
 
 pub use paint::paint;
 pub use paint_sidebar::{NAV_H, NAV_STEP, NAV_W, NAV_X, NAV_Y0};

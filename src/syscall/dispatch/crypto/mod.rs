@@ -24,6 +24,7 @@ mod secp256k1_pubkey;
 mod ed25519_pubkey;
 mod ed25519_sign;
 mod secp256k1_sign;
+mod machine_key;
 mod verify;
 
 pub use aead::{
@@ -40,4 +41,5 @@ pub use secp256k1_pubkey::handle_crypto_secp256k1_pubkey;
 pub use ed25519_pubkey::handle_crypto_ed25519_pubkey;
 pub use ed25519_sign::handle_crypto_ed25519_sign;
 pub use secp256k1_sign::handle_crypto_secp256k1_sign;
+pub use machine_key::handle_machine_key;
 pub use verify::handle_crypto_ed25519_verify;

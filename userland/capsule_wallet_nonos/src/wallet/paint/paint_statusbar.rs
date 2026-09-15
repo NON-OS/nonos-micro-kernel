@@ -20,15 +20,25 @@ use nonos_app_skeleton::PaintBuffer;
 use crate::wallet::state::State;
 use crate::wallet::theme::{DIM, GREEN, LINE, MUTED, SYSBAR};
 
+/// Space kept between the message and the chain name, so a message cut to
+/// the last pixel still reads as two things rather than one.
+const GAP: u32 = 24;
+
 pub fn paint_statusbar(state: &State, fb: &mut PaintBuffer) {
     let y = fb.height.saturating_sub(30);
     fb.fill_rect(200, y, fb.width.saturating_sub(200), 30, SYSBAR());
     fb.fill_rect(200, y, fb.width.saturating_sub(200), 1, LINE());
     let sx = fb.text_ttf(226, (y + 8) as i32, "STATUS: ", MUTED(), scale::BODY);
-    let msg = core::str::from_utf8(state.status).unwrap_or("ready");
-    let _ = fb.text_ttf(sx, (y + 8) as i32, msg, GREEN(), scale::BODY);
-    // The chain the wallet transacts on, not a fabricated block height.
+    /*
+     * The chain the wallet transacts on, not a fabricated block height. Placed
+     * first because the message is cut to what is left after it.
+     */
     let right = "Ethereum mainnet";
     let w = fb.measure_ttf(right, scale::BODY).max(0) as u32;
-    let _ = fb.text_ttf((fb.width - 26 - w) as i32, (y + 8) as i32, right, DIM(), scale::BODY);
+    let right_x = fb.width.saturating_sub(26 + w);
+    let _ = fb.text_ttf(right_x as i32, (y + 8) as i32, right, DIM(), scale::BODY);
+    let msg = core::str::from_utf8(state.status).unwrap_or("ready");
+    let room = right_x.saturating_sub(sx.max(0) as u32 + GAP);
+    let cut = super::status_fit::fit(fb, msg, room);
+    let _ = fb.text_ttf(sx, (y + 8) as i32, cut, GREEN(), scale::BODY);
 }

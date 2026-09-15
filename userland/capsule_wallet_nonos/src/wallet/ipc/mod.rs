@@ -24,6 +24,7 @@ mod generate_hd;
 mod import;
 mod lookup_keyring;
 mod lookup_self;
+mod ops;
 mod push_word;
 mod read_rails;
 mod recover;
@@ -33,6 +34,8 @@ mod sign_nox_send;
 mod sign_stake;
 
 pub use address::wallet_address;
+pub use call::keyring_call;
+pub use constants::{HDR_LEN, OP_VAULT_OPEN, OP_VAULT_SEAL};
 pub use decode_rails::decode_rails;
 pub use export::export_secret;
 pub use generate_hd::generate_wallet_hd;

@@ -36,8 +36,10 @@ const BALANCE_H: u32 = 64;
 pub const CARD_H: u32 = super::paint_network_card::NET_H;
 
 pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w: u32) {
-    // Before there is an account there is nothing to report, so the card stops
-    // pretending to be a balance and becomes the one instruction that matters.
+    /*
+     * Before there is an account there is nothing to report, so the card stops
+     * pretending to be a balance and becomes the one instruction that matters.
+     */
     if !state.address_ready {
         super::paint_account_empty::paint_account_empty(fb, x, y, w, CARD_H);
         return;
@@ -47,7 +49,9 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
     let balance_y = caption_y + CAPTION_H;
     let second_y = balance_y + BALANCE_H;
 
-    // The real account address, short form.
+    /*
+     * The real account address, short form.
+     */
     {
         let mut sa = [0u8; 13];
         short_addr(&state.address, &mut sa);
@@ -69,11 +73,19 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
             GREEN(),
             GREEN_INK(),
         );
+        /*
+         * Whether the machine can keep this wallet past the next boot, beside
+         * the badge that says it is live now.
+         */
+        let badge_y = caption_y.saturating_sub(3);
+        super::account_custody::badge(state, fb, x + w - 20 - aw - 8, badge_y);
     }
 
-    // Headline the NOX balance (the native token), with the live ETH balance on
-    // the line beneath it. Each shows a fetching mark while its read is in
-    // flight and a dash only when there is no route.
+    /*
+     * Headline the NOX balance (the native token), with the live ETH balance on
+     * the line beneath it. Each shows a fetching mark while its read is in
+     * flight and a dash only when there is no route.
+     */
     let up = state.net.rpc_chain_ok;
     let mut nb = [0u8; 48];
     let nox = crate::wallet::nox::live_amount(
@@ -83,8 +95,10 @@ pub fn paint_account_card(state: &State, fb: &mut PaintBuffer, x: u32, y: u32, w
         &mut nb,
     );
     let pen = fb.text_ttf((x + 20) as i32, balance_y as i32, nox, FG(), scale::SPLASH);
-    // The ticker sits on the balance's baseline rather than its top edge, so a
-    // taller figure does not leave it floating.
+    /*
+     * The ticker sits on the balance's baseline rather than its top edge, so a
+     * taller figure does not leave it floating.
+     */
     let _ = fb.text_ttf(pen + 10, (balance_y + 18) as i32, "NOX", ACCENT(), scale::TITLE);
 
     let mut eb = [0u8; 40];

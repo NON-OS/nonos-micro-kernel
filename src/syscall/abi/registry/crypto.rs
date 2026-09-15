@@ -34,6 +34,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     r(b"CHMC", SyscallNumber::CryptoHmacSha256, "CryptoHmacSha256"),
     r(b"CHKF", SyscallNumber::CryptoHkdfSha256, "CryptoHkdfSha256"),
     r(b"CKEC", SyscallNumber::CryptoKeccak256, "CryptoKeccak256"),
+    r(b"CMKY", SyscallNumber::CryptoMachineKey, "CryptoMachineKey"),
     r(b"CSKS", SyscallNumber::CryptoSecp256k1Sign, "CryptoSecp256k1Sign"),
     r(b"CSPB", SyscallNumber::CryptoSecp256k1Pubkey, "CryptoSecp256k1Pubkey"),
 ];
