@@ -18,7 +18,7 @@ use super::super::spec::{CapsuleSpecVerified, SpawnError};
 use crate::security::capsule_attest::Proved;
 
 pub(crate) fn publisher_gate(
-    spec: &CapsuleSpecVerified,
+    spec: &CapsuleSpecVerified<'_>,
     namespace: &str,
     attest_caps: u64,
 ) -> Result<Option<Proved>, SpawnError> {

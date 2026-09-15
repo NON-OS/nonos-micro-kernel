@@ -21,6 +21,6 @@ use alloc::string::String;
 pub(super) fn for_pid(pid: u32) -> String {
     crate::process::get_process(pid)
         .and_then(|pcb| pcb.reply_inbox())
-        .map(String::from)
+        .map(|n| String::from(n.as_str()))
         .unwrap_or_else(|| alloc::format!("proc.{}", pid))
 }

@@ -23,14 +23,23 @@ use crate::ipc::nonos_inbox;
 use crate::kernel_core::process_spawn::{
     allocate_kernel_stack, allocate_user_stack, setup_initial_user_context,
 };
+use crate::process::core::inbox_name::InboxName;
 use crate::process::core::{create_process_with_parent, ProcessState};
 use crate::services::registry::{adopt_endpoint, register_endpoint, required_caps};
 use alloc::format;
 
-pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
+pub(crate) fn run(params: &InstallParams<'_>) -> Result<u32, SpawnError> {
     super::trace::trace(params.name, b"install enter");
     if params.elf.is_empty() {
         return Err(SpawnError::FeatureDisabled);
+    }
+    /*
+     * The name is checked before anything is registered under it. Failing
+     * after the inbox and the endpoint exist would leave an unowned endpoint
+     * and a process nobody will schedule, with no path that takes them back.
+     */
+    if InboxName::new(params.reply_inbox).is_none() {
+        return Err(SpawnError::InboxName);
     }
     nonos_inbox::register_or_get_bootstrap_inbox(params.reply_inbox);
     register_endpoint(params.reply_inbox, params.reply_port, 0, 0).map_err(|_| {
@@ -45,12 +54,17 @@ pub(crate) fn run(params: &InstallParams) -> Result<u32, SpawnError> {
         params.on_behalf_of,
     )
     .map_err(|_| SpawnError::ProcessCreation)?;
-    crate::process::with_process(pid, |pcb| pcb.set_reply_inbox(params.reply_inbox))
+    let named = crate::process::with_process(pid, |pcb| pcb.set_reply_inbox(params.reply_inbox))
         .ok_or(SpawnError::ProcessCreation)?;
-    // The reply inbox was registered unowned above, because its name is needed
-    // before a pid exists. Claim it now. An unowned inbox with no entry
-    // requirement is one any capsule may write into, which is how a forged
-    // reply gets into somebody else's request and response flow.
+    if !named {
+        return Err(SpawnError::InboxName);
+    }
+    /*
+     * The reply inbox was registered unowned above, because its name is needed
+     * before a pid exists. Claim it now. An unowned inbox with no entry
+     * requirement is one any capsule may write into, which is how a forged
+     * reply gets into somebody else's request and response flow.
+     */
     adopt_endpoint(params.reply_inbox, pid, Capability::IPC.bit())
         .map_err(|_| SpawnError::EndpointCollision)?;
     nonos_inbox::register_inbox(&format!("proc.{}", pid), pid)

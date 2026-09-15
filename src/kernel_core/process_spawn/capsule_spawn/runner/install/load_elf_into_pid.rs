@@ -21,23 +21,27 @@ use crate::elf::loader::load_elf_entry_into;
 use crate::memory::paging::manager::lookup_asid_for_process;
 
 pub(super) fn load_elf_into_pid(
-    elf: &'static [u8],
+    elf: &[u8],
     pid: u32,
     debug_tag: &'static [u8],
 ) -> Result<u64, SpawnError> {
     let asid = lookup_asid_for_process(pid).ok_or(SpawnError::AddressSpace)?;
-    // load_elf_entry_into maps the segments AND applies relative relocations and
-    // RELRO; the loader must stay this one, since skipping either leaves null GOT
-    // entries that fault the capsule at cr2=0.
+    /*
+     * load_elf_entry_into maps the segments AND applies relative relocations and
+     * RELRO; the loader must stay this one, since skipping either leaves null GOT
+     * entries that fault the capsule at cr2=0.
+     */
     let entry = load_elf_entry_into(elf, asid).map_err(|err| {
         crate::sys::serial::println(debug_tag);
         crate::sys::serial::println(err.as_str().as_bytes());
         SpawnError::ElfLoad
     })?;
-    // Record the committed image footprint as this process's resident memory, so
-    // the process monitor reports the code, data and bss a capsule maps at load
-    // instead of zero. This is a read-only scan of the same PT_LOAD headers the
-    // loader just mapped; later mmap/munmap adjust the same counter.
+    /*
+     * Record the committed image footprint as this process's resident memory, so
+     * the process monitor reports the code, data and bss a capsule maps at load
+     * instead of zero. This is a read-only scan of the same PT_LOAD headers the
+     * loader just mapped; later mmap/munmap adjust the same counter.
+     */
     let pages = image_load_pages(elf);
     if pages != 0 {
         crate::process::with_process(pid, |pcb| {

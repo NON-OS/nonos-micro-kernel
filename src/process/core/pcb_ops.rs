@@ -72,11 +72,20 @@ impl ProcessControlBlock {
         }
     }
 
-    pub fn reply_inbox(&self) -> Option<&'static str> {
+    pub fn reply_inbox(&self) -> Option<super::inbox_name::InboxName> {
         *self.reply_inbox.read()
     }
 
-    pub fn set_reply_inbox(&self, inbox: &'static str) {
-        *self.reply_inbox.write() = Some(inbox);
+    /// False when the name is empty or longer than an inbox name may be. The
+    /// caller fails the spawn: a process whose reply inbox was silently cut
+    /// would have its replies routed to whatever the prefix matched.
+    pub fn set_reply_inbox(&self, inbox: &str) -> bool {
+        match super::inbox_name::InboxName::new(inbox) {
+            Some(n) => {
+                *self.reply_inbox.write() = Some(n);
+                true
+            }
+            None => false,
+        }
     }
 }

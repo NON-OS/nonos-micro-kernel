@@ -41,19 +41,25 @@ pub struct ProcessControlBlock {
     pub thread_group: Option<Arc<ThreadGroup>>,
     pub argv: Mutex<Vec<String>>,
     pub envp: Mutex<Vec<String>>,
-    // Truth for this process's authority. `caps_bits` is a derived
-    // bitmap cache kept in sync by `process::caps` so the bitmap-only
-    // readers (IPC routing, inheritance) stay an atomic load.
+    /*
+     * Truth for this process's authority. `caps_bits` is a derived
+     * bitmap cache kept in sync by `process::caps` so the bitmap-only
+     * readers (IPC routing, inheritance) stay an atomic load.
+     */
     pub capability_token: RwLock<Arc<CapabilityToken>>,
     pub caps_bits: AtomicU64,
-    // One-shot gate for the verified-capsule manifest install. The
-    // PCB is born holding the inheritance-derived token; `install_spawn`
-    // flips this once to swap that token for the manifest-derived one.
+    /*
+     * One-shot gate for the verified-capsule manifest install. The
+     * PCB is born holding the inheritance-derived token; `install_spawn`
+     * flips this once to swap that token for the manifest-derived one.
+     */
     pub caps_manifest_installed: core::sync::atomic::AtomicBool,
-    // Per-capsule revocation epoch. Bumped by `process::caps::revoke`
-    // and minted into each token; the resolver compares the token's
-    // epoch against this to invalidate authority that was minted
-    // before the most recent revoke.
+    /*
+     * Per-capsule revocation epoch. Bumped by `process::caps::revoke`
+     * and minted into each token; the resolver compares the token's
+     * epoch against this to invalidate authority that was minted
+     * before the most recent revoke.
+     */
     pub revocation_epoch: AtomicU64,
     pub mmap_va: Mutex<MmapVa>,
     pub exit_code: AtomicI32,
@@ -98,33 +104,43 @@ pub struct ProcessControlBlock {
     pub involuntary_switches: AtomicU64,
     pub cr3: AtomicU64,
     pub io_bitmap: Mutex<[u8; 8192]>,
-    pub reply_inbox: RwLock<Option<&'static str>>,
-    // Kernel-only stack top installed in TSS RSP0 on context switch.
-    // Allocated by `kernel_core::process_spawn::kernel_stack`. 0 means
-    // unallocated; the scheduler hook treats this as "no user mode
-    // expected" and refuses to dispatch a pending user entry.
+    pub reply_inbox: RwLock<Option<super::inbox_name::InboxName>>,
+    /*
+     * Kernel-only stack top installed in TSS RSP0 on context switch.
+     * Allocated by `kernel_core::process_spawn::kernel_stack`. 0 means
+     * unallocated; the scheduler hook treats this as "no user mode
+     * expected" and refuses to dispatch a pending user entry.
+     */
     pub kernel_stack_top: AtomicU64,
-    // User RSP captured on syscall entry for a blocking Mk path. The
-    // x86_64 syscall trampoline parks it in per-CPU state first; when
-    // a syscall yields and another task runs on the same CPU, that
-    // per-CPU slot must be restored from the PCB before the syscall
-    // returns to user mode.
+    /*
+     * User RSP captured on syscall entry for a blocking Mk path. The
+     * x86_64 syscall trampoline parks it in per-CPU state first; when
+     * a syscall yields and another task runs on the same CPU, that
+     * per-CPU slot must be restored from the PCB before the syscall
+     * returns to user mode.
+     */
     pub syscall_user_rsp: AtomicU64,
-    // First-transition-to-user record consumed by the arch's enter-user
-    // helper. On x86_64 this is the iretq 5-tuple; on aarch64/riscv64
-    // it carries the per-arch entry shape (ELR/SP_EL0/SPSR + per-task
-    // kernel sp on aarch64, sepc/sstatus/user_sp/kernel_sp on riscv64).
-    // `None` for kernel threads.
+    /*
+     * First-transition-to-user record consumed by the arch's enter-user
+     * helper. On x86_64 this is the iretq 5-tuple; on aarch64/riscv64
+     * it carries the per-arch entry shape (ELR/SP_EL0/SPSR + per-task
+     * kernel sp on aarch64, sepc/sstatus/user_sp/kernel_sp on riscv64).
+     * `None` for kernel threads.
+     */
     pub pending_user_entry: Mutex<Option<UserEntry>>,
-    // Snapshot written by the per-arch trap-entry path when a user
-    // task is preempted. On x86_64: 15 GPRs + iretq 5-tuple. On
-    // aarch64: x0..x30 + SP_EL0/ELR_EL1/SPSR_EL1 + kernel sp top.
-    // On riscv64: x1..x31 + sepc + sstatus + kernel sp top. Consumed
-    // by the arch's resume-user helper.
+    /*
+     * Snapshot written by the per-arch trap-entry path when a user
+     * task is preempted. On x86_64: 15 GPRs + iretq 5-tuple. On
+     * aarch64: x0..x30 + SP_EL0/ELR_EL1/SPSR_EL1 + kernel sp top.
+     * On riscv64: x1..x31 + sepc + sstatus + kernel sp top. Consumed
+     * by the arch's resume-user helper.
+     */
     pub saved_user_context: Mutex<Option<SavedUser>>,
-    // Per-PCB FP/SIMD slot for the non-x86 lazy-enable path. UnsafeCell
-    // inside; accessed only on the CPU running this task. x86 keeps
-    // its existing pid-keyed `FpuState` side-table, so no field there.
+    /*
+     * Per-PCB FP/SIMD slot for the non-x86 lazy-enable path. UnsafeCell
+     * inside; accessed only on the CPU running this task. x86 keeps
+     * its existing pid-keyed `FpuState` side-table, so no field there.
+     */
     #[cfg(target_arch = "aarch64")]
     pub arch_fpu: crate::arch::aarch64::fpu::PcbArchFpu,
     #[cfg(target_arch = "riscv64")]

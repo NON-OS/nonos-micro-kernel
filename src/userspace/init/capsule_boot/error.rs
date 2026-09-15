@@ -31,6 +31,7 @@ pub(super) fn message(prefix: &str, err: SpawnError) -> alloc::string::String {
         SpawnError::EndpointCollision => {
             alloc::format!("{}: service endpoint registration failed", prefix)
         }
+        SpawnError::InboxName => alloc::format!("{}: reply inbox name refused", prefix),
         SpawnError::NonosIdCertRejected(reason) => super::cert_reason::message(prefix, reason),
         SpawnError::ManifestRejected(reason) => super::manifest_reason::message(prefix, reason),
         SpawnError::AttestationRejected => {

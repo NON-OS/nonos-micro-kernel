@@ -16,7 +16,6 @@
 
 use super::super::artifacts::CapsuleArtifacts;
 use super::super::error::LoadError;
-use super::super::leak::{leak_bytes, leak_str};
 use super::endpoint::endpoint;
 use crate::kernel_core::process_spawn::capsule_spawn::{
     spawn_verified_as, AttestedParent, CapsuleSpecVerified,
@@ -42,25 +41,39 @@ pub(crate) fn load_capsule_from_vfs(
     let (service_name, service_port) = endpoint(&manifest, EndpointKind::Service)?;
     let (reply_name, reply_port) = endpoint(&manifest, EndpointKind::Reply)?;
 
+    /*
+     * Borrowed from artifacts, which this function owns and drops on the way
+     * out, on every path. It used to leak all four blobs into the kernel heap
+     * before the signature was checked, so a caller holding nothing more than
+     * the CoreExec, IPC and Memory every application has could spend 64 MB of
+     * ring-0 memory per call and never give it back: four calls exhausted the
+     * 256 MB heap and the allocator's failure path halts the machine.
+     *
+     * The same leak ran on the success path, where it cost a daily driver its
+     * memory one app launch at a time, since nothing in process teardown knew
+     * the allocations existed.
+     */
     let spec = CapsuleSpecVerified {
-        name: leak_str(service_name),
+        name: service_name,
         service_port,
-        reply_inbox: leak_str(reply_name),
+        reply_inbox: reply_name,
         reply_port,
-        elf: leak_bytes(artifacts.elf),
-        nonos_id_cert_bytes: leak_bytes(artifacts.cert),
-        manifest_bytes: leak_bytes(artifacts.manifest),
-        attestation_trailer: leak_bytes(artifacts.trailer),
-        target_triple: leak_str(manifest.target_triple_str()),
+        elf: &artifacts.elf,
+        nonos_id_cert_bytes: &artifacts.cert,
+        manifest_bytes: &artifacts.manifest,
+        attestation_trailer: &artifacts.trailer,
+        target_triple: manifest.target_triple_str(),
         requested_caps: requested_caps & (manifest.required_caps | manifest.optional_caps),
         debug_tag: b"[RUNTIME-LOAD] elf error:",
     };
     let trust = decode_trust(BAKED_TRUST_ANCHOR_POLICY).map_err(|_| LoadError::TrustAnchor)?;
-    // Enforce the certificate validity window against the wall clock, not
-    // uptime-since-boot: a real `valid_from_ms` is a wall-clock epoch, so
-    // comparing it to uptime rejected every runtime-loaded capsule as
-    // NotYetValid. Before the clock is set the gate returns None and the
-    // signature and trust anchor still gate the load.
+    /*
+     * Enforce the certificate validity window against the wall clock, not
+     * uptime-since-boot: a real `valid_from_ms` is a wall-clock epoch, so
+     * comparing it to uptime rejected every runtime-loaded capsule as
+     * NotYetValid. Before the clock is set the gate returns None and the
+     * signature and trust anchor still gate the load.
+     */
     let now_ms = super::super::validity_clock::validity_now_ms(crate::sys::unix_ms());
     let pid = spawn_verified_as(&spec, &trust, now_ms, on_behalf_of).map_err(LoadError::Spawn)?;
     if !args.is_empty() {

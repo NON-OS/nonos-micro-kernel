@@ -51,9 +51,11 @@ pub fn sys_ipc_send(endpoint: u64, buf: u64, len: usize) -> i64 {
 }
 
 pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correlation: u64) -> i64 {
-    // Reject oversize before allocating: len is validated against the 64 MiB
-    // usercopy ceiling downstream, but the message itself is capped at 1 MiB,
-    // so bound it here to avoid a capsule forcing huge transient allocations.
+    /*
+     * Reject oversize before allocating: len is validated against the 64 MiB
+     * usercopy ceiling downstream, but the message itself is capped at 1 MiB,
+     * so bound it here to avoid a capsule forcing huge transient allocations.
+     */
     if len == 0 || len > crate::ipc::channel::MAX_MESSAGE_SIZE {
         return ERRNO_INVAL;
     }
@@ -67,23 +69,27 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
     let pid = current_pid().unwrap_or(0);
     let target = resolve_send_target(endpoint);
     match redirect_reply(pid, &target) {
-        // A capsule replying to a request another capsule made with mk_ipc_call:
-        // hand the bytes to that caller's private inbox stamped with the token
-        // it waits on, and wake it since a reply inbox has no owner the router
-        // would wake on its own.
+        /*
+         * A capsule replying to a request another capsule made with mk_ipc_call:
+         * hand the bytes to that caller's private inbox stamped with the token
+         * it waits on, and wake it since a reply inbox has no owner the router
+         * would wake on its own.
+         */
         Redirect::ToCaller { caller_inbox, caller_pid, token } => {
             if !super::send_caps::caller_satisfies_endpoint(endpoint, &caller_inbox) {
                 return ERRNO_PERM;
             }
             trace(pid, endpoint, &caller_inbox, len);
-            // Enqueue straight into the caller's reply inbox, the exact inbox its
-            // blocked mk_ipc_call is draining, stamped with the token that call
-            // filters on. Going back through the service resolver would look the
-            // reply inbox up as a service and re-resolve it to the caller's proc
-            // inbox (the caller adopted this endpoint), where the caller's serve
-            // loop eats the reply and the call times out. That is why every
-            // userland call into a kernel-reply service (crypto, the block
-            // device, vfs) hung: the answer was delivered to the wrong inbox.
+            /*
+             * Enqueue straight into the caller's reply inbox, the exact inbox its
+             * blocked mk_ipc_call is draining, stamped with the token that call
+             * filters on. Going back through the service resolver would look the
+             * reply inbox up as a service and re-resolve it to the caller's proc
+             * inbox (the caller adopted this endpoint), where the caller's serve
+             * loop eats the reply and the call times out. That is why every
+             * userland call into a kernel-reply service (crypto, the block
+             * device, vfs) hung: the answer was delivered to the wrong inbox.
+             */
             match IpcMessage::new(&alloc::format!("proc.{}", pid), &caller_inbox, &data) {
                 Ok(mut msg) => {
                     msg.correlation = token;
@@ -98,12 +104,14 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
                 Err(_) => ERRNO_FAULT,
             }
         }
-        // A capsule replying to a kernel-mediated round trip (crypto_pool,
-        // entropy, vfs, the block device). The kernel drains this exact reply
-        // inbox, so put the bytes there directly. Routing it as addressed would
-        // send it to proc.<self>, where the serve loop reads its own reply as a
-        // request and self-mails a core to death; that is the loop the old drop
-        // guarded, and dropping instead stranded every kernel round trip.
+        /*
+         * A capsule replying to a kernel-mediated round trip (crypto_pool,
+         * entropy, vfs, the block device). The kernel drains this exact reply
+         * inbox, so put the bytes there directly. Routing it as addressed would
+         * send it to proc.<self>, where the serve loop reads its own reply as a
+         * request and self-mails a core to death; that is the loop the old drop
+         * guarded, and dropping instead stranded every kernel round trip.
+         */
         Redirect::ToReplyInbox => match IpcMessage::new(&alloc::format!("proc.{}", pid), &target, &data) {
             Ok(msg) => {
                 let _ = nonos_inbox::try_enqueue_strict(&target, msg);
@@ -111,8 +119,10 @@ pub(super) fn send_with_correlation(endpoint: u64, buf: u64, len: usize, correla
             }
             Err(_) => 0,
         },
-        // Any other send goes to its addressed target with its own correlation
-        // (0 for sys_ipc_send, all a forged reply injection can carry).
+        /*
+         * Any other send goes to its addressed target with its own correlation
+         * (0 for sys_ipc_send, all a forged reply injection can carry).
+         */
         Redirect::AsAddressed => {
             if !super::send_caps::caller_satisfies_endpoint(endpoint, &target) {
                 return ERRNO_PERM;
@@ -139,7 +149,7 @@ enum Redirect {
 // drain (ToReplyInbox). Every other send is addressed as written (AsAddressed).
 fn redirect_reply(sender_pid: u32, target: &str) -> Redirect {
     let own_reply = crate::process::get_process(sender_pid).and_then(|p| p.reply_inbox());
-    if own_reply == Some(target) {
+    if own_reply.as_ref().map(|n| n.as_str()) == Some(target) {
         if let Some((caller_pid, caller_inbox, token)) = super::pending_reply::pop(sender_pid) {
             return Redirect::ToCaller { caller_inbox, caller_pid, token };
         }

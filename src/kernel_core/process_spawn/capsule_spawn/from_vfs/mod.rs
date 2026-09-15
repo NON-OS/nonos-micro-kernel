@@ -16,7 +16,6 @@
 
 mod artifacts;
 mod error;
-mod leak;
 mod load;
 mod validity_clock;
 

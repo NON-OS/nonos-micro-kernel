@@ -21,7 +21,7 @@ use crate::security::capsule_attest::{verify_capsule_attestation, Proved};
 /// both once a pid exists. `None` only on the rollout path, where nothing was
 /// proved at all.
 pub(crate) fn attest_gate(
-    spec: &CapsuleSpecVerified,
+    spec: &CapsuleSpecVerified<'_>,
     install_caps: u64,
 ) -> Result<Option<Proved>, SpawnError> {
     let trailer = spec.attestation_trailer;
@@ -40,8 +40,10 @@ pub(crate) fn attest_gate(
             crate::sys::bench::mark_named(b"capsule_attest_ok", spec.name.as_bytes());
             crate::sys::serial::print(b"[ZK-ATTEST] ok ");
             crate::sys::serial::print(spec.name.as_bytes());
-            // The authority is on the line: a reader of the boot log should be
-            // able to tell shipped capsules from ones built on this machine.
+            /*
+             * The authority is on the line: a reader of the boot log should be
+             * able to tell shipped capsules from ones built on this machine.
+             */
             crate::sys::serial::print(b" ");
             crate::sys::serial::print(proved.authority.as_str().as_bytes());
             crate::sys::serial::print(b"\n");

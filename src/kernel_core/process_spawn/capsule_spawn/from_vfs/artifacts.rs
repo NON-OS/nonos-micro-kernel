@@ -19,6 +19,7 @@ use alloc::vec::Vec;
 // The four bytes blobs that make up a capsule, copied out of user memory by the
 // load syscall. They are owned here and promoted to a static lifetime before
 // the verified spawn, exactly as the embedded artifacts are.
+#[must_use]
 pub struct CapsuleArtifacts {
     pub elf: Vec<u8>,
     pub cert: Vec<u8>,

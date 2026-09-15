@@ -28,18 +28,34 @@ pub struct CapsuleSpec {
     pub debug_tag: &'static [u8],
 }
 
-pub struct CapsuleSpecVerified {
-    pub name: &'static str,
+/*
+ * Borrowed for the length of the spawn call, not for the life of the machine.
+ *
+ * A baked capsule's artifacts come from `include_bytes!` and are 'static, and
+ * they coerce into this without anyone noticing. A capsule loaded at runtime
+ * owns its four blobs in a Vec that the caller drops when the call returns.
+ *
+ * The lifetime used to be 'static for both, which meant the runtime path had
+ * to leak: `Box::leak` on every artifact, on the success path and on the
+ * failure path alike. Nothing needs them to live that long. The endpoint
+ * registry copies the name into a String, the process control block copies it
+ * again, and the ELF is mapped into the process address space before the call
+ * returns. After that the bytes have no reader.
+ */
+pub struct CapsuleSpecVerified<'a> {
+    pub name: &'a str,
     pub service_port: u32,
-    pub reply_inbox: &'static str,
+    pub reply_inbox: &'a str,
     pub reply_port: u32,
-    pub elf: &'static [u8],
-    pub nonos_id_cert_bytes: &'static [u8],
-    pub manifest_bytes: &'static [u8],
-    // Per-capsule ZK attestation trailer (NZKCAPS1), embedded alongside the
-    // manifest. Empty when the capsule has no sidecar in this build.
-    pub attestation_trailer: &'static [u8],
-    pub target_triple: &'static str,
+    pub elf: &'a [u8],
+    pub nonos_id_cert_bytes: &'a [u8],
+    pub manifest_bytes: &'a [u8],
+    /*
+     * Per-capsule ZK attestation trailer (NZKCAPS1), embedded alongside the
+     * manifest. Empty when the capsule has no sidecar in this build.
+     */
+    pub attestation_trailer: &'a [u8],
+    pub target_triple: &'a str,
     pub requested_caps: u64,
     pub debug_tag: &'static [u8],
 }
@@ -51,6 +67,8 @@ pub enum SpawnError {
     ProcessCreation,
     AddressSpace,
     EndpointCollision,
+    /// The reply inbox name is empty or longer than a process stores.
+    InboxName,
     NonosIdCertRejected(IdCertVerifyError),
     ManifestRejected(ManifestVerifyError),
     AttestationRejected,
