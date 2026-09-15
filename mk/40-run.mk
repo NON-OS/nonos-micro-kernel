@@ -1,7 +1,7 @@
 # Booting the image under QEMU (GUI, headless, serial, GDB, TPM), plus the
 # static and verification gates that run over the built kernel.
 
-.PHONY: nonos-mk-run-smp-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-check-caps nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast
+.PHONY: nonos-mk-run-smp-serial-log nonos-mk-debug nonos-mk-plan-a-runtime nonos-mk-run nonos-mk-run-input-probe-inject-serial-log nonos-mk-run-nat nonos-mk-run-net nonos-mk-run-serial nonos-mk-run-serial-log nonos-mk-run-serial-nat nonos-mk-run-serial-net nonos-mk-check-caps nonos-mk-scan nonos-mk-static nonos-mk-swtpm-start nonos-mk-swtpm-stop nonos-mk-verify nonos-mk-verify-fast nonos-mk-run-iommu-serial-log
 
 # QEMU
 
@@ -374,3 +374,24 @@ nonos-mk-run-smp-serial-log: nonos-mk-smp-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QE
 		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
 		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
 		-serial "file:$(QEMU_SMP_SERIAL_LOG)" -display none -no-reboot
+# The DMA-protection boot. Every other lane starts QEMU with no remapping
+# hardware, so the kernel finds an empty DMAR and says so:
+#
+#     [VT-D] no remapping units in DMAR; DMA is unrestricted
+#
+# which means the IOMMU bring-up compiled into every image has never run. This
+# lane presents an intel-iommu so it does. TCG rather than hvf: the hypervisor
+# framework does not emulate VT-d, so this boots slowly on purpose. It is a
+# proof lane, not an iteration lane.
+nonos-mk-run-iommu-serial-log: nonos-mk-desktop-gui-prod nonos-mk-esp $(QEMU_BLK_IMG) $(QEMU_BLK_STORE_STAMP) $(QEMU_OVMF_VARS_RW)
+	@mkdir -p $(dir $(QEMU_IOMMU_SERIAL_LOG))
+	@echo "Booting NONOS with an IOMMU in QEMU (TCG, slow)..."
+	@echo "  Serial log: $(QEMU_IOMMU_SERIAL_LOG)"
+	@$(QEMU) -m $(QEMU_MEM) -cpu max -smp 1 \
+		-machine q35,kernel-irqchip=split \
+		-device intel-iommu,$(QEMU_IOMMU_OPTS) \
+		-drive "format=raw,file=fat:rw:$(ESP_DIR)" \
+		-drive if=pflash,format=raw,readonly=on,file="$(OVMF)" \
+		-drive if=pflash,format=raw,unit=1,file="$(QEMU_OVMF_VARS_RW)" \
+		$(QEMU_BLK) $(QEMU_GPU) $(QEMU_NET) $(QEMU_USB) $(QEMU_RNG) \
+		-serial "file:$(QEMU_IOMMU_SERIAL_LOG)" -display none -no-reboot

@@ -51,6 +51,10 @@ QEMU_NET_MODE ?= nat
 QEMU_NET_CAPTURE ?=
 QEMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-serial.log
 QEMU_SMP_SERIAL_LOG ?= $(TARGET_DIR)/qemu-smp-serial.log
+QEMU_IOMMU_SERIAL_LOG ?= $(TARGET_DIR)/qemu-iommu-serial.log
+# Options for the intel-iommu device the IOMMU lane adds; a knob like the
+# others so the lane can be driven from the command line.
+QEMU_IOMMU_OPTS ?= intremap=on,caching-mode=on
 QEMU_BLK_IMG := $(TARGET_DIR)/qemu-virtio-blk.img
 QEMU_OVMF_VARS_RW := $(TARGET_DIR)/qemu-OVMF_VARS.fd
 QEMU_BLK := -drive "file=$(QEMU_BLK_IMG),if=none,id=vd0,format=raw" -device virtio-blk-pci,drive=vd0
