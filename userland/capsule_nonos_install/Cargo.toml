@@ -1,0 +1,25 @@
+# NONOS userland: capsule_nonos_install
+# eK@nonos.systems
+#
+# Proof-carrying installer. Walks the seven step install ritual from the
+# booted USB: discover, compose, prove, mint the machine root, enroll,
+# write the boot partition, print the receipt. The program is assembly
+# end to end; see src/asm/ and the design under capsule_setup_wizard.
+
+[package]
+name = "nonos_capsule_install"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+description = "NONOS install capsule"
+
+[[bin]]
+name = "nonos_install"
+path = "src/main.rs"
+
+[dependencies]
+
+[features]
+default = []

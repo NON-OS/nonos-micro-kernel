@@ -21,6 +21,8 @@ pub mod erase;
 pub mod guard;
 mod kernel_stacks;
 pub mod primitives;
+#[cfg(target_arch = "x86_64")]
+pub(super) mod scrub_asm;
 pub mod state;
 pub mod types;
 mod user_range;

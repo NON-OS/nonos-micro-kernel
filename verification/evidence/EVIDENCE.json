@@ -12,7 +12,7 @@
   },
   "proof_systems": {
     "kani": {
-      "harnesses": 99
+      "harnesses": 100
     },
     "lean_extraction": {
       "description": "Functions lowered from real Rust MIR by Charon and translated to Lean by Aeneas, then proven on the extracted definition.",

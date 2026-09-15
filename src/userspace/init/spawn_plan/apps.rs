@@ -17,6 +17,7 @@
 pub(super) fn spawn() {
     spawn_input_proof();
     spawn_about();
+    spawn_nonos_install();
     spawn_hello();
     spawn_calculator();
     spawn_clock();
@@ -49,6 +50,21 @@ fn spawn_about() {
 }
 #[cfg(not(feature = "nonos-capsule-about"))]
 fn spawn_about() {}
+
+// The install ritual is console-only and spawns at boot; an image built
+// with this feature is a live installer image by definition.
+#[cfg(feature = "nonos-capsule-nonos-install")]
+fn spawn_nonos_install() {
+    use crate::userspace::capsule_nonos_install as c;
+    super::boot::capsule(
+        "APP-NONOS-INSTALL",
+        "app_nonos_install",
+        c::spawn_nonos_install_capsule,
+        c::shared_state,
+    );
+}
+#[cfg(not(feature = "nonos-capsule-nonos-install"))]
+fn spawn_nonos_install() {}
 
 #[cfg(feature = "nonos-capsule-hello")]
 fn spawn_hello() {

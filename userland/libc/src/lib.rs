@@ -20,6 +20,7 @@ pub mod admin;
 pub mod attest;
 pub mod battery;
 pub mod broker;
+pub mod capcheck;
 pub mod capsule_load;
 pub mod capsule_verify;
 pub mod crypto;
@@ -55,6 +56,7 @@ pub use broker::{
     MK_DMA_MAP_HIGH, MK_IRQ_BIND_MSIX, MK_PCI_CFG_COMMAND, MK_PCI_CMD_BUS_MASTER, MK_PCI_CMD_MEMORY_SPACE,
     MK_PCI_MSIX_CTRL_ENABLE, MK_PCI_MSIX_CTRL_FUNCTION_MASK,
 };
+pub use capcheck::mk_cap_check;
 pub use capsule_load::{mk_capsule_load, CapsuleLoadRequest};
 pub use capsule_verify::{mk_capsule_verify, CapsuleVerifyRequest, CapsuleVerifySummary};
 pub use spawn_instance::mk_spawn_instance;

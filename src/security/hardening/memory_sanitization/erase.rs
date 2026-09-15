@@ -19,38 +19,37 @@ use super::state::{BYTES_SANITIZED, SANITIZATION_CALLS, SANITIZATION_LEVEL};
 use super::types::SanitizationLevel;
 use core::sync::atomic::Ordering;
 
-// `aligned_start` advances the pointer to an 8-byte boundary, so the
-// `*mut u64` cast for the word-stride zero loop is correctly aligned.
-#[allow(clippy::cast_ptr_alignment)]
+// On x86_64 the store loop is the assembly routine in scrub.S, so the wipe
+// never depends on what a compiler decides a volatile loop means: rep stosb
+// writes the range, sfence orders it, and the audit surface is four
+// instructions. Other architectures keep the volatile word walk until they
+// grow their own routine.
 #[inline(never)]
 pub fn secure_zero(ptr: *mut u8, len: usize) {
-    let align_offset = ptr as usize % 8;
-    let start_ptr = ptr;
+    #[cfg(target_arch = "x86_64")]
+    /*
+     * SAFETY: the caller owns len writable bytes at ptr, which is this
+     * function's own contract; the routine writes exactly that range.
+     */
+    unsafe {
+        super::scrub_asm::nonos_scrub_bytes(ptr, len)
+    };
 
-    for i in 0..core::cmp::min(align_offset, len) {
-        // SAFETY: i < len, so ptr.add(i) is within bounds
-        volatile_write_u8(unsafe { start_ptr.add(i) }, 0);
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        /*
+         * A volatile byte at a time. Slower than a word walk, and free of
+         * alignment cases the compiler could argue about; these arches get
+         * their own routine when one is written.
+         */
+        for i in 0..len {
+            /*
+             * SAFETY: i < len, so ptr.add(i) is within the range the caller
+             * owns.
+             */
+            volatile_write_u8(unsafe { ptr.add(i) }, 0);
+        }
     }
-
-    let aligned_start = if align_offset == 0 { 0 } else { 8 - align_offset };
-    let aligned_len = (len.saturating_sub(aligned_start)) / 8;
-
-    for i in 0..aligned_len {
-        // SAFETY: word_ptr is within the allocated region
-        let word_ptr = unsafe { start_ptr.add(aligned_start + i * 8) as *mut u64 };
-        volatile_write_u64(word_ptr, 0);
-    }
-
-    let suffix_start = aligned_start + aligned_len * 8;
-    for i in suffix_start..len {
-        // SAFETY: i < len, so ptr.add(i) is within bounds
-        volatile_write_u8(unsafe { start_ptr.add(i) }, 0);
-    }
-
-    memory_fence();
-
-    BYTES_SANITIZED.fetch_add(len, Ordering::Relaxed);
-    SANITIZATION_CALLS.fetch_add(1, Ordering::Relaxed);
 }
 
 #[inline(always)]
@@ -61,13 +60,17 @@ pub fn secure_zero_slice(slice: &mut [u8]) {
 #[inline(never)]
 pub fn dod_5220_erase(ptr: *mut u8, len: usize) {
     for i in 0..len {
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         volatile_write_u8(unsafe { ptr.add(i) }, 0x00);
     }
     memory_fence();
 
     for i in 0..len {
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         volatile_write_u8(unsafe { ptr.add(i) }, 0xFF);
     }
     memory_fence();
@@ -78,19 +81,25 @@ pub fn dod_5220_erase(ptr: *mut u8, len: usize) {
         rng_state ^= rng_state << 13;
         rng_state ^= rng_state >> 7;
         rng_state ^= rng_state << 17;
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         volatile_write_u8(unsafe { ptr.add(i) }, rng_state as u8);
     }
     memory_fence();
 
     for i in 0..len {
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         volatile_write_u8(unsafe { ptr.add(i) }, 0x00);
     }
     memory_fence();
 
     for i in 0..len {
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         let value = volatile_read_u8(unsafe { ptr.add(i) });
         if value != 0 {
             crate::log::error!("[SANITIZE] Memory verification failed at offset {}", i);
@@ -107,14 +116,18 @@ pub fn paranoid_erase(ptr: *mut u8, len: usize) {
 
     for pattern in PATTERNS {
         for i in 0..len {
-            // SAFETY: i < len
+            /*
+             * SAFETY: i < len
+             */
             volatile_write_u8(unsafe { ptr.add(i) }, pattern);
         }
         memory_fence();
     }
 
     for i in 0..len {
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         volatile_write_u8(unsafe { ptr.add(i) }, 0x00);
     }
     memory_fence();
@@ -133,7 +146,9 @@ pub fn gutmann_erase(ptr: *mut u8, len: usize) {
 
     for pattern in GUTMANN_PATTERNS {
         for i in 0..len {
-            // SAFETY: i < len
+            /*
+             * SAFETY: i < len
+             */
             volatile_write_u8(unsafe { ptr.add(i) }, pattern);
         }
         memory_fence();
@@ -145,13 +160,17 @@ pub fn gutmann_erase(ptr: *mut u8, len: usize) {
         rng_state ^= rng_state << 13;
         rng_state ^= rng_state >> 7;
         rng_state ^= rng_state << 17;
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         volatile_write_u8(unsafe { ptr.add(i) }, rng_state as u8);
     }
     memory_fence();
 
     for i in 0..len {
-        // SAFETY: i < len
+        /*
+         * SAFETY: i < len
+         */
         volatile_write_u8(unsafe { ptr.add(i) }, 0x00);
     }
     memory_fence();

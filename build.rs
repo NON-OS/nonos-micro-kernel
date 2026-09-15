@@ -94,6 +94,7 @@ fn compile_arch_asm() {
     let mut build = cc::Build::new();
     build
         .compiler("clang")
+        .include(&dir)
         .files(&files)
         .flag("-target")
         .flag(clang_target)
@@ -584,9 +585,11 @@ fn c_target(arch: &str) -> Option<(&'static str, &'static [&'static str])> {
 fn user_target() -> String {
     println!("cargo:rerun-if-env-changed=NONOS_USER_TARGET");
     let target = env::var("NONOS_USER_TARGET").unwrap_or_else(|_| "x86_64-nonos-user".to_string());
-    // The embed sites are `include_bytes!`, which takes a literal, so the path
-    // has to be assembled at compile time. Re-exporting the value as a rustc env
-    // lets them reach it through `env!` inside a `concat!`.
+    /*
+     * The embed sites are `include_bytes!`, which takes a literal, so the path
+     * has to be assembled at compile time. Re-exporting the value as a rustc env
+     * lets them reach it through `env!` inside a `concat!`.
+     */
     println!("cargo:rustc-env=NONOS_USER_TARGET={target}");
     target
 }

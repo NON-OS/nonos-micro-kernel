@@ -11,13 +11,14 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU Affero General Public License for more details.
 //
-//! Naked timer-IRQ trampoline.
+//! Timer-IRQ trap handler.
 //!
-//! Replaces the `extern "x86-interrupt" irq_timer` wrapper for the
-//! timer vector. It saves the full general-purpose register set plus
-//! the CPU-pushed iretq frame onto the kernel stack so the trap
-//! handler can capture the user context of a CPL=3 capsule that was
-//! preempted. Layout produced on the stack (low → high):
+//! The vector entry itself is `timer_trampoline` in
+//! `src/arch/x86_64/asm/exceptions.S` (the `TRAMP_CTX` body). It saves
+//! the full general-purpose register set plus the CPU-pushed iretq
+//! frame onto the kernel stack so the handler here can capture the
+//! user context of a CPL=3 capsule that was preempted. Layout the
+//! trampoline produces on the stack (low → high):
 //!
 //!     [rsp +   0] r15      ← last push
 //!     [rsp +   8] r14
@@ -47,12 +48,9 @@
 //! timer-tick body. On return from the handler the trampoline pops
 //! the GPRs, `swapgs`-es back if returning to CPL=3, and `iretq`s.
 //!
-//! From CPL=0 the CPU does not switch to TSS.RSP0 — the trampoline
-//! runs on whatever kernel stack was already current — and `swapgs`
+//! From CPL=0 the CPU does not switch to TSS.RSP0, the trampoline
+//! runs on whatever kernel stack was already current, and `swapgs`
 //! is skipped on both entry and exit.
 
 mod handler;
 mod send_eoi;
-mod trampoline;
-
-pub use trampoline::timer_trampoline;

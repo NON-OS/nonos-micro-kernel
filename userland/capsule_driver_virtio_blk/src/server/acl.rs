@@ -13,15 +13,27 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::protocol::{OP_FLUSH, OP_WRITE_BLOCKS};
-// The sender pid is parsed by the kernel from the message envelope it stamps
-// itself (`proc.<pid>`), so a capsule cannot forge it, and pid 0 is never
-// handed to a process. Only the kernel-internal client enqueues without that
-// prefix and so arrives as 0. Mutating operations are reserved for it: the
-// package store at LBA 0 is read back as trusted input on the next boot.
+
+//! Who may write the medium this driver guards.
+//!
+//! The package store at LBA 0 is read back as trusted input on the next
+//! boot, so the write path answers the kernel-internal client, which arrives
+//! as sender pid 0 because every real capsule's envelope is kernel-stamped,
+//! and otherwise only a sender the kernel says holds StoreWrite. The kernel
+//! is asked on every request: a cached verdict would outlive the holder's
+//! exit and follow its pid to whatever process is handed that pid next.
+
+mod rule;
+
+use nonos_libc::mk_cap_check;
+
+/// StoreWrite, as abi/caps.toml numbers it. Held by the installer and by the
+/// vfs server, and by nothing that merely draws a window.
+pub const CAP_STORE_WRITE: u64 = 1 << 26;
+
 pub fn permits(op: u16, sender_pid: u32) -> bool {
-    match op {
-        OP_WRITE_BLOCKS | OP_FLUSH => sender_pid == 0,
-        _ => true,
+    if rule::allows(op, sender_pid, false) {
+        return true;
     }
+    rule::allows(op, sender_pid, mk_cap_check(sender_pid, CAP_STORE_WRITE) == 1)
 }

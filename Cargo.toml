@@ -1,4 +1,4 @@
-# NØNOS kernel — upper-half microkernel.
+# NØNOS kernel, upper-half microkernel.
 # eK@nonos.systems
 #
 # Static ET_EXEC kernel handed off by the UEFI bootloader. The kernel
@@ -8,7 +8,7 @@
 # in their own ASID; the kernel reaches user pages through the
 # directmap, never by switching CR3 to the user table.
 #
-# `cargo build` resolves to `default = ["microkernel-core"]` — the
+# `cargo build` resolves to `default = ["microkernel-core"]`, the
 # brutal-minimum boot/runtime profile, what plain `cargo check`
 # compiles on a clean tree.
 #
@@ -30,7 +30,7 @@ edition     = "2021"
 publish     = false
 license     = "AGPL-3.0"
 authors     = ["eK@nonos.systems", "senseix21 <mahdix2118@protonmail.com>"]
-description = "NØNOS upper-half microkernel — RAM-resident, capability-enforced, signed CPL=3 capsules"
+description = "NØNOS upper-half microkernel, RAM-resident, capability-enforced, signed CPL=3 capsules"
 repository  = "https://github.com/NON-OS/nonos-micro-kernel"
 build       = "build.rs"
 keywords    = ["kernel", "microkernel", "os", "security", "privacy"]
@@ -103,6 +103,7 @@ nonos-capsule-setup-wizard      = []
 nonos-capsule-wm                = []
 nonos-capsule-toolkit           = []
 nonos-capsule-login             = []
+nonos-capsule-nonos-install     = []
 nonos-capsule-clipboard         = []
 nonos-capsule-attest            = []
 nonos-capsule-power             = []
@@ -165,7 +166,7 @@ nonos-capsule-market            = []
 # Layout-stable debug ring. Allocation-free, formatter-free fixed-VA
 # byte ring at the `.nonos.dbg_ring` section. Triggered by adding
 # `dbg_emit(tag, &payload)` call sites; drained from the panic path
-# and diagnostic paths. Off by default — production builds are
+# and diagnostic paths. Off by default, production builds are
 # byte-identical to before when this feature is absent.
 dbg-ring = []
 
@@ -786,7 +787,7 @@ microkernel-input-e2e-xhci = [
 # Minimal input-probe fleet (Task 0.4). The narrowest set that can
 # prove a keystroke reaching a focused capsule: PS/2 + virtio-gpu
 # drivers, input_router, compositor, and the input_probe surface.
-# NO window manager, shell, or other GUI apps — the probe is the sole
+# NO window manager, shell, or other GUI apps, the probe is the sole
 # focusable window, so input never starves behind the full fleet.
 microkernel-input-probe = [
   "microkernel-core",
@@ -879,7 +880,7 @@ volatile = { version = "0.4", default-features = false }
 # Network stack used by the virtio-net interface bridge.
 smoltcp = { version = "0.11", default-features = false, features = ["alloc", "socket-raw", "socket-udp", "socket-tcp", "proto-ipv4", "proto-ipv6", "medium-ethernet"] }
 
-# Zero-knowledge — halo2.
+# Zero-knowledge, halo2.
 halo2_proofs = { version = "0.3", default-features = false, optional = true }
 halo2curves  = { version = "0.6", default-features = false, optional = true }
 

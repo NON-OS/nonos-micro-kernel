@@ -32,6 +32,7 @@ pub(crate) const N_MK_TIME_ADJUST: i64 = tag4(b"MTAD");
 pub(crate) const N_MK_TIME_RTC: i64 = tag4(b"MTRT");
 pub(crate) const N_MK_BATTERY_STATUS: i64 = tag4(b"MBAT");
 pub(crate) const N_MK_PROC_STAT: i64 = tag4(b"MPST");
+pub(crate) const N_MK_CAP_CHECK: i64 = tag4(b"MCCK");
 pub(crate) const N_MK_PROC_OUTPUT: i64 = tag4(b"MOUT");
 pub(crate) const N_MK_ATTEST_STATUS: i64 = tag4(b"MAST");
 pub(crate) const N_MK_ATTEST_DOC: i64 = tag4(b"MADC");
