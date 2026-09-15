@@ -1,7 +1,7 @@
 // NONOS Operating System (AGPL-3.0-or-later)
 use crate::constants::queue::{
-    RX_BUFFER_LEN, RX_DESC_COUNT, RX_STATUS_DD, RX_STATUS_EOP, TX_CMD_EOP, TX_CMD_IFCS,
-    TX_BUFFER_LEN, TX_CMD_RS, TX_DESC_COUNT,
+    RX_BUFFER_LEN, RX_DESC_COUNT, RX_STATUS_DD, RX_STATUS_EOP, TX_BUFFER_LEN, TX_CMD_EOP,
+    TX_CMD_IFCS, TX_CMD_RS, TX_DESC_COUNT,
 };
 use crate::constants::MAX_ETHERNET_FRAME;
 use crate::protocol::{decode_request, encode_response_header, Request, HDR_LEN};
@@ -40,8 +40,7 @@ fn consume_passes_only_complete_bounded_frames() {
         let errors = (xorshift(&mut s) & 0xff) as u8;
         let length = (xorshift(&mut s) & 0xffff) as u16;
 
-        ring[head as usize] =
-            RxDesc { length, status, errors, ..RxDesc::default() };
+        ring[head as usize] = RxDesc { length, status, errors, ..RxDesc::default() };
         let mut rx = rx_ring(&mut ring);
         rx.head = head;
 
@@ -69,14 +68,12 @@ fn consume_passes_only_complete_bounded_frames() {
     }
 }
 
-#[test]
-#[allow(clippy::assertions_on_constants)] // guarding constant relations is the point
-fn an_accepted_length_always_fits_the_slot_buffer() {
-    // consume bounds len by MAX_ETHERNET_FRAME; the handler copies len bytes
-    // from the slot at buffer_va(idx). This relation is what keeps that copy
-    // inside the slot.
-    assert!(MAX_ETHERNET_FRAME <= RX_BUFFER_LEN);
-}
+/*
+ * consume bounds len by MAX_ETHERNET_FRAME and the handler copies len bytes
+ * from the slot at buffer_va(idx); this relation is what keeps that copy
+ * inside the slot, so it is checked when the crate compiles.
+ */
+const _: () = assert!(MAX_ETHERNET_FRAME <= RX_BUFFER_LEN);
 
 #[test]
 fn slot_addresses_are_laid_out_by_buffer_len() {

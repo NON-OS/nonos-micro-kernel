@@ -12,4 +12,4 @@ pub use input_mode::configure_reporting;
 pub use input_register::input_register;
 pub use power::wake;
 pub use probe::{probe_addr, probe_bus};
-pub use report_desc::{decode_touch, parse as parse_report_descriptor, TouchLayout};
+pub use report_desc::{decode_touch, parse as parse_report_descriptor, TouchLayout, TouchSample};

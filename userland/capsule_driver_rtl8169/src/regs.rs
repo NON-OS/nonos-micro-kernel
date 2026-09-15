@@ -16,6 +16,11 @@
 
 use core::ptr;
 
+/// The register window, by base address.
+///
+/// Every accessor is unsafe under one contract: `offset` must lie inside the
+/// BAR the caller mapped at `base`, and the caller must be the driver that
+/// owns the part, since reads and writes here reach the device directly.
 #[derive(Clone, Copy)]
 pub struct Regs {
     base: u64,
@@ -26,26 +31,44 @@ impl Regs {
         Self { base }
     }
 
+    /// # Safety
+    ///
+    /// `offset` lies inside the mapped window; see the type.
     pub unsafe fn r8(&self, offset: usize) -> u8 {
         ptr::read_volatile((self.base as usize + offset) as *const u8)
     }
 
+    /// # Safety
+    ///
+    /// `offset` lies inside the mapped window; see the type.
     pub unsafe fn r16(&self, offset: usize) -> u16 {
         ptr::read_volatile((self.base as usize + offset) as *const u16)
     }
 
+    /// # Safety
+    ///
+    /// `offset` lies inside the mapped window; see the type.
     pub unsafe fn r32(&self, offset: usize) -> u32 {
         ptr::read_volatile((self.base as usize + offset) as *const u32)
     }
 
+    /// # Safety
+    ///
+    /// `offset` lies inside the mapped window; see the type.
     pub unsafe fn w8(&self, offset: usize, value: u8) {
         ptr::write_volatile((self.base as usize + offset) as *mut u8, value);
     }
 
+    /// # Safety
+    ///
+    /// `offset` lies inside the mapped window; see the type.
     pub unsafe fn w16(&self, offset: usize, value: u16) {
         ptr::write_volatile((self.base as usize + offset) as *mut u16, value);
     }
 
+    /// # Safety
+    ///
+    /// `offset` lies inside the mapped window; see the type.
     pub unsafe fn w32(&self, offset: usize, value: u32) {
         ptr::write_volatile((self.base as usize + offset) as *mut u32, value);
     }

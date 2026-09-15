@@ -22,8 +22,8 @@
 
 mod assign;
 mod find_touch_report_id;
-mod parse;
 mod read_le;
 mod usage_for;
+mod walk;
 
-pub use parse::parse;
+pub use walk::parse;

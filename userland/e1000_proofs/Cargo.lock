@@ -4,4 +4,21 @@ version = 4
 
 [[package]]
 name = "e1000_proofs"
+version = "0.3.0"
+dependencies = [
+ "e1000_proofs_libc_shim",
+ "nonos_devmodel",
+ "nonos_mac",
+]
+
+[[package]]
+name = "e1000_proofs_libc_shim"
 version = "0.1.0"
+
+[[package]]
+name = "nonos_devmodel"
+version = "0.1.0"
+
+[[package]]
+name = "nonos_mac"
+version = "0.3.0"

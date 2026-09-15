@@ -39,8 +39,12 @@ pub fn probe_hid(driver: &Driver, addr: u8) -> Result<bool, TransferError> {
     // right after its controller comes out of reset, and one miss must not make
     // the driver give up on the bus the device actually lives on.
     for _ in 0..4 {
-        let req =
-            TransferRequest { addr, flags: FLAG_RESTART_ON_READ, write: &[0x01, 0x00], read_len: 4 };
+        let req = TransferRequest {
+            addr,
+            flags: FLAG_RESTART_ON_READ,
+            write: &[0x01, 0x00],
+            read_len: 4,
+        };
         match transfer(driver, req) {
             Ok(r) if r.read_len >= 2 => {
                 let desc_len = u16::from_le_bytes([r.read[0], r.read[1]]);

@@ -1,0 +1,23 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the Intel LPSS I2C capsule's transfer engine and
+# its IPC handler: the bytes a transfer puts on the wire, the FIFO discipline,
+# the abort path and the reply format. The shipping driver source is included
+# via #[path] and run against a DesignWare core and a HID touchpad modelled
+# from their specifications, reached through the driver's own register
+# accessor, so every read and write the engine makes is answered the way the
+# databook says a core answers it.
+[package]
+name = "i2c_transfer_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_i2cmodel = { path = "../nonos_i2cmodel" }
+nonos_libc = { package = "i2c_proofs_libc_shim", path = "../i2c_proofs_libc_shim" }

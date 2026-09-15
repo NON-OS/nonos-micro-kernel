@@ -29,7 +29,7 @@ pub fn transfer(
     control::wait_idle(regs)?;
     control::set_target(regs, req.addr)?;
     control::enable(regs)?;
-    let result = run(regs, req);
+    let result = run(driver, req);
     let _ = control::disable(regs);
     result
 }

@@ -15,6 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 use super::super::io::RegIo;
 
+/// The three capability regions, each by base address and offset.
+///
+/// Every accessor is unsafe under one contract: the region it reaches must be
+/// the window the caller mapped, and the offset must lie inside it. Reads and
+/// writes go to the part directly.
 #[derive(Clone, Copy)]
 pub struct Regs {
     pub(in crate::regs) common: RegIo,

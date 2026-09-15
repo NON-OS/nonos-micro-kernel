@@ -20,3 +20,4 @@ mod decode_touch;
 mod types;
 
 pub use decode_touch::decode_touch;
+pub use types::TouchSample;

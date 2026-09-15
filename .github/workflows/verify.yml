@@ -230,6 +230,16 @@ jobs:
           - sync_proofs
           - mechanism_proofs
           - wallet_proofs
+          - bga_proofs
+          - hda_proofs
+          - i2c_pci_proofs
+          - virtio_rng_proofs
+          - ps2_input_proofs
+          - rtl8169_proofs
+          - virtio_gpu_proofs
+          - nonos_i2cmodel
+          - i2c_transfer_proofs
+          - i2c_hid_proofs
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
         with:

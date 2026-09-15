@@ -23,8 +23,9 @@ pub const IC_STATUS_MST_ACTIVITY: u32 = 1 << 5;
 pub const IC_ENABLE_ENABLE: u32 = 1;
 pub const IC_CLR_TX_ABRT: u64 = 0x54;
 pub const TIMEOUT_ITERS: usize = 250_000;
-pub const TX_FIFO_DEPTH: u32 = 64;
-pub const RX_FIFO_DEPTH: u32 = 64;
+// IC_COMP_PARAM_1 carries each FIFO's depth minus one in an eight-bit field.
+pub const COMP_PARAM_TX_DEPTH_SHIFT: u32 = 16;
+pub const COMP_PARAM_RX_DEPTH_SHIFT: u32 = 8;
 pub const IC_CON_MASTER_MODE: u32 = 1 << 0;
 pub const IC_CON_SPEED_FAST: u32 = 2 << 1;
 pub const IC_CON_RESTART_EN: u32 = 1 << 5;

@@ -18,20 +18,13 @@ use super::types::{
     TouchActions, TouchGesture, CONTINUITY_DIV, GAIN_CEIL_X16, GAIN_FLOOR_X16, GAIN_SPEED_DIV,
     MOTION_CAP, NOMINAL_WIDTH, TAP_MAX_FRAMES, TAP_TRAVEL_DIV,
 };
+use crate::hid::TouchSample;
 
 impl TouchGesture {
-    #[allow(clippy::too_many_arguments)]
-    pub fn on_touch(
-        &mut self,
-        x: u32,
-        y: u32,
-        x_max: i32,
-        y_max: i32,
-        tip: bool,
-        confidence: bool,
-        contacts: u32,
-        button: bool,
-    ) -> TouchActions {
+    /// One decoded frame in, the pointer actions it amounts to out.
+    pub fn on_touch(&mut self, s: &TouchSample) -> TouchActions {
+        let (x, y, x_max, y_max) = (s.x, s.y, s.x_max, s.y_max);
+        let (tip, confidence, contacts, button) = (s.tip, s.confidence, s.contacts, s.button);
         let mut act = TouchActions::default();
 
         // A physical clickpad press maps to the left button, palm or not: a

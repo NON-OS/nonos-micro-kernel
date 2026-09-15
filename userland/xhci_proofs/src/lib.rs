@@ -13,11 +13,23 @@
 pub mod constants;
 #[path = "../../capsule_driver_xhci/src/protocol/mod.rs"]
 pub mod protocol;
-// Upstream LinkTrbBuilder has new() without Default; kept as it ships.
 #[path = "../../capsule_driver_xhci/src/trb/mod.rs"]
-#[allow(clippy::new_without_default)]
 pub mod trb;
 
+/*
+ * The controller bring-up, run against a register window. `regs` and `error`
+ * are the shipping trees whole; `controller` picks the files that talk only
+ * to registers, since the rings and contexts need a DMA pool the host does
+ * not have.
+ */
+pub mod controller;
+#[path = "../../capsule_driver_xhci/src/error/mod.rs"]
+pub mod error;
+#[path = "../../capsule_driver_xhci/src/regs/mod.rs"]
+pub mod regs;
+
+#[cfg(test)]
+mod conformance;
 #[cfg(test)]
 mod xhci_tests;
 

@@ -86,8 +86,7 @@ fn setters_touch_only_their_field() {
 
 #[test]
 fn the_setup_stage_encodes_a_get_descriptor_request() {
-    for (desc_type, desc_index, length) in
-        [(1u8, 0u8, 18u16), (2, 0, 9), (2, 0, 512), (3, 2, 255)]
+    for (desc_type, desc_index, length) in [(1u8, 0u8, 18u16), (2, 0, 9), (2, 0, 512), (3, 2, 255)]
     {
         for cycle in [false, true] {
             let trb = setup_stage_get_descriptor_typed(desc_type, desc_index, length, cycle);

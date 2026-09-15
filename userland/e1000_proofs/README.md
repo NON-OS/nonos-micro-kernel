@@ -38,3 +38,25 @@ cd userland/e1000_proofs
 cargo test --release
 cargo kani                # all-input ring bounds (requires Kani)
 ```
+
+## Bring-up: on the air under a drawn address, or not at all
+
+The bring-up files are included the same way and pointed at a window in host
+memory standing in for BAR0, with a part on a second thread completing the
+reset. The station address is drawn per bring-up rather than read out of the
+EEPROM, because the EEPROM address is the one identifier an amnesic machine
+would otherwise announce to every network it joins. With the entropy source
+switched off the bring-up fails after the reset: RAL0/RAH0 still hold the
+EEPROM address, and neither the receiver nor the transmitter was enabled. A
+mutation that falls back to any address without entropy kills that test.
+With entropy the drawn address is locally administered unicast, RAL0/RAH0
+hold it with the valid bit set, the 128 multicast table entries are cleared,
+both rings are named to the part at the driver's layout, the receive ring is
+primed with its buffer addresses, and both directions end up enabled. The
+reset handshake is proven against a part that completes it and against one
+that never does.
+
+The order of the enable against the address write inside one bring-up is a
+property of the source and is not asserted here: a window reads back final
+state, and a part sampling from another thread misses a gap of a few
+instructions.

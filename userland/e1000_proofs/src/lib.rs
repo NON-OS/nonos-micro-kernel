@@ -13,10 +13,15 @@ pub mod constants;
 pub mod protocol;
 // Upstream descriptor accessors are unsafe fns without a # Safety section;
 // kept as they ship.
+pub mod init;
 #[path = "../../capsule_driver_e1000/src/queue/mod.rs"]
-#[allow(clippy::missing_safety_doc)]
 pub mod queue;
+#[path = "../../capsule_driver_e1000/src/regs.rs"]
+pub mod regs;
+pub mod setup;
 
+#[cfg(test)]
+mod conformance;
 #[cfg(test)]
 mod e1000_tests;
 

@@ -56,7 +56,7 @@ pub fn get_edid(q: &ControlQueue, scanout: u32) -> Result<Option<PhysicalSize>, 
         return Err("virtio-gpu: edid rejected");
     }
     let size = le_u32(&buf, RESP_HDR_LEN).ok_or("virtio-gpu: bad edid body")? as usize;
-    if size < EDID_BLOCK_LEN || size > EDID_MAX_LEN || size > used - BODY_OFFSET {
+    if !(EDID_BLOCK_LEN..=EDID_MAX_LEN).contains(&size) || size > used - BODY_OFFSET {
         return Err("virtio-gpu: edid size out of range");
     }
     let block = &buf[BODY_OFFSET..PARSE_LEN];

@@ -1,0 +1,24 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host-runnable proofs for the HID-over-I2C touchpad capsule: the probe, the
+# wake sequence, the report-descriptor parse, the input-mode configuration and
+# the frame-to-pointer path. The shipping driver source is included via
+# #[path]. Its IPC calls land in the shipping i2c_pci transfer handler (from
+# i2c_transfer_proofs), which drives a DesignWare core modelled from the
+# databook with a touchpad modelled from the HID-over-I2C specification on its
+# bus, so both drivers' real wire code meets in one process.
+[package]
+name = "i2c_hid_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_i2cmodel = { path = "../nonos_i2cmodel" }
+i2c_transfer_proofs = { path = "../i2c_transfer_proofs" }
+nonos_libc = { package = "i2c_proofs_libc_shim", path = "../i2c_proofs_libc_shim" }

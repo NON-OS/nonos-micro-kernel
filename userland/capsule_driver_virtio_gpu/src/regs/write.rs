@@ -18,6 +18,9 @@ use super::pio;
 use super::state::Regs;
 use core::ptr::write_volatile;
 impl Regs {
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn w8(self, offset: usize, value: u8) {
         match self.common {
@@ -25,6 +28,9 @@ impl Regs {
             RegIo::Pio(grant) => pio::write(grant, self.common_offset + offset, 1, value as u32),
         }
     }
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn w16(self, offset: usize, value: u16) {
         match self.common {
@@ -34,6 +40,9 @@ impl Regs {
             RegIo::Pio(grant) => pio::write(grant, self.common_offset + offset, 2, value as u32),
         }
     }
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn w32(self, offset: usize, value: u32) {
         match self.common {
@@ -43,6 +52,9 @@ impl Regs {
             RegIo::Pio(grant) => pio::write(grant, self.common_offset + offset, 4, value),
         }
     }
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn w64(self, offset: usize, value: u64) {
         match self.common {

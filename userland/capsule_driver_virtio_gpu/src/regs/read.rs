@@ -18,6 +18,9 @@ use super::pio;
 use super::state::Regs;
 use core::ptr::read_volatile;
 impl Regs {
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn r8(self, offset: usize) -> u8 {
         match self.common {
@@ -25,6 +28,9 @@ impl Regs {
             RegIo::Pio(grant) => pio::read(grant, self.common_offset + offset, 1) as u8,
         }
     }
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn r16(self, offset: usize) -> u16 {
         match self.common {
@@ -32,6 +38,9 @@ impl Regs {
             RegIo::Pio(grant) => pio::read(grant, self.common_offset + offset, 2) as u16,
         }
     }
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn r32(self, offset: usize) -> u32 {
         match self.common {
@@ -39,6 +48,9 @@ impl Regs {
             RegIo::Pio(grant) => pio::read(grant, self.common_offset + offset, 4),
         }
     }
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn config_r32(self, offset: usize) -> u32 {
         match self.device {

@@ -1,4 +1,4 @@
-mod control;
+pub mod control;
 mod engine;
 mod types;
 

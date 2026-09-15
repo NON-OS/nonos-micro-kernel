@@ -14,6 +14,9 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
+nonos_devmodel = { path = "../nonos_devmodel" }
+nonos_mac = { path = "../nonos_mac" }
+nonos_libc = { package = "e1000_proofs_libc_shim", path = "libc_shim" }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }

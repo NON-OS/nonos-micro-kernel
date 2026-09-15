@@ -26,10 +26,16 @@ impl Regs {
         Self { base }
     }
 
+    /// # Safety
+    ///
+    /// `off` is a register the adapter exposes in the mapped window at `base`.
     pub unsafe fn r16(self, off: u32) -> u16 {
         read_volatile((self.base + off as u64) as *const u16)
     }
 
+    /// # Safety
+    ///
+    /// `off` is a register the adapter exposes in the mapped window at `base`.
     pub unsafe fn w16(self, off: u32, value: u16) {
         write_volatile((self.base + off as u64) as *mut u16, value);
     }

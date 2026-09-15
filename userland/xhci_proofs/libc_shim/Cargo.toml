@@ -1,0 +1,17 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# What the xHCI controller code needs from nonos_libc, for the host. A deadline
+# on the host clock, a yield that yields, and an interrupt wait that says there
+# is no interrupt to wait on. The driver's park path then falls back to
+# yielding, which is the behaviour it has on a machine with no IRQ grant.
+[package]
+name = "xhci_proofs_libc_shim"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+name = "nonos_libc"
+path = "src/lib.rs"

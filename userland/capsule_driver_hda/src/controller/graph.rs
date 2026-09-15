@@ -30,7 +30,15 @@ pub(crate) struct OutputPath {
     pub(crate) afg_nid: u8,
 }
 
-fn get_param(regs: Regs, cv: u64, rv: u64, wp: &mut u16, cad: u8, nid: u8, param: u16) -> Option<u32> {
+fn get_param(
+    regs: Regs,
+    cv: u64,
+    rv: u64,
+    wp: &mut u16,
+    cad: u8,
+    nid: u8,
+    param: u16,
+) -> Option<u32> {
     verb::send(regs, cv, rv, wp, compose_verb(cad, nid, VERB_GET_PARAMETER, param)).ok()
 }
 
@@ -39,7 +47,15 @@ fn subnodes(regs: Regs, cv: u64, rv: u64, wp: &mut u16, cad: u8, nid: u8) -> Opt
     Some((((r >> 16) & 0xff) as u8, (r & 0xff) as u8))
 }
 
-fn find_afg(regs: Regs, cv: u64, rv: u64, wp: &mut u16, cad: u8, start: u8, count: u8) -> Option<u8> {
+fn find_afg(
+    regs: Regs,
+    cv: u64,
+    rv: u64,
+    wp: &mut u16,
+    cad: u8,
+    start: u8,
+    count: u8,
+) -> Option<u8> {
     let mut i = 0u8;
     while i < count && i < WALK_CAP {
         let nid = start.wrapping_add(i);
@@ -52,7 +68,13 @@ fn find_afg(regs: Regs, cv: u64, rv: u64, wp: &mut u16, cad: u8, start: u8, coun
     None
 }
 
-pub(crate) fn find_output(regs: Regs, cv: u64, rv: u64, wp: &mut u16, cad: u8) -> Option<OutputPath> {
+pub(crate) fn find_output(
+    regs: Regs,
+    cv: u64,
+    rv: u64,
+    wp: &mut u16,
+    cad: u8,
+) -> Option<OutputPath> {
     let (fg_start, fg_count) = subnodes(regs, cv, rv, wp, cad, 0)?;
     let afg = find_afg(regs, cv, rv, wp, cad, fg_start, fg_count)?;
     let (w_start, w_count) = subnodes(regs, cv, rv, wp, cad, afg)?;

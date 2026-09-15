@@ -13,9 +13,12 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::{IC_RXFLR, RX_FIFO_DEPTH};
+use crate::constants::IC_RXFLR;
 use crate::regs::Regs;
 
-pub fn rx_space(regs: Regs) -> u32 {
-    RX_FIFO_DEPTH.saturating_sub(regs.read32(IC_RXFLR))
+/// Read commands the receive FIFO can still absorb. IC_RXFLR counts bytes
+/// that have landed; `in_flight` is the reads already issued whose bytes have
+/// not, and they need room too, or the core drops what arrives for them.
+pub fn rx_space(regs: Regs, depth: u32, in_flight: u32) -> u32 {
+    depth.saturating_sub(regs.read32(IC_RXFLR)).saturating_sub(in_flight)
 }

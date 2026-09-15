@@ -43,11 +43,18 @@ pub(crate) fn configure(
     send(regs, cv, rv, wp, power(path.afg_nid))?;
     send(regs, cv, rv, wp, power(path.dac_nid))?;
     send(regs, cv, rv, wp, power(path.pin_nid))?;
-    let pinctl = compose_verb(cad, path.pin_nid, VERB_SET_PIN_WIDGET_CONTROL, PIN_OUT_ENABLE as u16);
+    let pinctl =
+        compose_verb(cad, path.pin_nid, VERB_SET_PIN_WIDGET_CONTROL, PIN_OUT_ENABLE as u16);
     send(regs, cv, rv, wp, pinctl)?;
-    let amp = compose_verb_long(cad, path.dac_nid, VERB_SET_AMP_GAIN_MUTE as u16, AMP_OUT_UNMUTE | AMP_GAIN);
+    let amp = compose_verb_long(
+        cad,
+        path.dac_nid,
+        VERB_SET_AMP_GAIN_MUTE as u16,
+        AMP_OUT_UNMUTE | AMP_GAIN,
+    );
     send(regs, cv, rv, wp, amp)?;
-    let fmt = compose_verb_long(cad, path.dac_nid, VERB_SET_STREAM_FORMAT as u16, STREAM_FMT_48K16S);
+    let fmt =
+        compose_verb_long(cad, path.dac_nid, VERB_SET_STREAM_FORMAT as u16, STREAM_FMT_48K16S);
     send(regs, cv, rv, wp, fmt)?;
     let sid = compose_verb(cad, path.dac_nid, VERB_SET_CHANNEL_STREAMID, (tag as u16) << 4);
     send(regs, cv, rv, wp, sid)

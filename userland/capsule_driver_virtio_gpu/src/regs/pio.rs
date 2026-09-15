@@ -21,8 +21,7 @@ pub fn read(grant: u64, offset: usize, width: u8) -> u32 {
     }
     value
 }
+/// A refused write has nowhere to go, as a refused read answers zero.
 pub fn write(grant: u64, offset: usize, width: u8, value: u32) {
-    if mk_pio_write(grant, offset as u16, width, value) < 0 {
-        return;
-    }
+    mk_pio_write(grant, offset as u16, width, value);
 }

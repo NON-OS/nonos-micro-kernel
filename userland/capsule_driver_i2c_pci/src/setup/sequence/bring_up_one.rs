@@ -44,6 +44,8 @@ pub(super) fn bring_up_one(dev: Found) -> Result<Driver, &'static str> {
         family: dev.family,
         comp_type: init.comp_type,
         comp_param: init.comp_param,
+        tx_depth: init.tx_depth,
+        rx_depth: init.rx_depth,
         enabled: init.enabled,
         status: init.status,
         bound_by_probe: false,

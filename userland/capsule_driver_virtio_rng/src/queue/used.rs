@@ -52,6 +52,9 @@ impl Queue {
     /// `len` must be the value returned by `used_len` for the
     /// most recent completed descriptor; the caller is responsible
     /// for not aliasing the buffer with concurrent device writes.
+    /// # Safety
+    ///
+    /// The address the caller mapped, at an offset inside it.
     pub unsafe fn buffer(&self, len: u32) -> &[u8] {
         let n = core::cmp::min(len, self.buf_len) as usize;
         core::slice::from_raw_parts(self.buf_va, n)

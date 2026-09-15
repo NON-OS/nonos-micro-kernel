@@ -114,16 +114,7 @@ pub fn poll(state: &mut State) {
         if let Some(s) = decode_touch(body, &state.touch_layout) {
             state.touch_decoded = true;
             state.polls_since_touch = 0;
-            let act = state.gesture.on_touch(
-                s.x,
-                s.y,
-                s.x_max,
-                s.y_max,
-                s.tip,
-                s.confidence,
-                s.contacts,
-                s.button,
-            );
+            let act = state.gesture.on_touch(&s);
             publish_touch(state, &act);
             return;
         }

@@ -16,6 +16,6 @@
 
 use crate::constants::DISPI_IOPORT_OFFSET;
 
-pub(super) fn dispi_off(index: u32) -> u32 {
+pub fn dispi_off(index: u32) -> u32 {
     DISPI_IOPORT_OFFSET + index * 2
 }

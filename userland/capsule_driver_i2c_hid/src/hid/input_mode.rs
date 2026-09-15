@@ -122,7 +122,7 @@ fn configure_one_report(
         if need_bits == 0 {
             return false;
         }
-        let body_len = ((need_bits as usize) + 7) / 8;
+        let body_len = (need_bits as usize).div_ceil(8);
         if 1 + body_len > REPORT_MAX {
             return false;
         }

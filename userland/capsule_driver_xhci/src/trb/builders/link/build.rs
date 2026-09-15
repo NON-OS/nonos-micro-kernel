@@ -35,3 +35,9 @@ impl LinkTrbBuilder {
         self.inner.trb
     }
 }
+
+impl Default for LinkTrbBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}

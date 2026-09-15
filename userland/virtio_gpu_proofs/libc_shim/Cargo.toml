@@ -1,0 +1,16 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+#
+# Stands in for nonos_libc under the included driver files. Named nonos_libc
+# on the library side so their `use` lines resolve unchanged.
+[package]
+name = "virtio_gpu_proofs_libc_shim"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+name = "nonos_libc"
+path = "src/lib.rs"

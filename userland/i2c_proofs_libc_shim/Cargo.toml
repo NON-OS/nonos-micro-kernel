@@ -1,0 +1,17 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Stands in for nonos_libc under the i2c_pci and i2c_hid driver files the
+# proof crates include. One shim for both, because the two drivers meet over
+# IPC: the HID side's call lands in the controller side's handler, and a
+# dependency graph may carry only one crate named nonos_libc.
+[package]
+name = "i2c_proofs_libc_shim"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+name = "nonos_libc"
+path = "src/lib.rs"

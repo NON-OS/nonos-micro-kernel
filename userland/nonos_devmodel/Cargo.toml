@@ -1,0 +1,15 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# A device register window in host memory, so a driver capsule's own register
+# code can be driven by `cargo test` with no device present. See src/lib.rs for
+# what this does and does not prove.
+[package]
+name = "nonos_devmodel"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]

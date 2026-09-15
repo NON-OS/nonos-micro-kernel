@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+#
+# The PS/2 driver's bring-up, proved without the controller. The driver
+# reaches the i8042 only through port I/O calls into nonos_libc, so the shim
+# is the seam: a controller modelled from the datasheet answers every read and
+# takes every write, in the test's own thread, with nothing left to timing.
+[package]
+name = "ps2_input_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_libc = { package = "ps2_input_proofs_libc_shim", path = "libc_shim" }

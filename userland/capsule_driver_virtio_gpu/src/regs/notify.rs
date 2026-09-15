@@ -18,6 +18,9 @@ use super::pio;
 use super::state::Regs;
 use core::ptr::write_volatile;
 impl Regs {
+    /// # Safety
+    ///
+    /// The offset lies inside the mapped region; see the type.
     #[inline]
     pub unsafe fn notify(self, queue: u16) {
         match self.notify {

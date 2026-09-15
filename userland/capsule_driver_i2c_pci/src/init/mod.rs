@@ -1,12 +1,18 @@
-mod scl;
+mod fifo;
+pub mod scl;
 
 use crate::constants::*;
 use crate::regs::Regs;
+
+pub use fifo::fifo_depths;
 
 #[derive(Clone, Copy)]
 pub struct InitState {
     pub comp_type: u32,
     pub comp_param: u32,
+    /// FIFO depths as the core reports them, in entries.
+    pub tx_depth: u32,
+    pub rx_depth: u32,
     pub enabled: u32,
     pub status: u32,
 }
@@ -37,9 +43,10 @@ pub fn bring_up(regs: Regs, clock_hz: u32) -> Result<InitState, &'static str> {
     regs.write32(IC_INTR_MASK, 0);
     let _ = regs.read32(IC_CLR_INTR);
     let comp_param = regs.read32(IC_COMP_PARAM_1);
+    let (tx_depth, rx_depth) = fifo_depths(comp_param);
     let enabled = regs.read32(IC_ENABLE_STATUS);
     let status = regs.read32(IC_STATUS);
-    Ok(InitState { comp_type, comp_param, enabled, status })
+    Ok(InitState { comp_type, comp_param, tx_depth, rx_depth, enabled, status })
 }
 
 // Writes the standard and fast SCL count pairs plus the SDA hold time. Only

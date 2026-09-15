@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod poll;
+mod cycle;
 mod signal_raw_report;
 
-pub use poll::poll;
+pub use cycle::poll;

@@ -28,6 +28,9 @@ impl Regs {
         Self { io: RegIo::Pio(grant_id) }
     }
     #[inline]
+    /// # Safety
+    ///
+    /// The address the caller mapped, at an offset inside it.
     pub unsafe fn r8(self, offset: usize) -> u8 {
         match self.io {
             RegIo::Mmio(base) => read_volatile(base.add(offset)),
@@ -35,6 +38,9 @@ impl Regs {
         }
     }
     #[inline]
+    /// # Safety
+    ///
+    /// The address the caller mapped, at an offset inside it.
     pub unsafe fn r16(self, offset: usize) -> u16 {
         match self.io {
             RegIo::Mmio(base) => read_volatile(base.add(offset).cast()),
@@ -42,6 +48,9 @@ impl Regs {
         }
     }
     #[inline]
+    /// # Safety
+    ///
+    /// The address the caller mapped, at an offset inside it.
     pub unsafe fn r32(self, offset: usize) -> u32 {
         match self.io {
             RegIo::Mmio(base) => read_volatile(base.add(offset).cast()),
@@ -49,6 +58,9 @@ impl Regs {
         }
     }
     #[inline]
+    /// # Safety
+    ///
+    /// The address the caller mapped, at an offset inside it.
     pub unsafe fn w8(self, offset: usize, value: u8) {
         match self.io {
             RegIo::Mmio(base) => write_volatile(base.add(offset), value),
@@ -56,6 +68,9 @@ impl Regs {
         }
     }
     #[inline]
+    /// # Safety
+    ///
+    /// The address the caller mapped, at an offset inside it.
     pub unsafe fn w16(self, offset: usize, value: u16) {
         match self.io {
             RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),
@@ -63,6 +78,9 @@ impl Regs {
         }
     }
     #[inline]
+    /// # Safety
+    ///
+    /// The address the caller mapped, at an offset inside it.
     pub unsafe fn w32(self, offset: usize, value: u32) {
         match self.io {
             RegIo::Mmio(base) => write_volatile(base.add(offset).cast(), value),

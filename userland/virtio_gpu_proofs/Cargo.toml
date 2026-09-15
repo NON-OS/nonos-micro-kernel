@@ -1,0 +1,20 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+#
+# The virtio-gpu bring-up and control queue, proved without the device. The
+# shipping driver source is included by path; a window in host memory stands
+# in for the PCI capability regions and a second thread plays the part.
+[package]
+name = "virtio_gpu_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_devmodel = { path = "../nonos_devmodel" }
+nonos_libc = { package = "virtio_gpu_proofs_libc_shim", path = "libc_shim" }

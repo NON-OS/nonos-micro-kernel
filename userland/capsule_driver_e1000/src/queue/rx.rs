@@ -18,6 +18,7 @@ use crate::constants::queue::{RX_BUFFER_LEN, RX_DESC_COUNT, RX_STATUS_DD, RX_STA
 use crate::constants::MAX_ETHERNET_FRAME;
 
 use super::layout::RxDesc;
+use core::ptr::{addr_of, addr_of_mut, read_volatile, write_volatile};
 
 pub struct RxRing {
     pub ring_user_va: u64,
@@ -31,6 +32,10 @@ impl RxRing {
         Self { ring_user_va, buffer_user_va, buffer_device_addr, head: 0 }
     }
 
+    /// # Safety
+    ///
+    /// `idx` is below the descriptor count; the ring memory is the DMA grant
+    /// taken in setup, `RX_DESC_COUNT` descriptors long.
     pub unsafe fn descriptor(&self, idx: u16) -> *mut RxDesc {
         let base = self.ring_user_va as *mut RxDesc;
         base.add(idx as usize)
@@ -45,16 +50,23 @@ impl RxRing {
     }
 
     pub fn consume(&mut self) -> Option<(u16, u16)> {
-        let desc = unsafe { &mut *self.descriptor(self.head) };
-        if desc.status & RX_STATUS_DD == 0 {
+        let desc = unsafe { self.descriptor(self.head) };
+        /*
+         * The part writes these fields by DMA, so every read goes to memory. A
+         * status read hoisted out of the poll loop would never see the
+         * descriptor complete.
+         */
+        let status = unsafe { read_volatile(addr_of!((*desc).status)) };
+        if status & RX_STATUS_DD == 0 {
             return None;
         }
-        let status = desc.status;
-        let errors = desc.errors;
-        let len = desc.length;
+        let errors = unsafe { read_volatile(addr_of!((*desc).errors)) };
+        let len = unsafe { read_volatile(addr_of!((*desc).length)) };
         let idx = self.head;
-        desc.status = 0;
-        desc.errors = 0;
+        unsafe {
+            write_volatile(addr_of_mut!((*desc).status), 0);
+            write_volatile(addr_of_mut!((*desc).errors), 0);
+        }
         self.head = (self.head + 1) % (RX_DESC_COUNT as u16);
         if status & RX_STATUS_EOP == 0
             || errors != 0

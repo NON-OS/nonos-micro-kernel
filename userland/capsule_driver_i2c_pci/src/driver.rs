@@ -11,6 +11,10 @@ pub struct Driver {
     pub family: &'static str,
     pub comp_type: u32,
     pub comp_param: u32,
+    /// FIFO depths the core reported at bring-up. The transfer engine pushes
+    /// and issues against these, never against an assumed size.
+    pub tx_depth: u32,
+    pub rx_depth: u32,
     pub enabled: u32,
     pub status: u32,
     /// True when this controller was bound because the touchpad's address

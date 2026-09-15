@@ -1,0 +1,21 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# Host proofs for the rtl8169 bring-up: the drawn station address, the reset
+# handshake, the descriptor rings and the register programming, run through the
+# shipping driver source against a modelled part.
+[package]
+name = "rtl8169_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+nonos_devmodel = { path = "../nonos_devmodel" }
+nonos_mac = { path = "../nonos_mac" }
+# The included driver files name nonos_libc; on the host that is the shim.
+nonos_libc = { package = "rtl8169_proofs_libc_shim", path = "libc_shim" }

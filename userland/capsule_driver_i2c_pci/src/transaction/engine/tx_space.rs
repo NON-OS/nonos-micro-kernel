@@ -13,9 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
-use crate::constants::{IC_TXFLR, TX_FIFO_DEPTH};
+use crate::constants::IC_TXFLR;
 use crate::regs::Regs;
 
-pub fn tx_space(regs: Regs) -> u32 {
-    TX_FIFO_DEPTH.saturating_sub(regs.read32(IC_TXFLR))
+/// Commands the transmit FIFO will still take, against the depth the core
+/// reported at bring-up. A command pushed past that is silently lost.
+pub fn tx_space(regs: Regs, depth: u32) -> u32 {
+    depth.saturating_sub(regs.read32(IC_TXFLR))
 }

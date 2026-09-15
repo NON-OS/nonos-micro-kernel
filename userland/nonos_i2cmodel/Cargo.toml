@@ -1,0 +1,16 @@
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# A DesignWare I2C master, the bus behind it and a HID-over-I2C device on that
+# bus, modelled from their specifications for the host. The i2c_pci and
+# i2c_hid proof crates drive the shipping drivers through this instead of
+# through the LPSS controller and touchpad they were brought up on.
+[package]
+name = "nonos_i2cmodel"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0-or-later"
+
+[lib]
+path = "src/lib.rs"
