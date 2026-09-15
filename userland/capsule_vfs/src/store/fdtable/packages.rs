@@ -18,6 +18,7 @@ use alloc::string::String;
 use alloc::vec::Vec;
 
 use super::types::{File, Store, MAX_FILES};
+use crate::blk::store::StoreEntry;
 
 // Packages are staged from the block device rather than embedded, because
 // whole-set enrollment derives every capsule's trailer from every capsule
@@ -29,18 +30,19 @@ use super::types::{File, Store, MAX_FILES};
 // instead of failing the capsule, since the rest of the filesystem still works.
 
 impl Store {
-    pub(crate) fn seed_packages(&mut self) -> bool {
-        let staged = match crate::blk::load() {
-            Ok(staged) => staged,
-            Err(e) => {
-                crate::blk::status::record(&e);
-                return false;
-            }
-        };
+    /// Take the entries a resumable load finished with.
+    ///
+    /// Split from the reading so the walk can be interrupted: `seed_packages`
+    /// did both, which is why it held the receive loop for the whole container.
+    pub(crate) fn adopt_staged(&mut self, staged: Vec<StoreEntry>) {
         for entry in staged {
             self.stage(entry.name, entry.data);
         }
-        true
+        /*
+         * Staging lands from the idle slot, not through dispatch, so the
+         * counter the desktop and the package list wait on is moved here.
+         */
+        crate::server::generation::bump();
     }
 
     fn stage(&mut self, name: String, data: Vec<u8>) {

@@ -19,7 +19,10 @@
 use nonos_bench_core::{measure, Overhead, Summary};
 
 use super::format::{heading, row};
-use super::probes::{fire, Probe, CALIBRATION, PROBES, SAMPLES};
+use super::ipc::Peer;
+use super::probe_list::{IPC_NOTE, PROBES};
+use super::probes::{fire, CALIBRATION, IPC_SAMPLES, SAMPLES};
+use super::run_lines::{blank_line, note};
 use crate::command::output::Output;
 
 pub fn run(out: &mut Output<'_>, _argv: &[&[u8]]) {
@@ -29,33 +32,32 @@ pub fn run(out: &mut Output<'_>, _argv: &[&[u8]]) {
     blank_line(out, overhead.cycles);
     heading(out);
 
-    // One buffer, reused. A capsule has no business allocating sixteen kilobytes
-    // per probe when the samples are consumed before the next probe starts.
+    /*
+     * One buffer, reused. A capsule has no business allocating sixteen kilobytes
+     * per probe when the samples are consumed before the next probe starts.
+     */
     let mut buf = [0u64; SAMPLES];
     for (i, p) in PROBES.iter().enumerate() {
         let s: Summary = measure(&mut buf, overhead, || fire(i));
         row(out, p.name, &s);
     }
+
+    /*
+     * The round trip, which needs a peer that answers rather than only the
+     * kernel. Fewer samples: each one is a scheduler round trip through
+     * another process, so 2048 of them is a visible pause.
+     */
+    match Peer::find() {
+        Some(peer) => {
+            let mut rx = [0u8; 64];
+            let mut ipc_buf = [0u64; IPC_SAMPLES];
+            let s = measure(&mut ipc_buf, overhead, || peer.ping(&mut rx));
+            row(out, b"ipc", &s);
+        }
+        None => out.writeln(b"ipc        peer not registered, nothing measured"),
+    }
     for p in PROBES.iter() {
         note(out, p);
     }
-}
-
-fn blank_line(out: &mut Output<'_>, overhead: u64) {
-    let mut line = [b' '; 48];
-    let head = b"counter overhead: ";
-    line[..head.len()].copy_from_slice(head);
-    let mut b = [0u8; 20];
-    let n = super::format::decimal(overhead, &mut b);
-    line[head.len()..head.len() + n].copy_from_slice(&b[..n]);
-    out.writeln(&line);
-}
-
-fn note(out: &mut Output<'_>, p: &Probe) {
-    let mut line = [b' '; 96];
-    line[..p.name.len()].copy_from_slice(p.name);
-    let at = 10;
-    let end = (at + p.what.len()).min(line.len());
-    line[at..end].copy_from_slice(&p.what[..end - at]);
-    out.writeln(&line);
+    note(out, &IPC_NOTE);
 }

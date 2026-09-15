@@ -31,9 +31,7 @@ pub fn capacity() -> Result<u64, BlkError> {
     if body.len() < CAPACITY_BODY_LEN {
         return Err(BlkError::BadLength);
     }
-    Ok(u64::from_le_bytes([
-        body[0], body[1], body[2], body[3], body[4], body[5], body[6], body[7],
-    ]))
+    Ok(u64::from_le_bytes([body[0], body[1], body[2], body[3], body[4], body[5], body[6], body[7]]))
 }
 
 // `out` sizes the request: it must be a non-zero whole number of sectors and no

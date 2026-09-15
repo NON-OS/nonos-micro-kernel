@@ -33,9 +33,9 @@ mod seek;
 mod time;
 mod truncate;
 mod types;
-mod usage;
-mod zeroize;
 mod unlink;
+mod usage;
 mod write;
+mod zeroize;
 
 pub use types::{SeekWhence, Store, StoreError};

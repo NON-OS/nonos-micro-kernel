@@ -31,6 +31,7 @@
 //! that could never be red is the fakery this screen exists to replace.
 
 mod boot;
+mod own_mask;
 mod scan;
 mod table;
 mod table_read;

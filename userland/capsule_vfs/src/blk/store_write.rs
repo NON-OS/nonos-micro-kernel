@@ -35,9 +35,7 @@ pub fn append(name: &str, data: &[u8]) -> Result<(), BlkError> {
     let count = entry_count(&head)?;
     let mut toc = vec![0u8; sector_span(HEADER_LEN + ENTRY_LEN * count)];
     read_blocks(STORE_BASE_LBA, &mut toc)?;
-    let capacity_bytes = capacity()?
-        .checked_mul(SECTOR_SIZE as u64)
-        .ok_or(BlkError::BadLength)?;
+    let capacity_bytes = capacity()?.checked_mul(SECTOR_SIZE as u64).ok_or(BlkError::BadLength)?;
     let region_len = sector_span(HEADER_LEN + ENTRY_LEN * (count + 1));
     let reserved = sector_span(HEADER_LEN + ENTRY_LEN * MAX_ENTRIES);
     let mut next_off = STORE_BASE_LBA * SECTOR_SIZE as u64 + reserved as u64;

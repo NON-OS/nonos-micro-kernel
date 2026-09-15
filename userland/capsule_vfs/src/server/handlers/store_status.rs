@@ -20,11 +20,5 @@ use crate::protocol::{encode_response, Request, OP_STORE_STATUS};
 
 pub fn store_status(req: Request<'_>) -> Vec<u8> {
     let code = crate::blk::status::current();
-    encode_response(
-        OP_STORE_STATUS,
-        req.flags,
-        req.request_id,
-        0,
-        &code.to_le_bytes(),
-    )
+    encode_response(OP_STORE_STATUS, req.flags, req.request_id, 0, &code.to_le_bytes())
 }

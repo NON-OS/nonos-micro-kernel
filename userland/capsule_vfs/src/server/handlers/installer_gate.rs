@@ -45,12 +45,8 @@ pub(super) fn require_installer(sender_pid: u32) -> Result<(), i32> {
 fn installer_pid() -> Option<u32> {
     let mut port: u32 = 0;
     let mut pid: u32 = 0;
-    let rc = mk_service_lookup(
-        INSTALLER_SERVICE.as_ptr(),
-        INSTALLER_SERVICE.len(),
-        &mut port,
-        &mut pid,
-    );
+    let rc =
+        mk_service_lookup(INSTALLER_SERVICE.as_ptr(), INSTALLER_SERVICE.len(), &mut port, &mut pid);
     if rc != 0 || pid == 0 {
         return None;
     }

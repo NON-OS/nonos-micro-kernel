@@ -18,9 +18,7 @@ use alloc::vec::Vec;
 use core::str;
 
 use super::util::split_caller;
-use crate::protocol::{
-    encode_response, Request, EINVAL, MAX_LIST_BYTES, MAX_PATH_BYTES, OP_LIST,
-};
+use crate::protocol::{encode_response, Request, EINVAL, MAX_LIST_BYTES, MAX_PATH_BYTES, OP_LIST};
 use crate::store::Store;
 
 // Payload: u32 caller_pid, u8 prefix_len, prefix bytes.

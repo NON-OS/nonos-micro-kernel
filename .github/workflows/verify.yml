@@ -110,6 +110,17 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
+  syscall-reach:
+    # A syscall the kernel dispatches that no userland code references is a
+    # capability written and never wired. Three were dark at once in one day.
+    # The count in scripts/baselines may only go down.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+      - name: Kernel syscalls nothing in userland can reach
+        run: python3 scripts/check_syscall_reach.py --baseline scripts/baselines/syscall-unreachable-count.txt
+
   runnable-proofs:
     runs-on: ubuntu-latest
     timeout-minutes: 30

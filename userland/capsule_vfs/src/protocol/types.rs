@@ -38,6 +38,9 @@ pub const OP_STORE_REMOVE: u16 = 18;
 pub const OP_STORE_STATUS: u16 = 19;
 pub const OP_STORE_INSTALL: u16 = 20;
 pub const OP_STORE_UNINSTALL: u16 = 21;
+/// A counter that moves whenever the store may have changed. Lets a caller poll
+/// for change without asking for a directory listing it will throw away.
+pub const OP_GENERATION: u16 = 22;
 
 // Set on the last OP_STORE_INSTALL chunk of an artifact: the RAM copy is
 // complete and the whole file is handed to the on-device store.

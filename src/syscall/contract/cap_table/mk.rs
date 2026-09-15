@@ -70,8 +70,10 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkGetPid => caps.can_getpid(),
         SyscallNumber::MkArgs => caps.can_getpid(),
         SyscallNumber::MkThreadSpawn => caps.can_ipc(),
-        // A capsule may only move its own fs base; that mutates nothing
-        // outside its own PCB, so a valid token is the whole requirement.
+        /*
+         * A capsule may only move its own fs base; that mutates nothing
+         * outside its own PCB, so a valid token is the whole requirement.
+         */
         SyscallNumber::MkSetTls => caps.is_valid(),
         SyscallNumber::MkProcOutput => caps.can_ipc(),
         SyscallNumber::MkProcInput => caps.can_ipc(),
@@ -86,9 +88,13 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkIpcSend
         | SyscallNumber::MkIpcSendToPid
         | SyscallNumber::MkServiceLookup
-        | SyscallNumber::MkServiceRegister
-        | SyscallNumber::MkCapGrant
-        | SyscallNumber::MkCapRevoke => caps.can_ipc(),
+        | SyscallNumber::MkServiceRegister => caps.can_ipc(),
+        /*
+         * The handlers ask for Admin again and refuse to grant a bit the
+         * caller lacks. The table asks first, so a capsule without Admin is
+         * turned away before the handler runs.
+         */
+        SyscallNumber::MkCapGrant | SyscallNumber::MkCapRevoke => caps.can_admin(),
 
         SyscallNumber::MkDeviceList => caps.can_device_enum(),
         SyscallNumber::MkDeviceClaim | SyscallNumber::MkDeviceRelease => caps.can_driver(),
@@ -116,22 +122,28 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         SyscallNumber::MkSurfacePresent => caps.can_present(),
         SyscallNumber::MkDisplayVsyncWait => caps.can_display_query(),
         SyscallNumber::MkInputEventPost => caps.can_input_source(),
-        // Draining/waiting on the global raw-input ring is a privileged consumer
-        // operation: the ring carries every keystroke. `can_input_source()`
-        // accepts `Irq`, which every device driver holds, so it let any driver
-        // capsule steal the keystroke stream (cross-capsule keylogging). The
-        // consumer gate requires `InputSource` (the input_router's cap) and
-        // excludes `Irq`, keeping drivers able to POST but not DRAIN.
+        /*
+         * Draining/waiting on the global raw-input ring is a privileged consumer
+         * operation: the ring carries every keystroke. `can_input_source()`
+         * accepts `Irq`, which every device driver holds, so it let any driver
+         * capsule steal the keystroke stream (cross-capsule keylogging). The
+         * consumer gate requires `InputSource` (the input_router's cap) and
+         * excludes `Irq`, keeping drivers able to POST but not DRAIN.
+         */
         SyscallNumber::MkInputEventDrain => caps.can_input_consumer(),
         SyscallNumber::MkInputEventWait => caps.can_input_consumer(),
 
-        // Only a SpawnWindow-trusted capsule (the desktop shell) may ask the
-        // kernel to open another window instance of an embedded app capsule.
+        /*
+         * Only a SpawnWindow-trusted capsule (the desktop shell) may ask the
+         * kernel to open another window instance of an embedded app capsule.
+         */
         SyscallNumber::MkSpawnInstance => caps.can_spawn_window(),
 
-        // Running a baked command-line tool needs only IPC: the tool is spawned
-        // parented to the caller so the caller can drive its stdio, and only the
-        // baked, attested set can be named.
+        /*
+         * Running a baked command-line tool needs only IPC: the tool is spawned
+         * parented to the caller so the caller can drive its stdio, and only the
+         * baked, attested set can be named.
+         */
         SyscallNumber::MkToolRun => caps.can_ipc(),
 
         _ => return None,

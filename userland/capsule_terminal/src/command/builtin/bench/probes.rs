@@ -26,26 +26,14 @@ use nonos_libc::{mk_getpid, mk_uptime_ms, mk_yield};
 /// small enough that the whole run finishes inside a keystroke.
 pub const SAMPLES: usize = 2048;
 
+/// Samples for the round trip. Each one wakes another process and comes back,
+/// so the same count as a bare syscall would be a visible pause with no more to
+/// say: a few hundred already puts a real value at the 99th percentile.
+pub const IPC_SAMPLES: usize = 256;
+
 /// Rounds used to find the counter's own cost. The floor of these is what gets
 /// subtracted from every sample.
 pub const CALIBRATION: u32 = 512;
-
-pub struct Probe {
-    pub name: &'static [u8],
-    pub what: &'static [u8],
-}
-
-pub const PROBES: [Probe; 3] = [
-    Probe {
-        name: b"syscall",
-        what: b"entry and exit, measured on the cheapest call the kernel has",
-    },
-    Probe {
-        name: b"clock",
-        what: b"a syscall that reads kernel state, against one that reads a register",
-    },
-    Probe { name: b"yield", what: b"a trip through the scheduler and back" },
-];
 
 /// Run one probe body once. Split out so the timing loop holds no branch on
 /// which probe it is running.

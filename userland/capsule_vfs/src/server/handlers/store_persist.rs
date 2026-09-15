@@ -45,8 +45,6 @@ pub fn store_persist(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Ve
     };
     match crate::blk::store_write::append(&path, &data) {
         Ok(()) => encode_response(OP_STORE_PERSIST, req.flags, req.request_id, 0, &[]),
-        Err(e) => {
-            encode_response(OP_STORE_PERSIST, req.flags, req.request_id, map_blk_err(e), &[])
-        }
+        Err(e) => encode_response(OP_STORE_PERSIST, req.flags, req.request_id, map_blk_err(e), &[]),
     }
 }

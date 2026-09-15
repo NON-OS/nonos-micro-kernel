@@ -17,7 +17,11 @@
 //! Cycle-accurate measurement of the primitives this microkernel is built from.
 
 mod format;
+mod ipc;
+mod ipc_wire;
+mod probe_list;
 mod probes;
 mod run;
+mod run_lines;
 
 pub use run::run;

@@ -14,17 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod client;
-mod digest;
-pub(crate) mod error;
-pub mod load;
-mod reply;
-mod request;
-pub(crate) mod status;
-pub mod store;
-mod store_header;
-pub(crate) mod store_remove;
-mod store_toc;
-pub(crate) mod store_write;
-mod transport;
-mod wire;
+//! The attest capsule's request, which is the cheapest reply on the machine.
+
+/// The attest capsule's wire header: magic, version, op, then three words the
+/// healthcheck leaves zero.
+pub(super) const MAGIC: u32 = 0x4154_5354;
+pub(super) const VERSION: u16 = 1;
+pub(super) const OP_HEALTHCHECK: u16 = 0x0001;
+pub(super) const HDR_LEN: usize = 20;
+pub(super) const SERVICE: &[u8] = b"attest";
+
+/// Generous against a single round trip, so a timeout means the peer is gone
+/// rather than merely slow, and a run does not stall the terminal if it is.
+pub(super) const TIMEOUT_MS: u64 = 200;

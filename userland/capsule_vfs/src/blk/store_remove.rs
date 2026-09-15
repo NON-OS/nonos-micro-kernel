@@ -36,9 +36,7 @@ pub fn remove(name: &str) -> Result<(), BlkError> {
     let span = sector_span(HEADER_LEN + ENTRY_LEN * count);
     let mut toc = vec![0u8; span];
     read_blocks(STORE_BASE_LBA, &mut toc)?;
-    let capacity_bytes = capacity()?
-        .checked_mul(SECTOR_SIZE as u64)
-        .ok_or(BlkError::BadLength)?;
+    let capacity_bytes = capacity()?.checked_mul(SECTOR_SIZE as u64).ok_or(BlkError::BadLength)?;
     let entries = decode(&toc, count, capacity_bytes)?;
     let keep: Vec<usize> = (0..count).filter(|&i| entries[i].name != name).collect();
     if keep.len() == count {

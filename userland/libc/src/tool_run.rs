@@ -14,13 +14,6 @@ use crate::syscall::{call_raw, N_MK_TOOL_RUN};
 pub fn mk_tool_run(name: &[u8], argv: &[u8]) -> i64 {
     call_raw(
         N_MK_TOOL_RUN,
-        [
-            name.as_ptr() as u64,
-            name.len() as u64,
-            argv.as_ptr() as u64,
-            argv.len() as u64,
-            0,
-            0,
-        ],
+        [name.as_ptr() as u64, name.len() as u64, argv.as_ptr() as u64, argv.len() as u64, 0, 0],
     )
 }

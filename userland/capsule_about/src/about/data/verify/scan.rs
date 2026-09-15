@@ -23,6 +23,7 @@
 use nonos_libc::mk_getpid;
 
 use super::super::caps::{ADMIN, DEBUG, FILESYSTEM, MASK, RAW_HARDWARE};
+use super::own_mask::own_mask_verdict;
 use super::table::Tally;
 use super::table_read::read;
 use super::types::{Census, Check, Live, Verdict};
@@ -31,10 +32,7 @@ pub fn live() -> Option<Live> {
     let me = mk_getpid();
     let t: Tally = read(me)?;
 
-    // Our own row must be in a table we are listed in. Without it the mask
-    // comparison has nothing to compare, and reports unknown rather than pass.
-    let mask =
-        if t.own_mask == 0 { Verdict::Unknown } else { Verdict::from_bool(t.own_mask == MASK) };
+    let mask = own_mask_verdict(me, t.own_mask);
 
     Some(Live {
         checks: [

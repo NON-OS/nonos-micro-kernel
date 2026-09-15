@@ -19,5 +19,5 @@ mod idle;
 mod sched;
 
 pub use exit::mk_exit;
-pub use sched::mk_yield;
 pub use idle::mk_idle_ms;
+pub use sched::mk_yield;

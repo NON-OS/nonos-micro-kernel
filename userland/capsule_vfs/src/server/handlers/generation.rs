@@ -14,17 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod client;
-mod digest;
-pub(crate) mod error;
-pub mod load;
-mod reply;
-mod request;
-pub(crate) mod status;
-pub mod store;
-mod store_header;
-pub(crate) mod store_remove;
-mod store_toc;
-pub(crate) mod store_write;
-mod transport;
-mod wire;
+//! Answer with the store's generation counter.
+
+use alloc::vec::Vec;
+
+use crate::protocol::{encode_response, Request, OP_GENERATION};
+use crate::server::generation;
+
+/// Eight bytes and no walk. This exists so a caller polling for change does not
+/// have to list a directory to find out there was none.
+pub fn generation(req: Request<'_>) -> Vec<u8> {
+    let n = generation::current();
+    encode_response(OP_GENERATION, req.flags, req.request_id, 0, &n.to_le_bytes())
+}

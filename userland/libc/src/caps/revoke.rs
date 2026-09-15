@@ -14,17 +14,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod client;
-mod digest;
-pub(crate) mod error;
-pub mod load;
-mod reply;
-mod request;
-pub(crate) mod status;
-pub mod store;
-mod store_header;
-pub(crate) mod store_remove;
-mod store_toc;
-pub(crate) mod store_write;
-mod transport;
-mod wire;
+use crate::syscall::{call_raw, N_MK_CAP_REVOKE};
+
+/// Withdraw every bit in `mask` from `pid`.
+///
+/// Admin only, as for grant. A capsule may not narrow its own authority
+/// through this call; the mask a capsule runs with is what its signed manifest
+/// declared, and shrinking it at runtime would make the manifest a ceiling
+/// rather than the truth.
+///
+/// Returns 0, or a negative errno.
+pub fn mk_cap_revoke(pid: u32, mask: u64) -> i64 {
+    call_raw(N_MK_CAP_REVOKE, [pid as u64, mask, 0, 0, 0, 0])
+}

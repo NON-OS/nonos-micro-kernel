@@ -14,17 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod client;
-mod digest;
-pub(crate) mod error;
-pub mod load;
-mod reply;
-mod request;
-pub(crate) mod status;
-pub mod store;
-mod store_header;
-pub(crate) mod store_remove;
-mod store_toc;
-pub(crate) mod store_write;
-mod transport;
-mod wire;
+use crate::syscall::{call_raw, N_MK_CAP_CHECK};
+
+/// Whether `pid` holds every bit in `mask`.
+///
+/// Ungated: any process may ask about any other, which discloses nothing the
+/// process table does not already publish to everyone. It exists so a capsule
+/// can ask before acting rather than discovering a refusal mid-operation, and
+/// so a claim about what a process holds can be checked against the kernel's
+/// own answer rather than a copy of it.
+///
+/// Returns 1 when held, 0 when not or when `pid` is unknown.
+pub fn mk_cap_check(pid: u32, mask: u64) -> bool {
+    call_raw(N_MK_CAP_CHECK, [pid as u64, mask, 0, 0, 0, 0]) == 1
+}

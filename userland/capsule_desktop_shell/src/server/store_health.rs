@@ -15,24 +15,32 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Say it out loud, once, if the capsule store failed to decode at boot. The
-//! probe retries every tick until vfs_pool answers, then latches: a corrupted
-//! store used to present as a merely empty /capsules with nothing said.
+//! probe retries until vfs_pool answers, then latches: a corrupted store used
+//! to present as a merely empty /capsules with nothing said.
 
 use alloc::vec::Vec;
 use core::sync::atomic::{AtomicBool, Ordering};
 
 use nonos_libc::mk_time_millis;
 
+use super::backoff::Backoff;
 use crate::render::sync_toast_layer;
 use crate::state::{Context, NotifyLevel};
 
 static ANSWERED: AtomicBool = AtomicBool::new(false);
 
+/// Same window, same reason: vfs_pool cannot answer while it stages packages.
+static GAP: Backoff = Backoff::new(250, 4000);
+
 pub fn check(ctx: &mut Context) {
     if ANSWERED.load(Ordering::Relaxed) {
         return;
     }
+    if !GAP.due() {
+        return;
+    }
     let Some(code) = crate::vfs_client::store_status() else {
+        GAP.missed();
         return;
     };
     ANSWERED.store(true, Ordering::Relaxed);

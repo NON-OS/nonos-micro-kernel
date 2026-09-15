@@ -18,14 +18,22 @@ use alloc::vec::Vec;
 
 use super::handlers;
 use crate::protocol::{
-    encode_response, Request, EINVAL, OP_CHMOD, OP_CLOSE, OP_COPY, OP_HEALTHCHECK, OP_LIST,
-    OP_MKDIR, OP_OPEN, OP_READ, OP_RENAME, OP_RMDIR, OP_SEEK, OP_STAT, OP_STORE_INSTALL,
+    encode_response, Request, EINVAL, OP_CHMOD, OP_CLOSE, OP_COPY, OP_GENERATION, OP_HEALTHCHECK,
+    OP_LIST, OP_MKDIR, OP_OPEN, OP_READ, OP_RENAME, OP_RMDIR, OP_SEEK, OP_STAT, OP_STORE_INSTALL,
     OP_STORE_PERSIST, OP_STORE_REMOVE, OP_STORE_STATUS, OP_STORE_UNINSTALL, OP_TRUNCATE, OP_UNLINK,
     OP_USAGE, OP_WRITE,
 };
 use crate::store::Store;
 
 pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
+    /*
+     * One place, so no handler can forget. Bumped on the attempt rather than on
+     * success: a refused mkdir moving the counter costs one redundant listing,
+     * while a handler that forgets leaves a desktop that never updates.
+     */
+    if mutates(req.op) {
+        super::generation::bump();
+    }
     match req.op {
         OP_OPEN => handlers::open(store, req, sender_pid),
         OP_CLOSE => handlers::close(store, req, sender_pid),
@@ -48,6 +56,30 @@ pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8>
         OP_USAGE => handlers::usage(store, req, sender_pid),
         OP_CHMOD => handlers::chmod(store, req, sender_pid),
         OP_HEALTHCHECK => handlers::healthcheck(req),
+        OP_GENERATION => handlers::generation_op(req),
         _ => encode_response(req.op, req.flags, req.request_id, EINVAL, &[]),
     }
+}
+
+/// Whether an op can change what a listing would return.
+///
+/// Reads are absent on purpose. `OP_SEEK` and `OP_OPEN` move file state that no
+/// directory listing shows, so counting them would wake every watcher on a
+/// read-only workload.
+fn mutates(op: u16) -> bool {
+    matches!(
+        op,
+        OP_WRITE
+            | OP_MKDIR
+            | OP_UNLINK
+            | OP_RENAME
+            | OP_RMDIR
+            | OP_COPY
+            | OP_TRUNCATE
+            | OP_CHMOD
+            | OP_STORE_PERSIST
+            | OP_STORE_REMOVE
+            | OP_STORE_INSTALL
+            | OP_STORE_UNINSTALL
+    )
 }

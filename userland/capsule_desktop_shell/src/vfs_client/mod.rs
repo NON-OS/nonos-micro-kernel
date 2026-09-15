@@ -24,6 +24,7 @@ mod constants;
 mod create_file;
 mod entry;
 mod frame;
+mod generation;
 mod list;
 mod mkdir;
 mod owner_body;
@@ -37,6 +38,7 @@ mod walk;
 
 pub use create_file::create_file;
 pub use entry::Entry;
+pub use generation::generation;
 pub use list::list;
 pub use mkdir::mkdir;
 pub use remove::remove;
