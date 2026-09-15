@@ -171,7 +171,7 @@ jobs:
           cat SHA256SUMS BLAKE3SUMS
 
       - name: Sign build provenance for the image
-        uses: actions/attest-build-provenance@520d128f165991a6c774bcb264f323e3d70747f4 # v2.2.0
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-path: |
             rel/nonos.iso
