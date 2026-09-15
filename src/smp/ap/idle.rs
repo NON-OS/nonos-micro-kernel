@@ -28,6 +28,7 @@ use core::sync::atomic::Ordering;
 /// a latency optimisation, not the correctness condition.
 pub(super) fn ap_idle_loop(cpu_id: u32) -> ! {
     let cpu = &CPU_DESCRIPTORS[cpu_id as usize];
+    cpu.set_stage(crate::smp::Stage::IdleLoop);
     loop {
         // Interrupts off across the test, so work appearing between the test
         // and the halt cannot be missed.
@@ -37,6 +38,11 @@ pub(super) fn ap_idle_loop(cpu_id: u32) -> ! {
             core::arch::asm!("cli", options(nostack, nomem));
         }
 
+        // Set before the queue is consulted. Consulting it takes a lock with
+        // interrupts already masked, which is a place a CPU can stop without
+        // anything outside it being able to tell.
+        cpu.set_stage(crate::smp::Stage::IdleCheckingQueue);
+
         if need_reschedule() || runnable_process_count() > 0 {
             clear_reschedule();
             cpu.idle.store(false, Ordering::Relaxed);
@@ -45,8 +51,16 @@ pub(super) fn ap_idle_loop(cpu_id: u32) -> ! {
             unsafe {
                 core::arch::asm!("sti", options(nostack, nomem));
             }
+            cpu.set_stage(crate::smp::Stage::EnteringScheduler);
+            /*
+             * This does not return. `sched::schedule` is `scheduler::core::run`,
+             * which is `-> !`, so the `continue` below is unreachable and this
+             * loop runs at most one full pass on any CPU. Everything after this
+             * point on this CPU happens inside the scheduler's own loop, which
+             * is why `idle` and `idle_cycles` stay at whatever they were: their
+             * only writer is below.
+             */
             crate::sched::schedule();
-            continue;
         }
 
         cpu.idle.store(true, Ordering::Release);

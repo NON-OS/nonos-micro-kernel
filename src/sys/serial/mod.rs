@@ -15,9 +15,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 pub mod core;
+pub mod line;
 pub mod print;
 
 pub use core::init;
+pub use line::Line;
 pub use print::{print, print_dec, print_dec as print_u64, print_hex, print_str, println};
 
 use ::core::sync::atomic::{AtomicBool, Ordering};

@@ -77,12 +77,16 @@ pub fn init_core_systems() {
     bus::pci::init();
     serial::println(b"[NONOS] PCI enumerated");
     crate::sys::bench::mark(b"kernel_pci_ready");
-    // Wants the DMAR bases from the ACPI parse and an MMIO mapper that can
-    // hand out a register window, so it runs here, not beside the parse.
-    #[cfg(feature = "nonos-arch-iommu")]
-    crate::arch::x86_64::iommu::unit::report::init();
-    #[cfg(feature = "nonos-arch-iommu")]
-    crate::arch::x86_64::iommu::unit::bringup::init();
+    /*
+     * The IOMMU probe used to run here, on the argument that it needs the
+     * DMAR bases from the ACPI parse and an MMIO mapper able to hand out a
+     * register window. The first half was right and the second was not: the
+     * mapper needs the paging manager, and `init_unified_vm` does not bring
+     * that up until well after this function has returned. So the probe
+     * failed with "register window not mappable" on every boot and DMA was
+     * left unrestricted, on hardware as much as under QEMU. It runs from
+     * `microkernel_init` now, after paging.
+     */
     crate::kernel_core::init::init_platform_baseline();
     crate::sys::bench::mark(b"kernel_core_ready");
 }

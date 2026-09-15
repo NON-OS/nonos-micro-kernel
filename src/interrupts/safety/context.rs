@@ -88,3 +88,16 @@ pub fn set_interrupt_context() -> InterruptContext {
 pub fn in_interrupt_context() -> bool {
     IN_INTERRUPT[cpu_id()].load(Ordering::Acquire)
 }
+
+/// How deep in interrupt handlers `cpu` is, asked from another CPU.
+///
+/// The accessors above answer for the caller, which is no use to a diagnostic:
+/// the CPU that has stopped answering is never the one asking. Reading another
+/// slot is sound because each is a plain atomic and the reader only wants to
+/// know whether that CPU is inside a handler.
+pub fn depth_of(cpu: usize) -> u8 {
+    if cpu >= MAX_CPUS {
+        return 0;
+    }
+    INTERRUPT_DEPTH[cpu].load(Ordering::Acquire)
+}

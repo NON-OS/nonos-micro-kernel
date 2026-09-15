@@ -18,6 +18,7 @@ use super::realtime;
 use super::runqueue::RunQueue;
 use super::task::Task;
 use super::types::Scheduler;
+use crate::smp::Stage;
 use spin::{Mutex, Once};
 
 static RUNQUEUE: Once<Mutex<RunQueue>> = Once::new();
@@ -58,6 +59,11 @@ pub fn spawn(task: Task) {
 
 pub fn run() -> ! {
     loop {
+        // Where this CPU is, for another CPU to read once this one stops
+        // answering. This loop is where every CPU that has work spends its
+        // life, and the locks in it are taken with interrupts masked, so a CPU
+        // wedged here is indistinguishable from a halted one from outside.
+        mark(Stage::InScheduler);
         super::deadline::run_deadline_tasks();
         realtime::run_realtime_tasks();
 
@@ -72,8 +78,17 @@ pub fn run() -> ! {
                 get_queue().lock().push(task);
             }
         } else {
+            mark(Stage::SchedulerIdle);
             crate::arch::idle_cpu();
         }
+    }
+}
+
+/// Record this CPU's position. Silent on a CPU with no descriptor yet, which
+/// is the boot CPU before SMP init and is not a case worth failing over.
+fn mark(stage: Stage) {
+    if let Some(cpu) = crate::smp::get_cpu(crate::smp::cpu_id()) {
+        cpu.set_stage(stage);
     }
 }
 

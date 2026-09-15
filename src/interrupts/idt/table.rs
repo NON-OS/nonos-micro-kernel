@@ -37,5 +37,10 @@ fn build_idt() -> InterruptDescriptorTable {
         super::table_ist::configure(&mut idt);
         super::table_irqs::configure(&mut idt);
     }
+    // The IPI gates go in here rather than at SMP bring-up. Every CPU loads
+    // this table, an AP among them, and it loads it before the boot CPU has
+    // finished starting the others; while the table is being built is the only
+    // point at which these vectors are certain to be present for all of them.
+    crate::smp::install_ipi_gates(&mut idt);
     idt
 }

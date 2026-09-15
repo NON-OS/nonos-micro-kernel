@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::smp::constants::MAX_CPUS;
-use crate::smp::state::{BSP_APIC_ID, CPUS_ONLINE, CPU_COUNT, SMP_INITIALIZED};
+use crate::smp::state::{BSP_APIC_ID, CPU_COUNT, SMP_INITIALIZED};
 use crate::smp::topology;
 use core::sync::atomic::Ordering;
 
@@ -62,9 +62,22 @@ pub(super) fn start_aps() -> Result<usize, &'static str> {
     }
     super::ap_identity::remove();
 
-    CPUS_ONLINE.store(started + 1, Ordering::Release);
-    crate::log_info!("[SMP] {} APs started, {} total CPUs online", started, started + 1);
-    Ok(started)
+    /*
+     * The population is not published from here. `started` counts the APs that
+     * answered inside a deadline, which is not the set of APs that are running:
+     * one that arrives late is alive and uncounted. Each CPU adds itself as it
+     * comes up instead, which is what the aarch64 entry already does and what
+     * `ipi_handler` already assumes when it decrements on the way down.
+     *
+     * The distinction is not cosmetic. `cpus_online()` gates two things:
+     * `flush_tlb_*_smp` returns early at one CPU, and `lock_responsive` only
+     * services shootdowns by hand above one. Publish 1 on a machine running 2
+     * and both are switched off together, so the second CPU runs with a TLB
+     * nobody invalidates and the boot looks healthy while doing it.
+     */
+    let online = crate::smp::cpus_online();
+    crate::log_info!("[SMP] {} APs answered in time, {} CPUs online", started, online);
+    Ok(online.saturating_sub(1))
 }
 
 fn ensure_smp_ready() -> Result<(), &'static str> {

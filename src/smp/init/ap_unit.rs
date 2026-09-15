@@ -41,8 +41,16 @@ pub(super) fn start(
         crate::log_info!("[SMP] AP {} online (APIC {})", cpu_id, apic_id);
         Ok(true)
     } else {
-        crate::log_error!("[SMP] AP {} (APIC {}) startup timeout", cpu_id, apic_id);
-        ap.set_state(CpuState::Offline);
+        /*
+         * Not marked Offline. This AP missed the deadline; it was not stopped,
+         * and the loop that called us says so in its own comment. Writing
+         * Offline here raced the AP's own write of Online: lose that race and
+         * a running CPU is recorded as down, `shootdown::broadcast` skips it
+         * because it filters on `cpu_is_online`, and it goes on holding stale
+         * TLB entries with nobody flushing them. Leaving the descriptor in
+         * Starting makes the CPU the only writer of its own Online.
+         */
+        crate::log_error!("[SMP] AP {} (APIC {}) did not answer in time", cpu_id, apic_id);
         Ok(false)
     }
 }

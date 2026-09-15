@@ -15,7 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::idle::ap_idle_loop;
-use crate::smp::state::{AP_STARTUP_BARRIER, CPU_DESCRIPTORS};
+use crate::smp::state::{AP_STARTUP_BARRIER, CPUS_ONLINE, CPU_DESCRIPTORS};
 use crate::smp::types::CpuState;
 use core::sync::atomic::Ordering;
 
@@ -31,6 +31,7 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     // per-CPU register programming runs here.
     // SAFETY: eK@nonos.systems - runs once on this AP before any interrupt is
     // enabled, and touches only this CPU's own LAPIC registers.
+    CPU_DESCRIPTORS[cpu_id as usize].set_stage(crate::smp::Stage::ApEntered);
     unsafe { crate::arch::x86_64::interrupt::apic::init_ap_lapic() };
     let apic_id = crate::arch::interrupt_controller::local_id();
 
@@ -61,14 +62,52 @@ pub unsafe extern "C" fn ap_entry(cpu_id: u32) {
     // The BSP registered the IRQ-0 handler; each AP arms its own LAPIC timer.
     crate::arch::x86_64::interrupt::apic::preemption::install_on_ap();
 
-    CPU_DESCRIPTORS[cpu_id as usize].set_state(CpuState::Online);
-    AP_STARTUP_BARRIER.fetch_add(1, Ordering::Release);
+    CPU_DESCRIPTORS[cpu_id as usize].set_stage(crate::smp::Stage::LapicArmed);
 
     // SAFETY: eK@nonos.systems - the IDT, GDT, TSS and per-CPU state above are
     // all in place, so this CPU can now take an interrupt.
     unsafe {
         core::arch::asm!("sti", options(nostack, nomem));
     }
+    CPU_DESCRIPTORS[cpu_id as usize].set_stage(crate::smp::Stage::InterruptsOn);
+
+    /*
+     * Online is published after `sti`, not before, because Online is what
+     * makes this CPU a target. `shootdown::broadcast` selects targets with
+     * `cpu_is_online` and then waits for each to acknowledge by interrupt.
+     * Declaring Online while interrupts are still masked offers the rest of
+     * the machine a CPU that is required to answer and cannot.
+     *
+     * The window is not theoretical and it is not wide by accident. The boot
+     * CPU's `wait_online` returns the moment it sees this flag, and the next
+     * thing it does is map the following AP's stack, which flushes, which
+     * broadcasts. The target is whichever AP just set this.
+     *
+     * It stayed hidden because the population was published as a count by the
+     * boot CPU after every AP had started, so `cpus_online()` read 1 for the
+     * whole of bring-up and every one of these shootdowns was skipped.
+     */
+    CPU_DESCRIPTORS[cpu_id as usize].set_state(CpuState::Online);
+    CPU_DESCRIPTORS[cpu_id as usize].set_stage(crate::smp::Stage::Online);
+    CPUS_ONLINE.fetch_add(1, Ordering::AcqRel);
+    AP_STARTUP_BARRIER.fetch_add(1, Ordering::Release);
+
+    /*
+     * Read the part back rather than trust the write above. An AP parked in
+     * its idle loop with a timer that never armed looks exactly like a healthy
+     * idle AP, and the symptom arrives stages later as a TLB shootdown timeout
+     * with nothing pointing back here.
+     *
+     * After `sti`, and that is not a detail. Printing takes the serial lock,
+     * which is a plain spin mutex the boot CPU holds and releases hundreds of
+     * times while it brings the system up. An AP contending for it before
+     * interrupts are enabled spins with them masked: it answers no timer tick
+     * and no shootdown for as long as the boot CPU keeps printing, which is
+     * long enough to lose a shootdown round. Reporting here costs the same
+     * information and none of that.
+     */
+    crate::sys::apic::report_local_timer(cpu_id);
+    CPU_DESCRIPTORS[cpu_id as usize].set_stage(crate::smp::Stage::Reported);
 
     ap_idle_loop(cpu_id);
 }

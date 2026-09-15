@@ -211,14 +211,18 @@ fn read_tsc() -> u64 {
 ///
 /// A timeout says only that an acknowledgement did not arrive. Which CPU owed
 /// it, whether that CPU was ever marked as a target, whether it is halted in
-/// its idle loop or buried in an interrupt handler, and how deep its interrupt
-/// masking goes are what separate "the IPI was never delivered" from "the IPI
-/// was delivered and the CPU was in no position to run it".
+/// its idle loop or inside an interrupt handler, and whether it has taken a
+/// timer interrupt since it came up are what separate "the IPI was never
+/// delivered" from "the IPI was delivered and the CPU was in no position to
+/// run it".
+///
+/// Each of those has to be read from something that is actually written. This
+/// used to name interrupt-masking depth as well, and printed a field nothing
+/// maintains.
 fn report_stuck() {
-    use crate::sys::serial::{print, print_dec, println};
-    print(b"[SMP] acks outstanding=");
-    print_dec(REQ_PENDING_ACKS.load(Ordering::Acquire) as u64);
-    println(b"");
+    let mut head = crate::sys::serial::Line::new();
+    head.str(b"[SMP] acks outstanding=").dec(REQ_PENDING_ACKS.load(Ordering::Acquire) as u64);
+    head.end();
     for cpu in 0..crate::smp::MAX_CPUS {
         if !crate::smp::cpu_is_online(cpu) {
             continue;
@@ -226,22 +230,46 @@ fn report_stuck() {
         let (Some(d), Some(desc)) = (crate::smp::percpu::get(cpu), crate::smp::get_cpu(cpu)) else {
             continue;
         };
-        print(b"[SMP]  cpu=");
-        print_dec(cpu as u64);
-        print(b" apic=");
-        print_dec(d.apic_id as u64);
-        print(b" pending=");
-        print_dec(d.tlb_flush_pending.load(Ordering::Acquire) as u64);
-        print(b" irq_nest=");
-        print_dec(d.irq_nesting as u64);
-        print(b" cli_depth=");
-        print_dec(d.interrupt_disable_depth as u64);
-        print(b" asid=");
-        print_dec(d.active_asid.load(Ordering::Acquire) as u64);
-        print(b" idle=");
-        print_dec(u64::from(desc.idle.load(Ordering::Acquire)));
-        print(b" idle_cycles=");
-        print_dec(desc.idle_cycles.load(Ordering::Acquire));
-        println(b"");
+        /*
+         * One line per cpu, built whole. These are printed while the other
+         * cpus are still running and printing, and a dump that interleaves
+         * with them is unreadable exactly when it is needed.
+         *
+         * `irq_depth` comes from `interrupts::safety`, which the live handlers
+         * maintain. This used to print `smp::percpu::irq_nesting` beside an
+         * `interrupt_disable_depth`, and nothing writes either of them:
+         * `enter_irq`, `leave_irq` and `in_irq` have no callers, and the
+         * disable depth is only ever read here. Both columns were zero on
+         * every cpu of every dump this kernel has ever produced, which reads
+         * as a measurement and is a constant. The disable depth is gone rather
+         * than reported, since there is nothing behind it to report.
+         */
+        let mut l = crate::sys::serial::Line::new();
+        l.str(b"[SMP]  cpu=").dec(cpu as u64);
+        l.str(b" apic=").dec(d.apic_id as u64);
+        l.str(b" pending=").dec(d.tlb_flush_pending.load(Ordering::Acquire) as u64);
+        l.str(b" irq_depth=").dec(crate::interrupts::safety::depth_of(cpu) as u64);
+        l.str(b" asid=").dec(d.active_asid.load(Ordering::Acquire) as u64);
+        l.str(b" idle=").dec(u64::from(desc.idle.load(Ordering::Acquire)));
+        l.str(b" idle_cycles=").dec(desc.idle_cycles.load(Ordering::Acquire));
+        // Zero means this cpu has never taken a timer interrupt, which
+        // separates "did not answer this round" from "has not answered
+        // anything since it came up". Those need different fixes and the dump
+        // could not tell them apart.
+        l.str(b" ticked=").dec(u64::from(d.last_tick_tsc.load(Ordering::Acquire) != 0));
+        // Where it was when it stopped answering. A halted CPU and one
+        // spinning on a lock with interrupts masked are the same silence from
+        // here, and they are not the same defect.
+        l.str(b" at=").str(desc.stage().as_str().as_bytes());
+        // What that CPU's own APIC had in service when it last looked. A vector
+        // stuck here blocks its whole priority class and everything below it,
+        // while leaving higher classes working, which is what a CPU taking
+        // IPIs at 0x40 and no timer at 0x20 looks like from outside.
+        match desc.in_service_seen.load(Ordering::Acquire) {
+            0 => l.str(b" isr=unread"),
+            1 => l.str(b" isr=none"),
+            v => l.str(b" isr=").hex((v - 2) as u64),
+        };
+        l.end();
     }
 }

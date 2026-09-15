@@ -34,7 +34,15 @@ pub const LAPIC_PHYS_BASE: u64 = LOCAL_APIC_DEFAULT_BASE;
 pub(in crate::sys::apic) const LAPIC_ID: u32 = 0x020;
 pub(in crate::sys::apic) const LAPIC_VERSION: u32 = 0x030;
 pub(in crate::sys::apic) const LAPIC_TPR: u32 = 0x080;
+/// Processor priority. Bits 7:4 are the class currently blocking delivery: an
+/// interrupt is taken only when its own class is higher than this.
+pub(in crate::sys::apic) const LAPIC_PPR: u32 = 0x0A0;
 pub(in crate::sys::apic) const LAPIC_EOI: u32 = 0x0B0;
+/// In-service register: eight 32-bit words at 0x100, 0x110 ... 0x170, one bit
+/// per vector. A bit is set from delivery until the handler writes EOI, and
+/// while it is set nothing of equal or lower priority reaches this CPU again.
+pub(in crate::sys::apic) const LAPIC_ISR_BASE: u32 = 0x100;
+pub(in crate::sys::apic) const LAPIC_ISR_WORDS: u32 = 8;
 pub(in crate::sys::apic) const LAPIC_SVR: u32 = 0x0F0;
 pub(in crate::sys::apic) const LAPIC_ESR: u32 = 0x280;
 pub(in crate::sys::apic) const LAPIC_LVT_TIMER: u32 = 0x320;

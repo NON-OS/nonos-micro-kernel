@@ -22,6 +22,17 @@ use super::state;
 const LOAD_SAMPLE_TICKS: u64 = 500;
 
 pub fn on_timer_interrupt() {
+    /*
+     * Per-CPU evidence that this CPU takes interrupts at all. The tick counter
+     * below is one global, so a machine whose boot CPU ticks happily while its
+     * application processors never take an interrupt reads exactly like a
+     * healthy one. This field was declared for the purpose and nothing ever
+     * wrote it, which is why a CPU that had stopped answering could only be
+     * inferred, two subsystems away, from a shootdown that timed out.
+     */
+    crate::smp::percpu::current()
+        .last_tick_tsc
+        .store(crate::arch::read_time_counter(), core::sync::atomic::Ordering::Relaxed);
     state::increment_ticks();
     if option_env!("NONOS_FBCONSOLE").is_some() {
         super::heartbeat::on_tick(state::get_ticks());

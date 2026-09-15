@@ -25,18 +25,23 @@ pub(super) fn start_secondary_cpus() {
     }
     #[cfg(feature = "nonos-smp")]
     match crate::smp::start_aps() {
+        /*
+         * Assembled whole, then emitted once. An application processor prints
+         * its own bring-up at the same moment, and these used to interleave
+         * into `cpu_count=[APIC] Setting up timer at 1100 UP`. The boot matrix
+         * reads this line to decide whether the cell passed, so a shredded one
+         * is a cell graded on a string that was never printed.
+         */
         Ok(started) => {
-            crate::sys::serial::print(b"[SMP-PROOF] cpu_count=");
-            crate::sys::serial::print_dec((started + 1) as u64);
-            if started > 0 {
-                crate::sys::serial::println(b" PASS");
-            } else {
-                crate::sys::serial::println(b" UP");
-            }
+            let mut l = crate::sys::serial::Line::new();
+            l.str(b"[SMP-PROOF] cpu_count=").dec((started + 1) as u64);
+            l.str(if started > 0 { b" PASS" } else { b" UP" });
+            l.end();
         }
         Err(e) => {
-            crate::sys::serial::print(b"[SMP-PROOF] FAIL ");
-            crate::sys::serial::println(e.as_bytes());
+            let mut l = crate::sys::serial::Line::new();
+            l.str(b"[SMP-PROOF] FAIL ").str(e.as_bytes());
+            l.end();
         }
     }
 }

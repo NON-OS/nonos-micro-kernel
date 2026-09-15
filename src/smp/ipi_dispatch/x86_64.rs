@@ -14,49 +14,69 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Binds each IPI vector to its handler in the interrupt dispatch table.
+//! The IDT gates for the IPI vectors.
 //!
-//! The IDT gates for these vectors are installed unconditionally during IDT
-//! setup; registering the handlers here is harmless until SMP actually sends
-//! an IPI. Without it a delivered IPI would find no handler, never signal
-//! end-of-interrupt, and wedge the local APIC.
+//! Installed into the table the kernel actually loads, while that table is
+//! being built, so the gates exist before any CPU loads it.
+//!
+//! They used to be registrations into the handler array under
+//! `arch::x86_64::idt` instead. That array belongs to a second interrupt
+//! descriptor table whose `init` has no caller, so the kernel has never run on
+//! it and nothing in that array is ever consulted. The note here used to say
+//! the gates were "installed unconditionally during IDT setup", and went on to
+//! describe what happens when they are not: a delivered IPI finds no handler,
+//! never signals end-of-interrupt, and wedges the local APIC. That was a
+//! description of the live behaviour, written as a reassurance.
+//!
+//! What it cost: the live table has no gate at these vectors, so every TLB
+//! shootdown IPI sent to an application processor arrived on a not-present
+//! gate. The AP took a segment-not-present fault instead of flushing and never
+//! acknowledged, and the boot CPU halted the machine on the shootdown timeout.
+//! No kernel with more than one CPU online could complete a page-table
+//! mutation.
+
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 use super::handlers;
-use crate::arch::x86_64::idt::entry::InterruptFrame;
-use crate::arch::x86_64::idt::ops::register_handler;
 use crate::arch::x86_64::interrupt_controller::{
     IPI_BARRIER, IPI_CALL_FUNCTION, IPI_PANIC, IPI_RESCHEDULE, IPI_STOP, IPI_TLB_SHOOTDOWN,
 };
 
-fn tlb_shootdown(_frame: &mut InterruptFrame) {
+extern "x86-interrupt" fn tlb_shootdown(_frame: InterruptStackFrame) {
     handlers::tlb_shootdown();
 }
 
-fn reschedule(_frame: &mut InterruptFrame) {
+extern "x86-interrupt" fn reschedule(_frame: InterruptStackFrame) {
     handlers::reschedule();
 }
 
-fn call_function(_frame: &mut InterruptFrame) {
+extern "x86-interrupt" fn call_function(_frame: InterruptStackFrame) {
     handlers::call_function();
 }
 
-fn barrier(_frame: &mut InterruptFrame) {
+extern "x86-interrupt" fn barrier(_frame: InterruptStackFrame) {
     handlers::barrier();
 }
 
-fn panic(_frame: &mut InterruptFrame) {
+// These two never return, but an interrupt gate takes a handler typed as
+// returning unit, so the divergence stays inside the call rather than in the
+// signature.
+extern "x86-interrupt" fn panic(_frame: InterruptStackFrame) {
     handlers::panic()
 }
 
-fn stop(_frame: &mut InterruptFrame) {
+extern "x86-interrupt" fn stop(_frame: InterruptStackFrame) {
     handlers::stop()
 }
 
-pub(crate) fn register_ipi_handlers() {
-    let _ = register_handler(IPI_TLB_SHOOTDOWN, tlb_shootdown);
-    let _ = register_handler(IPI_RESCHEDULE, reschedule);
-    let _ = register_handler(IPI_CALL_FUNCTION, call_function);
-    let _ = register_handler(IPI_BARRIER, barrier);
-    let _ = register_handler(IPI_PANIC, panic);
-    let _ = register_handler(IPI_STOP, stop);
+/// Install a gate for every IPI vector.
+pub(crate) fn install_gates(idt: &mut InterruptDescriptorTable) {
+    idt[IPI_TLB_SHOOTDOWN as usize].set_handler_fn(tlb_shootdown);
+    idt[IPI_RESCHEDULE as usize].set_handler_fn(reschedule);
+    idt[IPI_CALL_FUNCTION as usize].set_handler_fn(call_function);
+    idt[IPI_BARRIER as usize].set_handler_fn(barrier);
+    // These two halt the CPU and never return, which is why each signals
+    // end-of-interrupt before it does.
+    idt[IPI_PANIC as usize].set_handler_fn(panic);
+    idt[IPI_STOP as usize].set_handler_fn(stop);
 }

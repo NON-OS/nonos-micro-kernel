@@ -25,10 +25,11 @@ pub fn map_device_memory(
     physical_addr: PhysAddr,
     size: usize,
 ) -> PagingResult<()> {
-    let permissions = PagePermissions::READ
-        | PagePermissions::WRITE
-        | PagePermissions::NO_CACHE
-        | PagePermissions::DEVICE;
+    // One spelling of what a device mapping is, rather than a second copy of
+    // the four bits. The two device paths in this tree disagreed for its whole
+    // life: this one said uncached, and the one every driver actually takes
+    // said nothing at all, so the mappings came out write-back.
+    let permissions = PagePermissions::device();
     for i in 0..pages_needed(size) {
         let va = VirtAddr::new(virtual_addr.as_u64() + (i * PAGE_SIZE_4K) as u64);
         let pa = PhysAddr::new(physical_addr.as_u64() + (i * PAGE_SIZE_4K) as u64);

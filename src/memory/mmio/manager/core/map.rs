@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::super::super::constants::{align_up, VM_FLAG_NX, VM_FLAG_USER, VM_FLAG_WRITABLE};
+use super::super::super::constants::{
+    align_up, VM_FLAG_CACHE_DISABLE, VM_FLAG_NX, VM_FLAG_USER, VM_FLAG_WRITABLE,
+    VM_FLAG_WRITE_COMBINE,
+};
 use super::super::super::error::{MmioError, MmioResult};
 use super::super::super::stats::MMIO_STATS;
 use super::super::super::types::{MmioFlags, MmioRegion};
@@ -82,6 +85,28 @@ impl MmioManager {
         }
         if (vm_flags & VM_FLAG_NX) == 0 {
             perms = perms | PagePermissions::EXECUTE;
+        }
+        /*
+         * Cache attributes, which this used to drop. Every caller asks for
+         * uncached and every mapping came out write-back, so a register read
+         * could be served from a cache line and a command write could sit in
+         * one. QEMU dispatches MMIO by address and ignores the attribute, so
+         * the emulator answers the same either way and nothing here ever
+         * showed it.
+         *
+         * Write-combining is not expressible yet and is deliberately not
+         * forced to uncached. Nothing programs IA32_PAT or the MTRRs, so under
+         * the reset PAT there is no write-combining entry to select. The
+         * framebuffer is the only caller that asks, it is the one mapping
+         * where uncached costs a full-screen blit an order of magnitude, and
+         * write-back is what it has always had. Leaving it there keeps that
+         * unchanged; programming the PAT is what makes the request honest.
+         */
+        if (vm_flags & VM_FLAG_WRITE_COMBINE) != 0 {
+            return manager::map_page(va, pa, perms).map_err(|_| MmioError::MappingFailed);
+        }
+        if (vm_flags & VM_FLAG_CACHE_DISABLE) != 0 {
+            perms = perms | PagePermissions::NO_CACHE | PagePermissions::DEVICE;
         }
         manager::map_page(va, pa, perms).map_err(|_| MmioError::MappingFailed)
     }

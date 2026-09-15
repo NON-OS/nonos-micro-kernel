@@ -34,9 +34,14 @@ pub fn init_bsp() -> Result<(), &'static str> {
     let cpu_count = topology::detect_cpus();
     CPU_COUNT.store(cpu_count, Ordering::Release);
     percpu::init_bsp();
-    // Bind the IPI vectors now so cross-CPU TLB shootdown, panic, stop, and
-    // call-function delivery work the moment APs come online. Harmless on a
-    // single-CPU boot: nothing sends IPIs until APs start.
+    /*
+     * The IPI vectors are not bound from here. On x86_64 they are gates in
+     * the one IDT, installed while that table is built, which is earlier than
+     * this and is the only point at which every CPU is guaranteed to load a
+     * table that has them. Binding them here was the old shape, and what it
+     * bound them into was a second descriptor table the kernel never loads.
+     */
+    #[cfg(target_arch = "aarch64")]
     super::super::ipi_dispatch::register_ipi_handlers();
 
     crate::log_info!("[SMP] BSP initialized: APIC ID={}, {} CPUs detected", bsp_apic, cpu_count);

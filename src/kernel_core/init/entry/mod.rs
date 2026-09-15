@@ -20,6 +20,7 @@ mod init_arch_firmware;
 mod init_arch_framebuffer;
 mod init_arch_memory_and_framebuffer;
 mod init_core_services;
+mod init_dma_protection;
 mod init_runtime;
 mod init_vm_and_protection;
 mod microkernel_init;

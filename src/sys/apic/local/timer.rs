@@ -29,9 +29,11 @@ pub fn setup_timer(frequency_hz: u32) {
     if !LAPIC_INIT.load(Ordering::Relaxed) {
         init_local_apic();
     }
-    serial::print(b"[APIC] Setting up timer at ");
-    serial::print_dec(frequency_hz as u64);
-    serial::println(b" Hz");
+    // One line. Every AP runs this during bring-up while the boot CPU is
+    // printing its own progress, and the two used to interleave.
+    let mut l = serial::Line::new();
+    l.str(b"[APIC] Setting up timer at ").dec(frequency_hz as u64).str(b" Hz");
+    l.end();
 
     let ticks_per_ms = crate::sys::apic::local_calibrate::calibrate_lapic_ticks_per_ms();
     let initial_count = compute_lapic_initial_count(ticks_per_ms, frequency_hz);

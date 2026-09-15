@@ -16,8 +16,11 @@
 
 //! Getting IPI handlers attached to the interrupt controller.
 //!
-//! Registration is the arch-specific half: x86_64 binds an IDT vector, aarch64
-//! registers an SGI with the GIC. Both end up calling the same handlers.
+//! Attaching is the arch-specific half: x86_64 installs IDT gates while the
+//! table is built, aarch64 registers SGIs with the GIC once it is up. Both end
+//! up calling the same handlers. The two happen at different times because the
+//! tables they write to are built at different times, so there is no single
+//! entry point here, only the per-arch one each side exports.
 
 mod handlers;
 
@@ -29,7 +32,7 @@ mod x86_64;
 #[cfg(target_arch = "aarch64")]
 pub(crate) use aarch64::register_ipi_handlers;
 #[cfg(target_arch = "x86_64")]
-pub(crate) use x86_64::register_ipi_handlers;
+pub(crate) use x86_64::install_gates;
 
 /// Nothing to register on an arch with no interrupt-controller backend, and
 /// nothing that would send an IPI either.
