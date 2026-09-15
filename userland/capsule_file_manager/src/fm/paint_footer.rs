@@ -14,41 +14,48 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::PaintBuffer;
+use nonos_app_skeleton::{measure_ttf, PaintBuffer};
 
 use super::layout::{CONTENT_X, FOOTER_H, PAD_X};
+use super::sel_summary::count_label;
 use super::state::{Mode, State};
-use super::theme::{FOREGROUND, HEADER_BG, LINE, MUTED};
+use super::theme::{CY, INK, INK3, LINE, PANEL};
 
-const HINT: &[u8] = b"n new   m dir   r rename   d del   c/x/p copy   / find   ? help";
+const HINT: &str = "n new    m dir    r rename    d del    c/x/p copy    / find    ? help";
+const FOOT_PX: f32 = 14.0;
+const GAP: u32 = 10;
 
+/// The status line and the hint strip share one band, and both are measured off
+/// the same facade the rest of the chrome draws with, so a long status pushes
+/// the caret exactly as far as the glyphs actually ran.
 pub fn paint_footer(state: &State, fb: &mut PaintBuffer) {
     let w = fb.width;
-    let cw = w.saturating_sub(CONTENT_X);
-    let left = CONTENT_X + PAD_X;
+    let band = w.saturating_sub(CONTENT_X);
     let y = fb.height.saturating_sub(FOOTER_H);
-    fb.fill_rect(CONTENT_X, y, cw, FOOTER_H, HEADER_BG);
-    fb.fill_rect(CONTENT_X, y, cw, 1, LINE);
-    let ty = y + FOOTER_H.saturating_sub(8) / 2;
-    let adv = fb.glyph_advance();
-
-    // status (and live prompt/filter input) on the left
-    fb.text(left, ty, state.status, MUTED);
+    fb.fill_rect(CONTENT_X, y, band, FOOTER_H, PANEL);
+    fb.fill_rect(CONTENT_X, y, band, 1, LINE);
+    let mut left = CONTENT_X + PAD_X;
+    let ty = (y + 8) as i32;
+    if let Some(count) = count_label(state) {
+        let _ = fb.text_ttf(left as i32, ty, count.as_str(), CY, FOOT_PX);
+        left += measure_ttf(count.as_str(), FOOT_PX).max(0) as u32 + GAP;
+    }
+    let status = core::str::from_utf8(state.status).unwrap_or("");
+    let _ = fb.text_ttf(left as i32, ty, status, INK3, FOOT_PX);
     match state.mode {
         Mode::Prompt(_) | Mode::Filter => {
-            let x = left + (state.status.len() as u32 + 2) * adv;
-            let text = if matches!(state.mode, Mode::Filter) {
-                state.filter.as_bytes()
+            let typed = if matches!(state.mode, Mode::Filter) {
+                state.filter.as_str()
             } else {
-                state.input.as_bytes()
+                state.input.as_str()
             };
-            fb.text(x, ty, text, FOREGROUND);
+            let x = left + measure_ttf(status, FOOT_PX).max(0) as u32 + GAP;
+            let _ = fb.text_ttf(x as i32, ty, typed, INK, FOOT_PX);
         }
         _ => {
-            // key hints on the right when there is room
-            let hw = HINT.len() as u32 * adv;
-            if w > hw + 360 {
-                fb.text(w.saturating_sub(PAD_X + hw), ty, HINT, MUTED);
+            let hw = measure_ttf(HINT, FOOT_PX).max(0) as u32;
+            if w > CONTENT_X + PAD_X * 2 + hw {
+                let _ = fb.text_ttf(w.saturating_sub(PAD_X + hw) as i32, ty, HINT, INK3, FOOT_PX);
             }
         }
     }

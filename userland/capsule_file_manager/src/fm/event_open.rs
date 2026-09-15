@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use nonos_app_skeleton::clients::vfs::journal_touch;
 use nonos_app_skeleton::EventOutcome;
 
 use super::preview;
@@ -22,6 +23,10 @@ use super::state::State;
 
 pub fn open_selected(state: &mut State) -> EventOutcome {
     let Some(entry) = state.entries.get(state.cursor).cloned() else { return EventOutcome::Idle };
+    // The journal is the only input the Home and Recents surfaces have, and the
+    // vfs records a touch only for its own open path, so an open the manager
+    // performs itself has to say so.
+    let _ = journal_touch(state.owner_pid, entry.full_path.as_bytes());
     if entry.is_dir {
         state.prefix = entry.full_path;
         state.cursor = 0;

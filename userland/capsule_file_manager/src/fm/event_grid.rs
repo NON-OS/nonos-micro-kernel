@@ -14,35 +14,22 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Map a click in the icon grid to the cell that was drawn there, using the
-//! same column count and starting cell paint used this frame.
+//! Map a click in the icon grid to the cell that was drawn there.
 
-use nonos_app_skeleton::{InputEvent, InputKind};
+use super::grid_geom::cell_at;
+use super::state::State;
 
-use super::layout::{CONTENT_X, GRID_CELL_H, GRID_CELL_W, GRID_PAD_X, GRID_TOP};
-use super::state::{Mode, State};
-
-pub fn grid_select(state: &mut State, event: InputEvent) {
-    if event.kind != InputKind::ButtonDown || !matches!(state.mode, Mode::Browse) {
-        return;
-    }
-    if event.x < 0 || event.y < 0 {
-        return;
-    }
-    let (x, y) = (event.x as u32, event.y as u32);
-    let left = CONTENT_X + GRID_PAD_X / 2;
-    if x < left || y < GRID_TOP {
-        return;
-    }
-    let cols = state.grid_cols.max(1);
-    let col = (x - left) / GRID_CELL_W;
-    if col >= cols {
-        return;
-    }
-    let row = (y - GRID_TOP) / GRID_CELL_H;
-    let start = state.scroll - (state.scroll % cols as usize);
-    let idx = start + (row * cols + col) as usize;
-    if idx < state.entries.len() {
-        state.cursor = idx;
+/// Move the cursor to the grid cell under `(x, y)`, tested against the very slot
+/// list `paint_grid` drew from, and report whether a cell was hit at all. The
+/// arithmetic that used to live here assumed its own left edge and knew nothing
+/// of the info panel's reserved strip, so it sat a whole padding step out of
+/// register with the cells on screen.
+pub fn grid_select(state: &mut State, x: u32, y: u32) -> bool {
+    match cell_at(state, x, y) {
+        Some(index) => {
+            state.cursor = index;
+            true
+        }
+        None => false,
     }
 }

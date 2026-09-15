@@ -22,7 +22,16 @@ pub fn kind_of(entry: &Entry) -> Kind {
     if entry.is_dir {
         return Kind::Dir;
     }
-    match ext(&entry.label) {
+    kind_of_name(&entry.label)
+}
+
+/// The same classification from a bare name or a raw store path, for the
+/// surfaces that render journal and search results and never build an `Entry`.
+pub fn kind_of_name(name: &str) -> Kind {
+    if name.ends_with('/') {
+        return Kind::Dir;
+    }
+    match ext(name) {
         "rs" | "c" | "h" | "cpp" | "py" | "js" | "ts" | "go" | "sh" | "toml" | "json" | "md"
         | "html" | "css" | "lua" => Kind::Code,
         "png" | "jpg" | "jpeg" | "gif" | "bmp" | "svg" | "webp" | "ico" => Kind::Image,

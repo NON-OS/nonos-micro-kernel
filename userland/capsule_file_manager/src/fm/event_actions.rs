@@ -19,6 +19,7 @@ use nonos_app_skeleton::EventOutcome;
 use super::clipboard;
 use super::clipboard_paste;
 use super::duplicate;
+use super::favorite_toggle::toggle_favorite;
 use super::perms;
 use super::selection;
 use super::selection_select_all::select_all;
@@ -34,6 +35,7 @@ pub fn run_action(state: &mut State, code: u32) -> Option<EventOutcome> {
         code if code == b'p' as u32 => clipboard_paste::paste(state),
         code if code == b'o' as u32 => duplicate::duplicate(state),
         code if code == b'u' as u32 => perms::toggle_readonly(state),
+        code if code == b'f' as u32 => toggle_favorite(state),
         code if code == b's' as u32 => {
             state.sort_mode = state.sort_mode.next();
             rebuild_view(state);

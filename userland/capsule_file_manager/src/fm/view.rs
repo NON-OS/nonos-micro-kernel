@@ -31,6 +31,10 @@ pub fn rebuild_view(state: &mut State) {
         .all
         .iter()
         .filter(|e| needle.is_empty() || e.label.to_ascii_lowercase().contains(needle.as_str()))
+        .filter(|e| {
+            state.tag_filter.is_empty()
+                || state.tags.tags_for(&e.full_path).iter().any(|t| *t == state.tag_filter)
+        })
         .cloned()
         .collect();
     sort_view(&mut view, state.sort_mode);

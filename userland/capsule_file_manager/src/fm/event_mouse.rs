@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use nonos_app_skeleton::{InputEvent, InputKind};
+use super::row_geom::row_at;
+use super::state::State;
 
-use super::state::{Mode, State};
-
-pub fn select_row(state: &mut State, event: InputEvent) {
-    if event.kind != InputKind::ButtonDown || !matches!(state.mode, Mode::Browse) {
-        return;
-    }
-    // Map the click against the live row geometry paint used this frame.
-    let rel = event.y as i32 - state.row_top as i32;
-    if rel < 0 {
-        return;
-    }
-    let row = state.scroll + (rel as u32 / state.row_h.max(1)) as usize;
-    if row < state.entries.len() {
-        state.cursor = row;
+/// Move the cursor to the list row under `y`, tested against the very slot list
+/// `paint_rows` drew from, and report whether a row was hit at all.
+pub fn select_row(state: &mut State, y: u32) -> bool {
+    match row_at(state, y) {
+        Some(index) => {
+            state.cursor = index;
+            true
+        }
+        None => false,
     }
 }

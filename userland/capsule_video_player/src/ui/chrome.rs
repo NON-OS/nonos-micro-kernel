@@ -16,7 +16,7 @@
 
 use nonos_app_skeleton::paint::PaintBuffer;
 
-use super::glyph;
+use super::icon::transport;
 use super::layout::Layout;
 use super::text::{hhmmss, BODY_PX};
 use super::theme;
@@ -45,12 +45,12 @@ pub fn paint_bar(fb: &mut PaintBuffer, l: &Layout, st: &BarState) {
 
 fn paint_buttons(fb: &mut PaintBuffer, l: &Layout, playing: bool) {
     if playing {
-        glyph::pause(fb, l.play.x + 11, l.play.y + 9, 5, 18, 4, theme::GLYPH);
+        transport::pause(fb, l.play.x + 8, l.play.y + 8, 20, theme::GLYPH);
     } else {
-        glyph::triangle_right(fb, l.play.x + 13, l.play.y + 9, 18, theme::GLYPH);
+        transport::play(fb, l.play.x + 8, l.play.y + 8, 20, theme::GLYPH);
     }
-    glyph::triangle_left(fb, l.back.x + 11, l.back.y + 11, 14, theme::GLYPH);
-    glyph::triangle_right(fb, l.fwd.x + 11, l.fwd.y + 11, 14, theme::GLYPH);
+    transport::rewind(fb, l.back.x + 9, l.back.y + 9, 18, theme::GLYPH);
+    transport::play(fb, l.fwd.x + 9, l.fwd.y + 9, 18, theme::GLYPH);
 }
 
 fn paint_times(fb: &mut PaintBuffer, l: &Layout, st: &BarState) {

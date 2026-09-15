@@ -43,6 +43,7 @@ pub fn on_browse_key(state: &mut State, code: u32) -> EventOutcome {
         code if code == b'n' as u32 => start_prompt(state, PromptKind::NewFile, b"new file: "),
         code if code == b'm' as u32 => start_prompt(state, PromptKind::MkDir, b"mkdir: "),
         code if code == b'r' as u32 => start_prompt(state, PromptKind::Rename, b"rename to: "),
+        code if code == b't' as u32 => start_prompt(state, PromptKind::Tag, b"tag: "),
         code if code == b'd' as u32 => {
             start_prompt(state, PromptKind::Delete, b"delete? type y + Enter: ")
         }

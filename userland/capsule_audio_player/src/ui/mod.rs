@@ -14,13 +14,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub mod control;
-mod draw;
-pub mod event;
-mod format;
-mod geometry;
-pub mod sprite;
-mod view;
+//! The Resonare interface. `theme`, `metrics` and `geometry` are the design
+//! tokens; `paint` is the clipping facade over the toolkit; `art`, `icon` and
+//! `widget` are the drawn vocabulary; `shell` and `screen` compose them; `hit`
+//! maps a pointer back onto whatever those painters put on the glass.
 
-pub use geometry::{layout, list_row_at, Layout};
-pub use view::{paint_library, paint_player};
+pub mod art;
+pub mod control;
+pub mod event;
+pub mod frame;
+pub mod geometry;
+pub mod hit;
+mod hit_screen;
+pub mod icon;
+pub mod metrics;
+pub mod paint;
+pub mod screen;
+pub mod shell;
+mod sprite;
+pub mod state;
+pub mod text;
+pub mod theme;
+pub mod widget;
+
+pub use control::Control;
+pub use frame::{Frame, Scene};
+pub use hit::{hit, Action};
+pub use state::{UiState, View};

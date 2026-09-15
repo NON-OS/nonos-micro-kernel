@@ -30,11 +30,23 @@ pub struct Library {
 impl Library {
     pub fn scan() -> Self {
         let mut tracks = Vec::new();
-        if let Ok(paths) = list_paths(mk_getpid(), AUDIO_DIR) {
-            for p in paths {
-                if is_audio(&p) {
-                    tracks.push(Track::from_path(&p));
+        match list_paths(mk_getpid(), AUDIO_DIR) {
+            Ok(paths) => {
+                let mut m = [0u8; 24];
+                m[..16].copy_from_slice(b"[AP] audio n=   ");
+                m[16] = b'0' + (paths.len() % 10) as u8;
+                m[17] = b'\n';
+                nonos_libc::mk_debug(m.as_ptr(), 18);
+                for p in paths {
+                    if is_audio(&p) {
+                        tracks.push(Track::from_path(&p));
+                    }
                 }
+            }
+            Err(e) => {
+                nonos_libc::mk_debug(b"[AP] audio list ERR: ".as_ptr(), 20);
+                nonos_libc::mk_debug(e.as_ptr(), e.len());
+                nonos_libc::mk_debug(b"\n".as_ptr(), 1);
             }
         }
         Library { tracks }

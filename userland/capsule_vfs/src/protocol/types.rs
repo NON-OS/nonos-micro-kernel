@@ -38,6 +38,10 @@ pub const OP_STORE_REMOVE: u16 = 18;
 pub const OP_STORE_STATUS: u16 = 19;
 pub const OP_STORE_INSTALL: u16 = 20;
 pub const OP_STORE_UNINSTALL: u16 = 21;
+pub const OP_DIRSTAT: u16 = 22;
+pub const OP_JOURNAL_TOUCH: u16 = 23;
+pub const OP_JOURNAL_LIST: u16 = 24;
+pub const OP_SEARCH: u16 = 25;
 
 // Set on the last OP_STORE_INSTALL chunk of an artifact: the RAM copy is
 // complete and the whole file is handed to the on-device store.

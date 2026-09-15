@@ -18,10 +18,10 @@ use alloc::vec::Vec;
 
 use super::handlers;
 use crate::protocol::{
-    encode_response, Request, EINVAL, OP_CHMOD, OP_CLOSE, OP_COPY, OP_HEALTHCHECK, OP_LIST,
-    OP_MKDIR, OP_OPEN, OP_READ, OP_RENAME, OP_RMDIR, OP_SEEK, OP_STAT, OP_STORE_INSTALL,
-    OP_STORE_PERSIST, OP_STORE_REMOVE, OP_STORE_STATUS, OP_STORE_UNINSTALL, OP_TRUNCATE, OP_UNLINK,
-    OP_USAGE, OP_WRITE,
+    encode_response, Request, EINVAL, OP_CHMOD, OP_CLOSE, OP_COPY, OP_DIRSTAT, OP_HEALTHCHECK,
+    OP_JOURNAL_LIST, OP_JOURNAL_TOUCH, OP_LIST, OP_MKDIR, OP_OPEN, OP_READ, OP_RENAME, OP_RMDIR,
+    OP_SEARCH, OP_SEEK, OP_STAT, OP_STORE_INSTALL, OP_STORE_PERSIST, OP_STORE_REMOVE,
+    OP_STORE_STATUS, OP_STORE_UNINSTALL, OP_TRUNCATE, OP_UNLINK, OP_USAGE, OP_WRITE,
 };
 use crate::store::Store;
 
@@ -48,6 +48,10 @@ pub fn dispatch(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8>
         OP_USAGE => handlers::usage(store, req, sender_pid),
         OP_CHMOD => handlers::chmod(store, req, sender_pid),
         OP_HEALTHCHECK => handlers::healthcheck(req),
+        OP_DIRSTAT => handlers::dirstat(store, req, sender_pid),
+        OP_JOURNAL_TOUCH => handlers::journal_touch(store, req, sender_pid),
+        OP_JOURNAL_LIST => handlers::journal_list(store, req, sender_pid),
+        OP_SEARCH => handlers::search(store, req, sender_pid),
         _ => encode_response(req.op, req.flags, req.request_id, EINVAL, &[]),
     }
 }

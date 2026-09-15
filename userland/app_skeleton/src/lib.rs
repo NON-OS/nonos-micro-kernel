@@ -25,6 +25,7 @@ pub mod input;
 pub mod paint;
 pub mod runner;
 pub mod setup;
+pub mod sidecar;
 pub mod wire;
 
 pub use app::{App, AppManifest, EventOutcome, WindowKind};

@@ -20,13 +20,13 @@ use super::state::{State, ViewKind};
 // Curated list geometry. The row count is derived from the live window height
 // each frame (see `measure`) so the list fills the window when resized or
 // maximized instead of stranding a fixed 7 rows in the top-left corner.
-pub const HEADER_H: u32 = 60;
+pub const HEADER_H: u32 = 78;
 pub const FOOTER_H: u32 = 38;
-pub const ROW_H: u32 = 34;
+pub const ROW_H: u32 = 44;
 pub const ICON_S: u32 = 20;
-pub const PAD_X: u32 = 20;
+pub const PAD_X: u32 = 24;
 // Left PLACES sidebar; the file list and chrome start at CONTENT_X.
-pub const SIDEBAR_W: u32 = 216;
+pub const SIDEBAR_W: u32 = 236;
 pub const CONTENT_X: u32 = SIDEBAR_W;
 pub const SIDE_ROW_H: u32 = 34;
 pub const SIDE_FIRST_Y: u32 = 92;
@@ -44,6 +44,32 @@ pub const GRID_CELL_H: u32 = 112;
 pub const GRID_ICON: u32 = 58;
 pub const GRID_PAD_X: u32 = 24;
 
+// Card metrics for the Home surface, and the vertical gap between the titled
+// sections every screen stacks its content into.
+pub const CARD_H: u32 = 92;
+pub const SECTION_GAP: u32 = 26;
+
+// Browse reserves a fixed right-hand strip for the info panel. The width is
+// stated once here and every Browse consumer -- the list, the grid's column
+// count, and the panel itself -- derives its own geometry from these three
+// functions, so the listing and the panel can never overlap.
+pub const INFO_W: u32 = 268;
+
+/// Left edge of the Browse listing.
+pub fn content_x() -> u32 {
+    CONTENT_X + PAD_X
+}
+
+/// Width left to the Browse listing once the info panel strip is reserved.
+pub fn content_w(win_w: u32) -> u32 {
+    win_w.saturating_sub(CONTENT_X + PAD_X * 3 + INFO_W).max(GRID_CELL_W)
+}
+
+/// Left edge of the info panel strip.
+pub fn info_x(win_w: u32) -> u32 {
+    win_w.saturating_sub(INFO_W + PAD_X)
+}
+
 /// Recompute the geometry for the active view from the current window height
 /// and stash it in state, so scroll clamping and click hit-testing use the same
 /// numbers paint drew.
@@ -56,8 +82,7 @@ pub fn measure(state: &mut State, win_h: u32) {
             state.view_rows = (avail / ROW_H).max(1) as usize;
         }
         ViewKind::Grid => {
-            let content_w = WIDTH.saturating_sub(CONTENT_X + GRID_PAD_X);
-            state.grid_cols = (content_w / GRID_CELL_W).max(1);
+            state.grid_cols = (content_w(WIDTH) / GRID_CELL_W).max(1);
             let avail = win_h.saturating_sub(GRID_TOP + FOOTER_H);
             let rows = (avail / GRID_CELL_H).max(1);
             state.view_rows = (rows * state.grid_cols) as usize;

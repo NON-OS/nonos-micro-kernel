@@ -18,6 +18,11 @@ extern crate alloc;
 
 use alloc::{string::String, vec::Vec};
 
+// The manager's own sidecar blobs live under a reserved prefix. The store is a
+// flat path table and synthesizes directories from path prefixes, so without
+// this the namespace would surface as a `.files/` folder in the user's root.
+pub const RESERVED_PREFIX: &str = "/.files";
+
 #[derive(Clone)]
 pub struct Entry {
     pub label: String,
@@ -45,7 +50,10 @@ pub fn build_entries(prefix: &str, paths: &[String]) -> Vec<Entry> {
         } else {
             alloc::format!("{prefix}{name}")
         };
-        if name.is_empty() || out.iter().any(|entry: &Entry| entry.full_path == full_path) {
+        if name.is_empty() || full_path.starts_with(RESERVED_PREFIX) {
+            continue;
+        }
+        if out.iter().any(|entry: &Entry| entry.full_path == full_path) {
             continue;
         }
         out.push(Entry { label, full_path, is_dir, size: None, mtime: 0, writable: true });

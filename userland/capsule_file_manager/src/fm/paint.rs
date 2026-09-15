@@ -20,10 +20,20 @@ use super::help::paint_help;
 use super::paint_footer::paint_footer;
 use super::paint_grid::paint_grid;
 use super::paint_header::paint_header;
+use super::paint_info::paint_info;
 use super::paint_rows::paint_rows;
 use super::preview_paint::paint_preview;
+use super::screen::Screen;
+use super::screen_home::paint_home;
+use super::screen_recents::paint_recents;
+use super::screen_search::paint_search;
+use super::screen_shared::paint_shared;
+use super::screen_tags::paint_tags;
+use super::sel_band::paint_band;
 use super::state::{Mode, State, ViewKind};
-use super::theme::BACKGROUND;
+use super::chrome_card::Plate;
+use super::chrome_glow::glow_in;
+use super::theme::{HAIR, R_SHELL, WIN};
 
 pub fn paint(state: &State, fb: &mut PaintBuffer) {
     if matches!(state.mode, Mode::Help) {
@@ -34,12 +44,31 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
         paint_preview(preview, fb);
         return;
     }
-    fb.clear(BACKGROUND);
+    let (w, h) = (fb.width, fb.height);
+    fb.clear(0);
+    Plate::new(WIN).radius(R_SHELL).line(HAIR).draw(fb, 0, 0, w, h);
+    glow_in(fb, 0, 0, w, h, R_SHELL, 6);
     super::paint_sidebar::paint_sidebar(state, fb);
     paint_header(state, fb);
+    match state.screen {
+        Screen::Browse => paint_browse(state, fb),
+        Screen::Home => paint_home(state, fb),
+        Screen::Recents => paint_recents(state, fb),
+        Screen::Search => paint_search(state, fb),
+        Screen::Tags => paint_tags(state, fb),
+        Screen::Shared => paint_shared(state, fb),
+    }
+    paint_footer(state, fb);
+}
+
+// The directory listing plus the info panel describing what the cursor is on.
+// The presentation toggle applies only to the listing half; the panel's strip is
+// reserved out of the content width, so the two never overlap.
+fn paint_browse(state: &State, fb: &mut PaintBuffer) {
     match state.view {
         ViewKind::Grid => paint_grid(state, fb),
         ViewKind::List => paint_rows(state, fb),
     }
-    paint_footer(state, fb);
+    paint_info(state, fb);
+    paint_band(state, fb);
 }

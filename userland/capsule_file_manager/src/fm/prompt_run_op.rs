@@ -36,6 +36,7 @@ pub fn run_op(
             rename(pid, old.full_path.trim_end_matches('/').as_bytes(), target.as_bytes())
                 .map(|_| b"renamed".as_slice())
         }
+        PromptKind::Tag => Err("tagging is not a filesystem op"),
         PromptKind::Delete => {
             if name != "y" {
                 return Ok(b"not deleted");

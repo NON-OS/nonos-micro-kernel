@@ -19,6 +19,7 @@ use alloc::vec::Vec;
 use nonos_app_skeleton::clients::vfs::list_paths;
 
 use super::media::MediaItem;
+use super::probe::probe;
 
 pub const MAX_ENTRIES: usize = 256;
 
@@ -31,6 +32,9 @@ pub fn scan(owner_pid: u32) -> Vec<MediaItem> {
     }
     out.sort_by(|a, b| a.name.cmp(&b.name));
     out.truncate(MAX_ENTRIES);
+    for item in out.iter_mut() {
+        probe(owner_pid, item);
+    }
     out
 }
 

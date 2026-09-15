@@ -27,6 +27,10 @@ mod chmod;
 mod close;
 #[path = "../../../capsule_vfs/src/store/fdtable/copy.rs"]
 mod copy;
+#[path = "../../../capsule_vfs/src/store/fdtable/dirstat.rs"]
+mod dirstat;
+#[path = "../../../capsule_vfs/src/store/fdtable/journal.rs"]
+mod journal;
 #[path = "../../../capsule_vfs/src/store/fdtable/lookup.rs"]
 mod lookup;
 #[path = "../../../capsule_vfs/src/store/fdtable/mkdir.rs"]
@@ -43,6 +47,8 @@ mod read;
 mod rename;
 #[path = "../../../capsule_vfs/src/store/fdtable/rmdir.rs"]
 mod rmdir;
+#[path = "../../../capsule_vfs/src/store/fdtable/search.rs"]
+mod search;
 #[path = "../../../capsule_vfs/src/store/fdtable/seek.rs"]
 mod seek;
 #[path = "../../../capsule_vfs/src/store/fdtable/truncate.rs"]

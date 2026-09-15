@@ -17,4 +17,6 @@
 pub mod entry;
 pub mod kind;
 pub mod media;
+pub mod probe;
+pub mod thumb;
 pub mod scan;

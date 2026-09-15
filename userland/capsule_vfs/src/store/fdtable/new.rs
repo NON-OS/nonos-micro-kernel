@@ -24,7 +24,7 @@ impl Store {
         for _ in 0..MAX_OPEN_FDS {
             fds.push(None);
         }
-        Self { files: Vec::new(), fds }
+        Self { files: Vec::new(), fds, journal: Vec::new() }
     }
 }
 

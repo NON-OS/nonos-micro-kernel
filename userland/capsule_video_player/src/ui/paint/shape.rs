@@ -22,32 +22,12 @@ pub fn circle(fb: &mut PaintBuffer, cx: u32, cy: u32, r: u32, argb: u32) {
     rrect::fill_round(fb, cx.saturating_sub(r), cy.saturating_sub(r), d, d, r, argb);
 }
 
-pub fn ring(fb: &mut PaintBuffer, cx: u32, cy: u32, r: u32, t: u32, argb: u32) {
-    let d = r * 2;
-    rrect::stroke_round(fb, cx.saturating_sub(r), cy.saturating_sub(r), d, d, r, t, argb);
-}
-
 pub fn hline(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, argb: u32) {
     fb.fill_rect(x, y, w, 1, argb);
 }
 
 pub fn vline(fb: &mut PaintBuffer, x: u32, y: u32, h: u32, argb: u32) {
     fb.fill_rect(x, y, 1, h, argb);
-}
-
-pub fn border(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32, t: u32, argb: u32) {
-    if t == 0 || w == 0 || h == 0 {
-        return;
-    }
-    let t = if t * 2 > h { h } else { t };
-    fb.fill_rect(x, y, w, t, argb);
-    fb.fill_rect(x, y + h - t, w, t, argb);
-    let mid = h.saturating_sub(t * 2);
-    let side = if t * 2 > w { w } else { t };
-    if mid > 0 {
-        fb.fill_rect(x, y + t, side, mid, argb);
-        fb.fill_rect(x + w - side, y + t, side, mid, argb);
-    }
 }
 
 pub fn hex(fb: &mut PaintBuffer, cx: u32, cy: u32, r: u32, argb: u32) {

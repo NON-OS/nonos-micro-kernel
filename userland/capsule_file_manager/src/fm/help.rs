@@ -24,7 +24,7 @@ const LEFT: u32 = 16;
 const FIRST_Y: u32 = 44;
 const LINE_H: u32 = 18;
 
-const KEYS: [&str; 17] = [
+const KEYS: [&str; 18] = [
     "arrows / j k h l   move and open",
     "Enter / l          open dir or preview file",
     "Backspace / h      up a directory",
@@ -38,6 +38,7 @@ const KEYS: [&str; 17] = [
     "p                  paste into current dir",
     "o                  duplicate",
     "u                  toggle read-only",
+    "f                  pin / unpin in favorites",
     "s                  cycle sort (name/size/date/type)",
     "wheel              scroll the listing",
     "/                  filter, type to search",

@@ -18,6 +18,6 @@ mod basic;
 mod level;
 mod mode;
 
-pub use basic::{next, pause, play, prev};
+pub use basic::{next, pause, play, prev, rewind};
 pub use level::{mute, volume};
 pub use mode::{repeat, shuffle};

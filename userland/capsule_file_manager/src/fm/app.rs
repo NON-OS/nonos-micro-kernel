@@ -19,8 +19,10 @@ use nonos_app_skeleton::{App, AppManifest, EventOutcome, InputEvent, PaintBuffer
 use super::event::on_event;
 use super::manifest::manifest;
 use super::paint::paint;
+use super::persist_meta::persist_meta;
 use super::refresh::refresh;
 use super::state::State;
+use super::store_meta::load_meta;
 
 pub struct FileManager {
     state: State,
@@ -29,6 +31,7 @@ pub struct FileManager {
 impl FileManager {
     pub fn new() -> Self {
         let mut state = State::new();
+        load_meta(&mut state);
         refresh(&mut state);
         FileManager { state }
     }
@@ -43,14 +46,22 @@ impl App for FileManager {
         if self.state.owner_pid == 0 || self.state.status == b"vfs unavailable" {
             refresh(&mut self.state);
         }
-        on_event(&mut self.state, event)
+        let outcome = on_event(&mut self.state, event);
+        if outcome == EventOutcome::Close {
+            persist_meta(&self.state);
+        }
+        outcome
     }
 
     fn paint(&mut self, fb: &mut PaintBuffer) {
         if self.state.owner_pid == 0 || self.state.status == b"vfs unavailable" {
             refresh(&mut self.state);
         }
+        self.state.win_w = fb.width;
+        self.state.win_h = fb.height;
         super::layout::measure(&mut self.state, fb.height);
+        super::info_cache::sync_info(&mut self.state);
+        super::home_count::sync_places(&mut self.state);
         paint(&self.state, fb);
     }
 }

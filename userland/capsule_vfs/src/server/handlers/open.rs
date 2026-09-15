@@ -63,7 +63,10 @@ pub fn open(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
         return encode_response(OP_OPEN, req.flags, req.request_id, EACCES, &[]);
     }
     match store.open(&path, pid, create, truncate, append, !read_only) {
-        Ok(fd) => encode_response(OP_OPEN, req.flags, req.request_id, 0, &fd.to_le_bytes()),
+        Ok(fd) => {
+            store.journal_touch(&path);
+            encode_response(OP_OPEN, req.flags, req.request_id, 0, &fd.to_le_bytes())
+        }
         Err(e) => encode_response(OP_OPEN, req.flags, req.request_id, map_store_err(e), &[]),
     }
 }

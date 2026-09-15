@@ -20,6 +20,11 @@
 
 extern crate alloc;
 
+// The file-manager source imports `nonos_app_skeleton::sidecar`. Aliasing this
+// crate to that name makes the included source resolve against the sidecar
+// module below instead of needing the whole app_skeleton dependency.
+extern crate self as nonos_app_skeleton;
+
 use alloc::string::String;
 
 // Real capsule source under test, included verbatim.
@@ -35,6 +40,9 @@ pub mod vfs_store;
 
 // Self-contained file-manager logic (listing parser, type classifier).
 pub mod fm_logic;
+
+// The app_skeleton key/value sidecar codec the file manager persists with.
+pub mod sidecar;
 
 // Real network wire parsers for untrusted-input coverage.
 pub mod net;
@@ -106,17 +114,47 @@ pub fn desktop_walk(rx: &[u8], start: usize, end: usize) -> alloc::vec::Vec<(Str
 #[cfg(test)]
 mod desktop_tests;
 #[cfg(test)]
+mod dirstat_wire_tests;
+#[cfg(test)]
+mod favorites_tests;
+#[cfg(test)]
+mod files_fixture;
+#[cfg(test)]
+mod files_tests;
+#[cfg(test)]
 mod fm_tests;
 #[cfg(test)]
 mod fmt_tests;
 #[cfg(test)]
 mod fuzz_tests;
 #[cfg(test)]
+mod journal_tests;
+#[cfg(test)]
+mod journal_wire_tests;
+#[cfg(test)]
 mod net_tests;
+#[cfg(test)]
+mod open_with_tests;
+#[cfg(test)]
+mod prefs_tests;
 #[cfg(test)]
 mod protocol_tests;
 #[cfg(test)]
+mod recents_tests;
+#[cfg(test)]
+mod search_limit_tests;
+#[cfg(test)]
+mod search_tests;
+#[cfg(test)]
+mod search_wire_tests;
+#[cfg(test)]
+mod sidecar_tests;
+#[cfg(test)]
 mod store_tests;
+#[cfg(test)]
+mod tags_blob_tests;
+#[cfg(test)]
+mod tags_tests;
 #[cfg(test)]
 mod util_tests;
 #[cfg(test)]

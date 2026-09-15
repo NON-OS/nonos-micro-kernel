@@ -14,76 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! The detail list: one rounded row per entry, placed by `row_geom::row_slots`
+//! so a click hit-tests against exactly what was drawn.
+
 use nonos_app_skeleton::PaintBuffer;
 
-use super::file_color::color;
-use super::file_kind::kind_of;
-use super::fmt_time::fmt_time;
-use super::human_size::human_size;
-use super::icon;
-use super::layout::{CONTENT_X, ICON_S, PAD_X};
+use super::layout::{content_w, content_x, ROW_H};
+use super::list_head::paint_head;
+use super::paint_row::row_body;
+use super::row_geom::{list_top, row_slots};
+use super::screen_row::empty_state;
 use super::state::State;
-use super::theme::{ACCENT, ALT_ROW, BACKGROUND, DIRECTORY, FILE_C, MUTED, SELECT_BG};
+use super::theme::SELECT_BG;
 
 pub fn paint_rows(state: &State, fb: &mut PaintBuffer) {
-    let w = fb.width;
-    let cw = w.saturating_sub(CONTENT_X);
-    let left = CONTENT_X + PAD_X;
+    let left = content_x();
+    let cw = content_w(fb.width);
+    paint_head(state, fb, left, cw, state.row_top);
     if state.entries.is_empty() {
-        let msg: &str = if state.filter.is_empty() { "empty directory" } else { "no matches" };
-        let _ = fb.text_ttf(left as i32, (state.row_top + 6) as i32, msg, MUTED, 18.0);
+        let note = if state.filter.is_empty() {
+            "This folder has nothing in it."
+        } else {
+            "No entry matches the current filter."
+        };
+        empty_state(fb, left, list_top(state) + 40, cw, "Nothing here", note);
         return;
     }
-
-    let name_x = left + ICON_S + 16;
-    let date_end = w.saturating_sub(PAD_X);
-    let size_end = date_end.saturating_sub(160);
-
-    for (vis, (i, entry)) in
-        state.entries.iter().enumerate().skip(state.scroll).take(state.view_rows).enumerate()
-    {
-        let y = state.row_top + vis as u32 * state.row_h;
-        let selected = i == state.cursor;
-        let row_bg = if selected {
-            SELECT_BG
-        } else if vis % 2 == 1 {
-            ALT_ROW
-        } else {
-            BACKGROUND
-        };
-        if selected {
-            fb.fill_rect(CONTENT_X, y, cw, state.row_h, SELECT_BG);
-            fb.fill_rect(CONTENT_X, y, 3, state.row_h, ACCENT);
-        } else if vis % 2 == 1 {
-            fb.fill_rect(CONTENT_X, y, cw, state.row_h, ALT_ROW);
+    for slot in row_slots(state) {
+        let entry = &state.entries[slot.index];
+        let lit = slot.index == state.cursor
+            || state.selected.iter().any(|path| path == &entry.full_path);
+        if lit {
+            fb.fill_round(left, slot.y + 2, cw, ROW_H - 4, 10, SELECT_BG);
         }
-
-        let is_dir = entry.label.as_bytes().last() == Some(&b'/');
-        let icy = y + state.row_h.saturating_sub(ICON_S) / 2;
-        if is_dir {
-            icon::folder(fb, left, icy, ICON_S, DIRECTORY, row_bg);
-        } else {
-            icon::file(fb, left, icy, ICON_S, FILE_C, row_bg);
-        }
-
-        // name, centered in the row
-        let name_color = color(kind_of(entry));
-        let ny = y + state.row_h.saturating_sub(18) / 2;
-        let _ = fb.text_ttf(name_x as i32, ny as i32, entry.label.as_str(), name_color, 18.0);
-
-        // size + date, right-aligned, small mono, centered
-        let my = y + state.row_h.saturating_sub(8) / 2;
-        if let Some(size) = entry.size {
-            right(fb, size_end, my, human_size(size).as_bytes(), MUTED);
-        }
-        if entry.mtime != 0 {
-            right(fb, date_end, my, fmt_time(entry.mtime).as_bytes(), MUTED);
-        }
+        row_body(state, fb, slot.index, slot.y, left, cw);
     }
-}
-
-fn right(fb: &mut PaintBuffer, end_x: u32, y: u32, bytes: &[u8], c: u32) {
-    let adv = fb.glyph_advance();
-    let x = end_x.saturating_sub(bytes.len() as u32 * adv);
-    fb.text(x, y, bytes, c);
 }

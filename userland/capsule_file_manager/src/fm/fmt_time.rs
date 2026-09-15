@@ -32,7 +32,7 @@ pub fn fmt_time(ms: u64) -> String {
 
 // Days since the unix epoch to a (year, month, day) civil date, using Howard
 // Hinnant's branchless algorithm.
-fn civil_from_days(days: i64) -> (i64, u32, u32) {
+pub fn civil_from_days(days: i64) -> (i64, u32, u32) {
     let z = days + 719_468;
     let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
     let doe = (z - era * 146_097) as u64;

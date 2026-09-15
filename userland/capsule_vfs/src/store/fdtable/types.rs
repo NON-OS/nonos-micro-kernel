@@ -80,4 +80,5 @@ pub(super) struct OpenFd {
 pub struct Store {
     pub(super) files: Vec<File>,
     pub(super) fds: Vec<Option<OpenFd>>,
+    pub(super) journal: Vec<(u64, String)>,
 }

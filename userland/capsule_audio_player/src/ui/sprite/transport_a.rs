@@ -34,13 +34,6 @@ pub fn pause(px: u32, rgb: u32) -> Sprite {
     s
 }
 
-pub fn stop(px: u32, rgb: u32) -> Sprite {
-    let mut s = Sprite::blank(px);
-    let m = |p: u32| (px * p / 100) as i32;
-    shape::rrect(&mut s, m(26), m(26), m(48), m(48), m(6), rgb);
-    s
-}
-
 pub fn prev(px: u32, rgb: u32) -> Sprite {
     let mut s = Sprite::blank(px);
     let m = |p: u32| (px * p / 100) as i32;

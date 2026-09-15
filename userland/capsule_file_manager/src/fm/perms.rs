@@ -20,9 +20,10 @@ use super::refresh::refresh;
 use super::selection_acting::acting;
 use super::selection_clear::clear;
 use super::state::State;
+use super::undo::Op;
 
-const MODE_RW: u16 = 0o644;
-const MODE_RO: u16 = 0o444;
+pub const MODE_RW: u16 = 0o644;
+pub const MODE_RO: u16 = 0o444;
 
 // Flip the read-only state of the acting set (selection or cursor). An entry
 // currently writable becomes read-only and vice versa.
@@ -39,6 +40,8 @@ pub fn toggle_readonly(state: &mut State) {
         let mode = if writable { MODE_RO } else { MODE_RW };
         if chmod(pid, full.trim_end_matches('/').as_bytes(), mode).is_err() {
             failed = true;
+        } else {
+            state.undo.push(Op::Chmod { path: full.clone(), writable });
         }
     }
     clear(state);

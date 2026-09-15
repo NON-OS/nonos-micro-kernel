@@ -15,15 +15,18 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::filetype::Kind;
+use super::theme::{AMBER, BLUE, BLUE_LT, CY_DIM, INK, INK2, RED};
 
+/// The filetype tint, drawn from the palette rather than from literals of its
+/// own, so `theme` stays the single home for every colour in the app.
 pub fn color(kind: Kind) -> u32 {
     match kind {
-        Kind::Dir => 0xFF6CE08C,
-        Kind::Code => 0xFF7FB4FF,
-        Kind::Image => 0xFFD08CF0,
-        Kind::Doc => 0xFFD7E2F2,
-        Kind::Archive => 0xFFE0B060,
-        Kind::Exec => 0xFFE0785C,
-        Kind::Other => 0xFFA8B6CC,
+        Kind::Dir => CY_DIM,
+        Kind::Code => BLUE_LT,
+        Kind::Image => BLUE,
+        Kind::Doc => INK,
+        Kind::Archive => AMBER,
+        Kind::Exec => RED,
+        Kind::Other => INK2,
     }
 }

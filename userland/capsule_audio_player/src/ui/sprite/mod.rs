@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Anti-aliased RGBA8 sprite rasterizer for transport icons and art.
+//! Anti-aliased RGBA8 glyph rasteriser. Every mask is built once at start-up
+//! by `icon::Icons` and tinted at blit time, so no frame pays for supersampling.
 
 mod canvas;
-mod fx;
 mod glyph_a;
 mod glyph_b;
-mod hero;
+mod glyph_c;
 mod prim;
 mod shape;
 mod stroke;
@@ -28,9 +28,8 @@ mod transport_a;
 mod transport_b;
 
 pub use canvas::Sprite;
-pub use fx::lerp;
 pub use glyph_a::{magnifier, note, speaker};
 pub use glyph_b::{check, close, plus};
-pub use hero::{glow_ring, gradient_art, gradient_logo, knob};
-pub use transport_a::{pause, play, prev, next, stop};
+pub use glyph_c::{bell, chevron, compass, download, gear, grid, heart, home, radio};
+pub use transport_a::{next, pause, play, prev};
 pub use transport_b::{repeat, shuffle};

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use alloc::vec::Vec;
 use alloc::string::{String, ToString};
 
 use super::entry::file_name;
@@ -28,6 +29,7 @@ pub struct MediaItem {
     pub width: u32,
     pub height: u32,
     pub resume_ms: i64,
+    pub thumb: Option<Vec<u32>>,
 }
 
 impl MediaItem {
@@ -43,6 +45,7 @@ impl MediaItem {
             width: 0,
             height: 0,
             resume_ms: 0,
+            thumb: None,
         })
     }
 

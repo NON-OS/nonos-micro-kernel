@@ -19,6 +19,8 @@ use alloc::format;
 use super::prompt_run_op::run_op;
 use super::refresh::refresh;
 use super::state::{Mode, PromptKind, State};
+use super::tag_commit::tag_commit;
+use super::undo_record::record;
 
 pub fn commit(state: &mut State, kind: PromptKind) {
     let name = core::mem::take(&mut state.input);
@@ -27,9 +29,16 @@ pub fn commit(state: &mut State, kind: PromptKind) {
         state.status = b"empty name";
         return;
     }
+    if matches!(kind, PromptKind::Tag) {
+        return tag_commit(state, name.as_str());
+    }
     let target = format!("{}{}", state.prefix, name);
+    let prior = state.entries.get(state.cursor).map(|e| e.full_path.clone());
     let msg = match run_op(state, kind, &name, &target) {
-        Ok(msg) => msg,
+        Ok(msg) => {
+            record(state, kind, &target, &name, prior);
+            msg
+        }
         Err(e) => e.as_bytes(),
     };
     refresh(state);
