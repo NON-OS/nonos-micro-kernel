@@ -20,12 +20,20 @@ use alloc::vec::Vec;
 use super::types::{File, Store, StoreError, StoreResult, MAX_FILES, MAX_FILE_BYTES};
 
 impl Store {
-    // Place one chunk of an artifact at `path`. Offset zero replaces the whole
-    // file; a later chunk must start exactly where the previous one ended, so a
-    // dropped or reordered chunk fails instead of stitching a corrupt image.
-    // Directories are never overwritten and no fd is involved, so this cannot
-    // be reached by a caller holding only a descriptor.
-    pub fn install_bytes(&mut self, path: &str, offset: usize, bytes: &[u8]) -> StoreResult<()> {
+    /*
+     * Place one chunk of an artifact at `path`. Offset zero replaces the whole
+     * file; a later chunk must start exactly where the previous one ended, so a
+     * dropped or reordered chunk fails instead of stitching a corrupt image.
+     * Directories are never overwritten and no fd is involved, so this cannot
+     * be reached by a caller holding only a descriptor.
+     */
+    pub fn install_bytes(
+        &mut self,
+        path: &str,
+        offset: usize,
+        bytes: &[u8],
+        owner: u32,
+    ) -> StoreResult<()> {
         if offset.saturating_add(bytes.len()) > MAX_FILE_BYTES {
             return Err(StoreError::Full);
         }
@@ -35,7 +43,7 @@ impl Store {
             }
         }
         if offset == 0 {
-            return self.replace(path, bytes);
+            return self.replace(path, bytes, owner);
         }
         let idx = self.find(path).ok_or(StoreError::NotFound)?;
         if self.files[idx].data.len() != offset {
@@ -46,14 +54,14 @@ impl Store {
         Ok(())
     }
 
-    fn replace(&mut self, path: &str, bytes: &[u8]) -> StoreResult<()> {
+    fn replace(&mut self, path: &str, bytes: &[u8], owner: u32) -> StoreResult<()> {
         if self.find(path).is_some() {
             self.unlink(path)?;
         }
         if self.files.len() >= MAX_FILES {
             return Err(StoreError::Full);
         }
-        self.files.push(File::new(String::from(path), Vec::from(bytes), false));
+        self.files.push(File::new(String::from(path), Vec::from(bytes), false, owner));
         Ok(())
     }
 }

@@ -39,7 +39,7 @@ fn get(store: &mut Store, path: &str) -> Vec<u8> {
 #[test]
 fn mkdir_p_creates_missing_ancestors() {
     let mut s = Store::new();
-    s.mkdir("/a/b/c").unwrap();
+    s.mkdir("/a/b/c", 1).unwrap();
     assert!(s.stat("/a").unwrap().1);
     assert!(s.stat("/a/b").unwrap().1);
     assert!(s.stat("/a/b/c").unwrap().1);
@@ -48,8 +48,8 @@ fn mkdir_p_creates_missing_ancestors() {
 #[test]
 fn mkdir_existing_is_rejected() {
     let mut s = Store::new();
-    s.mkdir("/a").unwrap();
-    assert_eq!(s.mkdir("/a"), Err(StoreError::Exists));
+    s.mkdir("/a", 1).unwrap();
+    assert_eq!(s.mkdir("/a", 1), Err(StoreError::Exists));
 }
 
 #[test]
@@ -64,7 +64,7 @@ fn write_then_read_roundtrips() {
 fn default_modes_are_file_644_dir_755() {
     let mut s = Store::new();
     put(&mut s, "/f", b"");
-    s.mkdir("/d").unwrap();
+    s.mkdir("/d", 1).unwrap();
     assert_eq!(s.stat("/f").unwrap().3, 0o644);
     assert_eq!(s.stat("/d").unwrap().3, 0o755);
 }
@@ -99,20 +99,20 @@ fn truncate_shrinks_and_zero_grows_without_stale_data() {
 fn copy_file_duplicates_content() {
     let mut s = Store::new();
     put(&mut s, "/f", b"payload");
-    s.copy("/f", "/g", false).unwrap();
+    s.copy("/f", "/g", false, 1).unwrap();
     assert_eq!(get(&mut s, "/g"), b"payload");
     // Destination must not already exist.
-    assert_eq!(s.copy("/f", "/g", false), Err(StoreError::Exists));
+    assert_eq!(s.copy("/f", "/g", false, 1), Err(StoreError::Exists));
 }
 
 #[test]
 fn copy_dir_recursive_rewrites_whole_subtree() {
     let mut s = Store::new();
-    s.mkdir("/d").unwrap();
+    s.mkdir("/d", 1).unwrap();
     put(&mut s, "/d/x", b"1");
-    s.mkdir("/d/sub").unwrap();
+    s.mkdir("/d/sub", 1).unwrap();
     put(&mut s, "/d/sub/y", b"2");
-    s.copy("/d", "/d2", true).unwrap();
+    s.copy("/d", "/d2", true, 1).unwrap();
     assert!(s.stat("/d2").unwrap().1);
     assert_eq!(get(&mut s, "/d2/x"), b"1");
     assert_eq!(get(&mut s, "/d2/sub/y"), b"2");
@@ -123,9 +123,9 @@ fn copy_dir_recursive_rewrites_whole_subtree() {
 #[test]
 fn rmdir_refuses_nonempty_then_removes_recursively() {
     let mut s = Store::new();
-    s.mkdir("/d").unwrap();
+    s.mkdir("/d", 1).unwrap();
     put(&mut s, "/d/x", b"1");
-    s.mkdir("/d/sub").unwrap();
+    s.mkdir("/d/sub", 1).unwrap();
     put(&mut s, "/d/sub/y", b"2");
     assert_eq!(s.rmdir("/d", false), Err(StoreError::NotEmpty));
     s.rmdir("/d", true).unwrap();
@@ -149,10 +149,10 @@ fn unlink_reindexes_open_handles_to_the_right_file() {
 #[test]
 fn directory_stat_reports_immediate_child_count() {
     let mut s = Store::new();
-    s.mkdir("/c").unwrap();
+    s.mkdir("/c", 1).unwrap();
     put(&mut s, "/c/a", b"");
     put(&mut s, "/c/b", b"");
-    s.mkdir("/c/sub").unwrap();
+    s.mkdir("/c/sub", 1).unwrap();
     put(&mut s, "/c/sub/deep", b""); // not an immediate child of /c
     assert_eq!(s.stat("/c").unwrap().0, 3);
 }
@@ -208,9 +208,9 @@ fn rename_moves_a_file_and_rejects_existing_dest() {
 #[test]
 fn rename_rewrites_a_directory_subtree() {
     let mut s = Store::new();
-    s.mkdir("/d").unwrap();
+    s.mkdir("/d", 1).unwrap();
     put(&mut s, "/d/x", b"1");
-    s.mkdir("/d/sub").unwrap();
+    s.mkdir("/d/sub", 1).unwrap();
     put(&mut s, "/d/sub/y", b"2");
     s.rename("/d", "/e").unwrap();
     assert_eq!(s.stat("/d"), Err(StoreError::NotFound));

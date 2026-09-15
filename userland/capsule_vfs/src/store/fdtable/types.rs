@@ -48,11 +48,21 @@ pub(super) struct File {
     pub(super) name: String,
     pub(super) data: Vec<u8>,
     pub(super) is_dir: bool,
-    // Last-modified wall-clock time in unix milliseconds, stamped at creation
-    // and refreshed on every write.
+    /*
+     * Last-modified wall-clock time in unix milliseconds, stamped at creation
+     * and refreshed on every write.
+     */
     pub(super) mtime: u64,
-    // Unix-style permission bits; only the owner-write bit (0o200) is enforced.
+    /*
+     * Unix-style permission bits; only the owner-write bit (0o200) is enforced.
+     */
     pub(super) mode: u16,
+    /*
+     * The pid that created the file, as the kernel stamped it on the request.
+     * Persisting a file to the block store is the owner's right alone; files
+     * staged from the package store carry zero and nobody persists them.
+     */
+    pub(super) owner: u32,
 }
 
 // Default permissions for a new file and a new directory.
@@ -62,10 +72,12 @@ pub(super) const MODE_DIR: u16 = 0o755;
 pub(super) const MODE_WRITE: u16 = 0o200;
 
 impl File {
-    // Build a file stamped with the current time and default permissions.
-    pub(super) fn new(name: String, data: Vec<u8>, is_dir: bool) -> Self {
+    /*
+     * Build a file stamped with the current time and default permissions.
+     */
+    pub(super) fn new(name: String, data: Vec<u8>, is_dir: bool, owner: u32) -> Self {
         let mode = if is_dir { MODE_DIR } else { MODE_FILE };
-        File { name, data, is_dir, mtime: super::time::now_ms(), mode }
+        File { name, data, is_dir, mtime: super::time::now_ms(), mode, owner }
     }
 }
 

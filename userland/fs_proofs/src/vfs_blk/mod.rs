@@ -20,3 +20,10 @@
 
 #[path = "../../../capsule_vfs/src/blk/error.rs"]
 pub mod error;
+
+/*
+ * The table-of-contents patch that a same-length replacement writes, with the
+ * header and toc modules it reads, so the offsets under test are the shipping
+ * ones rather than numbers repeated here.
+ */
+pub mod store_patch;

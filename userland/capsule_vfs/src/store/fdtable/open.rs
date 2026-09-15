@@ -31,14 +31,16 @@ impl Store {
     ) -> Result<u32, StoreError> {
         let file_idx = match self.find(path) {
             Some(i) => i,
-            None => self.create_file(path, create)?,
+            None => self.create_file(path, create, owner_pid)?,
         };
         if self.files[file_idx].is_dir {
             return Err(StoreError::IsDir);
         }
-        // The handle is writable only if the caller was allowed to write and the
-        // file's own permissions permit it. Truncating a read-only file is
-        // rejected rather than silently clearing it.
+        /*
+         * The handle is writable only if the caller was allowed to write and the
+         * file's own permissions permit it. Truncating a read-only file is
+         * rejected rather than silently clearing it.
+         */
         let mode_writable = self.files[file_idx].mode & MODE_WRITE != 0;
         let writable = writable && mode_writable;
         if truncate {
@@ -54,14 +56,14 @@ impl Store {
         Ok(fd_slot as u32)
     }
 
-    fn create_file(&mut self, path: &str, create: bool) -> StoreResult<usize> {
+    fn create_file(&mut self, path: &str, create: bool, owner: u32) -> StoreResult<usize> {
         if !create {
             return Err(StoreError::NotFound);
         }
         if self.files.len() >= MAX_FILES {
             return Err(StoreError::Full);
         }
-        self.files.push(File::new(String::from(path), Vec::new(), false));
+        self.files.push(File::new(String::from(path), Vec::new(), false, owner));
         Ok(self.files.len() - 1)
     }
 }

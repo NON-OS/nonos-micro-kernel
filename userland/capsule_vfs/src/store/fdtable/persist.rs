@@ -14,12 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! What a capsule may hand to the block store: its own files.
+
 use alloc::vec::Vec;
 
-use super::types::Store;
+use super::types::{Store, StoreError, StoreResult};
 
 impl Store {
-    pub fn bytes_of(&self, path: &str) -> Option<Vec<u8>> {
-        self.find(path).map(|i| self.files[i].data.clone())
+    /// The bytes of `path` for persisting, when `pid` created the file. The
+    /// pid is the one the kernel stamped on the request, so this is the
+    /// attested sender and not a name or a path prefix standing in for one.
+    pub fn persistable(&self, path: &str, pid: u32) -> StoreResult<Vec<u8>> {
+        let file = &self.files[self.find(path).ok_or(StoreError::NotFound)?];
+        if file.owner != pid {
+            return Err(StoreError::AccessDenied);
+        }
+        Ok(file.data.clone())
     }
 }

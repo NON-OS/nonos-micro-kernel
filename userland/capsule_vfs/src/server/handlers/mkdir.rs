@@ -23,7 +23,7 @@ use crate::protocol::{encode_response, Request, EACCES, EINVAL, MAX_PATH_BYTES, 
 use crate::store::Store;
 
 pub fn mkdir(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
-    let (_pid, rest) = match split_caller(req.payload, sender_pid) {
+    let (pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_MKDIR, req.flags, req.request_id, s, &[]),
     };
@@ -42,7 +42,7 @@ pub fn mkdir(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     if is_read_only(&path) {
         return encode_response(OP_MKDIR, req.flags, req.request_id, EACCES, &[]);
     }
-    match store.mkdir(&path) {
+    match store.mkdir(&path, pid) {
         Ok(()) => encode_response(OP_MKDIR, req.flags, req.request_id, 0, &[]),
         Err(e) => encode_response(OP_MKDIR, req.flags, req.request_id, map_store_err(e), &[]),
     }

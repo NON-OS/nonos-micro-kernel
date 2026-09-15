@@ -16,6 +16,12 @@
 
 pub(super) const REC_MAGIC: [u8; 8] = *b"NONOSDR1";
 pub(super) const REC_COUNT_OFFSET: usize = 8;
+
+/// The next record block of this directory, or zero at the end of the chain.
+///
+/// This sits in what were unused header bytes, so every volume written before
+/// directories could chain reads as a single record and keeps working.
+pub(super) const REC_NEXT_OFFSET: usize = 12;
 pub(super) const REC_ENTRY_BASE: usize = 24;
 pub(super) const ENTRY_BYTES: usize = 64;
 pub(super) const NAME_BYTES: usize = 56;

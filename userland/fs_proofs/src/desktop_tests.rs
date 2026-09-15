@@ -140,7 +140,7 @@ fn walk_empty_when_start_past_end() {
 // A flood of entries is capped so a hostile reply cannot exhaust memory.
 #[test]
 fn walk_caps_entry_count() {
-    let names: Vec<&str> = core::iter::repeat("/a").take(5000).collect();
+    let names: Vec<&str> = core::iter::repeat_n("/a", 5000).collect();
     let buf = framed(&names);
     assert_eq!(desktop_walk(&buf, 0, buf.len()).len(), 4096);
 }

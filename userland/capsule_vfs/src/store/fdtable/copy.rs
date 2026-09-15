@@ -21,11 +21,13 @@ use alloc::vec::Vec;
 use super::types::{File, Store, StoreError, StoreResult, MAX_FILES};
 
 impl Store {
-    // Copy `src` to `dst` inside the store, no size-capped IPC round-trip. A
-    // file is duplicated with its data; a directory with `recursive` clones the
-    // whole subtree, rewriting each descendant's `src/` prefix to `dst/`. The
-    // destination must not already exist. Returns the number of entries added.
-    pub fn copy(&mut self, src: &str, dst: &str, recursive: bool) -> StoreResult<u32> {
+    /*
+     * Copy `src` to `dst` inside the store, no size-capped IPC round-trip. A
+     * file is duplicated with its data; a directory with `recursive` clones the
+     * whole subtree, rewriting each descendant's `src/` prefix to `dst/`. The
+     * destination must not already exist. Returns the number of entries added.
+     */
+    pub fn copy(&mut self, src: &str, dst: &str, recursive: bool, owner: u32) -> StoreResult<u32> {
         let src_idx = self.find(src).ok_or(StoreError::NotFound)?;
         if self.find(dst).is_some() {
             return Err(StoreError::Exists);
@@ -35,11 +37,11 @@ impl Store {
                 return Err(StoreError::Full);
             }
             let data = self.files[src_idx].data.clone();
-            self.files.push(File::new(String::from(dst), data, false));
+            self.files.push(File::new(String::from(dst), data, false, owner));
             return Ok(1);
         }
         let mut additions: Vec<File> = Vec::new();
-        additions.push(File::new(String::from(dst), Vec::new(), true));
+        additions.push(File::new(String::from(dst), Vec::new(), true, owner));
         if recursive {
             let mut src_prefix = String::from(src);
             src_prefix.push('/');
@@ -49,7 +51,7 @@ impl Store {
                 if self.find(&new_name).is_some() {
                     return Err(StoreError::Exists);
                 }
-                additions.push(File::new(new_name, f.data.clone(), f.is_dir));
+                additions.push(File::new(new_name, f.data.clone(), f.is_dir, owner));
             }
         }
         if self.files.len() + additions.len() > MAX_FILES {

@@ -25,7 +25,7 @@ use crate::store::Store;
 // Payload: u32 caller_pid, u8 src_len, src, u8 dst_len, dst, u8 recursive. A
 // non-zero recursive byte copies a directory's whole subtree.
 pub fn copy(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
-    let (_pid, rest) = match split_caller(req.payload, sender_pid) {
+    let (pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_COPY, req.flags, req.request_id, s, &[]),
     };
@@ -56,7 +56,7 @@ pub fn copy(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
     if is_read_only(&dst) {
         return encode_response(OP_COPY, req.flags, req.request_id, EACCES, &[]);
     }
-    match store.copy(&src, &dst, recursive) {
+    match store.copy(&src, &dst, recursive, pid) {
         Ok(_) => encode_response(OP_COPY, req.flags, req.request_id, 0, &[]),
         Err(e) => encode_response(OP_COPY, req.flags, req.request_id, map_store_err(e), &[]),
     }

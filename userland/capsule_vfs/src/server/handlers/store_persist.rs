@@ -18,12 +18,12 @@ use alloc::vec::Vec;
 use core::str;
 
 use super::path::normalize;
-use super::util::{map_blk_err, split_caller};
-use crate::protocol::{encode_response, Request, EINVAL, ENOENT, MAX_PATH_BYTES, OP_STORE_PERSIST};
+use super::util::{map_blk_err, map_store_err, split_caller};
+use crate::protocol::{encode_response, Request, EINVAL, MAX_PATH_BYTES, OP_STORE_PERSIST};
 use crate::store::Store;
 
 pub fn store_persist(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Vec<u8> {
-    let (_pid, rest) = match split_caller(req.payload, sender_pid) {
+    let (pid, rest) = match split_caller(req.payload, sender_pid) {
         Ok(v) => v,
         Err(s) => return encode_response(OP_STORE_PERSIST, req.flags, req.request_id, s, &[]),
     };
@@ -39,9 +39,11 @@ pub fn store_persist(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Ve
         Err(_) => return encode_response(OP_STORE_PERSIST, req.flags, req.request_id, EINVAL, &[]),
     };
     let path = normalize(path);
-    let data = match store.bytes_of(&path) {
-        Some(d) => d,
-        None => return encode_response(OP_STORE_PERSIST, req.flags, req.request_id, ENOENT, &[]),
+    let data = match store.persistable(&path, pid) {
+        Ok(d) => d,
+        Err(e) => {
+            return encode_response(OP_STORE_PERSIST, req.flags, req.request_id, map_store_err(e), &[])
+        }
     };
     match crate::blk::store_write::append(&path, &data) {
         Ok(()) => encode_response(OP_STORE_PERSIST, req.flags, req.request_id, 0, &[]),

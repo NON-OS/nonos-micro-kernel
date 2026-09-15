@@ -47,6 +47,6 @@ impl Store {
         if self.files.len() >= MAX_FILES || self.files.iter().any(|f| f.name == name) {
             return;
         }
-        self.files.push(File::new(name, data, false));
+        self.files.push(File::new(name, data, false, 0));
     }
 }

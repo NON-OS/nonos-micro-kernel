@@ -25,14 +25,18 @@ const DEMO: &[u8] = b"Demo loop:\n 1. terminal: write /hello.txt hello from nono
 
 impl Store {
     pub fn seed(&mut self) {
-        let _ = self.mkdir("/docs");
-        // Scratch space; std's env::temp_dir() on NONOS points here.
-        let _ = self.mkdir("/tmp");
-        let _ = self.mkdir("/capsules");
-        let _ = self.mkdir("/home/nonos/workspace");
-        // The desktop shows the home directory, so a first boot that leaves it
-        // empty shows a bare desktop and nothing to open.
-        let _ = self.mkdir("/home/nonos/documents");
+        let _ = self.mkdir("/docs", 0);
+        /*
+         * Scratch space; std's env::temp_dir() on NONOS points here.
+         */
+        let _ = self.mkdir("/tmp", 0);
+        let _ = self.mkdir("/capsules", 0);
+        let _ = self.mkdir("/home/nonos/workspace", 0);
+        /*
+         * The desktop shows the home directory, so a first boot that leaves it
+         * empty shows a bare desktop and nothing to open.
+         */
+        let _ = self.mkdir("/home/nonos/documents", 0);
         self.seed_file("/home/nonos/readme.txt", README);
         self.seed_file("/readme.txt", README);
         self.seed_file("/docs/about.txt", ABOUT);
@@ -67,7 +71,7 @@ impl Store {
 
     fn seed_file(&mut self, name: &str, data: &[u8]) {
         if self.files.len() < MAX_FILES && self.find(name).is_none() {
-            self.files.push(File::new(String::from(name), Vec::from(data), false));
+            self.files.push(File::new(String::from(name), Vec::from(data), false, 0));
         }
     }
 }

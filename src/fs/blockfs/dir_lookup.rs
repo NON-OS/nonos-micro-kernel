@@ -14,28 +14,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::dir_consts::{
-    ENTRY_BYTES, MAX_ENTRIES, NAME_BYTES, REC_COUNT_OFFSET, REC_ENTRY_BASE, REC_MAGIC,
-};
-use super::dir_name_match::name_matches;
-use super::read_u32::read_u32;
-use super::read_u64::read_u64;
+//! Finding a name in a directory.
+
+use super::dir_block::{find, lba};
+use super::dir_block_header::is_record;
+use super::dir_chain::records;
 use super::{BlockFsError, BlockFsNode};
 
+/// The child's node address, or `None`.
+///
+/// Walks every record block of the directory. A name lives in at most one of
+/// them, because `link` refuses a name that already resolves anywhere in the
+/// chain.
 pub fn lookup(key: &[u8; 32], dir: &BlockFsNode, name: &[u8]) -> Result<Option<u64>, BlockFsError> {
-    if dir.first_record_lba == 0 {
-        return Ok(None);
-    }
-    let block = crate::fs::cryptoblock::read(key, dir.first_record_lba)
-        .map_err(BlockFsError::CryptoBlock)?;
-    if block[0..8] != REC_MAGIC[..] {
-        return Err(BlockFsError::InvalidRecord);
-    }
-    let count = (read_u32(&block, REC_COUNT_OFFSET) as usize).min(MAX_ENTRIES);
-    for i in 0..count {
-        let off = REC_ENTRY_BASE + i * ENTRY_BYTES;
-        if name_matches(&block[off..off + NAME_BYTES], name) {
-            return Ok(Some(read_u64(&block, off + NAME_BYTES)));
+    for rec in records(key, dir)? {
+        let block = crate::fs::cryptoblock::read(key, rec).map_err(BlockFsError::CryptoBlock)?;
+        if !is_record(&block) {
+            return Err(BlockFsError::InvalidRecord);
+        }
+        if let Some(i) = find(&block, name) {
+            return Ok(Some(lba(&block, i)));
         }
     }
     Ok(None)

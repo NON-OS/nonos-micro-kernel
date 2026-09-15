@@ -19,7 +19,7 @@
 //! MAX_PAYLOAD_BYTES; the server appends at the offset the client states and
 //! hands the assembled file to the on-device store when FINAL arrives. This is
 //! the only write path allowed into the read-only /capsules tree, which is why
-//! `split_artifact` — not `is_read_only` — is what stands between a caller and
+//! `split_artifact`, not `is_read_only`, is what stands between a caller and
 //! that tree.
 
 use alloc::vec::Vec;
@@ -28,7 +28,7 @@ use super::artifact_path::split_artifact;
 use super::installer_gate::require_installer;
 use super::util::{map_blk_err, map_store_err, split_caller};
 use crate::protocol::{
-    encode_response, Request, EINVAL, EMSGSIZE, ENOENT, MAX_DATA_BYTES, OP_STORE_INSTALL,
+    encode_response, Request, EINVAL, EMSGSIZE, MAX_DATA_BYTES, OP_STORE_INSTALL,
     STORE_INSTALL_FINAL,
 };
 use crate::store::Store;
@@ -45,7 +45,7 @@ pub fn store_install(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Ve
 
 fn place(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Result<(), i32> {
     require_installer(sender_pid)?;
-    let (_pid, rest) = split_caller(req.payload, sender_pid)?;
+    let (pid, rest) = split_caller(req.payload, sender_pid)?;
     let (path, tail) = split_artifact(rest)?;
     if tail.len() < HEAD_LEN {
         return Err(EINVAL);
@@ -56,10 +56,10 @@ fn place(store: &mut Store, req: Request<'_>, sender_pid: u32) -> Result<(), i32
     if data.len() > MAX_DATA_BYTES as usize {
         return Err(EMSGSIZE);
     }
-    store.install_bytes(&path, offset, data).map_err(map_store_err)?;
+    store.install_bytes(&path, offset, data, pid).map_err(map_store_err)?;
     if flags & STORE_INSTALL_FINAL == 0 {
         return Ok(());
     }
-    let whole = store.bytes_of(&path).ok_or(ENOENT)?;
+    let whole = store.persistable(&path, pid).map_err(map_store_err)?;
     crate::blk::store_write::append(&path, &whole).map_err(map_blk_err)
 }

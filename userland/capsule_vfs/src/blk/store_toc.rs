@@ -46,7 +46,7 @@ pub fn decode(toc: &[u8], count: usize, capacity_bytes: u64) -> Result<Vec<TocEn
         let offset = le_u64(toc, base + NAME_LEN);
         let len = le_u64(toc, base + NAME_LEN + 8);
         let end = offset.checked_add(len).ok_or(BlkError::BadContainer)?;
-        if offset % SECTOR_SIZE as u64 != 0 || end > capacity_bytes || len > budget {
+        if !offset.is_multiple_of(SECTOR_SIZE as u64) || end > capacity_bytes || len > budget {
             return Err(BlkError::BadContainer);
         }
         budget -= len;
