@@ -16,6 +16,7 @@
 
 pub mod about;
 pub mod bench;
+pub mod cap_names;
 pub mod capsules;
 pub mod clear;
 pub mod display;

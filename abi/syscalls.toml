@@ -144,13 +144,13 @@ MIED = 0x4445494D
 
 [desc.CRND]
 nr   = 0x444E5243
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="buf",type="u8*",dir="out"},{name="len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
 [desc.CHSH]
 nr   = 0x48534843
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="alg",type="u32",dir="in"},{name="data",type="u8*",dir="in"},{name="len",type="usize",dir="in"},{name="out",type="u8*",dir="out"},{name="out_len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
@@ -228,13 +228,13 @@ ret  = {type="i64"}
 
 [desc.MMAP]
 nr   = 0x50414D4D
-caps = ["valid_token"]
+caps = ["Memory"]
 args = [{name="hint",type="u64",dir="in"},{name="len",type="usize",dir="in",max="@limits.max_mmap_bytes"},{name="flags",type="u32",dir="in"},{name="addr_out",type="u64*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.MUMP]
 nr   = 0x504D554D
-caps = ["valid_token"]
+caps = ["Memory"]
 args = [{name="addr",type="u64",dir="in"},{name="len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
@@ -276,91 +276,91 @@ ret  = {type="i64"}
 
 [desc.MDLS]
 nr   = 0x534C444D
-caps = ["DeviceEnum"]
+caps = ["valid_token"]
 args = [{name="class",type="u32",dir="in"},{name="buf",type="u8*",dir="out"},{name="count",type="usize",dir="in",max="@limits.max_devices"}]
 ret  = {type="i64"}
 
 [desc.MDCL]
 nr   = 0x4C43444D
-caps = ["Driver"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MDRL]
 nr   = 0x4C52444D
-caps = ["Driver"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MMMP]
 nr   = 0x504D4D4D
-caps = ["Mmio"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"},{name="bar_index",type="u32",dir="in"},{name="length",type="usize",dir="in"},{name="flags",type="u32",dir="in"},{name="vaddr_out",type="u64*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.MMUM]
 nr   = 0x4D554D4D
-caps = ["Mmio"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"},{name="vaddr",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MIRB]
 nr   = 0x4252494D
-caps = ["Irq"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"},{name="claim_epoch",type="u64",dir="in"},{name="vector_count",type="u32",dir="in"},{name="flags",type="u32",dir="in"},{name="slot_base_out",type="u32*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.MIRU]
 nr   = 0x5552494D
-caps = ["Irq"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"},{name="slot_base",type="u32",dir="in"},{name="vector_count",type="u32",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MIRA]
 nr   = 0x4152494D
-caps = ["Irq"]
+caps = ["valid_token"]
 args = [{name="slot",type="u32",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MIRP]
 nr   = 0x5052494D
-caps = ["Irq"]
+caps = ["valid_token"]
 args = [{name="slot",type="u32",dir="in"},{name="seq_out",type="u64*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.MDMM]
 nr   = 0x4D4D444D
-caps = ["Dma"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"},{name="claim_epoch",type="u64",dir="in"},{name="length",type="usize",dir="in"},{name="flags",type="u32",dir="in"},{name="grant_out",type="u8*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.MDMU]
 nr   = 0x554D444D
-caps = ["Dma"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"},{name="grant_id",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MPGT]
 nr   = 0x5447504D
-caps = ["Pio"]
+caps = ["valid_token"]
 args = [{name="device_id",type="u64",dir="in"},{name="claim_epoch",type="u64",dir="in"},{name="port_base",type="u16",dir="in"},{name="port_count",type="u16",dir="in"},{name="grant_out",type="u32*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.MPRD]
 nr   = 0x4452504D
-caps = ["Pio"]
+caps = ["valid_token"]
 args = [{name="grant_id",type="u32",dir="in"},{name="offset",type="u16",dir="in"},{name="width",type="u8",dir="in"},{name="value_out",type="u32*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.MPWR]
 nr   = 0x5257504D
-caps = ["Pio"]
+caps = ["valid_token"]
 args = [{name="grant_id",type="u32",dir="in"},{name="offset",type="u16",dir="in"},{name="width",type="u8",dir="in"},{name="value",type="u32",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MPRL]
 nr   = 0x4C52504D
-caps = ["Pio"]
+caps = ["valid_token"]
 args = [{name="grant_id",type="u32",dir="in"}]
 ret  = {type="i64"}
 
@@ -408,85 +408,85 @@ ret  = {type="i64"}
 
 [desc.MIEP]
 nr   = 0x5045494D
-caps = ["Irq"]
+caps = ["valid_token"]
 args = [{name="event_kind",type="u32",dir="in"},{name="payload",type="u8*",dir="in"},{name="len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MIED]
 nr   = 0x4445494D
-caps = ["IPC"]
+caps = ["valid_token"]
 args = [{name="buf",type="u8*",dir="out"},{name="cap",type="usize",dir="in"},{name="count_out",type="u32*",dir="out"}]
 ret  = {type="i64"}
 
 [desc.APPS]
 nr   = 0x53505041
-caps = ["valid_token"]
+caps = ["Admin"]
 args = [{name="field_id",type="u64",dir="in"},{name="kind",type="u64",dir="in"},{name="value_ptr",type="u64",dir="in"},{name="value_len",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.CDAD]
 nr   = 0x44414443
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="algo",type="u64",dir="in"},{name="key_ptr",type="u64",dir="in"},{name="nonce_ptr",type="u64",dir="in"},{name="frame_ptr",type="u64",dir="in"},{name="frame_len",type="u64",dir="in"},{name="plaintext_ptr",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CEAD]
 nr   = 0x44414543
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="algo",type="u64",dir="in"},{name="key_ptr",type="u64",dir="in"},{name="nonce_ptr",type="u64",dir="in"},{name="frame_ptr",type="u64",dir="in"},{name="frame_len",type="u64",dir="in"},{name="ciphertext_ptr",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CEDP]
 nr   = 0x50444543
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="seed_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CEDS]
 nr   = 0x53444543
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="seed_ptr",type="u64",dir="in"},{name="msg_ptr",type="u64",dir="in"},{name="msg_len",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CHKF]
 nr   = 0x464B4843
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="frame_ptr",type="u64",dir="in"},{name="frame_len",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.CHMC]
 nr   = 0x434D4843
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="key_ptr",type="u64",dir="in"},{name="key_len",type="u64",dir="in"},{name="data_ptr",type="u64",dir="in"},{name="data_len",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CKEC]
 nr   = 0x43454B43
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="data",type="u64",dir="in"},{name="len",type="u64",dir="in"},{name="out",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.CSKS]
 nr   = 0x534B5343
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="sk_ptr",type="u64",dir="in"},{name="digest_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CSPB]
 nr   = 0x42505343
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="sk_ptr",type="u64",dir="in"},{name="out",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CXPK]
 nr   = 0x4B505843
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="private_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
 ret  = {type="i64"}
 
 [desc.CXSH]
 nr   = 0x48535843
-caps = ["valid_token"]
+caps = ["Crypto"]
 args = [{name="private_ptr",type="u64",dir="in"},{name="public_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
 ret  = {type="i64"}
 [desc.MAST]
@@ -503,13 +503,13 @@ ret  = {type="i64"}
 
 [desc.MCLD]
 nr   = 0x444C434D
-caps = ["valid_token"]
+caps = ["CoreExec", "IPC", "Memory"]
 args = [{name="req_ptr",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MCVF]
 nr   = 0x4656434D
-caps = ["valid_token"]
+caps = ["CoreExec", "IPC", "Memory"]
 args = [{name="req_ptr",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"}]
 ret  = {type="i64"}
 [desc.MFTK]
@@ -526,7 +526,7 @@ ret  = {type="i64"}
 
 [desc.MGPD]
 nr   = 0x4450474D
-caps = ["valid_token"]
+caps = ["CoreExec"]
 args = []
 ret  = {type="i64"}
 
@@ -544,19 +544,19 @@ ret  = {type="i64"}
 
 [desc.MIRY]
 nr   = 0x5952494D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="dest_pid",type="u64",dir="in"},{name="buf",type="u64",dir="out"},{name="len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MKAR]
 nr   = 0x52414B4D
-caps = ["valid_token"]
+caps = ["CoreExec"]
 args = [{name="buf",type="u64",dir="out"},{name="len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MKIL]
 nr   = 0x4C494B4D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="pid",type="u64",dir="in"},{name="sig",type="u64",dir="in"}]
 ret  = {type="i64"}
 
@@ -568,7 +568,7 @@ ret  = {type="i64"}
 
 [desc.MOUT]
 nr   = 0x54554F4D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="pid",type="u64",dir="in"},{name="buf_ptr",type="u64",dir="out"},{name="buf_len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
@@ -586,7 +586,7 @@ ret  = {type="i64"}
 
 [desc.MPIN]
 nr   = 0x4E49504D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="pid",type="u64",dir="in"},{name="buf_ptr",type="u64",dir="out"},{name="buf_len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
@@ -598,7 +598,7 @@ ret  = {type="i64"}
 
 [desc.MSOW]
 nr   = 0x574F534D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="user_ptr",type="u64",dir="in"},{name="len",type="u64",dir="in"}]
 ret  = {type="i64"}
 
@@ -610,7 +610,7 @@ ret  = {type="i64"}
 
 [desc.MSRD]
 nr   = 0x4452534D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="buf_ptr",type="u64",dir="out"},{name="buf_len",type="usize",dir="in"}]
 ret  = {type="i64"}
 
@@ -622,13 +622,13 @@ ret  = {type="i64"}
 
 [desc.MSVR]
 nr   = 0x5256534D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="name_ptr",type="u64",dir="in"},{name="name_len",type="usize",dir="in"},{name="port",type="u32",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MSWR]
 nr   = 0x5257534D
-caps = ["valid_token"]
+caps = ["StoreWrite"]
 args = [{name="lba",type="u64",dir="in"},{name="user_ptr",type="u64",dir="in"},{name="len",type="u64",dir="in"}]
 ret  = {type="i64"}
 
@@ -646,7 +646,7 @@ ret  = {type="i64"}
 
 [desc.MTRN]
 nr   = 0x4E52544D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="name_ptr",type="u64",dir="in"},{name="name_len",type="u64",dir="in"},{name="argv_ptr",type="u64",dir="in"},{name="argv_len",type="u64",dir="in"}]
 ret  = {type="i64"}
 
@@ -658,13 +658,13 @@ ret  = {type="i64"}
 
 [desc.MTSP]
 nr   = 0x5053544D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="entry",type="u64",dir="in"},{name="stack",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MWAT]
 nr   = 0x5441574D
-caps = ["valid_token"]
+caps = ["IPC"]
 args = [{name="pid",type="u64",dir="in"},{name="timeout_ms",type="u64",dir="in"}]
 ret  = {type="i64"}
 

@@ -19,7 +19,7 @@ mod call;
 mod emit;
 mod fmt;
 mod manage;
-mod names;
+
 mod run;
 mod summary;
 mod wire;

@@ -33,7 +33,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from check_syscall_abi import read_abi, read_kernel  # noqa: E402
+from check_syscall_abi import read_abi, read_kernel, tags_by_source  # noqa: E402
 
 # Two dispatch families, two spellings. The microkernel matches on SYS_
 # constants, the router matches on SyscallNumber variants, and the crypto and
@@ -143,7 +143,7 @@ def main() -> int:
     ap.add_argument("--root", type=Path, default=Path("."), help="repository root")
     args = ap.parse_args()
 
-    kernel = read_kernel(args.root)
+    kernel = tags_by_source(read_kernel(args.root))
     published, _ = read_abi(args.root)
     arms = dispatch_map(args.root)
     sigs = signatures(args.root)

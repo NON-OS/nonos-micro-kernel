@@ -16,7 +16,7 @@
 
 use alloc::vec::Vec;
 
-use super::names::CAP_NAMES;
+use crate::command::builtin::cap_names::CAP_NAMES;
 use crate::term::util::format_u64;
 
 // Trust tier as the kernel's manifest summary encodes it: 1 for a capsule

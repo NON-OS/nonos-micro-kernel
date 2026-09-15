@@ -37,6 +37,28 @@ jobs:
       - name: Production source hygiene
         run: cargo run --manifest-path nonos-verify/Cargo.toml -- hygiene
 
+  abi-contracts:
+    # abi/ is what a libc or a foreign toolchain reads to learn how to call
+    # this kernel. The checks for it read the tree only and the kernel is
+    # authoritative in every one, so they run on every push. Three published
+    # syscalls sat unreachable for weeks while nothing ran them.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+      - name: Published syscall numbers reach a handler
+        run: python3 scripts/check_syscall_abi.py
+      - name: Published capability bits and groups against the kernel
+        run: python3 scripts/check_caps_abi.py
+      - name: Capability names the screens print against the kernel bits
+        run: python3 scripts/check_userland_caps.py
+      - name: Capability bits against the kernel and its mirrors
+        run: python3 scripts/check_cap_parity.py
+      - name: Service capability constants against the kernel bits
+        run: python3 scripts/check_service_caps.py
+      - name: Attestation parameters live in one place
+        run: python3 scripts/check_attest_params.py
+
   # The committed verification/evidence/EVIDENCE.json is a machine-readable inventory of
   # everything NONOS proves. Regenerate it from the source tree and fail if it
   # has drifted, so the file in the repo is always an accurate, CI-checked

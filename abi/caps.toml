@@ -35,11 +35,21 @@ KEYRING                 = 0x0000_0000_1000_0000
 ENTROPY                 = 0x0000_0000_2000_0000
 APP_INSTALL             = 0x0000_0000_4000_0000
 
+# Named bundles, each the set a class of capsule is actually spawned with in
+# this tree. They named LOG, YIELD, TIME and KSTAT until now, which are not
+# capabilities: logging, yielding, reading the clock and reading the process
+# table are ungated, so those four rights had no bits and the groups described
+# a model the kernel had stopped enforcing.
+#
+# A group is policy rather than something derivable from the enum, so these
+# stay hand written. What keeps them honest is that each is the mask of a real
+# capsule: SERVICE is the keyring's, GRAPHICS_SERVICE is the wallet's without
+# its network and crypto, OPER is the process manager's.
 [groups]
-BASIC   = ["LOG","YIELD","TIME"]
-SERVICE = ["LOG","YIELD","TIME","IPC"]
-OPER    = ["LOG","YIELD","TIME","IPC","KSTAT"]
-GRAPHICS_SERVICE = ["LOG","YIELD","TIME","IPC","GRAPHICS_DISPLAY_QUERY","GRAPHICS_SURFACE_CREATE","GRAPHICS_SURFACE_MAP","GRAPHICS_PRESENT"]
+BASIC   = ["CORE_EXEC","MEMORY"]
+SERVICE = ["CORE_EXEC","MEMORY","IPC"]
+OPER    = ["CORE_EXEC","MEMORY","IPC","PROCESS_CONTROL"]
+GRAPHICS_SERVICE = ["CORE_EXEC","MEMORY","IPC","GRAPHICS_DISPLAY_QUERY","GRAPHICS_SURFACE_CREATE","GRAPHICS_SURFACE_MAP","GRAPHICS_PRESENT"]
 
 [token]
 id_bytes        = 32
@@ -55,9 +65,11 @@ algo = "sha3-256"
 const_time = true
 context = "NONOS_CAP_V1"
 
+# FROM -> TO allowed rights. Every line is a subset of the FROM group, since a
+# holder cannot hand on a right it does not have, and of the TO group, since
+# the point of delegating to a narrower class is that it stays narrower.
 [delegation]
-# FROM -> TO allowed rights (subset)
-BASIC_to_BASIC     = ["LOG","YIELD","TIME"]
-OPER_to_SERVICE    = ["LOG","YIELD","TIME","IPC"]
-OPER_to_BASIC      = ["LOG","YIELD","TIME"]
-SERVICE_to_BASIC   = ["LOG","YIELD","TIME"]
+BASIC_to_BASIC     = ["CORE_EXEC","MEMORY"]
+OPER_to_SERVICE    = ["CORE_EXEC","MEMORY","IPC"]
+OPER_to_BASIC      = ["CORE_EXEC","MEMORY"]
+SERVICE_to_BASIC   = ["CORE_EXEC","MEMORY"]
