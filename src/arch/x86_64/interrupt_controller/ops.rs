@@ -29,12 +29,25 @@ pub fn end_of_interrupt(_ipi: Ipi) {
     apic::eoi();
 }
 
+/*
+ * Both refuse before the local APIC is set up. Its command register is
+ * reached through a mapped base that is zero until then, and a build that
+ * never brings the APIC up (one processor, timer on the RTC) still
+ * broadcasts a stop from the reboot path: that write faulted in ring 0 at
+ * offset 0x300 of nothing, and the restart never happened.
+ */
 pub fn send_ipi(target: u32, ipi: Ipi) -> Result<(), ()> {
+    if !apic::state::is_initialized() {
+        return Err(());
+    }
     apic::ipi_one(target, vector_of(ipi));
     Ok(())
 }
 
 pub fn broadcast_ipi(ipi: Ipi) -> Result<(), ()> {
+    if !apic::state::is_initialized() {
+        return Err(());
+    }
     apic::ipi_others(vector_of(ipi));
     Ok(())
 }
