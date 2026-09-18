@@ -36,8 +36,18 @@ pub fn sys_exit(code: i32) -> i64 {
     let Some(pid) = current_pid() else {
         return ERRNO_INVAL;
     };
-    let _ = code;
     trace_exit(b"enter", pid);
+    // A non-zero code is the one trace a silent capsule leaves: name it.
+    if code != 0 {
+        use crate::sys::serial::{print, print_dec, println};
+        print(b"[EXIT] pid=");
+        print_dec(pid as u64);
+        print(b" code=");
+        print_dec(code as u64);
+        print(b" ");
+        let _ = crate::process::with_process(pid, |pcb| print(pcb.name.lock().as_bytes()));
+        println(b"");
+    }
     crate::process::exit::exit_and_yield(code, false)
 }
 
