@@ -21,13 +21,14 @@ use nonos_libc::{mk_ipc_recv, mk_irq_ack, mk_irq_poll, IrqPollOut};
 use crate::protocol::{
     decode_request, Request, E_INVAL, HDR_LEN, MAX_RW_PAYLOAD_BYTES, OP_CAPACITY,
     OP_CONTROLLER_INFO, OP_FLUSH, OP_HEALTHCHECK, OP_IDENTIFY_CONTROLLER, OP_IDENTIFY_NAMESPACE,
-    OP_READ_BLOCKS, OP_SMART_HEALTH, OP_WRITE_BLOCKS, RESP_HDR_LEN, SERVICE_NAME, STATUS_LEN,
+    OP_READ_BLOCKS, OP_SMART_HEALTH, OP_WRITE_BLOCKS, RESP_HDR_LEN, RW_HEADER_LEN, SERVICE_NAME,
+    STATUS_LEN,
 };
 use crate::server::{error, handlers};
 use crate::setup::Driver;
 
 pub fn run(driver: &mut Driver) -> ! {
-    let rx_len = HDR_LEN + MAX_RW_PAYLOAD_BYTES as usize;
+    let rx_len = HDR_LEN + RW_HEADER_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let tx_len = RESP_HDR_LEN + STATUS_LEN + MAX_RW_PAYLOAD_BYTES as usize;
     let mut rx = vec![0u8; rx_len];
     let mut tx = vec![0u8; tx_len];
@@ -53,7 +54,10 @@ pub fn run(driver: &mut Driver) -> ! {
 
 fn dispatch(driver: &mut Driver, req: &Request, body: &[u8], tx: &mut [u8]) {
     match req.op {
-        OP_HEALTHCHECK | OP_CONTROLLER_INFO | OP_IDENTIFY_CONTROLLER | OP_IDENTIFY_NAMESPACE
+        OP_HEALTHCHECK
+        | OP_CONTROLLER_INFO
+        | OP_IDENTIFY_CONTROLLER
+        | OP_IDENTIFY_NAMESPACE
         | OP_SMART_HEALTH
             if req.payload_len != 0 =>
         {
