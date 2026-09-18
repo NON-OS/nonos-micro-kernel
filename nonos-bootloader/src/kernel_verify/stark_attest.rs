@@ -58,6 +58,7 @@ pub fn verify_kernel_self_attestation(kernel_bytes: &[u8], trailer: &[u8]) -> bo
         &hasher,
         LOG_ROUNDS,
         KERNEL_ATTEST_ROOT,
+        kernel_bytes,
         DEPTH,
         trailer,
         &ctx,

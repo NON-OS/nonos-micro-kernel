@@ -1,8 +1,9 @@
 // NONOS Operating System (AGPL-3.0-or-later)
-//! Enrollment measures every capsule image with a Poseidon sponge over its whole
-//! length. Opening one capsule needs the same committed tree as opening any
-//! other, so the set is measured once and shared. These pin that the shared path
-//! is not a different proof: same root, same trailer bytes, still gate-verifiable.
+//! Enrollment measures every capsule image the way the gate does, BLAKE3 into
+//! one Poseidon permutation. Opening one capsule needs the same committed tree
+//! as opening any other, so the set is measured once and shared. These pin that
+//! the shared path is not a different proof: same root, same trailer bytes,
+//! still gate-verifiable over the image it was issued for.
 
 use crate::crypto::stark::air::{
     build_attestation_trailer, build_attestation_trailer_from_set, enroll_policy_root,
@@ -47,7 +48,7 @@ fn committing_once_gives_the_same_root() {
     let imgs = images();
     let refs: Vec<&[u8]> = imgs.iter().map(|v| v.as_slice()).collect();
     let h = hasher();
-    assert_eq!(MeasuredSet::commit(&h, &refs).root(), enroll_policy_root(&h, &refs));
+    assert_eq!(MeasuredSet::commit_hybrid(&h, &refs).root(), enroll_policy_root(&h, &refs));
 }
 
 #[test]
@@ -55,7 +56,7 @@ fn the_shared_set_yields_byte_identical_trailers() {
     let imgs = images();
     let refs: Vec<&[u8]> = imgs.iter().map(|v| v.as_slice()).collect();
     let h = hasher();
-    let set = MeasuredSet::commit(&h, &refs);
+    let set = MeasuredSet::commit_hybrid(&h, &refs);
     for i in 0..N {
         let ctx = context(i as u64);
         let slow = build_attestation_trailer(
@@ -87,7 +88,7 @@ fn every_shared_trailer_still_verifies_against_the_root() {
     let imgs = images();
     let refs: Vec<&[u8]> = imgs.iter().map(|v| v.as_slice()).collect();
     let h = hasher();
-    let set = MeasuredSet::commit(&h, &refs);
+    let set = MeasuredSet::commit_hybrid(&h, &refs);
     let root = root_bytes(set.root());
     for i in 0..N {
         let ctx = context(i as u64);
@@ -106,6 +107,7 @@ fn every_shared_trailer_still_verifies_against_the_root() {
                 &h,
                 LOG_ROUNDS,
                 root,
+                &imgs[i],
                 DEPTH,
                 &trailer,
                 &ctx,
@@ -123,7 +125,7 @@ fn a_trailer_does_not_verify_under_another_capsules_context() {
     let imgs = images();
     let refs: Vec<&[u8]> = imgs.iter().map(|v| v.as_slice()).collect();
     let h = hasher();
-    let set = MeasuredSet::commit(&h, &refs);
+    let set = MeasuredSet::commit_hybrid(&h, &refs);
     let root = root_bytes(set.root());
     let trailer = build_attestation_trailer_from_set(
         &h,
@@ -140,6 +142,7 @@ fn a_trailer_does_not_verify_under_another_capsules_context() {
             &h,
             LOG_ROUNDS,
             root,
+            &imgs[1],
             DEPTH,
             &trailer,
             &context(1),

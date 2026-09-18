@@ -27,7 +27,7 @@ use crate::crypto::stark::field::Fp;
 use crate::security::capsule_attest::AttestError;
 // One definition, in crate::crypto::stark. Prover and verifier must
 // agree exactly; a drift downward in queries or grinding still verifies.
-use crate::crypto::stark::attest_params::{GRIND_BITS, LOG_ROUNDS, N_QUERIES, EXTRA_BLOWUP_BITS as EXTRA_BLOWUP_BITS};
+use crate::crypto::stark::attest_params::{EXTRA_BLOWUP_BITS, GRIND_BITS, LOG_ROUNDS, N_QUERIES};
 
 const DEPTH: usize = 8;
 const BOOT_EPOCH: u64 = 1;
@@ -52,6 +52,7 @@ pub fn verify_kernel_self_attestation(
         &hasher,
         LOG_ROUNDS,
         root,
+        kernel_image,
         DEPTH,
         trailer,
         &ctx,

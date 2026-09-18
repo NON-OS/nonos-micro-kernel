@@ -275,7 +275,8 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
 name = "nonos-stark"
-version = "0.2.0"
+version = "0.1.0"
+source = "git+https://github.com/NON-OS/zkolang.git?rev=beeca35bb417444d888dda28e241974a69305b99#beeca35bb417444d888dda28e241974a69305b99"
 dependencies = [
  "blake3",
 ]

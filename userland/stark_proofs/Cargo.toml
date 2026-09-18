@@ -12,7 +12,7 @@ edition = "2021"
 path = "src/lib.rs"
 
 [dependencies]
-nonos-stark = { path = "../../stark-attest/crates/stark-core" }
+nonos-stark = { git = "https://github.com/NON-OS/zkolang.git", rev = "beeca35bb417444d888dda28e241974a69305b99" }
 
 [dev-dependencies]
 rayon = "1"

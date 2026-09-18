@@ -28,6 +28,7 @@ pub fn verify_kernel_attestation(root: &[u8; 32], kernel_bytes: &[u8], trailer: 
         &hasher,
         LOG_ROUNDS,
         *root,
+        kernel_bytes,
         DEPTH,
         trailer,
         &kernel_context(kernel_bytes),

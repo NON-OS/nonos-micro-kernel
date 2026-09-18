@@ -18,4 +18,4 @@ curve25519-dalek = "4.1.3"
 nonos-attestation-circuit = { path = "../nonos-attestation-circuit" }
 
 [dev-dependencies]
-nonos-stark = { path = "../../../stark-attest/crates/stark-core" }
+nonos-stark = { git = "https://github.com/NON-OS/zkolang.git", rev = "beeca35bb417444d888dda28e241974a69305b99" }

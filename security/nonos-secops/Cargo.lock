@@ -199,7 +199,7 @@ dependencies = [
 
 [[package]]
 name = "embed-zk-proof"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "blake3",
@@ -247,7 +247,7 @@ checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
 
 [[package]]
 name = "nonos-attestation-circuit"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "blake3",
  "clap",
@@ -257,7 +257,7 @@ dependencies = [
 
 [[package]]
 name = "nonos-secops"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "blake3",
  "embed-zk-proof",
@@ -267,6 +267,7 @@ dependencies = [
 [[package]]
 name = "nonos-stark"
 version = "0.1.0"
+source = "git+https://github.com/NON-OS/zkolang.git?rev=beeca35bb417444d888dda28e241974a69305b99#beeca35bb417444d888dda28e241974a69305b99"
 dependencies = [
  "blake3",
 ]

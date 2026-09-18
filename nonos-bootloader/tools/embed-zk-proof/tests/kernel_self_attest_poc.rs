@@ -27,15 +27,14 @@ use embed_zk_proof::{assemble_attested_image, SignedKernel};
 use nonos_stark::air::{
     build_attestation_trailer, enroll_policy_root, verify_membership_trailer, Poseidon, RATE,
 };
+use nonos_stark::attest_params::{EXTRA_BLOWUP_BITS, GRIND_BITS, LOG_ROUNDS, N_QUERIES};
 use nonos_stark::field::Fp;
 
-// The constants the bootloader's stark_attest.rs and the enrollment tool agree on.
-const LOG_ROUNDS: u32 = 3;
+// The tree shape the bootloader's stark_attest.rs and the enrollment tool
+// agree on. The soundness parameters come from the one place both read, so
+// this test cannot pass at a strength the boot chain does not run.
 const DEPTH: usize = 8;
 const LEAVES: usize = 1 << DEPTH;
-const N_QUERIES: usize = 32;
-const GRIND_BITS: u32 = 16;
-const EXTRA_BLOWUP_BITS: u32 = 3;
 const BOOT_EPOCH: u64 = 1;
 const PAD_IMAGE: &[u8] = b"\x00NONOS-POLICY-RESERVED-SLOT-v1";
 
@@ -57,14 +56,21 @@ fn root_to_bytes(root: [Fp; RATE]) -> [u8; 32] {
     out
 }
 
-/// Enroll a kernel image: pad the tree to the gate depth, commit, and build the
-/// trailer bound to the kernel context. Returns the serialized root and trailer.
-fn enroll_kernel(kernel_bytes: &[u8]) -> ([u8; 32], Vec<u8>) {
-    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
+/// The policy set a kernel is enrolled in: the kernel at slot 0, the tree padded
+/// to the gate depth with the reserved slot.
+fn policy_set(kernel_bytes: &[u8]) -> Vec<&[u8]> {
     let mut images: Vec<&[u8]> = vec![kernel_bytes];
     while images.len() < LEAVES {
         images.push(PAD_IMAGE);
     }
+    images
+}
+
+/// Enroll a kernel image: pad the tree to the gate depth, commit, and build the
+/// trailer bound to the kernel context. Returns the serialized root and trailer.
+fn enroll_kernel(kernel_bytes: &[u8]) -> ([u8; 32], Vec<u8>) {
+    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
+    let images = policy_set(kernel_bytes);
     let root = root_to_bytes(enroll_policy_root(&hasher, &images));
     let ctx = kernel_context(kernel_bytes);
     let trailer = build_attestation_trailer(
@@ -96,6 +102,7 @@ fn boot_verify(root: &[u8; 32], kernel_bytes: &[u8], trailer: &[u8]) -> bool {
         &hasher,
         LOG_ROUNDS,
         *root,
+        kernel_bytes,
         DEPTH,
         trailer,
         &kernel_context(kernel_bytes),
@@ -177,6 +184,34 @@ fn attack_swap_a_foreign_kernel_with_a_stolen_trailer() {
     assert!(
         !boot_verify(&root, &parsed_kernel, &parsed_proof),
         "a foreign kernel carrying a stolen trailer must be rejected"
+    );
+}
+
+#[test]
+fn attack_mint_a_trailer_over_the_genuine_kernels_public_witness() {
+    // An attacker holds the genuine kernel image and its trailer, so they hold
+    // the enrolled leaf and its path, both public. They mint a fresh proof over
+    // that witness under the foreign kernel's own context and embed it. Before
+    // the gate measured the image itself, this booted.
+    let genuine = b"the genuine enrolled kernel code";
+    let (root, _) = enroll_kernel(genuine);
+    let foreign = b"a malicious kernel that was never enrolled".to_vec();
+    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
+    let minted = build_attestation_trailer(
+        &hasher,
+        LOG_ROUNDS,
+        &policy_set(genuine),
+        0,
+        &kernel_context(&foreign),
+        N_QUERIES,
+        GRIND_BITS,
+        EXTRA_BLOWUP_BITS,
+    );
+    let image = assemble_attested_image(&signed_kernel(&foreign), minted).data;
+    let (parsed_kernel, parsed_proof) = parse_footer(&image);
+    assert!(
+        !boot_verify(&root, &parsed_kernel, &parsed_proof),
+        "a trailer minted over a public witness must not attest a foreign kernel"
     );
 }
 

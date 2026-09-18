@@ -18,8 +18,9 @@
 //! policy tree, and emits each image's transparent STARK attestation trailer
 //! bound to its identity. The tree is padded to the gate's fixed depth with a
 //! domain-separated slot that no ELF can occupy, the root is deterministic, and
-//! every emitted trailer is re-checked here with the exact parse the kernel
-//! spawn gate runs, so a trailer that would not verify at boot fails at build.
+//! every emitted trailer is re-checked here with the verify the kernel spawn
+//! gate runs, over the image it was issued for, so a trailer that would not
+//! verify at boot fails at build.
 
 use std::env;
 use std::fs;
@@ -28,8 +29,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
 use nonos_stark::air::{
-    build_attestation_trailer_from_set, deserialize_proof_ext, stark_verify_ext_blown_bound,
-    MeasuredSet, MerkleMembership, Poseidon, RATE,
+    build_attestation_trailer_from_set, verify_membership_trailer, MeasuredSet, Poseidon, RATE,
 };
 use nonos_stark::field::Fp;
 // One definition, in nonos_stark. Prover and verifier must
@@ -42,7 +42,6 @@ const POLICY_EPOCH: u64 = 1;
 const BOOT_EPOCH: u64 = 1;
 const POLICY_TREE_DEPTH: usize = 8;
 const LEAVES: usize = 1 << POLICY_TREE_DEPTH;
-const MAGIC: &[u8; 8] = b"NZKSTRK1";
 
 /// The padding image for unused policy slots. It begins with a byte no ELF
 /// starts with, so a real capsule can never measure to a padding leaf.
@@ -65,17 +64,6 @@ fn kernel_context(image: &[u8]) -> Vec<u8> {
     ctx
 }
 
-/// Four little-endian words into a rate-width digest, as the gate reads a root.
-fn to_rate(bytes: &[u8]) -> [Fp; RATE] {
-    let mut out = [Fp::ZERO; RATE];
-    for (i, lane) in out.iter_mut().enumerate() {
-        let mut w = [0u8; 8];
-        w.copy_from_slice(&bytes[i * 8..i * 8 + 8]);
-        *lane = Fp::from_u64(u64::from_le_bytes(w));
-    }
-    out
-}
-
 /// A rate-width root serialized as the gate expects to read it back.
 fn root_to_bytes(root: [Fp; RATE]) -> [u8; 32] {
     let mut out = [0u8; 32];
@@ -95,36 +83,23 @@ fn padded_images<'a>(images: &[&'a [u8]]) -> Vec<&'a [u8]> {
     v
 }
 
-/// The kernel spawn gate's exact parse and verify, run here so an emitted
-/// trailer that would be refused at boot is caught now. Returns the verdict.
-fn gate_verify(root_bytes: &[u8; 32], trailer: &[u8], context: &[u8]) -> bool {
-    let depth = POLICY_TREE_DEPTH;
-    let dir_bytes = depth.div_ceil(8);
-    let sib_end = 9 + depth * 32;
-    if trailer.len() < sib_end + dir_bytes
-        || &trailer[0..8] != MAGIC
-        || trailer[8] as usize != depth
-    {
-        return false;
-    }
-    let mut siblings = Vec::with_capacity(depth);
-    for i in 0..depth {
-        siblings.push(to_rate(&trailer[9 + i * 32..9 + i * 32 + 32]));
-    }
-    let dirs = &trailer[sib_end..sib_end + dir_bytes];
-    let directions: Vec<bool> = (0..depth).map(|i| (dirs[i / 8] >> (i % 8)) & 1 == 1).collect();
-    let Some(proof) = deserialize_proof_ext(&trailer[sib_end + dir_bytes..]) else {
-        return false;
-    };
-    let root = to_rate(root_bytes);
-    let air = MerkleMembership::new(
-        Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]),
+/// The kernel spawn gate's verify, the crate's own rather than a copy of its
+/// parse, run here so an emitted trailer that would be refused at boot is
+/// caught now. The gate measures the image it admits, so the image goes in.
+fn gate_verify(root: &[u8; 32], image: &[u8], trailer: &[u8], context: &[u8]) -> bool {
+    let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
+    verify_membership_trailer(
+        &hasher,
         LOG_ROUNDS,
-        root,
-        siblings,
-        directions,
-    );
-    stark_verify_ext_blown_bound(&air, &proof, N_QUERIES, GRIND_BITS, EXTRA_BLOWUP, context)
+        *root,
+        image,
+        POLICY_TREE_DEPTH,
+        trailer,
+        context,
+        N_QUERIES,
+        GRIND_BITS,
+        EXTRA_BLOWUP,
+    )
 }
 
 /// Enroll `images` under one policy root and emit a trailer for each, bound to
@@ -134,9 +109,9 @@ fn enroll(images: &[&[u8]], contexts: &[Vec<u8>]) -> ([u8; 32], Vec<Vec<u8>>) {
     assert_eq!(images.len(), contexts.len(), "one context per image");
     let hasher = Poseidon::new(LOG_ROUNDS, [Fp::ZERO; RATE]);
     let padded = padded_images(images);
-    // Measure and commit once. Every trailer opens this same tree, so measuring
-    // per capsule would hash the whole image set once per capsule.
-    let set = MeasuredSet::commit(&hasher, &padded);
+    // Measure and commit once, the hybrid way the gate measures. Every trailer
+    // opens this same tree, so measuring per capsule would do the set N times.
+    let set = MeasuredSet::commit_hybrid(&hasher, &padded);
     let root = root_to_bytes(set.root());
 
     let n = contexts.len();
@@ -163,7 +138,7 @@ fn enroll(images: &[&[u8]], contexts: &[Vec<u8>]) -> ([u8; 32], Vec<Vec<u8>>) {
                             GRIND_BITS,
                             EXTRA_BLOWUP,
                         );
-                        if !gate_verify(&root, &trailer, ctx) {
+                        if !gate_verify(&root, images[i], &trailer, ctx) {
                             eprintln!("enroll: trailer {i} failed the gate self-check");
                             exit(2);
                         }
@@ -200,12 +175,16 @@ fn selftest() {
     let (root, trailers) = enroll(&images, &contexts);
 
     for (i, trailer) in trailers.iter().enumerate() {
-        assert!(gate_verify(&root, trailer, &contexts[i]), "enrolled image {i} refused");
+        assert!(gate_verify(&root, images[i], trailer, &contexts[i]), "enrolled image {i} refused");
     }
     let wrong = capsule_context(&cap_a, 0x0000_0000_0000_00FF);
-    assert!(!gate_verify(&root, &trailers[0], &wrong), "wrong capability context accepted");
-    let rogue = capsule_context(b"capsule:rogue never enrolled", 0x7);
-    assert!(!gate_verify(&root, &trailers[0], &rogue), "rogue measurement accepted");
+    assert!(!gate_verify(&root, &cap_a, &trailers[0], &wrong), "wrong capability context accepted");
+    let rogue_image = b"capsule:rogue never enrolled";
+    let rogue = capsule_context(rogue_image, 0x7);
+    assert!(!gate_verify(&root, rogue_image, &trailers[0], &rogue), "rogue image accepted");
+    // A trailer for cap_a, presented for cap_b under cap_b's own context: the
+    // leaf the gate measures is not the one the proof opens.
+    assert!(!gate_verify(&root, &cap_b, &trailers[0], &contexts[1]), "neighbour's trailer accepted");
 
     println!("selftest OK: {} images enrolled under root {}", images.len(), hex(&root));
 }
@@ -302,7 +281,7 @@ fn verify_capsules(root_path: &str, specs: &[String]) {
         let image = read(parts[1]);
         let trailer = read(parts[2]);
         let ctx = capsule_context(&image, caps);
-        if gate_verify(&root, &trailer, &ctx) {
+        if gate_verify(&root, &image, &trailer, &ctx) {
             println!("  ok    {}", parts[1]);
         } else {
             println!("  FAIL  {}", parts[1]);
@@ -334,7 +313,7 @@ fn verify_kernel(root_path: &str, image_path: &str, trailer_path: &str) {
     let image = read(image_path);
     let trailer = read(trailer_path);
     let ctx = kernel_context(&image);
-    if gate_verify(&root, &trailer, &ctx) {
+    if gate_verify(&root, &image, &trailer, &ctx) {
         println!("verified kernel self-attestation under root {}", hex(&root));
     } else {
         eprintln!("kernel self-attestation FAILED under root {}", hex(&root));
