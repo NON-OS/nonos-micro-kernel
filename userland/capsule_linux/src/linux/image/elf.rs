@@ -18,8 +18,11 @@
 //! x86_64 image. Parsing lives here and not in the kernel: a malformed
 //! header is this capsule's problem and nobody else's.
 
-use super::phdr::Phdr;
-use super::read::{u16v, u32v, u64v};
+use super::read::{u16v, u64v};
+
+/// A shared object, which is also what a position independent
+/// executable and every dynamic linker is.
+pub const ET_DYN: u16 = 3;
 
 pub const PT_LOAD: u32 = 1;
 pub const PT_INTERP: u32 = 3;
@@ -28,10 +31,11 @@ pub const PF_W: u32 = 2;
 
 pub struct Elf<'a> {
     pub bytes: &'a [u8],
+    pub kind: u16,
     pub entry: u64,
-    phoff: u64,
-    phentsize: u16,
-    phnum: u16,
+    pub phoff: u64,
+    pub phentsize: u16,
+    pub(super) phnum: u16,
 }
 
 impl<'a> Elf<'a> {
@@ -46,6 +50,7 @@ impl<'a> Elf<'a> {
         }
         Some(Elf {
             bytes,
+            kind: u16v(bytes, 16)?,
             entry: u64v(bytes, 24)?,
             phoff: u64v(bytes, 32)?,
             phentsize: u16v(bytes, 54)?,
@@ -53,19 +58,4 @@ impl<'a> Elf<'a> {
         })
     }
 
-    pub fn phdr(&self, index: u16) -> Option<Phdr> {
-        let at = (self.phoff + index as u64 * self.phentsize as u64) as usize;
-        Some(Phdr {
-            kind: u32v(self.bytes, at)?,
-            flags: u32v(self.bytes, at + 4)?,
-            offset: u64v(self.bytes, at + 8)?,
-            vaddr: u64v(self.bytes, at + 16)?,
-            filesz: u64v(self.bytes, at + 32)?,
-            memsz: u64v(self.bytes, at + 40)?,
-        })
-    }
-
-    pub fn phnum(&self) -> u16 {
-        self.phnum
-    }
 }

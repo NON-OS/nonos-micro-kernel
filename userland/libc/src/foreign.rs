@@ -20,14 +20,9 @@
 
 use crate::syscall::{
     call_raw, N_MK_FOREIGN_REPLY, N_MK_FOREIGN_SPAWN, N_MK_FOREIGN_START, N_MK_FOREIGN_WAIT,
-    N_MK_PEER_COPY, N_MK_PEER_MAP,
 };
 
 pub use crate::foreign_frame::ForeignFrame;
-
-/// Pages of a guest may be written, and may be executed.
-pub const PEER_PROT_WRITE: u64 = 1 << 0;
-pub const PEER_PROT_EXEC: u64 = 1 << 1;
 
 /// An empty, capability-free process supervised by this one. Returns its
 /// pid, or a negative errno.
@@ -54,21 +49,4 @@ pub fn mk_foreign_wait(out: &mut ForeignFrame, timeout_ms: u64) -> i64 {
 /// Answer one parked guest with the value its `rax` receives.
 pub fn mk_foreign_reply(pid: u32, value: u64) -> i64 {
     call_raw(N_MK_FOREIGN_REPLY, [pid as u64, value, 0, 0, 0, 0])
-}
-
-/// Back a span of a guest's address space with fresh zeroed frames.
-pub fn mk_peer_map(pid: u32, addr: u64, len: u64, prot: u64) -> i64 {
-    call_raw(N_MK_PEER_MAP, [pid as u64, addr, len, prot, 0, 0])
-}
-
-/// Copy into a guest this process supervises.
-pub fn mk_peer_write(pid: u32, guest_addr: u64, src: &[u8]) -> i64 {
-    let args = [pid as u64, guest_addr, src.as_ptr() as u64, src.len() as u64, 1, 0];
-    call_raw(N_MK_PEER_COPY, args)
-}
-
-/// Copy out of a guest this process supervises.
-pub fn mk_peer_read(pid: u32, guest_addr: u64, dst: &mut [u8]) -> i64 {
-    let args = [pid as u64, guest_addr, dst.as_mut_ptr() as u64, dst.len() as u64, 0, 0];
-    call_raw(N_MK_PEER_COPY, args)
 }

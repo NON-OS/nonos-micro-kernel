@@ -14,16 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `brk`, `mmap` and `munmap`. The addresses are chosen here because a
+//! `brk` and `munmap`. The addresses are chosen here because a
 //! Linux program expects a Linux address space, and the kernel only ever
 //! maps the pages it is told to.
 
 use crate::linux::abi::errno;
 use crate::linux::guest::{page_up, Guest};
-
-/// The flag bit that says a mapping is backed by nothing but zeroes.
-const MAP_ANONYMOUS: u64 = 0x20;
-const PROT_EXEC: u64 = 4;
 
 /// `brk(0)` reports the break; any other value moves it and reports where
 /// it landed, which is Linux's contract and not an error channel.
@@ -40,27 +36,6 @@ pub fn brk(guest: &mut Guest, want: u64) -> u64 {
     }
     guest.brk = want;
     errno::ok(guest.brk)
-}
-
-/// Anonymous mappings only. A file-backed mapping needs the file layer and
-/// is refused rather than quietly handed back zeroed pages, which is the
-/// failure that would look like data corruption later.
-pub fn mmap(guest: &mut Guest, addr: u64, len: u64, prot: u64, flags: u64) -> u64 {
-    if len == 0 {
-        return errno::fail(errno::EINVAL);
-    }
-    if flags & MAP_ANONYMOUS == 0 {
-        return errno::fail(errno::ENOSYS);
-    }
-    let span = page_up(len);
-    let at = if addr == 0 { guest.mmap_next } else { addr };
-    if guest.map(at, span, true, prot & PROT_EXEC != 0) < 0 {
-        return errno::fail(errno::ENOMEM);
-    }
-    if addr == 0 {
-        guest.mmap_next += span;
-    }
-    errno::ok(at)
 }
 
 /// Accepted and remembered as unmapped only in the sense that the guest

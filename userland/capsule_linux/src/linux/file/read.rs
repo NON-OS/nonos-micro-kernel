@@ -56,7 +56,7 @@ fn take(guest: &mut Guest, fd: u64, len: u64) -> Result<alloc::vec::Vec<u8>, u64
     }
     let want = len.min(MAX_IO).min(entry.size - entry.offset);
     let at = entry.offset;
-    /* Opened to write only: Linux answers EBADF, not end of file. */
+    // Opened to write only: Linux answers EBADF, not end of file.
     let Some(stream) = entry.stream.as_mut() else {
         return Err(errno::fail(errno::EBADF));
     };

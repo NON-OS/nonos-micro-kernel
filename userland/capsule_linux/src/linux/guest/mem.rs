@@ -23,7 +23,7 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use nonos_libc::{mk_peer_map, mk_peer_read, mk_peer_write, PEER_PROT_EXEC, PEER_PROT_WRITE};
+use nonos_libc::peer::{mk_peer_map, mk_peer_read, mk_peer_write, PEER_PROT_EXEC, PEER_PROT_WRITE};
 
 use super::handle::Guest;
 

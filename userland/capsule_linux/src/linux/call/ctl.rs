@@ -54,8 +54,10 @@ pub fn fcntl(guest: &Guest, fd: u64, cmd: u64) -> u64 {
          */
         F_GETFD | F_SETFD | F_SETFL => errno::ok(0),
         F_GETFL => errno::ok(2),
-        /* Duplication needs a second handle on the server, which the
-         * store does not offer yet. Refused rather than aliased. */
+        /*
+         * Duplication needs a second handle on the server, which the
+         * store does not offer yet. Refused rather than aliased.
+         */
         F_DUPFD => errno::fail(errno::ENOSYS),
         _ => errno::fail(errno::EINVAL),
     }

@@ -51,7 +51,7 @@ fn console(guest: &Guest, buf: u64, len: u64) -> u64 {
 
 pub fn read(guest: &mut Guest, fd: u64, buf: u64, len: u64) -> u64 {
     match guest.fds.get(fd as usize).map(|f| &f.kind) {
-        /* Nothing is typed at a guest yet, and end of file is the truth. */
+        // Nothing is typed at a guest yet, and end of file is the truth.
         Some(Kind::Stdin) => errno::ok(0),
         Some(Kind::File) => file::read(guest, fd, buf, len),
         Some(Kind::Dir) => errno::fail(errno::EISDIR),

@@ -23,6 +23,7 @@ mod file;
 mod guest;
 mod image;
 mod serve;
+mod source;
 mod start;
 
 pub use start::run;

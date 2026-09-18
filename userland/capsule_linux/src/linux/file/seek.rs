@@ -30,7 +30,7 @@ pub fn lseek(guest: &mut Guest, fd: u64, offset: u64, whence: u64) -> u64 {
         return errno::fail(errno::EBADF);
     };
     if entry.kind != Kind::File {
-        /* A pipe or a console has no position, which Linux calls ESPIPE. */
+        // A pipe or a console has no position, which Linux calls ESPIPE.
         return errno::fail(errno::ESPIPE);
     }
     let delta = offset as i64;

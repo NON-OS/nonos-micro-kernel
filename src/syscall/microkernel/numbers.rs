@@ -76,6 +76,8 @@ pub const SYS_FOREIGN_REPLY: u64 = tag4(b"MFRP");
 pub const SYS_PEER_MAP: u64 = tag4(b"MPMP");
 /// Copy bytes between the caller and a guest it supervises.
 pub const SYS_PEER_COPY: u64 = tag4(b"MPCP");
+/// Set the protection of pages a guest already has.
+pub const SYS_PEER_PROTECT: u64 = tag4(b"MPPT");
 /// Ask to enrol a signing root so software built here runs here. Prints a
 /// confirmation code; enrols nothing on its own.
 pub const SYS_DEV_ROOT_REQUEST: u64 = tag4(b"MDRQ");

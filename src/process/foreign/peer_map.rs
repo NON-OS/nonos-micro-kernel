@@ -31,7 +31,7 @@ fn span_ok(addr: u64, len: u64) -> bool {
     len != 0 && len <= MAX_SPAN && addr % PAGE == 0 && addr.checked_add(len).is_some()
 }
 
-fn perms_of(prot: u64) -> PagePermissions {
+pub(super) fn perms_of(prot: u64) -> PagePermissions {
     let mut perms = PagePermissions::READ | PagePermissions::USER;
     if prot & PROT_WRITE != 0 {
         perms = perms | PagePermissions::WRITE;

@@ -14,48 +14,41 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The stack a Linux program expects to wake up on: argc, then argv, then
-//! the environment, then the auxiliary vector, each list ended by a null.
+
+//! The stack a Linux program wakes up on: argc, then argv, then the
+//! environment, then the auxiliary vector, each list ended by a null.
 //! A C runtime reads all four before `main` and crashes without them.
+//! The layout is fixed by the System V supplement, not by us.
 
 use alloc::vec::Vec;
 
+use super::auxv::pairs;
+use super::loaded::Loaded;
 use crate::linux::guest::Guest;
 
-pub const AT_NULL: u64 = 0;
-pub const AT_PAGESZ: u64 = 6;
-pub const AT_ENTRY: u64 = 9;
-pub const AT_UID: u64 = 11;
-pub const AT_EUID: u64 = 12;
-pub const AT_GID: u64 = 13;
-pub const AT_EGID: u64 = 14;
+/// Sixteen bytes a C runtime turns into its stack guard.
+const RANDOM_LEN: u64 = 16;
 
-/// Build the initial stack in `guest` and return the `rsp` it starts on.
-/// The layout is fixed by the System V supplement, not by us.
-pub fn build(guest: &Guest, top: u64, entry: u64) -> Option<u64> {
-    let mut words: Vec<u64> = Vec::new();
-    /*
-     * One argument, no environment. The strings go above the vector and
-     * are pointed at from it, so the whole block is written once and the
-     * guest sees a stack indistinguishable from the one Linux builds.
-     */
-    let name = b"guest\0";
-    let name_at = top - name.len() as u64;
-    words.push(1);
-    words.push(name_at);
-    words.push(0);
-    words.push(0);
-    for (key, value) in
-        [(AT_PAGESZ, 4096), (AT_ENTRY, entry), (AT_UID, 0), (AT_EUID, 0), (AT_GID, 0), (AT_EGID, 0)]
-    {
-        words.push(key);
-        words.push(value);
-    }
-    words.push(AT_NULL);
-    words.push(0);
+pub fn build(
+    guest: &Guest,
+    top: u64,
+    image: &Loaded,
+    interp_base: u64,
+    argv0: &[u8],
+) -> Option<u64> {
+    let name_at = top - (argv0.len() as u64 + 1);
+    let random_at = (name_at - RANDOM_LEN) & !0x0F;
+    let mut words: Vec<u64> = alloc::vec![1, name_at, 0, 0];
+    words.extend(pairs(image, interp_base, random_at, name_at));
     let bytes = words.len() as u64 * 8;
-    let rsp = (name_at - bytes) & !0xF;
-    if guest.write(name_at, name) < 0 {
+    let rsp = (random_at - bytes) & !0x0F;
+
+    let mut name = argv0.to_vec();
+    name.push(0);
+    if guest.write(name_at, &name) < 0 {
+        return None;
+    }
+    if guest.write(random_at, &random()?) < 0 {
         return None;
     }
     let mut blob: Vec<u8> = Vec::with_capacity(bytes as usize);
@@ -66,4 +59,15 @@ pub fn build(guest: &Guest, top: u64, entry: u64) -> Option<u64> {
         return None;
     }
     Some(rsp)
+}
+
+/// Entropy for the guard comes from the system, never from a constant: a
+/// fixed value here would make every guest's stack guard the same and
+/// the protection worth nothing.
+fn random() -> Option<[u8; RANDOM_LEN as usize]> {
+    let mut out = [0u8; RANDOM_LEN as usize];
+    match nonos_libc::crypto_random(out.as_mut_ptr(), out.len()) {
+        n if n < 0 => None,
+        _ => Some(out),
+    }
 }

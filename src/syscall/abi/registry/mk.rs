@@ -96,6 +96,7 @@ pub(super) const ENTRIES: &[AbiEntry] = &[
     e(b"MFRP", SyscallNumber::MkForeignReply, "MkForeignReply"),
     e(b"MPMP", SyscallNumber::MkPeerMap, "MkPeerMap"),
     e(b"MPCP", SyscallNumber::MkPeerCopy, "MkPeerCopy"),
+    e(b"MPPT", SyscallNumber::MkPeerProtect, "MkPeerProtect"),
     e(b"MTRN", SyscallNumber::MkToolRun, "MkToolRun"),
     e(b"MSOW", SyscallNumber::MkStdoutWrite, "MkStdoutWrite"),
     e(b"MSWR", SyscallNumber::MkStoreWrite, "MkStoreWrite"),

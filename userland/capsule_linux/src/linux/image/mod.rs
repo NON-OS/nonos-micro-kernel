@@ -17,11 +17,18 @@
 //! Reading a Linux executable and putting it where a Linux program
 //! expects to find itself.
 
+mod auxv;
 mod elf;
+mod elf_phdr;
+mod interp;
 mod load;
+mod loaded;
 mod phdr;
 mod read;
+mod segment;
 mod stack;
 
-pub use load::load;
+pub use interp::program;
+pub use load::load_at;
+pub use loaded::{LoadError, Loaded};
 pub use stack::build;

@@ -76,6 +76,7 @@ MFWT = 0x5457464D
 MFRP = 0x5052464D
 MPMP = 0x504D504D
 MPCP = 0x5043504D
+MPPT = 0x5450504D
 MIRW = 0x5752494D
 MIRY = 0x5952494D
 MKAR = 0x52414B4D
@@ -643,6 +644,12 @@ ret  = {type="i64"}
 nr   = 0x5043504D
 caps = ["ForeignExec"]
 args = [{name="pid",type="u32",dir="in"},{name="guest_addr",type="u64",dir="in"},{name="buf",type="u8*",dir="inout"},{name="len",type="u64",dir="in"},{name="to_guest",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MPPT]
+nr   = 0x5450504D
+caps = ["ForeignExec"]
+args = [{name="pid",type="u32",dir="in"},{name="addr",type="u64",dir="in"},{name="len",type="u64",dir="in"},{name="prot",type="u64",dir="in"}]
 ret  = {type="i64"}
 
 [desc.MSPI]

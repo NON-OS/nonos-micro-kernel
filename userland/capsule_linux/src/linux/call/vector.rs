@@ -44,7 +44,7 @@ pub fn writev(guest: &mut Guest, fd: u64, iov: u64, count: u64) -> u64 {
         }
         let result = super::io::write(guest, fd, base, len);
         if (result as i64) < 0 {
-            /* A failure after a partial write is that partial count. */
+            // A failure after a partial write is that partial count.
             return if written == 0 { result } else { errno::ok(written) };
         }
         written += result;

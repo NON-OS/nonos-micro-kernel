@@ -14,60 +14,42 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Laying a program's segments into a guest's address space.
+
+//! Laying an image's segments into a guest's address space.
 //!
-//! The kernel maps pages on request and copies bytes on request; deciding
-//! which pages and which bytes is the personality's job, because the
+//! The kernel maps pages on request and copies bytes on request; which
+//! pages and which bytes is the personality's business, because the
 //! format is the personality's knowledge.
 
-use super::elf::{Elf, PF_W, PF_X, PT_INTERP, PT_LOAD};
-use super::phdr::Phdr;
+use super::elf::{Elf, ET_DYN, PF_W, PF_X, PT_INTERP, PT_LOAD};
+use super::loaded::{LoadError, Loaded};
+use super::segment::{name, segment};
 use crate::linux::guest::Guest;
 
-pub enum LoadError {
-    NotElf,
-    Dynamic,
-    Map,
-    Copy,
-}
-
-/// Map every `PT_LOAD` and return the entry point. A dynamic executable is
-/// refused here rather than half loaded: its interpreter is the next phase
-/// and a half loaded image would fault in a way nobody could read.
-pub fn load(guest: &Guest, bytes: &[u8]) -> Result<u64, LoadError> {
+/// Map every `PT_LOAD` at `bias` and report what was learned. A shared
+/// object is expected to be biased and an executable is not, so a caller
+/// passing a bias for an `ET_EXEC` image is refused rather than moving an
+/// image that carries absolute addresses.
+pub fn load_at(guest: &Guest, bytes: &[u8], bias: u64) -> Result<Loaded, LoadError> {
     let elf = Elf::parse(bytes).ok_or(LoadError::NotElf)?;
+    if bias != 0 && elf.kind != ET_DYN {
+        return Err(LoadError::NotElf);
+    }
+    let mut interp = None;
     for i in 0..elf.phnum() {
         let Some(ph) = elf.phdr(i) else { continue };
-        if ph.kind == PT_INTERP {
-            return Err(LoadError::Dynamic);
+        match ph.kind {
+            PT_INTERP => interp = name(bytes, &ph),
+            PT_LOAD if ph.memsz > 0 => segment(guest, bytes, &ph, bias)?,
+            _ => {}
         }
     }
-    for i in 0..elf.phnum() {
-        let Some(ph) = elf.phdr(i) else { continue };
-        if ph.kind == PT_LOAD && ph.memsz > 0 {
-            segment(guest, bytes, &ph)?;
-        }
-    }
-    Ok(elf.entry)
-}
-
-/// One segment: pages first, then the file bytes into them. The gap
-/// between `filesz` and `memsz` is left as the zeroes the fresh frames
-/// already hold, which is what a `.bss` is.
-fn segment(guest: &Guest, bytes: &[u8], ph: &Phdr) -> Result<(), LoadError> {
-    let write = ph.flags & PF_W != 0;
-    let exec = ph.flags & PF_X != 0;
-    if guest.map(ph.vaddr, ph.memsz, write, exec) < 0 {
-        return Err(LoadError::Map);
-    }
-    if ph.filesz == 0 {
-        return Ok(());
-    }
-    let from = ph.offset as usize;
-    let to = from + ph.filesz as usize;
-    let body = bytes.get(from..to).ok_or(LoadError::NotElf)?;
-    if guest.write(ph.vaddr, body) < 0 {
-        return Err(LoadError::Copy);
-    }
-    Ok(())
+    Ok(Loaded {
+        entry: elf.entry + bias,
+        phdr: elf.phdr_addr(bias).unwrap_or(0),
+        phentsize: elf.phentsize as u64,
+        phnum: elf.phnum() as u64,
+        interp,
+        bias,
+    })
 }

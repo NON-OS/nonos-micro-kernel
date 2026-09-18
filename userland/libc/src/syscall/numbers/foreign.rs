@@ -25,3 +25,4 @@ pub(crate) const N_MK_FOREIGN_WAIT: i64 = tag4(b"MFWT");
 pub(crate) const N_MK_FOREIGN_REPLY: i64 = tag4(b"MFRP");
 pub(crate) const N_MK_PEER_MAP: i64 = tag4(b"MPMP");
 pub(crate) const N_MK_PEER_COPY: i64 = tag4(b"MPCP");
+pub(crate) const N_MK_PEER_PROTECT: i64 = tag4(b"MPPT");

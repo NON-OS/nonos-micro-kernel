@@ -35,7 +35,7 @@ pub fn getcwd(guest: &Guest, out: u64, size: u64) -> u64 {
     if guest.write(out, &buf) < need as i64 {
         return errno::fail(errno::EFAULT);
     }
-    /* Linux returns the length including the terminator, not a pointer. */
+    // Linux returns the length including the terminator, not a pointer.
     errno::ok(need as u64)
 }
 
