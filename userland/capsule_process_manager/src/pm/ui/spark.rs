@@ -16,12 +16,27 @@
 
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::pm::state::{Ring, SAMPLES};
+use crate::pm::state::{RateRing, Ring, SAMPLES};
 
 use super::metrics::SPARK_DOT_R;
 
 pub fn cpu(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, h: u32, ring: &Ring, tint: u32) {
     plot(fb, x, y, w, h, |i| ring.cpu_at(i) as u32, ring.len(), 100, tint);
+}
+
+/// A per-second figure against `hi`, the ceiling the caller chose (its own
+/// peak for a rate, 100 for a share).
+pub fn rate(
+    fb: &mut PaintBuffer,
+    x: u32,
+    y: u32,
+    w: u32,
+    h: u32,
+    ring: &RateRing,
+    hi: u32,
+    tint: u32,
+) {
+    plot(fb, x, y, w, h, |i| ring.at(i), ring.len(), hi, tint);
 }
 
 // Memory has no natural ceiling, so the tallest sample in the window sets the

@@ -14,10 +14,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::metrics::TBL_HEAD_H;
+
 use super::super::state::Sort;
-use super::metrics::{
-    COL_AUTH_W, COL_CPU_W, COL_MEM_W, COL_PID_W, COL_STATE_W, COL_UPTIME_W, TBL_HEAD_H,
-};
+
+pub use super::table_cols::{fixed_w, Col, COLS_FULL, COLS_OVERVIEW};
 
 // Everything measured from these columns (widths, offsets, the row band and the
 // click inversions) is a child module, so each file stays inside the 75-line cap
@@ -27,49 +28,22 @@ mod table_span;
 
 pub use table_span::{col_w, col_x, index_at, max_scroll, name_w, row_y, sort_at_x, visible_rows};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum Col {
-    Name,
-    Pid,
-    State,
-    Cpu,
-    Mem,
-    Uptime,
-    Auth,
+// The header band, in table-local coordinates. `index_at` rejects the same y,
+// so the sort test and the row test share one edge rather than two.
+pub fn in_head(y: i32) -> bool {
+    y >= 0 && y < TBL_HEAD_H as i32
 }
 
-pub const COLS_OVERVIEW: [Col; 5] = [Col::Name, Col::Pid, Col::Cpu, Col::Mem, Col::Auth];
-pub const COLS_FULL: [Col; 7] =
-    [Col::Name, Col::Pid, Col::State, Col::Cpu, Col::Mem, Col::Uptime, Col::Auth];
-
-// Name is the one flex column, so it declares no budget of its own and takes
-// whatever the fixed columns leave.
-pub fn fixed_w(col: Col) -> u32 {
-    match col {
-        Col::Name => 0,
-        Col::Pid => COL_PID_W,
-        Col::State => COL_STATE_W,
-        Col::Cpu => COL_CPU_W,
-        Col::Mem => COL_MEM_W,
-        Col::Uptime => COL_UPTIME_W,
-        Col::Auth => COL_AUTH_W,
-    }
-}
-
-// Only four of the seven columns have a sort in refresh(); clicking any other
-// header is a no-op rather than a silently wrong reorder.
+// Only the columns refresh() can order by sort on a click; any other header
+// is a no-op rather than a silently wrong reorder.
 pub fn sort_for(col: Col) -> Option<Sort> {
     match col {
         Col::Name => Some(Sort::Name),
         Col::Pid => Some(Sort::Pid),
         Col::Cpu => Some(Sort::Cpu),
         Col::Mem => Some(Sort::Mem),
+        Col::Ipc => Some(Sort::Ipc),
+        Col::Sysc => Some(Sort::Sysc),
         _ => None,
     }
-}
-
-// The header band, in table-local coordinates. `index_at` rejects the same y,
-// so the sort test and the row test share one edge rather than two.
-pub fn in_head(y: i32) -> bool {
-    y >= 0 && y < TBL_HEAD_H as i32
 }

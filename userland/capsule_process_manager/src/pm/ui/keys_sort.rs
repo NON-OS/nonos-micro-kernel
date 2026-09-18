@@ -48,4 +48,18 @@ pub const SORT: &[Binding] = &[
         group: Group::Sort,
         act: Act::SortPid,
     },
+    Binding {
+        key: b"i",
+        codes: &[0x49, 0x69],
+        label: b"by messages per second",
+        group: Group::Sort,
+        act: Act::SortIpc,
+    },
+    Binding {
+        key: b"y",
+        codes: &[0x59, 0x79],
+        label: b"by syscalls per second",
+        group: Group::Sort,
+        act: Act::SortSysc,
+    },
 ];

@@ -40,6 +40,8 @@ pub enum Act {
     SortMem,
     SortName,
     SortPid,
+    SortIpc,
+    SortSysc,
     Refresh,
     FilterAll,
     FilterElevated,

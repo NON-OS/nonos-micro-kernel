@@ -17,17 +17,16 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::pm::state::State;
-use crate::pm::theme::{ACCENT, DANGER, MUTED, RULE_SOFT};
+use crate::pm::theme::{ACCENT, DANGER, OK, RULE_SOFT};
 
 use super::super::chrome::Rect;
-use super::super::metrics::{BODY_PX, NUM_PX, PANEL_HEAD_H, PANEL_PAD};
+use super::super::metrics::{BODY_PX, PANEL_PAD};
 use super::super::spark;
 use super::super::text;
 use super::cpu::panel;
-use super::ovw_cards::sub_n;
 
-// Gridlines the eye reads a percentage off, and the saturation threshold the
-// mock marks in red. All are opaque hairlines, so fill_rect is correct here.
+// Gridlines the eye reads a percentage off, and the saturation threshold
+// marked in red. All are opaque hairlines, so fill_rect is correct here.
 const GRID: [u32; 3] = [25, 50, 75];
 const SATURATION: u32 = 95;
 const DASH: u32 = 6;
@@ -42,10 +41,13 @@ pub(super) fn paint(state: &State, fb: &mut PaintBuffer, r: &Rect, h: u32) {
         fb.fill_rect(x, py + ph - ph * pct / 100, w, 1, RULE_SOFT);
     }
     spark::cpu(fb, x, py, w, ph, &state.history.total, ACCENT);
+    // The part of busy that was the processes' own code, drawn over it: the
+    // gap between the two lines is the kernel working on their behalf.
+    spark::rate(fb, x, py, w, ph, &state.history.user, 100, OK);
     let sat = py + ph - ph * SATURATION / 100;
     dashed(fb, x, sat, w, DANGER);
     text::left(fb, x, sat + DASH, b"SATURATION", DANGER, BODY_PX);
-    legend(state, fb, &rect);
+    super::cpu_legend::legend(state, fb, &rect);
 }
 
 // Dashed rather than solid, because saturation is a threshold the load may
@@ -56,20 +58,4 @@ fn dashed(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, argb: u32) {
         fb.fill_rect(px, y, DASH, 1, argb);
         px += DASH * 2;
     }
-}
-
-// Peak and mean are placed from the panel's right edge by measurement, so a
-// three-digit peak never shoves the caption that sits on the same line.
-fn legend(state: &State, fb: &mut PaintBuffer, r: &Rect) {
-    let ring = &state.history.total;
-    let n = ring.len().max(1) as u32;
-    let mean = (0..ring.len()).map(|i| ring.cpu_at(i) as u32).sum::<u32>() / n;
-    let top = text::centred_top(r.y, PANEL_HEAD_H, NUM_PX);
-    let right = r.x + r.w.saturating_sub(PANEL_PAD);
-    let mut buf = [0u8; 24];
-    let len = sub_n(&mut buf, b"mean ", mean, b"%");
-    text::mono_right(fb, right, top, &buf[..len], MUTED, NUM_PX);
-    let used = text::mono_width(fb, &buf[..len], NUM_PX) + PANEL_PAD;
-    let len = sub_n(&mut buf, b"peak ", ring.peak_cpu() as u32, b"%");
-    text::mono_right(fb, right.saturating_sub(used), top, &buf[..len], MUTED, NUM_PX);
 }

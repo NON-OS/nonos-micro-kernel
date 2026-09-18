@@ -31,6 +31,9 @@ fn label(col: Col) -> &'static [u8] {
         Col::State => b"STATE",
         Col::Cpu => b"CPU",
         Col::Mem => b"MEMORY",
+        Col::Ipc => b"IPC/S",
+        Col::Sysc => b"SYSC/S",
+        Col::Faults => b"FAULTS",
         Col::Uptime => b"UPTIME",
         Col::Auth => b"AUTHORITY",
     }

@@ -23,25 +23,25 @@ use crate::pm::theme::{ACCENT, AMBER, DANGER, MUTED, TRACK_BG};
 use super::metrics::{NUM_PX, RISK_SLOT_GAP, RISK_SLOT_H, RISK_SLOT_W};
 use super::text;
 
-// The four sensitive classes, drawn as four fixed slots so a scanning eye can
-// compare rows by position instead of reading labels. A held class fills its slot
-// in the class colour; an unheld one leaves the track showing.
+// The four sensitive classes, in the order a row prints them.
 pub const CLASSES: [(u64, u32); 4] =
     [(ADMIN, DANGER), (RAW_HW, AMBER), (SPAWN, ACCENT), (DEBUG, MUTED)];
 
-// Every colour above is opaque, which is the only reason `fill_rect` is correct
-// over a row this capsule has already painted: it writes rather than blends, so
-// an alpha-carrying token here would punch through the table body.
+// One letter per class, in the class colour when held and in the track tone
+// when not, at a fixed advance so a scanning eye compares rows by position.
+// Admin, raw Hardware, Spawn, Debug.
+const LETTERS: [&[u8]; 4] = [b"A", b"H", b"S", b"D"];
+
 pub fn paint(fb: &mut PaintBuffer, x: u32, y: u32, caps: u64) -> u32 {
+    let top = text::centred_top(y, RISK_SLOT_H, NUM_PX);
     let mut slot_x = x;
-    for (mask, argb) in CLASSES {
-        let fill = if caps & mask != 0 { argb } else { TRACK_BG };
-        fb.fill_rect(slot_x, y, RISK_SLOT_W, RISK_SLOT_H, fill);
+    for (i, (mask, argb)) in CLASSES.iter().enumerate() {
+        let ink = if caps & mask != 0 { *argb } else { TRACK_BG };
+        text::mono(fb, slot_x, top, LETTERS[i], ink, NUM_PX);
         slot_x += RISK_SLOT_W + RISK_SLOT_GAP;
     }
     let mut buf = [0u8; 4];
     let n = format::u32_decimal(caps.count_ones(), &mut buf);
-    let top = text::centred_top(y, RISK_SLOT_H, NUM_PX);
-    text::mono(fb, slot_x, top, &buf[..n], MUTED, NUM_PX);
-    slot_x + text::mono_width(fb, &buf[..n], NUM_PX)
+    text::mono(fb, slot_x + RISK_SLOT_GAP, top, &buf[..n], MUTED, NUM_PX);
+    slot_x + RISK_SLOT_GAP + text::mono_width(fb, &buf[..n], NUM_PX)
 }

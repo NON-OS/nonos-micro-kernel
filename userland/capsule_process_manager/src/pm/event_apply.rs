@@ -32,6 +32,8 @@ pub fn apply(state: &mut State, act: Act) {
         Act::SortMem => state.set_sort(Sort::Mem),
         Act::SortName => state.set_sort(Sort::Name),
         Act::SortPid => state.set_sort(Sort::Pid),
+        Act::SortIpc => state.set_sort(Sort::Ipc),
+        Act::SortSysc => state.set_sort(Sort::Sysc),
         Act::Refresh => state.refresh(),
         Act::FilterAll => state.set_filter(Filter::All),
         Act::FilterElevated => state.set_filter(Filter::Elevated),

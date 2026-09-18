@@ -63,6 +63,7 @@ pub fn spawn_process_manager_instance() -> Result<u32, SpawnError> {
         attestation: PROCESS_MANAGER_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
+            | Capability::Debug.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
             | Capability::GraphicsDisplayQuery.bit()
@@ -88,6 +89,7 @@ pub fn spawn_process_manager_capsule() -> Result<(), SpawnError> {
         attestation_trailer: PROCESS_MANAGER_ATTESTATION_BYTES,
         target_triple: TARGET_TRIPLE,
         requested_caps: Capability::CoreExec.bit()
+            | Capability::Debug.bit()
             | Capability::IPC.bit()
             | Capability::Memory.bit()
             | Capability::GraphicsDisplayQuery.bit()

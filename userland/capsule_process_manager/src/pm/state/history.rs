@@ -14,21 +14,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Whole-system history plus one ring per live pid. Rings for pids that
+//! leave the table are dropped on the next refresh, so the vector tracks
+//! the live set and never grows without bound. The kernel's per-second
+//! figures keep their own rings so the CPU screen can show their shape.
+
 use alloc::vec::Vec;
 
+use super::rates::RateRing;
 use super::samples::Ring;
 
-// Whole-system history plus one ring per live pid. Rings for pids that leave
-// the table are dropped on the next refresh, so the vector tracks the live set
-// and never grows without bound.
 pub struct History {
+    /// Busy share and memory in use, sampled once per refresh.
     pub total: Ring,
+    /// Busy share that landed in user code, the rest being kernel work.
+    pub user: RateRing,
+    pub syscalls: RateRing,
+    pub messages: RateRing,
+    pub switches: RateRing,
+    pub interrupts: RateRing,
     per_pid: Vec<(u32, Ring)>,
 }
 
 impl History {
     pub fn new() -> Self {
-        History { total: Ring::new(), per_pid: Vec::new() }
+        History {
+            total: Ring::new(),
+            user: RateRing::new(),
+            syscalls: RateRing::new(),
+            messages: RateRing::new(),
+            switches: RateRing::new(),
+            interrupts: RateRing::new(),
+            per_pid: Vec::new(),
+        }
     }
 
     pub fn get(&self, pid: u32) -> Option<&Ring> {

@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// Column the table is ordered by.
+//! The orders the table can be put in. Rates sort like shares: busiest first.
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Sort {
     Cpu,
     Mem,
+    Ipc,
+    Sysc,
     Name,
     Pid,
 }
@@ -28,6 +31,8 @@ impl Sort {
         match self {
             Sort::Cpu => b"cpu",
             Sort::Mem => b"memory",
+            Sort::Ipc => b"ipc rate",
+            Sort::Sysc => b"syscall rate",
             Sort::Name => b"name",
             Sort::Pid => b"pid",
         }

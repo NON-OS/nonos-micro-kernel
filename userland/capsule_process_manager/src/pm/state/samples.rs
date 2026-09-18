@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-pub const SAMPLES: usize = 32;
+pub const SAMPLES: usize = 60;
 
 // A fixed-capacity ring of one-second samples. `head` is the next write slot;
 // `len` saturates at SAMPLES, so a fresh ring reports only the points it holds

@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Four cards across the top, then the table with the rate columns. The
+//! card width is divided out of r.w rather than fixed, because this screen
+//! docks the inspector and the pane narrows with it.
+
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::pm::state::State;
@@ -22,17 +26,14 @@ use super::super::chrome::Rect;
 use super::super::metrics::{CARD_GAP, CARD_H};
 use super::super::table;
 use super::super::table_geom::COLS_OVERVIEW;
-use super::{ovw_authority, ovw_cards, ovw_counts};
+use super::{ovw_activity, ovw_authority, ovw_cpu_mem};
 
-// Four stat cards across the top, then the five-column table taking the rest.
-// The card width is divided out of r.w rather than fixed, because this screen
-// docks the inspector and the pane narrows with it.
 pub fn paint(state: &State, fb: &mut PaintBuffer, r: &Rect) {
     let w = r.w.saturating_sub(CARD_GAP * 3) / 4;
     let step = w + CARD_GAP;
-    ovw_cards::cpu(state, fb, r.x, r.y, w);
-    ovw_cards::memory(state, fb, r.x + step, r.y, w);
-    ovw_counts::processes(state, fb, r.x + step * 2, r.y, w);
+    ovw_cpu_mem::cpu(state, fb, r.x, r.y, w);
+    ovw_cpu_mem::memory(state, fb, r.x + step, r.y, w);
+    ovw_activity::paint(state, fb, r.x + step * 2, r.y, w);
     ovw_authority::paint(state, fb, r.x + step * 3, r.y, w);
     let below = CARD_H + CARD_GAP;
     let rect = Rect { x: r.x, y: r.y + below, w: r.w, h: r.h.saturating_sub(below) };

@@ -18,6 +18,8 @@ mod app;
 mod critical;
 mod event;
 mod format;
+mod format_labels;
+mod format_sys;
 mod manifest;
 mod security;
 mod state;

@@ -22,9 +22,9 @@ use crate::pm::theme::{CARD_BG, CARD_BORDER, LABEL};
 use super::super::chrome::Rect;
 use super::super::metrics::{BODY_PX, CARD_GAP, PANEL_HEAD_H, PANEL_PAD, PANEL_RADIUS};
 use super::super::text;
-use super::{cpu_bands, cpu_chart};
+use super::{cpu_bands, cpu_chart, cpu_kernel};
 
-// The chart takes a fixed height so the two summary panels below it always start
+// The chart takes a fixed height so the three panels below it always start
 // on the same line whatever the window does. Everything else flexes off r.w,
 // which is the whole pane here because the CPU screen docks no inspector.
 const CHART_H: u32 = 220;
@@ -33,9 +33,10 @@ pub fn paint(state: &State, fb: &mut PaintBuffer, r: &Rect) {
     cpu_chart::paint(state, fb, r, CHART_H);
     let y = r.y + CHART_H + CARD_GAP;
     let h = r.h.saturating_sub(CHART_H + CARD_GAP);
-    let w = r.w.saturating_sub(CARD_GAP) / 2;
+    let w = r.w.saturating_sub(CARD_GAP * 2) / 3;
     cpu_bands::states(state, fb, &Rect { x: r.x, y, w, h });
     cpu_bands::consumers(state, fb, &Rect { x: r.x + w + CARD_GAP, y, w, h });
+    cpu_kernel::kernel(state, fb, &Rect { x: r.x + (w + CARD_GAP) * 2, y, w, h });
 }
 
 // Every band on this screen is the same card: rounded ground, hairline border

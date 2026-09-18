@@ -14,9 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! The strip along the bottom: count, load, memory, uptime, posture, sort.
+
 use nonos_app_skeleton::PaintBuffer;
 
-use crate::pm::format::{mem_human, u32_decimal};
+use crate::pm::format::{mem_human, pct_1dp, u32_decimal, uptime_human};
+use crate::pm::format_sys::load_human;
 use crate::pm::security::Level;
 use crate::pm::state::State;
 use crate::pm::theme::{ACCENT, AMBER, DANGER, HEADER_BG, MUTED, OK, RULE, TITLE};
@@ -24,16 +27,12 @@ use crate::pm::theme::{ACCENT, AMBER, DANGER, HEADER_BG, MUTED, OK, RULE, TITLE}
 use super::metrics::{BODY_PX, PANE_PAD_X, STATUS_GAP, STATUS_GROUP_GAP, STATUS_H};
 use super::text;
 
-// Every number the old footer totals line carried, on one strip: how many
-// processes the snapshot holds, what they cost, and the worst thing the monitor
-// found in them. The sort column sits on the right because it describes the
-// table rather than the system.
 pub fn paint(fb: &mut PaintBuffer, state: &State) {
     let y = fb.height.saturating_sub(STATUS_H);
     fb.fill_rect(0, y, fb.width, STATUS_H, HEADER_BG);
     fb.fill_rect(0, y, fb.width, 1, RULE);
     let top = text::centred_top(y, STATUS_H, BODY_PX);
-    let mut buf = [0u8; 24];
+    let mut buf = [0u8; 32];
     let total = state.rows.len() as u32;
     let visible = state.filtered().len() as u32;
     let mut n = u32_decimal(total, &mut buf);
@@ -44,15 +43,16 @@ pub fn paint(fb: &mut PaintBuffer, state: &State) {
         n += u32_decimal(total, &mut buf[n..]);
     }
     let mut x = pair(fb, PANE_PAD_X, top, b"PROCS", &buf[..n]);
-    let n = u32_decimal(state.total_cpu, &mut buf);
+    let n = pct_1dp(state.sys.busy_pct, &mut buf);
     x = pair(fb, x, top, b"CPU", &buf[..n]);
-    let n = mem_human(state.total_mem_kb, &mut buf);
+    let n = mem_human(state.sys.mem_used_kb(), &mut buf);
     x = pair(fb, x, top, b"MEM", &buf[..n]);
+    let n = load_human(state.sys.load[0], &mut buf);
+    x = pair(fb, x, top, b"LOAD", &buf[..n]);
+    let n = uptime_human(state.sys.uptime_ms / 1000, &mut buf);
+    x = pair(fb, x, top, b"UP", &buf[..n]);
     let (tone, label) = posture(state);
     text::left(fb, x, top, label, tone, BODY_PX);
-    // The sort column describes the table, so it sits right. The key hint sits
-    // left of it because an overlay nobody knows about is no better than none:
-    // every shortcut in this window was invisible until this line existed.
     let right_x = fb.width.saturating_sub(PANE_PAD_X);
     text::right(fb, right_x, top, state.sort.label(), ACCENT, BODY_PX);
     let sort_w = text::width(fb, state.sort.label(), BODY_PX);
@@ -65,7 +65,6 @@ fn pair(fb: &mut PaintBuffer, x: u32, top: u32, label: &[u8], value: &[u8]) -> u
     text::mono(fb, after, top, value, TITLE, BODY_PX).max(0) as u32 + STATUS_GROUP_GAP
 }
 
-// No findings is itself a claim, so the strip states it rather than going blank.
 fn posture(state: &State) -> (u32, &'static [u8]) {
     match state.alerts.iter().map(|a| a.level).max() {
         None => (OK, b"SECURE"),

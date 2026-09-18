@@ -23,10 +23,11 @@ impl State {
     pub fn new() -> Self {
         let mut state = State {
             rows: Vec::new(),
+            sys: super::System::default(),
             refreshes: 0,
             status: b"reading process table",
             selected_pid: 0,
-            notice: b"up/down select  K end  F force  C/M/N/P sort",
+            notice: b"up/down select  K end  F force  C/M/I/Y/N/P sort",
             pending_pid: 0,
             pending_sig: 0,
             sort: Sort::Cpu,

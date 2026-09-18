@@ -48,8 +48,8 @@ fn head(fb: &mut PaintBuffer, x: u32, y: u32, w: u32, label: &[u8], live: bool, 
     text::left(fb, x, y, label, MUTED, BODY_PX);
     let tail: &[u8] = match (live, flat) {
         (false, _) => b"collecting",
-        (true, true) => b"idle, last 32s",
-        (true, false) => b"last 32s",
+        (true, true) => b"idle, last 60s",
+        (true, false) => b"last 60s",
     };
     text::right(fb, x + w, y, tail, MUTED, BODY_PX);
     y + line_height(BODY_PX).max(1) as u32 + CARD_LINE_GAP

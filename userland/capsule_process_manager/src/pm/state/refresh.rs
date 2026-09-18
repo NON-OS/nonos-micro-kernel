@@ -14,18 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec;
-use alloc::vec::Vec;
+//! One refresh: read the whole live table in a single syscall, then rebuild
+//! the rows and the machine figures from it. Every field is the kernel's
+//! own count; a rate is the difference between two reads over the time
+//! between them.
 
-use nonos_libc::{mk_proc_stat, ProcStatEntry, ProcStatHeader};
+use alloc::vec;
+
+use nonos_libc::{mk_proc_stat, ProcStatHeader};
 
 use super::types::{ENTRY_LEN, HEADER_LEN, MAX_PROCS};
-use super::{Row, Sort, State};
+use super::{Sort, State};
+
+/// A percentage is only meaningful over enough ticks to divide by. A read
+/// landing four ticks after the last gave every process that ran once a
+/// quarter of the window; below this floor the previous figures are held.
+const MIN_TICKS: u64 = 32;
 
 impl State {
-    // Read the whole live process table in one syscall and rebuild the rows.
-    // Every field is the kernel's own truth; cpu percent is this process's tick
-    // delta over the total tick delta since the last read.
     pub fn refresh(&mut self) {
         self.refreshes = self.refreshes.wrapping_add(1);
         let mut buf = vec![0u8; HEADER_LEN + MAX_PROCS * ENTRY_LEN];
@@ -35,119 +41,35 @@ impl State {
             return;
         }
         let count = (written as usize).min(MAX_PROCS);
+        // SAFETY: eK@nonos.systems - the kernel wrote HEADER_LEN bytes of the
+        // repr(C) header at the start of a buffer this call sized for it.
         let header: ProcStatHeader =
             unsafe { core::ptr::read_unaligned(buf.as_ptr() as *const ProcStatHeader) };
         let dt = header.total_ticks.saturating_sub(self.last_total_ticks);
-        // A percentage is only meaningful over enough ticks to divide by.
-        //
-        // This used to accept any dt above zero. A refresh landing four ticks
-        // after the last one gives every process that ran even once 1/4 of the
-        // window, so four busy-ish processes each read 25.0% and the total read
-        // 100.0% on a machine doing very little. The suspiciously round numbers
-        // were the tell: real load does not land on quarters.
-        //
-        // Below the floor the previous percentages are kept rather than
-        // recomputed, so the table holds still instead of flickering between
-        // quantised values.
-        const MIN_TICKS: u64 = 32;
         let warmed = self.last_total_ticks != 0 && dt >= MIN_TICKS;
-
-        let mut rows = Vec::with_capacity(count);
-        let mut prev = Vec::with_capacity(count);
-        for i in 0..count {
-            let off = HEADER_LEN + i * ENTRY_LEN;
-            if off + ENTRY_LEN > buf.len() {
-                break;
-            }
-            let e: ProcStatEntry =
-                unsafe { core::ptr::read_unaligned(buf.as_ptr().add(off) as *const ProcStatEntry) };
-            let cpu_pct = if warmed {
-                let last =
-                    self.prev.iter().find(|(p, _)| *p == e.pid).map(|(_, t)| *t).unwrap_or(0);
-                let d = e.run_ticks.saturating_sub(last);
-                (d.saturating_mul(100) / dt).min(100) as u8
-            } else {
-                // Too short a window to divide by. Hold what this pid last
-                // read rather than dropping it to zero, so the column stays
-                // still between real samples instead of blinking.
-                self.rows.iter().find(|r| r.pid == e.pid).map(|r| r.cpu_pct).unwrap_or(0)
-            };
-            rows.push(Row {
-                pid: e.pid,
-                name: e.name,
-                name_len: e.name_len,
-                state: e.state,
-                caps: e.caps,
-                mem_kb: e.mem_kb,
-                cpu_pct,
-                uptime_ms: e.uptime_ms,
-            });
-            prev.push((e.pid, e.run_ticks));
+        let ms = header.uptime_ms.saturating_sub(self.sys.uptime_ms);
+        let (mut rows, prev) = super::refresh_rows::build(self, &buf, count, (dt, ms, warmed));
+        if warmed {
+            self.sys.update(&header);
+            self.prev = prev;
+            self.last_total_ticks = header.total_ticks;
+        } else if self.last_total_ticks == 0 {
+            self.sys.update(&header);
+            self.prev = prev;
+            self.last_total_ticks = header.total_ticks;
         }
-        // Totals across the whole live set.
         self.total_mem_kb = rows.iter().map(|r| r.mem_kb).sum();
-        // A share of one processor, so the total cannot pass a hundred however
-        // the per-process rounding falls. Summing forty-five figures each
-        // rounded up on their own is how it did.
-        self.total_cpu = rows.iter().map(|r| r.cpu_pct as u32).sum::<u32>().min(100);
-
+        self.total_cpu = self.sys.busy_pct as u32;
         match self.sort {
             Sort::Cpu => rows.sort_by(|a, b| b.cpu_pct.cmp(&a.cpu_pct).then(a.pid.cmp(&b.pid))),
             Sort::Mem => rows.sort_by(|a, b| b.mem_kb.cmp(&a.mem_kb).then(a.pid.cmp(&b.pid))),
+            Sort::Ipc => rows.sort_by(|a, b| b.ipc_ps.cmp(&a.ipc_ps).then(a.pid.cmp(&b.pid))),
+            Sort::Sysc => rows.sort_by(|a, b| b.sysc_ps.cmp(&a.sysc_ps).then(a.pid.cmp(&b.pid))),
             Sort::Name => rows.sort_by(|a, b| a.name().cmp(b.name()).then(a.pid.cmp(&b.pid))),
             Sort::Pid => rows.sort_by(|a, b| a.pid.cmp(&b.pid)),
         }
-
         self.rows = rows;
-        // The tick snapshot pairs with the baseline above: keeping one while
-        // resetting the other would measure a delta against the wrong moment.
-        if warmed {
-            self.prev = prev;
-        }
-        // Only move the baseline when a percentage was actually computed from
-        // it. Advancing every refresh would restart the window each time and
-        // `dt` would never reach the floor, so the percentages would never be
-        // computed at all.
-        if warmed {
-            self.last_total_ticks = header.total_ticks;
-        } else if self.last_total_ticks == 0 {
-            self.last_total_ticks = header.total_ticks;
-        }
-        self.status = b"live: name, pid, state, cpu, memory, caps";
-
-        // Keep the selection on screen after the list changes. With nothing
-        // selected yet, land on the first row so the detail line and the kill
-        // action are usable immediately.
-        if let Some(idx) = self.selected_index() {
-            self.ensure_visible(idx);
-        } else if let Some(first) = self.rows.first() {
-            self.selected_pid = first.pid;
-        } else {
-            self.selected_pid = 0;
-        }
-        let max = self.filtered().len().saturating_sub(self.visible);
-        if self.scroll > max {
-            self.scroll = max;
-        }
-
-        // Re-run the security view over the same rows the kernel just gave us,
-        // then keep the findings selection valid against the new list.
-        self.alerts = self.monitor.evaluate(&self.rows);
-        self.clamp_alert_scroll();
-        self.flagged = self.alerts.iter().filter(|a| a.pid != 0).map(|a| a.pid).collect();
-        // Only a warmed sample goes into the history. An unwarmed pass holds
-        // each process's previous figure, and a screenful of held figures summed
-        // past two hundred and fifty-five during boot, clamped to a byte, and
-        // was then displayed forever as "peak 255%". A saturation constant shown
-        // as a measurement is worse than showing nothing: it is a number the
-        // machine cannot produce, on the screen whose job is to be trusted.
-        if warmed {
-            self.history.total.push(self.total_cpu as u8, self.total_mem_kb);
-        }
-        for row in &self.rows {
-            self.history.record(row.pid, row.cpu_pct, row.mem_kb);
-        }
-        let live: Vec<u32> = self.rows.iter().map(|r| r.pid).collect();
-        self.history.retain_live(&live);
+        self.status = b"live from the kernel";
+        self.finish(warmed);
     }
 }

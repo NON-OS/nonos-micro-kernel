@@ -17,6 +17,7 @@
 use nonos_app_skeleton::PaintBuffer;
 
 use crate::pm::format::{mem_human, pct_1dp, state_label, u32_decimal, uptime_human};
+use crate::pm::format_sys::{count_human, rate_human};
 use crate::pm::state::Row;
 use crate::pm::theme::{FOREGROUND, MUTED, WARNING};
 
@@ -38,6 +39,9 @@ pub fn paint(fb: &mut PaintBuffer, r: &Rect, cols: &[Col], row: &Row, col: Col, 
         Col::Pid => (u32_decimal(row.pid, &mut buf), MUTED),
         Col::Cpu => (pct_1dp(row.cpu_pct, &mut buf), FOREGROUND),
         Col::Mem => (mem_human(row.mem_kb, &mut buf), FOREGROUND),
+        Col::Ipc => (rate_human(row.ipc_ps, &mut buf), rate_tint(row.ipc_ps)),
+        Col::Sysc => (rate_human(row.sysc_ps, &mut buf), rate_tint(row.sysc_ps)),
+        Col::Faults => (count_human(row.faults, &mut buf), MUTED),
         Col::Uptime => (uptime_human(row.uptime_ms / 1000, &mut buf), WARNING),
         Col::State => {
             text::left(fb, x, top, state_label(row.state), state_tint(row.state), BODY_PX);
@@ -50,4 +54,13 @@ pub fn paint(fb: &mut PaintBuffer, r: &Rect, cols: &[Col], row: &Row, col: Col, 
         Col::Name => return,
     };
     text::mono_right(fb, right, top, &buf[..n], tint, NUM_PX);
+}
+
+// A zero rate is the common case and reads quietest; anything moving is ink.
+fn rate_tint(per_second: u32) -> u32 {
+    if per_second == 0 {
+        MUTED
+    } else {
+        FOREGROUND
+    }
 }

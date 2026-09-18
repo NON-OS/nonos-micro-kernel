@@ -38,7 +38,7 @@ pub fn paint(state: &State, fb: &mut PaintBuffer) {
     };
     let (left, w) = (content_x(fb.width), content_w());
     let mut y = heading(fb, left, PANE_PAD_TOP, w, row);
-    y = insp_fields::block(fb, left, y, row, state.total_mem_kb) + INSP_SECTION_GAP;
+    y = insp_fields::block(fb, left, y, row, state.sys.mem_total_kb) + INSP_SECTION_GAP;
     y = insp_spark::paint(fb, left, y, w, state.history.get(row.pid));
     let mut buf = [0u8; 12];
     let n = u32_decimal(row.caps.count_ones(), &mut buf);
