@@ -14,17 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The Linux personality: everything this system knows about Linux, in
-//! one capsule that holds the capabilities its guests do not.
 
-mod abi;
-mod call;
-mod file;
-mod guest;
-mod net;
-mod image;
-pub mod serve;
-mod source;
-mod start;
+//! Reads and writes that land on a socket rather than a file.
 
-pub use start::run;
+use crate::linux::abi::errno;
+use crate::linux::guest::Guest;
+use crate::linux::net;
+
+pub(super) fn socket_write(guest: &Guest, fd: u64, buf: u64, len: u64) -> u64 {
+    match guest.socket_handle(fd) {
+        Some(h) => net::send(guest, h, buf, len),
+        None => errno::fail(errno::EBADF),
+    }
+}
+
+pub(super) fn socket_read(guest: &Guest, fd: u64, buf: u64, len: u64) -> u64 {
+    match guest.socket_handle(fd) {
+        Some(h) => net::recv(guest, h, buf, len),
+        None => errno::fail(errno::EBADF),
+    }
+}
+

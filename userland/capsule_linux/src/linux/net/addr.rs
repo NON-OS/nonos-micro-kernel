@@ -14,17 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The Linux personality: everything this system knows about Linux, in
-//! one capsule that holds the capabilities its guests do not.
 
-mod abi;
-mod call;
-mod file;
-mod guest;
-mod net;
-mod image;
-pub mod serve;
-mod source;
-mod start;
+//! `struct sockaddr_in` out of a guest.
 
-pub use start::run;
+use crate::linux::guest::Guest;
+
+/// family(2) port(2) addr(4), and the rest of the sixteen bytes unused.
+const SOCKADDR_IN: usize = 16;
+const AF_INET: u16 = 2;
+
+/// Port in network order and address in network order, which is the
+/// order net.sockets wants as well, so neither is byte swapped here.
+pub fn inet(guest: &Guest, at: u64, len: u64) -> Option<(u16, [u8; 4])> {
+    if len < SOCKADDR_IN as u64 {
+        return None;
+    }
+    let raw = guest.read(at, SOCKADDR_IN)?;
+    if u16::from_le_bytes([raw[0], raw[1]]) != AF_INET {
+        return None;
+    }
+    let port = u16::from_be_bytes([raw[2], raw[3]]);
+    Some((port, [raw[4], raw[5], raw[6], raw[7]]))
+}

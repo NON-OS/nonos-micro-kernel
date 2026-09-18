@@ -37,6 +37,9 @@ pub struct Guest {
     pub threads: Vec<u32>,
     /// Threads parked in a futex wait, with the word they wait on.
     pub waits: Vec<(u32, u64)>,
+    /// Which signals the guest installed a handler for. Nothing is ever
+    /// raised against them; see `call::signal`.
+    pub handlers: [bool; 64],
     /// What a relative path is relative to.
     pub cwd: Vec<u8>,
     /// Where the guest last asked its thread pointer to be set.
@@ -54,6 +57,7 @@ impl Guest {
             fds: Fd::standard(),
             threads: Vec::new(),
             waits: Vec::new(),
+            handlers: [false; 64],
             cwd: alloc::vec![b'/'],
             fs_base: 0,
             exited: None,

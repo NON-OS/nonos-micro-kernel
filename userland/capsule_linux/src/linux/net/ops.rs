@@ -14,17 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The Linux personality: everything this system knows about Linux, in
-//! one capsule that holds the capabilities its guests do not.
 
-mod abi;
-mod call;
-mod file;
-mod guest;
-mod net;
-mod image;
-pub mod serve;
-mod source;
-mod start;
+//! The net.sockets opcodes this capsule uses.
+//!
+//! Transcribed from userland/capsule_net_sockets/src/protocol/ops.rs. The
+//! server is a separate binary and its protocol module is not a library,
+//! so these cannot be imported; a number changed there and not here is a
+//! wrong operation, which is why the source is named.
 
-pub use start::run;
+pub const OP_SOCKET: u16 = 2;
+pub const OP_CONNECT: u16 = 6;
+pub const OP_SEND: u16 = 7;
+pub const OP_RECV: u16 = 8;
+pub const OP_CLOSE: u16 = 9;
+pub const OP_POLL: u16 = 13;
+
+/// What OP_POLL reports: a recv would return data, a send would take it.
+pub const POLL_READABLE: u8 = 1;
+pub const POLL_WRITABLE: u8 = 2;

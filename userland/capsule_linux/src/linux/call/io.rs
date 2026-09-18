@@ -21,6 +21,9 @@
 
 use crate::linux::abi::errno;
 use crate::linux::file;
+use crate::linux::net;
+
+use super::io_socket::{socket_read, socket_write};
 use crate::linux::guest::{Guest, Kind};
 
 /// Cap on one transfer, matching the kernel's own peer-copy ceiling.
@@ -30,6 +33,7 @@ pub fn write(guest: &mut Guest, fd: u64, buf: u64, len: u64) -> u64 {
     match guest.fds.get(fd as usize).map(|f| &f.kind) {
         Some(Kind::Stdout) | Some(Kind::Stderr) => console(guest, buf, len),
         Some(Kind::File) => file::write(guest, fd, buf, len),
+        Some(Kind::Socket) => socket_write(guest, fd, buf, len),
         Some(Kind::Dir) => errno::fail(errno::EISDIR),
         _ => errno::fail(errno::EBADF),
     }
@@ -54,11 +58,15 @@ pub fn read(guest: &mut Guest, fd: u64, buf: u64, len: u64) -> u64 {
         // Nothing is typed at a guest yet, and end of file is the truth.
         Some(Kind::Stdin) => errno::ok(0),
         Some(Kind::File) => file::read(guest, fd, buf, len),
+        Some(Kind::Socket) => socket_read(guest, fd, buf, len),
         Some(Kind::Dir) => errno::fail(errno::EISDIR),
         _ => errno::fail(errno::EBADF),
     }
 }
 
 pub fn close(guest: &mut Guest, fd: u64) -> u64 {
+    if let Some(h) = guest.socket_handle(fd) {
+        net::close(h);
+    }
     file::close(guest, fd)
 }

@@ -19,9 +19,18 @@
 
 use nonos_libc::mk_foreign_reply;
 
+use super::fd::Kind;
 use super::handle::Guest;
 
 impl Guest {
+    /// The net.sockets handle behind `fd`, if it is a socket.
+    pub fn socket_handle(&self, fd: u64) -> Option<u32> {
+        match self.fds.get(fd as usize) {
+            Some(f) if f.kind == Kind::Socket => Some(f.handle),
+            _ => None,
+        }
+    }
+
     /// True for the guest and for every thread of it, which is what the
     /// serve loop needs: a trap arrives under the thread's own tid.
     pub fn owns(&self, pid: u32) -> bool {

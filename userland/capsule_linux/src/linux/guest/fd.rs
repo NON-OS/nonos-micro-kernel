@@ -37,6 +37,8 @@ pub enum Kind {
     File,
     /// A directory, listed once when it was opened.
     Dir,
+    /// A socket net.sockets issued to this capsule.
+    Socket,
 }
 
 pub struct Fd {
@@ -55,6 +57,8 @@ pub struct Fd {
     pub names: Vec<String>,
     /// Set when the guest asked to write, so close knows to flush.
     pub writable: bool,
+    /// The net.sockets handle behind a socket descriptor.
+    pub handle: u32,
 }
 
 impl Fd {

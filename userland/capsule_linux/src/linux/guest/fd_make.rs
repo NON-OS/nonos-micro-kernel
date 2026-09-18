@@ -40,6 +40,12 @@ impl Fd {
         fd
     }
 
+    pub fn socket(handle: u32) -> Fd {
+        let mut fd = Fd::empty(Kind::Socket);
+        fd.handle = handle;
+        fd
+    }
+
     pub fn dir(path: Vec<u8>, names: Vec<String>) -> Fd {
         let mut fd = Fd::empty(Kind::Dir);
         fd.path = path;
@@ -59,6 +65,7 @@ impl Fd {
             pending: Vec::new(),
             names: Vec::new(),
             writable: false,
+            handle: 0,
         }
     }
 }

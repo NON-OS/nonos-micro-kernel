@@ -14,17 +14,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The Linux personality: everything this system knows about Linux, in
-//! one capsule that holds the capabilities its guests do not.
 
-mod abi;
+//! Sockets, over the net.sockets service. A guest's descriptor holds a
+//! handle that service issued to this capsule, so a guest reaches only
+//! the sockets this capsule opened for it.
+
+mod addr;
 mod call;
-mod file;
-mod guest;
-mod net;
-mod image;
-pub mod serve;
-mod source;
-mod start;
+mod connect;
+mod ops;
+mod poll;
+mod poll_set;
+mod socket;
+mod stream;
 
-pub use start::run;
+pub use connect::connect;
+pub use poll_set::poll;
+pub use socket::socket;
+pub use stream::{close, recv, send};
