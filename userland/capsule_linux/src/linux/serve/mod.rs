@@ -16,8 +16,11 @@
 
 //! Answering for a guest: the loop, and the table it answers from.
 
+mod answer;
 mod dispatch;
-mod unserved;
 mod loop_impl;
+mod table;
+mod unserved;
 
+pub use answer::Answer;
 pub use loop_impl::serve;

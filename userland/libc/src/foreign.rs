@@ -19,7 +19,8 @@
 //! everything it can do passes through the supervisor that made it.
 
 use crate::syscall::{
-    call_raw, N_MK_FOREIGN_REPLY, N_MK_FOREIGN_SPAWN, N_MK_FOREIGN_START, N_MK_FOREIGN_WAIT,
+    call_raw, N_MK_FOREIGN_REPLY, N_MK_FOREIGN_SPAWN, N_MK_FOREIGN_START, N_MK_FOREIGN_THREAD,
+    N_MK_FOREIGN_WAIT,
 };
 
 pub use crate::foreign_frame::ForeignFrame;
@@ -36,6 +37,12 @@ pub fn mk_foreign_spawn(name: &[u8]) -> i64 {
 /// expecting argv and an auxiliary vector needs.
 pub fn mk_foreign_start(pid: u32, entry: u64, rsp: u64) -> i64 {
     call_raw(N_MK_FOREIGN_START, [pid as u64, entry, rsp, 0, 0, 0])
+}
+
+/// A thread in a guest, sharing its address space. `tls` is the FS base
+/// it wakes with, which a C runtime reads before anything else.
+pub fn mk_foreign_thread(pid: u32, entry: u64, rsp: u64, tls: u64) -> i64 {
+    call_raw(N_MK_FOREIGN_THREAD, [pid as u64, entry, rsp, tls, 0, 0])
 }
 
 /// Block until a guest of this process makes a call the kernel refuses,

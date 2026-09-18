@@ -26,3 +26,4 @@ pub(crate) const N_MK_FOREIGN_REPLY: i64 = tag4(b"MFRP");
 pub(crate) const N_MK_PEER_MAP: i64 = tag4(b"MPMP");
 pub(crate) const N_MK_PEER_COPY: i64 = tag4(b"MPCP");
 pub(crate) const N_MK_PEER_PROTECT: i64 = tag4(b"MPPT");
+pub(crate) const N_MK_FOREIGN_THREAD: i64 = tag4(b"MFTH");

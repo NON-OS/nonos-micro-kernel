@@ -22,7 +22,7 @@ mod call;
 mod file;
 mod guest;
 mod image;
-mod serve;
+pub mod serve;
 mod source;
 mod start;
 

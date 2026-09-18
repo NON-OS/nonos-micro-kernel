@@ -14,33 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! One file per family of Linux calls. A family gets its own file the
-//! moment it has more than a handful, so the table stays readable as the
-//! surface grows toward the whole of it.
 
-mod io;
-mod life;
-mod clone;
-mod ctl;
-mod map;
-mod map_file;
-mod map_req;
-mod memory;
-mod futex;
-mod prot;
-mod thread;
-mod uname;
-mod vector;
+//! What the serve loop does with a trap.
 
-pub use io::{close, read, write};
-pub use clone::clone;
-pub use ctl::{fcntl, ioctl};
-pub use futex::futex;
-pub use life::{exit, exit_thread};
-pub use map::mmap;
-pub use map_req::MapReq;
-pub use memory::{brk, munmap};
-pub use prot::mprotect;
-pub use thread::{arch_prctl, clock_gettime, getrandom};
-pub use uname::uname;
-pub use vector::writev;
+/// A parked caller is not an error: the guest thread stays inside its
+/// syscall with no reply until something else here wakes it. That is how
+/// a futex wait works, and it is why the loop cannot reply to every
+/// frame it takes.
+pub enum Answer {
+    Reply(u64),
+    Park,
+}
+
+impl Answer {
+    pub fn value(v: u64) -> Answer {
+        Answer::Reply(v)
+    }
+}

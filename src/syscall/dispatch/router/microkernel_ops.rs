@@ -89,6 +89,7 @@ pub(super) fn matches(nr: SyscallNumber) -> bool {
             | MkPeerMap
             | MkPeerCopy
             | MkPeerProtect
+            | MkForeignThread
             | MkToolRun
     )
 }

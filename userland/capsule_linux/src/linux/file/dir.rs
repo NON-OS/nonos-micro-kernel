@@ -15,12 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! Opening a directory.
-//!
-//! The listing is taken once, when the directory is opened, and the guest
-//! walks that copy. Linux promises no more: a directory stream shows what
-//! was there when it was opened, and what arrives afterwards may or may
-//! not appear.
+//! Directory open. The listing is snapshotted here, which is all POSIX
+//! promises a directory stream.
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -43,12 +39,8 @@ pub fn open(guest: &mut Guest, owner: u32, path: Vec<u8>) -> u64 {
     }
 }
 
-/*
- * The store answers with whole keys under the prefix, at any depth. A
- * directory holds its immediate children, so a key that still has a
- * separator after the prefix belongs to a subdirectory and is reported
- * as that subdirectory, once.
- */
+// OP_LIST returns whole keys at any depth. Cut at the first separator
+// past the prefix and dedupe, or every file below shows up as a sibling.
 fn children(path: &[u8], keys: Vec<String>) -> Vec<String> {
     let cut = if path == b"/" { 1 } else { path.len() + 1 };
     let mut out: Vec<String> = Vec::new();

@@ -42,6 +42,7 @@ pub const ACCESS: u64 = 21;
 pub const MADVISE: u64 = 28;
 pub const NANOSLEEP: u64 = 35;
 pub const GETPID: u64 = 39;
+pub const CLONE: u64 = 56;
 pub const EXIT: u64 = 60;
 pub const UNAME: u64 = 63;
 pub const FCNTL: u64 = 72;

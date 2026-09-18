@@ -20,6 +20,11 @@
 use crate::linux::abi::errno;
 use crate::linux::guest::Guest;
 
+pub fn exit_thread(guest: &mut Guest, tid: u32) -> u64 {
+    guest.threads.retain(|t| *t != tid);
+    errno::ok(0)
+}
+
 pub fn exit(guest: &mut Guest, code: u64) -> u64 {
     guest.exited = Some(code as i32);
     errno::ok(0)

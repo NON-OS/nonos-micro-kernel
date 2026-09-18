@@ -15,13 +15,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! `openat`, and the plain `open` older binaries still use.
-//!
-//! Everything a guest opens is opened under this capsule's own identity,
-//! never the guest's: a hosted process holds no capabilities at all, so
-//! the store would refuse it outright. A guest therefore reaches exactly
-//! what this capsule is allowed to reach, and narrowing that is a matter
-//! of what the capsule is granted, not of anything the guest can ask for.
+//! `openat`. Opens run under this capsule's pid, not the guest's: a guest
+//! holds no capabilities and the store would refuse it.
 
 use alloc::vec::Vec;
 
@@ -52,8 +47,7 @@ pub fn openat(guest: &mut Guest, dirfd: u64, path_ptr: u64, flags: u64) -> u64 {
     }
 }
 
-/// The directory a relative path is relative to. Only the working
-/// directory and a directory the guest opened itself can be named.
+/// AT_FDCWD or a dirfd the guest itself opened. No other dirfd resolves.
 fn base_of(guest: &Guest, dirfd: u64) -> Result<Vec<u8>, u64> {
     if dirfd == AT_FDCWD {
         return Ok(guest.cwd.clone());

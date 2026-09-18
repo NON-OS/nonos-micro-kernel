@@ -15,19 +15,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! Taking a path out of a guest.
-//!
-//! The string is NUL terminated and its length is not known before it is
-//! read, so it is read one page at a time: a copy that crossed into an
-//! unmapped page would fail as a whole and lose the part that was there,
-//! and a program keeps its arguments wherever it likes.
+//! NUL-terminated path out of a guest, a page at a time: a peer copy that
+//! crosses into an unmapped page fails whole and loses the mapped part.
 
 use alloc::vec::Vec;
 
 use crate::linux::guest::{page_down, Guest, PAGE};
 
-/// The server takes a single length byte, so a longer path could not be
-/// asked for without truncating into a different path than the guest meant.
+/// The vfs length prefix is one byte.
 pub const MAX_PATH: usize = 255;
 
 pub fn read_path(guest: &Guest, addr: u64) -> Option<Vec<u8>> {

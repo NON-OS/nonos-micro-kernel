@@ -21,6 +21,7 @@ mod fd;
 mod fd_make;
 mod handle;
 mod mem;
+mod threads;
 
 pub use fd::{Fd, Kind};
 pub use handle::{Guest, BRK_BASE};

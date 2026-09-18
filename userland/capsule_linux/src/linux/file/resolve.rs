@@ -15,18 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! Turning what a guest asked for into a key the store will accept.
-//!
-//! A Linux program names files relative to a working directory and uses
-//! dot and dot-dot freely. The store has neither, so the path is made
-//! absolute and flattened here rather than being handed on and refused.
+//! Guest path to store key. The store has no cwd and no dot-dot, so both
+//! are resolved here.
 
 use alloc::vec::Vec;
 
-/// Join `path` onto `cwd` unless it is already absolute, then remove every
-/// dot component and resolve dot-dot against what came before it. A
-/// dot-dot that climbs past the root stops at the root, which is what
-/// Linux does.
+/// Dot-dot past the root stops at the root, as Linux does.
 pub fn absolute(cwd: &[u8], path: &[u8]) -> Vec<u8> {
     let mut joined: Vec<u8> = Vec::new();
     if path.first() != Some(&b'/') {

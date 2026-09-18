@@ -74,8 +74,13 @@ pub(crate) fn create_process_with_parent(
 /// thread group. Returns the new thread id. The thread has no VMAs of its own,
 /// so its teardown frees nothing of the shared address space.
 pub fn spawn_thread(entry: u64, stack: u64) -> Result<Pid, &'static str> {
-    let parent_pid = CURRENT_PID.load(Ordering::Relaxed);
-    let parent = PROCESS_TABLE.find_by_pid(parent_pid).ok_or("no current process")?;
+    spawn_thread_in(CURRENT_PID.load(Ordering::Relaxed), entry, stack)
+}
+
+/// A thread in `parent_pid` rather than in the caller. The foreign path
+/// needs this: the supervisor asks, the guest gets the thread.
+pub fn spawn_thread_in(parent_pid: Pid, entry: u64, stack: u64) -> Result<Pid, &'static str> {
+    let parent = PROCESS_TABLE.find_by_pid(parent_pid).ok_or("no such process")?;
     let tid = allocate_tid().ok_or("pid space exhausted")?;
     let caps = compute_inherited_caps(tid, parent_pid);
     let pcb = build_pcb(tid, parent_pid, "thread", ProcessState::Ready, Priority::Normal, 0, caps)?;

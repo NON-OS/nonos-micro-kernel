@@ -72,7 +72,9 @@ pub use crypto::{
     crypto_secp256k1_sign, crypto_x25519_public, crypto_x25519_shared,
 };
 pub use debug::mk_debug;
-pub use foreign::{mk_foreign_reply, mk_foreign_spawn, mk_foreign_start, mk_foreign_wait};
+pub use foreign::{
+    mk_foreign_reply, mk_foreign_spawn, mk_foreign_start, mk_foreign_thread, mk_foreign_wait,
+};
 pub use foreign_frame::ForeignFrame;
 pub use graphics::nonos_display_dimensions;
 #[cfg(feature = "heap")]

@@ -15,24 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! One `struct linux_dirent64`, as `getdents64` returns them.
-//!
-//! The record is a header followed by a NUL terminated name, and its
-//! length is rounded up so the next record starts eight byte aligned. A
-//! libc walks the buffer by adding d_reclen, so a record that lies about
-//! its length sends the reader into the middle of the next one.
+//! `struct linux_dirent64`. A libc walks by adding d_reclen, so a wrong
+//! reclen lands the reader mid-record.
 
 use alloc::vec::Vec;
 
 /// d_ino, d_off, d_reclen, d_type: 8 + 8 + 2 + 1.
 pub const HEADER: usize = 19;
 
-/*
- * The store's listing says what is there and not what each entry
- * is, and a wrong d_type sends a caller down the wrong path without
- * checking. Unknown is the answer Linux defines for exactly this, and
- * a caller that cares then stats the name itself.
- */
+// OP_LIST does not say file or directory. DT_UNKNOWN makes the caller
+// stat; guessing DT_REG makes it skip the stat and be wrong.
 pub const DT_UNKNOWN: u8 = 0;
 
 /// The bytes one entry occupies, name and terminator included.

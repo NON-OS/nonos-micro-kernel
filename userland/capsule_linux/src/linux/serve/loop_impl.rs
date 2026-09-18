@@ -14,27 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The service loop: wait for a guest to make a call the kernel refuses,
-//! answer it, hand the answer back. Everything a hosted program can do to
-//! this system passes through these few lines.
+
+//! The service loop: take a trap from any thread of the guest, answer it
+//! or leave the caller parked.
 
 use nonos_libc::{mk_foreign_reply, mk_foreign_wait, ForeignFrame};
 
+use super::answer::Answer;
 use super::dispatch::answer;
 use crate::linux::guest::Guest;
 
-/// How long one wait blocks before looking at its guests again. A guest
-/// that exits while nothing is in flight is noticed on the next pass.
+/// How long one wait blocks before looking at the guest again.
 const WAIT_MS: u64 = 250;
 
-/// Serve `guest` until it exits, and report its exit code.
 pub fn serve(guest: &mut Guest) -> i32 {
     loop {
         let mut frame = ForeignFrame::default();
         let got = mk_foreign_wait(&mut frame, WAIT_MS);
-        if got > 0 && frame.pid == guest.pid {
-            let value = answer(guest, &frame);
-            let _ = mk_foreign_reply(guest.pid, value);
+        if got > 0 && guest.owns(frame.pid) {
+            if let Answer::Reply(value) = answer(guest, &frame) {
+                let _ = mk_foreign_reply(frame.pid, value);
+            }
         }
         if let Some(code) = guest.exited {
             return code;

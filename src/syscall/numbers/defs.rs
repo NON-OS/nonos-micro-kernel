@@ -122,4 +122,5 @@ pub enum SyscallNumber {
     MkPeerMap = tag4(b"MPMP"),
     MkPeerCopy = tag4(b"MPCP"),
     MkPeerProtect = tag4(b"MPPT"),
+    MkForeignThread = tag4(b"MFTH"),
 }

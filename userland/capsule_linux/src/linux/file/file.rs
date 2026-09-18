@@ -28,11 +28,7 @@ use super::flags::{wants_read, wants_write, O_TRUNC};
 use super::slot;
 
 pub fn open(guest: &mut Guest, owner: u32, path: Vec<u8>, size: u64, flags: u64) -> u64 {
-    /*
-     * A handle is taken only when the guest will read through it. A file
-     * opened to be overwritten is never read, and taking a handle for it
-     * would hold a server-side descriptor open for nothing.
-     */
+    // No server handle for write-only or O_TRUNC: nothing will read it.
     let truncating = flags & O_TRUNC != 0;
     let stream = if wants_read(flags) && !truncating {
         match VfsStream::open(owner, &path) {
@@ -50,9 +46,7 @@ pub fn open(guest: &mut Guest, owner: u32, path: Vec<u8>, size: u64, flags: u64)
     }
 }
 
-/// A file the guest asked to create. Nothing is written to the store until
-/// close: a program that creates a file and dies without writing to it
-/// should not leave an empty one behind.
+/// Nothing hits the store until close, so a create-then-die leaves no file.
 pub fn create(guest: &mut Guest, path: Vec<u8>) -> u64 {
     let fd = Fd::file(path, 0, None, true);
     match slot::install(guest, fd) {

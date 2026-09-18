@@ -33,6 +33,10 @@ pub struct Guest {
     /// The next address an anonymous mapping gets, growing upward.
     pub mmap_next: u64,
     pub fds: Vec<Fd>,
+    /// Tids of this guest's threads, not counting itself.
+    pub threads: Vec<u32>,
+    /// Threads parked in a futex wait, with the word they wait on.
+    pub waits: Vec<(u32, u64)>,
     /// What a relative path is relative to.
     pub cwd: Vec<u8>,
     /// Where the guest last asked its thread pointer to be set.
@@ -48,6 +52,8 @@ impl Guest {
             brk: BRK_BASE,
             mmap_next: MMAP_BASE,
             fds: Fd::standard(),
+            threads: Vec::new(),
+            waits: Vec::new(),
             cwd: alloc::vec![b'/'],
             fs_base: 0,
             exited: None,
