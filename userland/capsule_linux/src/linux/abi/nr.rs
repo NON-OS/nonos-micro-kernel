@@ -55,6 +55,7 @@ pub const SIGALTSTACK: u64 = 131;
 pub const ARCH_PRCTL: u64 = 158;
 pub const GETTID: u64 = 186;
 pub const FUTEX: u64 = 202;
+pub const GETDENTS64: u64 = 217;
 pub const SET_TID_ADDRESS: u64 = 218;
 pub const CLOCK_GETTIME: u64 = 228;
 pub const EXIT_GROUP: u64 = 231;

@@ -33,6 +33,8 @@ pub struct Guest {
     /// The next address an anonymous mapping gets, growing upward.
     pub mmap_next: u64,
     pub fds: Vec<Fd>,
+    /// What a relative path is relative to.
+    pub cwd: Vec<u8>,
     /// Where the guest last asked its thread pointer to be set.
     pub fs_base: u64,
     /// Set once the guest asks to end, so the loop can drop it.
@@ -46,6 +48,7 @@ impl Guest {
             brk: BRK_BASE,
             mmap_next: MMAP_BASE,
             fds: Fd::standard(),
+            cwd: alloc::vec![b'/'],
             fs_base: 0,
             exited: None,
         }

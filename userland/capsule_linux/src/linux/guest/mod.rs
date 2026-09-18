@@ -18,9 +18,10 @@
 //! reaches into it.
 
 mod fd;
+mod fd_make;
 mod handle;
 mod mem;
 
-pub use fd::Kind;
+pub use fd::{Fd, Kind};
 pub use handle::{Guest, BRK_BASE};
-pub use mem::page_up;
+pub use mem::{page_down, page_up, PAGE};

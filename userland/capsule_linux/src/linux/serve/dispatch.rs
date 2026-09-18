@@ -20,8 +20,10 @@
 
 use nonos_libc::ForeignFrame;
 
-use crate::linux::abi::{errno, name, nr};
+use crate::linux::abi::{errno, nr};
 use crate::linux::call;
+use crate::linux::file;
+use crate::linux::file::flags;
 use crate::linux::guest::Guest;
 
 pub fn answer(guest: &mut Guest, frame: &ForeignFrame) -> u64 {
@@ -31,6 +33,20 @@ pub fn answer(guest: &mut Guest, frame: &ForeignFrame) -> u64 {
         nr::WRITEV => call::writev(guest, a[0], a[1], a[2]),
         nr::READ => call::read(guest, a[0], a[1], a[2]),
         nr::CLOSE => call::close(guest, a[0]),
+        nr::OPENAT => file::openat(guest, a[0], a[1], a[2]),
+        nr::OPEN => file::openat(guest, flags::AT_FDCWD, a[0], a[1]),
+        nr::LSEEK => file::lseek(guest, a[0], a[1], a[2]),
+        nr::FSTAT => file::fstat(guest, a[0], a[1]),
+        nr::STAT | nr::LSTAT => file::newfstatat(guest, flags::AT_FDCWD, a[0], a[1]),
+        nr::NEWFSTATAT => file::newfstatat(guest, a[0], a[1], a[2]),
+        nr::GETDENTS64 => file::getdents64(guest, a[0], a[1], a[2]),
+        nr::PREAD64 => file::pread64(guest, a[0], a[1], a[2], a[3]),
+        nr::GETCWD => file::getcwd(guest, a[0], a[1]),
+        nr::ACCESS => file::access(guest, a[0]),
+        nr::READLINK => file::readlink(guest, a[0]),
+        nr::IOCTL => call::ioctl(guest, a[0], a[1]),
+        nr::FCNTL => call::fcntl(guest, a[0], a[1]),
+        nr::UNAME => call::uname(guest, a[0]),
         nr::BRK => call::brk(guest, a[0]),
         nr::MMAP => call::mmap(guest, a[0], a[1], a[2], a[3]),
         nr::MUNMAP => call::munmap(guest, a[0], a[1]),
@@ -41,22 +57,6 @@ pub fn answer(guest: &mut Guest, frame: &ForeignFrame) -> u64 {
         nr::CLOCK_GETTIME => call::clock_gettime(guest, a[0], a[1]),
         nr::GETRANDOM => call::getrandom(guest, a[0], a[1], a[2]),
         nr::EXIT | nr::EXIT_GROUP => call::exit(guest, a[0]),
-        other => unserved(other),
+        other => super::unserved::unserved(other),
     }
-}
-
-/// Name what was asked for. A guest that dies on a missing call should
-/// leave behind the name of the call it needed.
-fn unserved(number: u64) -> u64 {
-    let mut line = [0u8; 64];
-    let head = b"[LINUX] unserved ";
-    let tag = name::of(number);
-    let n = head.len().min(line.len());
-    line[..n].copy_from_slice(&head[..n]);
-    let m = (n + tag.len()).min(line.len());
-    line[n..m].copy_from_slice(&tag[..m - n]);
-    let end = (m + 1).min(line.len());
-    line[m..end].copy_from_slice(b"\n");
-    let _ = nonos_libc::mk_debug(line.as_ptr(), end);
-    errno::fail(errno::ENOSYS)
 }

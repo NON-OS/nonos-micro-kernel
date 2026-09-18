@@ -14,24 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! `read`, `write` and `close`. A guest's descriptor is an index into a
-//! table this capsule owns, so the number it passes can only ever reach
-//! something this capsule decided to give it.
+
+//! `read`, `write` and `close`, routed by what the descriptor is. A
+//! guest's descriptor is an index into a table this capsule owns, so the
+//! number it passes can only ever reach something this capsule gave it.
 
 use crate::linux::abi::errno;
+use crate::linux::file;
 use crate::linux::guest::{Guest, Kind};
 
 /// Cap on one transfer, matching the kernel's own peer-copy ceiling.
 const MAX_IO: u64 = 1 << 20;
 
 pub fn write(guest: &mut Guest, fd: u64, buf: u64, len: u64) -> u64 {
-    let Some(entry) = guest.fds.get(fd as usize).copied() else {
-        return errno::fail(errno::EBADF);
-    };
-    match entry.kind {
-        Kind::Stdout | Kind::Stderr => console(guest, buf, len),
-        Kind::Stdin => errno::fail(errno::EBADF),
-        Kind::Free => errno::fail(errno::EBADF),
+    match guest.fds.get(fd as usize).map(|f| &f.kind) {
+        Some(Kind::Stdout) | Some(Kind::Stderr) => console(guest, buf, len),
+        Some(Kind::File) => file::write(guest, fd, buf, len),
+        Some(Kind::Dir) => errno::fail(errno::EISDIR),
+        _ => errno::fail(errno::EBADF),
     }
 }
 
@@ -49,21 +49,16 @@ fn console(guest: &Guest, buf: u64, len: u64) -> u64 {
     errno::ok(take)
 }
 
-pub fn read(guest: &mut Guest, fd: u64, _buf: u64, _len: u64) -> u64 {
-    match guest.fds.get(fd as usize).map(|f| f.kind) {
+pub fn read(guest: &mut Guest, fd: u64, buf: u64, len: u64) -> u64 {
+    match guest.fds.get(fd as usize).map(|f| &f.kind) {
         /* Nothing is typed at a guest yet, and end of file is the truth. */
         Some(Kind::Stdin) => errno::ok(0),
-        Some(Kind::Stdout) | Some(Kind::Stderr) => errno::fail(errno::EBADF),
-        Some(Kind::Free) | None => errno::fail(errno::EBADF),
+        Some(Kind::File) => file::read(guest, fd, buf, len),
+        Some(Kind::Dir) => errno::fail(errno::EISDIR),
+        _ => errno::fail(errno::EBADF),
     }
 }
 
 pub fn close(guest: &mut Guest, fd: u64) -> u64 {
-    match guest.fds.get_mut(fd as usize) {
-        Some(entry) if entry.is_open() => {
-            entry.kind = Kind::Free;
-            errno::ok(0)
-        }
-        _ => errno::fail(errno::EBADF),
-    }
+    file::close(guest, fd)
 }

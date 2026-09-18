@@ -14,14 +14,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+
 //! A guest's file descriptors. A descriptor is a number the guest chose to
 //! believe in; what it points at is this personality's business, and is
 //! never a NONOS handle the guest could name on its own.
 
+use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+use nonos_app_skeleton::clients::vfs::VfsStream;
+
+#[derive(PartialEq, Eq)]
 pub enum Kind {
     /// Closed, and reusable.
     Free,
@@ -29,23 +33,34 @@ pub enum Kind {
     Stdin,
     Stdout,
     Stderr,
+    /// A file in the store, held open on the server.
+    File,
+    /// A directory, listed once when it was opened.
+    Dir,
 }
 
-#[derive(Clone, Copy)]
 pub struct Fd {
     pub kind: Kind,
     /// Byte offset for the kinds that have one.
     pub offset: u64,
+    /// The size the server reported when this was opened.
+    pub size: u64,
+    /// The path the guest named, kept for stat and for the flush on close.
+    pub path: Vec<u8>,
+    /// The server-side handle, for a file opened to read.
+    pub stream: Option<VfsStream>,
+    /// Bytes written by the guest and not yet on the server.
+    pub pending: Vec<u8>,
+    /// The entries of a directory, taken once at open.
+    pub names: Vec<String>,
+    /// Set when the guest asked to write, so close knows to flush.
+    pub writable: bool,
 }
 
 impl Fd {
     /// The three a program is entitled to assume are already open.
     pub fn standard() -> Vec<Fd> {
-        vec![
-            Fd { kind: Kind::Stdin, offset: 0 },
-            Fd { kind: Kind::Stdout, offset: 0 },
-            Fd { kind: Kind::Stderr, offset: 0 },
-        ]
+        vec![Fd::console(Kind::Stdin), Fd::console(Kind::Stdout), Fd::console(Kind::Stderr)]
     }
 
     pub fn is_open(&self) -> bool {

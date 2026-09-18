@@ -20,12 +20,16 @@
 
 mod io;
 mod life;
+mod ctl;
 mod memory;
 mod thread;
+mod uname;
 mod vector;
 
 pub use io::{close, read, write};
+pub use ctl::{fcntl, ioctl};
 pub use life::exit;
 pub use memory::{brk, mmap, munmap};
 pub use thread::{arch_prctl, clock_gettime, getrandom};
+pub use uname::uname;
 pub use vector::writev;

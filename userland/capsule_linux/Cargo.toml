@@ -14,7 +14,7 @@ edition = "2021"
 publish = false
 license = "AGPL-3.0"
 authors = ["eK@nonos.systems"]
-description = "NØNOS Linux personality — hosts Linux binaries outside the trusted computing base"
+description = "NONOS Linux personality: hosts Linux binaries outside the trusted computing base"
 
 [[bin]]
 name = "linux"
@@ -22,6 +22,7 @@ path = "src/main.rs"
 
 [dependencies]
 nonos_libc = { package = "nonos_userland_libc", path = "../libc" }
+nonos_app_skeleton = { path = "../app_skeleton", default-features = false }
 
 [profile.release]
 panic = "abort"

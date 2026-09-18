@@ -56,6 +56,7 @@ pub fn of(number: u64) -> &'static [u8] {
         nr::SET_TID_ADDRESS => b"set_tid_address",
         nr::CLOCK_GETTIME => b"clock_gettime",
         nr::EXIT_GROUP => b"exit_group",
+        nr::GETDENTS64 => b"getdents64",
         nr::OPENAT => b"openat",
         nr::NEWFSTATAT => b"newfstatat",
         nr::SET_ROBUST_LIST => b"set_robust_list",

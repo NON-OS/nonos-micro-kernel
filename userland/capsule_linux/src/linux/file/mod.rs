@@ -14,15 +14,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The Linux personality: everything this system knows about Linux, in
-//! one capsule that holds the capabilities its guests do not.
 
-mod abi;
-mod call;
+//! The filesystem a guest sees.
+//!
+//! Every path a guest names is resolved here and reached through the store
+//! under this capsule's own identity. The kernel is not involved and holds
+//! no filesystem view for a hosted process to inherit.
+
+mod close;
+mod dir;
+mod dirent;
+mod dirents;
 mod file;
-mod guest;
-mod image;
-mod serve;
-mod start;
+pub mod flags;
+mod open;
+mod path;
+mod pread;
+mod query;
+mod read;
+mod resolve;
+mod seek;
+mod slot;
+mod stat;
+mod statbuf;
+mod write;
 
-pub use start::run;
+pub use close::close;
+pub use dirents::getdents64;
+pub use open::openat;
+pub use pread::pread64;
+pub use query::{access, getcwd, readlink};
+pub use read::read;
+pub use seek::lseek;
+pub use stat::{fstat, newfstatat};
+pub use write::write;
