@@ -80,7 +80,7 @@ jobs:
           - crypto-curve25519
           - crypto-ed25519-dalek
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
         with:
           submodules: recursive
           persist-credentials: false
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
       - name: Published syscall numbers reach a handler
         run: python3 scripts/check_syscall_abi.py
       - name: Published capability bits and groups against the kernel
@@ -153,7 +153,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
       - name: Kernel syscalls nothing in userland can reach
         run: python3 scripts/check_syscall_reach.py --baseline scripts/baselines/syscall-unreachable-count.txt
 
