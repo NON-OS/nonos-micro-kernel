@@ -40,6 +40,14 @@ pub(crate) extern "C" fn timer_trap_handler(ctx: *mut UserContext) {
     let frame = unsafe { &*ctx };
     let from_user = (frame.cs & 3) == 3;
 
+    #[cfg(feature = "dbg-ring")]
+    if from_user
+        && (frame.cs != crate::process::userspace::USER_CS as u64
+            || frame.ss != crate::process::userspace::USER_DS as u64)
+    {
+        crate::log::dbg_ring::dbg_emit_2u64(0x5346_0001, frame.cs, frame.ss);
+    }
+
     if from_user {
         if let Some(pcb) = crate::process::current_process() {
             let snapshot = UserContext {
