@@ -14,10 +14,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::arch::x86_64::diag::emit_fatal_notice;
 use crate::interrupts::handlers::exceptions::context::ExceptionContext;
 use crate::interrupts::idt::halt_loop;
 
 pub(crate) fn handle_missing_fpu(ctx: &ExceptionContext) -> ! {
+    if !ctx.is_user_mode() {
+        emit_fatal_notice(b"NM", ctx.instruction_pointer);
+    }
     crate::log::logger::log_error!("No FPU available");
     if ctx.is_user_mode() {
         crate::process::exit::exit_and_yield(-4, true)

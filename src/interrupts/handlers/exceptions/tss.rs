@@ -17,6 +17,7 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception_with_code, ExceptionContext};
+use crate::arch::x86_64::diag::emit_fatal_notice;
 use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
@@ -61,6 +62,7 @@ pub enum DescriptorTable {
 
 pub fn handle(frame: InterruptStackFrame, error_code: u64) {
     let ctx = ExceptionContext::from_frame(&frame);
+    emit_fatal_notice(b"TS", ctx.instruction_pointer);
     log_exception_with_code("INVALID TSS", &ctx, error_code);
     stats::increment_exceptions();
 

@@ -17,12 +17,14 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception, ExceptionContext};
+use crate::arch::x86_64::diag::emit_fatal_notice_nolock;
 use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 use crate::security::observability::redact::redact_address;
 
 pub fn handle(frame: InterruptStackFrame, error_code: u64) -> ! {
     let ctx = ExceptionContext::from_frame(&frame);
+    emit_fatal_notice_nolock(b"DF", ctx.instruction_pointer);
     log_exception("DOUBLE FAULT", &ctx);
     stats::increment_exceptions();
 

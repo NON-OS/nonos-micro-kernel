@@ -19,6 +19,7 @@ use x86_64::registers::control::Cr2;
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_page_fault, ExceptionContext, PageFaultContext, PageFaultErrorCode};
+use crate::arch::x86_64::diag::emit_fatal_notice;
 use crate::interrupts::idt::halt_loop;
 use crate::interrupts::safety::set_interrupt_context;
 use crate::interrupts::stats;
@@ -77,6 +78,7 @@ fn terminate_user_process(ctx: &PageFaultContext) -> ! {
 }
 
 fn kernel_panic(ctx: &PageFaultContext) {
+    emit_fatal_notice(b"PF", ctx.exception.instruction_pointer);
     crate::log::logger::log_critical(&alloc::format!(
         "KERNEL PANIC: Page fault at address {}",
         redact_address(ctx.accessed_address)

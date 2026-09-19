@@ -18,12 +18,16 @@ use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception, ExceptionContext};
 use super::rip_probe::rip_byte_range_mapped;
+use crate::arch::x86_64::diag::emit_fatal_notice;
 use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
 pub fn handle(frame: InterruptStackFrame) {
     crate::arch::x86_64::diag::dump_trap(b"UD", &frame, None, None);
     let ctx = ExceptionContext::from_frame(&frame);
+    if !ctx.is_user_mode() {
+        emit_fatal_notice(b"UD", ctx.instruction_pointer);
+    }
     log_exception("INVALID OPCODE", &ctx);
     stats::increment_exceptions();
 

@@ -17,6 +17,7 @@
 use x86_64::structures::idt::InterruptStackFrame;
 
 use super::context::{log_exception, ExceptionContext};
+use crate::arch::x86_64::diag::emit_fatal_notice;
 use crate::interrupts::idt::halt_loop;
 use crate::interrupts::stats;
 
@@ -33,6 +34,7 @@ pub struct MachineCheckStatus {
 
 pub fn handle(frame: InterruptStackFrame) -> ! {
     let ctx = ExceptionContext::from_frame(&frame);
+    emit_fatal_notice(b"MC", ctx.instruction_pointer);
     log_exception("MACHINE CHECK", &ctx);
     stats::increment_exceptions();
 
