@@ -82,7 +82,7 @@ jobs:
     steps:
       # The release body reads from the tree; without a checkout the job has
       # only the downloaded artifact and body_path dies on ENOENT.
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           sparse-checkout: .github
           persist-credentials: false
