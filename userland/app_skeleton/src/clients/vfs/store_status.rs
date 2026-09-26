@@ -35,3 +35,20 @@ pub fn store_status() -> Result<u32, i32> {
     }
     read_u32(&rx, HDR_LEN + 4).map_err(|_| ERR_TRANSPORT)
 }
+
+/// Whether vfs has finished loading the store from disk, so a file that is
+/// not there is really absent rather than not loaded yet. An older vfs that
+/// sends only the code reads as settled, which is what it always behaved as.
+pub fn store_settled() -> Result<bool, i32> {
+    let port = super::resolve::vfs_port();
+    let mut rx = vec![0u8; HDR_LEN + 12];
+    let (status, len) = super::call::call(port, super::types::OP_STORE_STATUS, 19, &[], &mut rx)
+        .map_err(|_| ERR_TRANSPORT)?;
+    if status != 0 {
+        return Err(status);
+    }
+    if len < HDR_LEN + 12 {
+        return Ok(true);
+    }
+    read_u32(&rx, HDR_LEN + 8).map(|v| v != 0).map_err(|_| ERR_TRANSPORT)
+}

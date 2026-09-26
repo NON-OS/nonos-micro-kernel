@@ -59,7 +59,7 @@ pub use stat::stat;
 pub use stat_full::stat_full;
 pub use store_install::store_install;
 pub use store_remove::store_remove;
-pub use store_status::store_status;
+pub use store_status::{store_settled, store_status};
 pub use store_uninstall::store_uninstall;
 pub use stream::VfsStream;
 pub use truncate::truncate;
