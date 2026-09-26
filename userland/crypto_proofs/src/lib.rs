@@ -54,6 +54,12 @@ mod rsa_tests;
 #[cfg(test)]
 mod zk_tests;
 #[cfg(test)]
+mod zk_attest_tests;
+#[cfg(test)]
+mod zk_field_tests;
+#[cfg(test)]
+mod zk_field_vectors;
+#[cfg(test)]
 mod sha256_tests;
 #[cfg(test)]
 mod sha3_tests;
