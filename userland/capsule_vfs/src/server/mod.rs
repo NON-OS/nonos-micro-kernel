@@ -19,6 +19,9 @@ pub mod generation;
 mod handlers;
 mod runner;
 mod seeder;
+mod seeder_busy;
 mod seeder_idle;
+mod seeder_step;
+mod slow_op;
 
 pub use runner::run;

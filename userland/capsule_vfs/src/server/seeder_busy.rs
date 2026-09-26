@@ -14,28 +14,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Advancing the staging load from the receive loop's idle slot.
+//! Staging on a store that is never quiet.
 
 use crate::store::Store;
 
-use super::seeder::{PackageSeeder, QUIET_POLLS};
+use super::seeder::PackageSeeder;
 
+/// The longest staging waits for a quiet moment before it takes one anyway.
+const STARVE_MS: i64 = 1_000;
+
+/*
+ * The idle slot needs several receive timeouts in a row, and any caller
+ * polling faster than that resets the count. A desktop reading the store
+ * generation does, so staging never began and nothing written to the disk
+ * came back on the next boot. A slice is a few milliseconds, so taking one
+ * after a request, once a second at most, costs callers almost nothing.
+ */
 impl PackageSeeder {
-    pub fn on_idle(&mut self, store: &mut Store) {
-        if self.done {
+    pub fn on_busy(&mut self, store: &mut Store) {
+        let now = nonos_libc::mk_uptime_ms();
+        if self.done || now.saturating_sub(self.last_slice_ms) < STARVE_MS {
             return;
-        }
-        /*
-         * The quiet gate is for starting a load. One in progress takes every
-         * idle slot, and poll_ms makes those a millisecond apart: gated, a
-         * slice ran every 750 ms and staging took ten minutes under TCG.
-         */
-        if self.load.is_none() {
-            self.quiet += 1;
-            if self.quiet < QUIET_POLLS + self.attempts {
-                return;
-            }
-            self.quiet = 0;
         }
         self.advance(store);
     }

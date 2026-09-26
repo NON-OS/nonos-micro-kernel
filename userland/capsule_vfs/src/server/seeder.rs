@@ -27,7 +27,7 @@
 // The load is resumable now and runs on a time budget, so the receive path gets
 // control back after a few milliseconds and the longest anyone waits is a single
 // block request.
-use nonos_libc::mk_debug;
+use nonos_libc::{mk_debug, mk_uptime_ms};
 
 use crate::blk::load::Load;
 
@@ -49,18 +49,19 @@ pub struct PackageSeeder {
     /// The load in progress. Held across idle slots, which is the whole point:
     /// each slot advances it and hands the receive loop back.
     pub(super) load: Option<Load>,
+    pub(super) last_slice_ms: i64,
 }
 
 impl PackageSeeder {
     pub fn new() -> Self {
-        Self { attempts: 0, quiet: 0, done: false, load: None }
+        Self { attempts: 0, quiet: 0, done: false, load: None, last_slice_ms: mk_uptime_ms() }
     }
 
     pub fn poll_ms(&self) -> u64 {
-        if self.done {
-            0
-        } else {
-            POLL_MS
+        match (self.done, self.load.is_some()) {
+            (true, _) => 0,
+            (false, true) => 1,
+            (false, false) => POLL_MS,
         }
     }
 

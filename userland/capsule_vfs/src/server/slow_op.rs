@@ -14,15 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use alloc::vec::Vec;
+//! The line a slow handler leaves on the console.
 
-use crate::protocol::{encode_response, Request, OP_STORE_STATUS};
+use nonos_libc::mk_debug;
 
-pub fn store_status(req: Request<'_>) -> Vec<u8> {
-    // The settled word follows the code, so a client reading only the code
-    // is unaffected.
-    let mut body = [0u8; 8];
-    body[..4].copy_from_slice(&crate::blk::status::current().to_le_bytes());
-    body[4..].copy_from_slice(&u32::from(crate::blk::status::settled()).to_le_bytes());
-    encode_response(OP_STORE_STATUS, req.flags, req.request_id, 0, &body)
+/// A handler that outlives its caller's timeout turns every reply into a drop
+/// and reads as a dead service. Name the op and the cost.
+pub(super) fn report(op: u16, spent: i64) {
+    if spent <= 1000 {
+        return;
+    }
+    let mut line = *b"[VFS] slow op 0000 ms 000000";
+    for (i, shift) in [(14usize, 12u32), (15, 8), (16, 4), (17, 0)] {
+        line[i] = b"0123456789abcdef"[((op as usize) >> shift) & 0xF];
+    }
+    let ms = spent.min(999_999) as u32;
+    let mut v = ms;
+    for i in (22..28).rev() {
+        line[i] = b'0' + (v % 10) as u8;
+        v /= 10;
+    }
+    let _ = mk_debug(line.as_ptr(), line.len());
 }

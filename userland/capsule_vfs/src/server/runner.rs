@@ -60,21 +60,7 @@ pub fn run() -> ! {
         } else {
             let _ = mk_ipc_reply(sender_pid, resp.as_ptr(), resp.len());
         }
-        // A handler that outlives its caller's timeout turns every reply into
-        // a drop and reads as a dead service. Name the op and the cost.
-        let spent = nonos_libc::mk_uptime_ms().saturating_sub(started);
-        if spent > 1000 {
-            let mut line = *b"[VFS] slow op 0000 ms 000000";
-            for (i, shift) in [(14usize, 12u32), (15, 8), (16, 4), (17, 0)] {
-                line[i] = b"0123456789abcdef"[((op as usize) >> shift) & 0xF];
-            }
-            let ms = spent.min(999_999) as u32;
-            let mut v = ms;
-            for i in (22..28).rev() {
-                line[i] = b'0' + (v % 10) as u8;
-                v /= 10;
-            }
-            let _ = mk_debug(line.as_ptr(), line.len());
-        }
+        super::slow_op::report(op, nonos_libc::mk_uptime_ms().saturating_sub(started));
+        seeder.on_busy(&mut store);
     }
 }

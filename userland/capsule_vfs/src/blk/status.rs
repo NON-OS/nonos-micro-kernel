@@ -17,11 +17,23 @@
 // A store that fails to decode at boot used to become a silently empty
 // /capsules. The first failure's code is kept here so OP_STORE_STATUS can
 // report it; later failures never overwrite the original evidence.
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 use super::error::BlkError;
 
 static STORE_STATUS: AtomicU32 = AtomicU32::new(0);
+
+/// Set once boot staging has ended, loaded or given up. Until then a file
+/// that is not there may simply not be loaded yet.
+static SETTLED: AtomicBool = AtomicBool::new(false);
+
+pub fn settle() {
+    SETTLED.store(true, Ordering::Release);
+}
+
+pub fn settled() -> bool {
+    SETTLED.load(Ordering::Acquire)
+}
 
 pub fn record(err: &BlkError) {
     let _ = STORE_STATUS.compare_exchange(0, code(err), Ordering::Relaxed, Ordering::Relaxed);
