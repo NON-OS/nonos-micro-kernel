@@ -18,11 +18,28 @@
 //! reaches into it.
 
 mod fd;
+mod fd_dup;
+mod fd_empty;
+mod fd_kind;
 mod fd_make;
 mod handle;
+mod handle_new;
+mod layout;
 mod mem;
+mod mem_copy;
+mod mem_map;
+mod mem_unmap;
+mod region;
+mod region_cut;
+mod region_find;
 mod threads;
 
-pub use fd::{Fd, Kind};
-pub use handle::{Guest, BRK_BASE};
-pub use mem::{page_down, page_up, PAGE};
+pub use fd::Fd;
+pub use fd_kind::Kind;
+pub use handle::Guest;
+pub use layout::{
+    BRK_BASE, BRK_LIMIT, EXEC_BASE, INTERP_BASE, MMAP_BASE, MMAP_LIMIT, STACK_SIZE,
+    STACK_TOP,
+};
+pub use mem::{page_down, page_up, span_within, MAX_SPAN, PAGE};
+pub use region::Region;

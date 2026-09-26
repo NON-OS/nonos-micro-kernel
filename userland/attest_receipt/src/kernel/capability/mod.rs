@@ -24,13 +24,13 @@
 #[path = "../../../../../src/capabilities/types/defs.rs"]
 pub mod defs;
 
-#[path = "../../../../../src/capabilities/types/bit.rs"]
-mod bit;
+#[path = "../../../../../src/capabilities/types/table.rs"]
+mod table;
 
 #[path = "../../../../../src/capabilities/types/as_str.rs"]
 mod as_str;
 
-#[path = "../../../../../src/capabilities/types/all.rs"]
-mod all;
+#[path = "../../../../../src/capabilities/types/guard.rs"]
+mod guard;
 
 pub use defs::Capability;

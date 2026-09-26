@@ -14,11 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! Closing a descriptor, and writing out anything it was holding.
-
-use nonos_app_skeleton::clients::vfs::write_file;
-use nonos_libc::mk_getpid;
 
 use crate::linux::abi::errno;
 use crate::linux::guest::{Fd, Guest, Kind};
@@ -31,9 +27,8 @@ pub fn close(guest: &mut Guest, fd: u64) -> u64 {
         return errno::fail(errno::EBADF);
     }
     /*
-     * The store handle is dropped with the descriptor, which closes it on
-     * the server. A failed flush is reported here because close is the
-     * last chance a program has to learn that its output never landed.
+     * The store handle is dropped with the descriptor, which closes it on the
+     * server.
      */
     let flushed = flush(entry);
     *entry = Fd::empty(Kind::Free);
@@ -43,9 +38,10 @@ pub fn close(guest: &mut Guest, fd: u64) -> u64 {
     }
 }
 
-fn flush(entry: &Fd) -> bool {
+/// Write a descriptor's buffered bytes out.
+pub(super) fn flush(entry: &Fd) -> bool {
     if entry.kind != Kind::File || !entry.writable {
         return true;
     }
-    write_file(mk_getpid() as u32, &entry.path, &entry.pending).is_ok()
+    super::store::write(&super::resolve::key(&entry.path), &entry.pending).is_ok()
 }

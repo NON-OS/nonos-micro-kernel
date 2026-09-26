@@ -76,6 +76,14 @@ MPMP = 0x504D504D
 MPCP = 0x5043504D
 MPPT = 0x5450504D
 MFTH = 0x4854464D
+MPTL = 0x4C54504D
+MFFK = 0x4B46464D
+MPUN = 0x4E55504D
+MFEX = 0x5845464D
+MLSG = 0x47534C4D
+MLVF = 0x46564C4D
+MAIN = 0x4E49414D
+MDRO = 0x4F52444D
 MIRW = 0x5752494D
 MIRY = 0x5952494D
 MKAR = 0x52414B4D
@@ -630,6 +638,54 @@ ret  = {type="i64"}
 nr   = 0x4854464D
 caps = ["ForeignExec"]
 args = [{name="pid",type="u32",dir="in"},{name="entry",type="u64",dir="in"},{name="rsp",type="u64",dir="in"},{name="tls",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MPTL]
+nr   = 0x4C54504D
+caps = ["ForeignExec"]
+args = [{name="pid",type="u32",dir="in"},{name="base",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MFFK]
+nr   = 0x4B46464D
+caps = ["ForeignExec"]
+args = [{name="pid",type="u32",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MPUN]
+nr   = 0x4E55504D
+caps = ["ForeignExec"]
+args = [{name="pid",type="u32",dir="in"},{name="addr",type="u64",dir="in"},{name="len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MFEX]
+nr   = 0x5845464D
+caps = ["ForeignExec"]
+args = [{name="pid",type="u32",dir="in"},{name="entry",type="u64",dir="in"},{name="rsp",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MLSG]
+nr   = 0x47534C4D
+caps = ["LocalSign"]
+args = [{name="elf_ptr",type="u64",dir="in"},{name="elf_len",type="u64",dir="in"},{name="caps",type="u64",dir="in"},{name="out_ptr",type="u64",dir="out"},{name="out_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MLVF]
+nr   = 0x46564C4D
+caps = ["ForeignExec"]
+args = [{name="elf_ptr",type="u64",dir="in"},{name="elf_len",type="u64",dir="in"},{name="caps",type="u64",dir="in"},{name="trailer_ptr",type="u64",dir="in"},{name="trailer_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MAIN]
+nr   = 0x4E49414D
+caps = ["AppInstall"]
+args = [{name="name_ptr",type="u64",dir="in"},{name="name_len",type="u64",dir="in"}]
+ret  = {type="i64"}
+
+[desc.MDRO]
+nr   = 0x4F52444D
+caps = ["EnrolDevRoot"]
+args = []
 ret  = {type="i64"}
 
 [desc.MPPT]

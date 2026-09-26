@@ -14,25 +14,24 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! Directory open. The listing is snapshotted here, which is all POSIX
 //! promises a directory stream.
 
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use nonos_app_skeleton::clients::vfs::list_paths;
-
 use crate::linux::abi::errno;
 use crate::linux::guest::{Fd, Guest};
 
-use super::slot;
+use super::{resolve, slot, store};
 
-pub fn open(guest: &mut Guest, owner: u32, path: Vec<u8>) -> u64 {
-    let Ok(keys) = list_paths(owner, &path) else {
+pub fn open(guest: &mut Guest, path: Vec<u8>) -> u64 {
+    let at = resolve::key(&path);
+    let Ok(keys) = store::list(&at) else {
         return errno::fail(errno::EACCES);
     };
-    let names = children(&path, keys);
+    // Cut against the store key, not against the path the guest named.
+    let names = children(at.as_bytes(), keys);
     match slot::install(guest, Fd::dir(path, names)) {
         Some(n) => errno::ok(n),
         None => errno::fail(errno::EMFILE),
@@ -41,8 +40,8 @@ pub fn open(guest: &mut Guest, owner: u32, path: Vec<u8>) -> u64 {
 
 // OP_LIST returns whole keys at any depth. Cut at the first separator
 // past the prefix and dedupe, or every file below shows up as a sibling.
-fn children(path: &[u8], keys: Vec<String>) -> Vec<String> {
-    let cut = if path == b"/" { 1 } else { path.len() + 1 };
+fn children(at: &[u8], keys: Vec<String>) -> Vec<String> {
+    let cut = at.len() + 1;
     let mut out: Vec<String> = Vec::new();
     for key in keys {
         let bytes = key.as_bytes();

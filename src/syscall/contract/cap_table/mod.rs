@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Which capability admits which syscall.
+
 mod admin;
 mod crypto;
 mod graphics;
@@ -22,11 +24,7 @@ mod mk;
 use crate::capabilities::CapabilityToken;
 use crate::syscall::numbers::SyscallNumber;
 
-// Total cap-table over `SyscallNumber`. A number unclaimed by any
-// family is refused by the trailing `unwrap_or(false)`. The legacy
-// `hardware` family (IoPortRead/IoPortWrite/MmioMap) has been folded
-// into the `mk` family — `MkPioRead/MkPioWrite/MkMmioMap` are the
-// single source of truth.
+/// Total cap-table over `SyscallNumber`.
 pub(super) fn is_allowed(caps: &CapabilityToken, number: SyscallNumber) -> bool {
     crypto::check(caps, number)
         .or_else(|| admin::check(caps, number))

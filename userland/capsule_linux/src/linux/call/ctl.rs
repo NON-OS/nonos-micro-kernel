@@ -14,14 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! `ioctl` and `fcntl`.
-//!
-//! There is no terminal behind any descriptor here, so every ioctl is
-//! refused with ENOTTY. That is not a gap: a libc asks TCGETS to find out
-//! whether stdout is a terminal, and ENOTTY is the true answer. Claiming
-//! otherwise would put the program into line buffering on something that
-//! is not a line.
 
 use crate::linux::abi::errno;
 use crate::linux::guest::Guest;
@@ -39,24 +32,33 @@ pub fn ioctl(guest: &Guest, fd: u64, _request: u64) -> u64 {
     }
 }
 
-pub fn fcntl(guest: &Guest, fd: u64, cmd: u64) -> u64 {
-    let open = matches!(guest.fds.get(fd as usize), Some(e) if e.is_open());
-    if !open {
+/// The only descriptor flag there is.
+const FD_CLOEXEC: u64 = 1;
+
+pub fn fcntl(guest: &mut Guest, fd: u64, cmd: u64, arg: u64) -> u64 {
+    let Some(entry) = guest.fds.get_mut(fd as usize).filter(|e| e.is_open()) else {
         return errno::fail(errno::EBADF);
-    }
+    };
     match cmd {
         /*
-         * Nothing here is ever handed to an exec, so the close-on-exec
-         * flag is genuinely clear and setting it changes nothing. The
-         * status flags are reported as the read-write the descriptor
-         * already has, and a request to change them is accepted because
-         * none of the flags a program sets here has an effect.
+         * A shell sets close-on-exec on the descriptors it keeps for itself,
+         * then execs, and expects the command not to see them.
          */
-        F_GETFD | F_SETFD | F_SETFL => errno::ok(0),
+        F_GETFD => errno::ok(u64::from(entry.cloexec)),
+        F_SETFD => {
+            entry.cloexec = arg & FD_CLOEXEC != 0;
+            errno::ok(0)
+        }
+        /*
+         * Reported as the read-write the descriptor already has; a request to
+         * change them is accepted because none of the flags a program sets
+         * here has an effect.
+         */
+        F_SETFL => errno::ok(0),
         F_GETFL => errno::ok(2),
         /*
-         * Duplication needs a second handle on the server, which the
-         * store does not offer yet. Refused rather than aliased.
+         * Duplication needs a second handle on the server, which the store
+         * does not offer yet.
          */
         F_DUPFD => errno::fail(errno::ENOSYS),
         _ => errno::fail(errno::EINVAL),

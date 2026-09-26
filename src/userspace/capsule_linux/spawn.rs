@@ -15,9 +15,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Admitting the Linux personality through the same verified path every
-//! capsule takes. ForeignExec is the only capability here that no other
-//! capsule holds, and it is what lets this one host code the kernel has
-//! not verified. Its guests hold nothing at all.
+//! capsule takes.
 
 use super::embed::{
     LINUX_ATTESTATION_BYTES, LINUX_ELF, LINUX_MANIFEST_BYTES, LINUX_NONOS_ID_CERT_BYTES,
@@ -36,14 +34,15 @@ const REPLY_INBOX: &str = "endpoint.app.linux.reply";
 const REPLY_PORT: u32 = 4937;
 const TARGET_TRIPLE: &str = env!("NONOS_USER_TARGET");
 
-/// Declared once here and mirrored by the capsule's manifest, which is
-/// what the gate actually enforces.
+/// Declared once here and mirrored by the capsule's manifest, which is what
+/// the gate actually enforces.
 pub const LINUX_CAPS: u64 = Capability::CoreExec.bit()
     | Capability::IPC.bit()
     | Capability::Memory.bit()
     | Capability::Crypto.bit()
     | Capability::Debug.bit()
-    | Capability::ForeignExec.bit();
+    | Capability::ForeignExec.bit()
+    | Capability::LocalSign.bit();
 
 pub fn spawn_linux_capsule() -> Result<(), SpawnError> {
     let trust_anchor = decode_trust_anchor(BAKED_TRUST_ANCHOR_POLICY)

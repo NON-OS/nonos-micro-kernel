@@ -14,19 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! `openat`. Opens run under this capsule's pid, not the guest's: a guest
-//! holds no capabilities and the store would refuse it.
+//! `openat`.
 
 use alloc::vec::Vec;
-
-use nonos_libc::mk_getpid;
 
 use crate::linux::abi::errno;
 use crate::linux::guest::{Guest, Kind};
 
-use super::flags::{wants_write, AT_FDCWD, O_CREAT, O_DIRECTORY};
-use super::{dir, file, path, resolve, stat};
+use super::flags::{wants_write, AT_FDCWD, O_CLOEXEC, O_CREAT, O_DIRECTORY};
+use super::{dir, path, regular, resolve, store};
 
 pub fn openat(guest: &mut Guest, dirfd: u64, path_ptr: u64, flags: u64) -> u64 {
     let Some(name) = path::read_path(guest, path_ptr) else {
@@ -36,14 +32,26 @@ pub fn openat(guest: &mut Guest, dirfd: u64, path_ptr: u64, flags: u64) -> u64 {
         Ok(base) => base,
         Err(e) => return e,
     };
-    let full = resolve::absolute(&base, &name);
-    let owner = mk_getpid() as u32;
-    match stat::look(owner, &full) {
-        Some((_, true)) => dir::open(guest, owner, full),
+    let full = resolve::visible(&base, &name);
+    let got = match store::stat(&resolve::key(&full)).ok() {
+        Some((_, true)) => dir::open(guest, full),
         Some((_, false)) if flags & O_DIRECTORY != 0 => errno::fail(errno::ENOTDIR),
-        Some((size, false)) => file::open(guest, owner, full, size, flags),
-        None if flags & O_CREAT != 0 && wants_write(flags) => file::create(guest, full),
+        Some((size, false)) => regular::open(guest, full, size, flags),
+        None if flags & O_CREAT != 0 && wants_write(flags) => regular::create(guest, full),
         None => errno::fail(errno::ENOENT),
+    };
+    mark(guest, got, flags & O_CLOEXEC != 0);
+    got
+}
+
+/// O_CLOEXEC is a property of the descriptor, not of the open, so it is set
+/// once the number is known rather than threaded through every one of the
+/// paths above.
+fn mark(guest: &mut Guest, got: u64, on: bool) {
+    if let Some(slot) = errno::slot(got).filter(|_| on) {
+        if let Some(fd) = guest.fds.get_mut(slot) {
+            fd.cloexec = true;
+        }
     }
 }
 

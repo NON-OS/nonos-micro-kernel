@@ -1,0 +1,177 @@
+#!/usr/bin/env python3
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""Refuse a capability nothing consults, and a syscall with a hole.
+
+A capability used to be able to exist in the enum and be missing from
+the array `bits_to_caps` filters over, which converted it to nothing: a
+capsule granted it in its signed manifest got the bit in `caps_bits` and
+no capability in its token. That happened to ForeignExec and cost the
+Linux personality every boot it ever had. It cannot happen now, because
+one list in `capabilities/types/defs.rs` generates the enum, the bits
+and the array together, and the build refuses two entries sharing a bit.
+
+What no compiler can see is the other direction: a capability declared
+and gated by nothing at all. A manifest granting it says more than the
+kernel enforces, and an auditor reading that manifest is misled about
+what the capsule can reach. So that is what is checked here.
+
+The syscall tables are checked for the same reason: a number defined and
+routed but missing from the capability table is ungated, and missing from
+the registry is unnamed.
+"""
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+
+def read(root: Path, rel: str) -> str:
+    return (root / rel).read_text(errors="replace")
+
+
+def declared(root: Path) -> set:
+    """The one list, as `Name = 1 << n,` inside the table invocation."""
+    src = read(root, "src/capabilities/types/defs.rs")
+    return set(re.findall(r"^\s{4}(\w+) = 1 << \d+,$", src, re.M))
+
+
+def code_lines(path: Path):
+    """Source lines with the comments dropped.
+
+    Comments describe these checks using stand-in names, so a scan that
+    reads them finds capabilities that were never meant to exist.
+    """
+    for line in path.read_text(errors="replace").splitlines():
+        if line.lstrip().startswith(("//", "///", "*")):
+            continue
+        yield line
+
+
+def called_anywhere(root: Path, fn: str) -> bool:
+    """Whether anything outside its own definition calls `fn`."""
+    pat = re.compile(r"\b" + re.escape(fn) + r"\s*\(")
+    definition = re.compile(r"\bfn\s+" + re.escape(fn) + r"\b")
+    for path in (root / "src").rglob("*.rs"):
+        for line in code_lines(path):
+            if definition.search(line):
+                continue
+            if pat.search(line):
+                return True
+    return False
+
+
+def consulted(root: Path, listed: set) -> set:
+    """Which of `listed` some reachable code actually asks about.
+
+    A capability named only inside a checker that nothing calls is not
+    consulted, however it looks to a grep. That distinction is the
+    point: `Capability::FileSystem` is written into manifests and read
+    by `can_read`, `can_write` and six more in `syscall/caps/checks`,
+    and at the time of writing not one of those is called from
+    anywhere. A manifest granting it says something the kernel does not
+    enforce.
+
+    Filtered against `listed` because two other enums in this kernel
+    are also called `Capability`, one for zkIDs and one for the policy
+    engine. A regex cannot tell them apart and the compiler does not
+    have to, so anything not on the list is somebody else's type.
+    """
+    seen, by_checker = set(), {}
+    for path in (root / "src").rglob("*.rs"):
+        if "capabilities/types/" in str(path):
+            continue
+        inside = "syscall/caps/checks" in str(path)
+        fn = None
+        for line in code_lines(path):
+            found = re.search(r"\bfn\s+(\w+)", line)
+            if found:
+                fn = found.group(1)
+            for name in re.findall(r"Capability::(\w+)", line):
+                if inside and fn:
+                    by_checker.setdefault(name, set()).add(fn)
+                else:
+                    seen.add(name)
+    for name, fns in by_checker.items():
+        if any(called_anywhere(root, fn) for fn in fns):
+            seen.add(name)
+    return seen & listed
+
+
+# Capabilities known to enforce nothing, recorded so the check is a
+# ratchet rather than noise: these two do not fail the audit, and any
+# third one will. Neither is requested by a capsule. `IO` is read by
+# `can_read` and `can_write`, `Hardware` by `can_hardware`, and nothing
+# calls any of them. Wire one or retire it and take it off this list;
+# do not add to it to make the audit quiet.
+UNENFORCED = {"IO", "Hardware"}
+
+
+def capabilities(root: Path) -> int:
+    """Every declared capability must be consulted by something."""
+    listed = declared(root)
+    used = consulted(root, listed)
+
+    bad = 0
+    for name in sorted(listed - used - UNENFORCED):
+        print(f"declared but nothing consults it: {name}", file=sys.stderr)
+        bad += 1
+    for name in sorted(UNENFORCED - (listed - used)):
+        print(f"on the unenforced list but now enforced, remove it: {name}", file=sys.stderr)
+        bad += 1
+    print(f"capabilities: {len(listed)} declared, {len(used)} consulted, "
+          f"{len(UNENFORCED)} known unenforced")
+    return bad
+
+
+def syscalls(root: Path) -> int:
+    """Every Mk number must be gated, named, routed and dispatched."""
+    defs = {
+        n for n, _ in re.findall(
+            r"(\w+) = tag4\(b\"(\w{4})\"\)", read(root, "src/syscall/numbers/defs.rs")
+        )
+    }
+    mk = {d for d in defs if d.startswith("Mk")}
+    reg = set(re.findall(r"SyscallNumber::(\w+),", read(root, "src/syscall/abi/registry/mk.rs")))
+    gated = set(
+        re.findall(r"SyscallNumber::(Mk\w+)", read(root, "src/syscall/contract/cap_table/mk.rs"))
+    )
+
+    bad = 0
+    for name in sorted(mk - reg):
+        print(f"syscall not in the ABI registry: {name}", file=sys.stderr)
+        bad += 1
+    for name in sorted(mk - gated):
+        print(f"syscall with no capability gate: {name}", file=sys.stderr)
+        bad += 1
+    print(f"syscalls: {len(mk)} Mk numbers, all gated and named" if not bad else "")
+    return bad
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--root", type=Path, default=Path("."))
+    args = ap.parse_args()
+    bad = capabilities(args.root) + syscalls(args.root)
+    if bad:
+        print(f"\n{bad} problem(s); a right nothing enforces is not a right",
+              file=sys.stderr)
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

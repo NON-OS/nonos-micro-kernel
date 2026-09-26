@@ -14,37 +14,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! Bring one Linux program up and stay with it until it ends.
 
-use nonos_libc::{heap_init, mk_debug, mk_exit, mk_foreign_spawn, mk_foreign_start};
+use nonos_libc::{heap_init, mk_debug, mk_exit, mk_foreign_spawn};
 
 use super::guest::Guest;
-use super::image;
 use super::serve::serve;
 use super::source::source;
-
-/// The stack top a guest wakes on, below the personality's own mappings
-/// and above everything it maps for itself.
-const STACK_TOP: u64 = 0x0000_7FFF_F000;
-
-/// The stack a guest gets, which is also the largest span one peer call
-/// will map. Sixty-four kilobytes served a static binary and would have
-/// overflowed under an interpreter recursing through a dependency graph,
-/// as a fault inside the linker with nothing to read.
-const STACK_SIZE: u64 = 1 << 20;
+use super::start_guest::start;
 
 pub fn run() -> ! {
     let _ = heap_init();
     say(b"[LINUX] personality up\n");
-    let (path, bytes) = source();
+    if let Some(name) = super::request::install_request() {
+        say(b"[LINUX] installing\n");
+        let ok = super::install::install(&name);
+        say(if ok { b"[LINUX] installed\n" } else { b"[LINUX] install failed\n" });
+        mk_exit(if ok { 0 } else { 1 })
+    }
+    let (path, bytes, origin) = source();
     let pid = mk_foreign_spawn(b"linux");
     if pid < 0 {
-        say(b"[LINUX] no guest: refused\n");
+        say(b"[LINUX] no guest, errno ");
+        let e = (-pid) as u32;
+        let digits = [b'0' + (e / 10 % 10) as u8, b'0' + (e % 10) as u8, b'\n'];
+        say(&digits);
         mk_exit(1)
     }
     let mut guest = Guest::new(pid as u32);
-    let code = match start(&mut guest, &path, &bytes) {
+    let code = match start(&mut guest, &path, &bytes, origin) {
         Ok(()) => {
             say(b"[LINUX] guest running\n");
             serve(&mut guest)
@@ -58,18 +56,6 @@ pub fn run() -> ! {
     mk_exit(code)
 }
 
-fn start(guest: &mut Guest, path: &[u8], bytes: &[u8]) -> Result<(), &'static [u8]> {
-    let (image, entry, interp_base) =
-        image::program(guest, bytes).map_err(|_| &b"[LINUX] image refused\n"[..])?;
-    guest.map(STACK_TOP - STACK_SIZE, STACK_SIZE, true, false);
-    let rsp = image::build(guest, STACK_TOP, &image, interp_base, path)
-        .ok_or(&b"[LINUX] stack refused\n"[..])?;
-    match mk_foreign_start(guest.pid, entry, rsp) {
-        n if n < 0 => Err(&b"[LINUX] start refused\n"[..]),
-        _ => Ok(()),
-    }
-}
-
-fn say(line: &[u8]) {
+pub(super) fn say(line: &[u8]) {
     let _ = mk_debug(line.as_ptr(), line.len());
 }

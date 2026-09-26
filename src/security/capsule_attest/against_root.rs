@@ -16,41 +16,37 @@
 
 use super::error::AttestError;
 
+/// The two proof shapes, told apart by their own first eight bytes.
+const STARK_MAGIC: &[u8; 8] = b"NZKSTRK1";
+
 /// Verify a capsule's proof against one specific root.
-///
-/// The root is a parameter rather than a lookup. That is the whole point: the
-/// verification is identical whoever owns the tree, so a capsule built on this
-/// machine clears exactly the bar a shipped one does. Only membership differs.
-///
-/// Returns the measurement the proof was checked against, so a caller records
-/// what was verified rather than recomputing it and hoping the two agree.
 pub(super) fn verify(
     trailer: &[u8],
     elf: &[u8],
     granted_caps: u64,
     root: &[u8; 32],
 ) -> Result<[u8; 32], AttestError> {
-    #[cfg(feature = "nonos-stark-attest")]
-    {
-        super::stark::verify_against(trailer, elf, granted_caps, root)
+    if trailer.len() >= 8 && &trailer[0..8] == STARK_MAGIC {
+        return stark(trailer, elf, granted_caps, root);
     }
-    #[cfg(not(feature = "nonos-stark-attest"))]
-    {
-        use super::layout::POLICY_EPOCH;
-        use super::trailer::parse;
-        use crate::crypto::zk_kernel::verify_enrolled;
-
-        let proof = parse(trailer)?;
-        let capsule_hash = *blake3::hash(elf).as_bytes();
-        let mut ctx = [0u8; 48];
-        ctx[..32].copy_from_slice(&capsule_hash);
-        ctx[32..40].copy_from_slice(&granted_caps.to_be_bytes());
-        ctx[40..48].copy_from_slice(&POLICY_EPOCH.to_be_bytes());
-
-        if verify_enrolled(&proof, root, &ctx) {
-            Ok(capsule_hash)
-        } else {
-            Err(AttestError::Rejected)
-        }
-    }
+    super::against_pedersen::verify(trailer, elf, granted_caps, root)
 }
+
+#[cfg(feature = "nonos-stark-attest")]
+fn stark(
+    trailer: &[u8],
+    elf: &[u8],
+    granted_caps: u64,
+    root: &[u8; 32],
+) -> Result<[u8; 32], AttestError> {
+    super::stark::verify_against(trailer, elf, granted_caps, root)
+}
+
+/// A build without the STARK verifier cannot check a STARK trailer, and saying
+/// so is the only safe answer: the alternative is falling through to the other
+/// parser, which would refuse for the wrong reason.
+#[cfg(not(feature = "nonos-stark-attest"))]
+fn stark(_: &[u8], _: &[u8], _: u64, _: &[u8; 32]) -> Result<[u8; 32], AttestError> {
+    Err(AttestError::Rejected)
+}
+

@@ -18,7 +18,7 @@
 
 `abi/caps.toml` is what an external toolchain reads to learn what a capability
 bit means. The kernel is the only thing that decides that, so the file is
-correct exactly when it agrees with `src/capabilities/types/bit.rs`.
+correct exactly when it agrees with `src/capabilities/types/defs.rs`.
 
 The existing CI check compares four graphics entries against values written
 into the check itself, which makes the check a third copy of the table rather
@@ -36,7 +36,7 @@ import re
 import sys
 from pathlib import Path
 
-KERNEL_BITS = Path("src/capabilities/types/bit.rs")
+KERNEL_BITS = Path("src/capabilities/types/defs.rs")
 ABI_CAPS = Path("abi/caps.toml")
 
 
@@ -46,8 +46,8 @@ def canonical(name: str) -> str:
 
 def read_kernel(root: Path):
     text = (root / KERNEL_BITS).read_text()
-    pairs = re.findall(r"Self::(\w+)\s*=>\s*(\d+)\s*,", text)
-    return {canonical(n): (n, int(v)) for n, v in pairs}
+    pairs = re.findall(r"^\s*(\w+)\s*=\s*1\s*<<\s*(\d+)\s*,", text, re.M)
+    return {canonical(n): (n, 1 << int(v)) for n, v in pairs}
 
 
 def sections(text: str):

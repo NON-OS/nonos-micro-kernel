@@ -14,27 +14,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! A second thread inside a guest.
 
+use super::peer_guard::{in_user_half, pid_arg};
 use crate::process::core::{admit_thread, spawn_thread_parked};
 use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM};
 
 /// `MkForeignThread`: a thread in `pid`, sharing its address space and
-/// supervised by the same caller. `tls` is stored rather than applied:
-/// the context switch loads FS base from the control block, so a thread
-/// that has never run still wakes with it set, which it must, because a
-/// C runtime touches thread-local storage before its first instruction
-/// of program code.
+/// supervised by the same caller.
 pub fn sys_foreign_thread(pid: u64, entry: u64, rsp: u64, tls: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let pid = pid as u32;
+    let pid = match pid_arg(pid) {
+        Ok(p) => p,
+        Err(e) => return e,
+    };
     if super::registry::supervisor_of(pid) != Some(caller) {
         return ERRNO_PERM;
     }
-    if entry == 0 || rsp == 0 {
+    /*
+     * Ring three addresses only, and the thread pointer among them: the switch
+     * writes that one to an MSR that faults in ring zero on a non-canonical
+     * value.
+     */
+    if !in_user_half(entry, 1) || !in_user_half(rsp, 0) {
+        return ERRNO_INVAL;
+    }
+    if tls != 0 && !in_user_half(tls, 1) {
         return ERRNO_INVAL;
     }
     let Ok(tid) = spawn_thread_parked(pid, entry, rsp) else {

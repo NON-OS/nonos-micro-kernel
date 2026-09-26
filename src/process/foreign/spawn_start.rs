@@ -16,38 +16,34 @@
 
 //! Making a built guest runnable.
 
-use crate::kernel_core::process_spawn::{allocate_user_stack, setup_initial_user_context};
-use crate::process::core::ProcessState;
-use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM};
+use super::peer_guard::{in_user_half, pid_arg};
+use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_PERM};
 
-/*
- * `rsp` of zero asks for the kernel's own user stack. Any other value is
- * a stack the supervisor built inside the guest, which is what a program
- * that reads its arguments needs: the kernel knows nothing about argument
- * vectors, and the supervisor that does cannot install a stack pointer
- * without this call.
- */
+// `rsp` of zero asks for the kernel's own user stack.
 pub fn sys_foreign_start(pid: u64, entry: u64, rsp: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let pid = pid as u32;
+    let pid = match pid_arg(pid) {
+        Ok(p) => p,
+        Err(e) => return e,
+    };
     if super::registry::supervisor_of(pid) != Some(caller) {
         return ERRNO_PERM;
     }
-    let stack = match rsp {
-        0 => match allocate_user_stack(pid) {
-            Ok(top) => top,
-            Err(_) => return ERRNO_NOMEM,
-        },
-        given => given,
-    };
-    if setup_initial_user_context(pid, entry, stack).is_err() {
-        return ERRNO_FAULT;
+    /*
+     * An entry of zero means the guest already holds the state it should wake
+     * in, which is what a fork leaves behind.
+     */
+    if entry == 0 && rsp == 0 {
+        return super::resume::resume(pid);
     }
-    crate::process::with_process(pid, |pcb| {
-        *pcb.state.lock() = ProcessState::Ready;
-    });
-    crate::sched::add_to_run_queue(pid);
-    0
+    /*
+     * A guest runs in ring three, so a kernel entry or stack would fault on
+     * its first instruction rather than escalate.
+     */
+    if !in_user_half(entry, 1) || (rsp != 0 && !in_user_half(rsp, 0)) {
+        return ERRNO_INVAL;
+    }
+    super::start_context::install(pid, entry, rsp)
 }

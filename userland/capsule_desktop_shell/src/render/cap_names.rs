@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 
 use crate::server::handlers::pkg_install::push_i32;
 
-const NAMES: [&[u8]; 33] = [
+const NAMES: [&[u8]; 34] = [
     b"CoreExec",
     b"IO",
     b"Network",
@@ -45,6 +45,7 @@ const NAMES: [&[u8]; 33] = [
     b"AppInstall",
     b"AttestRead",
     b"ForeignExec",
+    b"LocalSign",
 ];
 
 pub(super) fn append(caps: u64, out: &mut Vec<u8>) {

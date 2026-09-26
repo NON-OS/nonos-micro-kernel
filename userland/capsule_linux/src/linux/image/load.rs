@@ -14,23 +14,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! Laying an image's segments into a guest's address space.
-//!
-//! The kernel maps pages on request and copies bytes on request; which
-//! pages and which bytes is the personality's business, because the
-//! format is the personality's knowledge.
 
-use super::elf::{Elf, ET_DYN, PF_W, PF_X, PT_INTERP, PT_LOAD};
+use super::elf::{Elf, ET_DYN, PT_INTERP, PT_LOAD};
 use super::loaded::{LoadError, Loaded};
 use super::segment::{name, segment};
 use crate::linux::guest::Guest;
 
-/// Map every `PT_LOAD` at `bias` and report what was learned. A shared
-/// object is expected to be biased and an executable is not, so a caller
-/// passing a bias for an `ET_EXEC` image is refused rather than moving an
-/// image that carries absolute addresses.
-pub fn load_at(guest: &Guest, bytes: &[u8], bias: u64) -> Result<Loaded, LoadError> {
+/// Map every `PT_LOAD` at `bias` and report what was learned.
+pub fn load_at(guest: &mut Guest, bytes: &[u8], bias: u64) -> Result<Loaded, LoadError> {
     let elf = Elf::parse(bytes).ok_or(LoadError::NotElf)?;
     if bias != 0 && elf.kind != ET_DYN {
         return Err(LoadError::NotElf);
@@ -45,11 +37,14 @@ pub fn load_at(guest: &Guest, bytes: &[u8], bias: u64) -> Result<Loaded, LoadErr
         }
     }
     Ok(Loaded {
-        entry: elf.entry + bias,
+        /*
+         * Checked: unchecked it wraps, and the kernel then refuses an
+         * address the image never asked for.
+         */
+        entry: elf.entry.checked_add(bias).ok_or(LoadError::NotElf)?,
         phdr: elf.phdr_addr(bias).unwrap_or(0),
         phentsize: elf.phentsize as u64,
         phnum: elf.phnum() as u64,
         interp,
-        bias,
     })
 }

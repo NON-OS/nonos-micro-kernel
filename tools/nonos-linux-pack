@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""Resolve a Linux program's shared library closure and place it in the store.
+
+The Linux personality reads a program and its libraries out of the NONOS store
+at the paths the program itself names: the interpreter from PT_INTERP, then
+whatever that interpreter opens. So installing an application is placing the
+real files at the real paths, and the only hard part is knowing which files.
+
+This walks the ELF dynamic section for DT_NEEDED, resolves each name against a
+sysroot using DT_RUNPATH and then the default library directories, and repeats
+until nothing new appears. It emits the entry list that tools/nonos-store-pack
+takes, or writes them into an image directly.
+
+Nothing here guesses. A name that cannot be resolved inside the sysroot is
+reported and the run fails, because a missing library at boot is a dynamic
+linker abort with no message worth reading.
+"""
+
+import argparse
+import struct
+import subprocess
+import sys
+from pathlib import Path
+
+PT_INTERP = 3
+PT_DYNAMIC = 2
+DT_NEEDED = 1
+DT_RUNPATH = 29
+DT_RPATH = 15
+DT_STRTAB = 5
+DT_STRSZ = 10
+
+DEFAULT_LIBDIRS = ("/lib", "/usr/lib", "/lib64", "/usr/lib64")
+
+
+class NotElf(Exception):
+    pass
+
+
+def phdrs(data: bytes):
+    """(type, offset, vaddr, filesz) for each program header."""
+    if len(data) < 64 or data[:4] != b"\x7fELF":
+        raise NotElf("not an ELF")
+    if data[4] != 2 or data[5] != 1:
+        raise NotElf("not 64-bit little-endian")
+    e_phoff, = struct.unpack_from("<Q", data, 32)
+    e_phentsize, e_phnum = struct.unpack_from("<HH", data, 54)
+    out = []
+    for i in range(e_phnum):
+        at = e_phoff + i * e_phentsize
+        p_type, = struct.unpack_from("<I", data, at)
+        p_offset, p_vaddr = struct.unpack_from("<QQ", data, at + 8)
+        p_filesz, = struct.unpack_from("<Q", data, at + 32)
+        out.append((p_type, p_offset, p_vaddr, p_filesz))
+    return out
+
+
+def vaddr_to_off(headers, vaddr: int):
+    """File offset of a virtual address, using the load segment holding it."""
+    for p_type, p_offset, p_vaddr, p_filesz in headers:
+        if p_type == 1 and p_vaddr <= vaddr < p_vaddr + p_filesz:
+            return p_offset + (vaddr - p_vaddr)
+    return None
+
+
+def interp(data: bytes, headers) -> str:
+    for p_type, p_offset, _, p_filesz in headers:
+        if p_type == PT_INTERP:
+            raw = data[p_offset:p_offset + p_filesz]
+            return raw.split(b"\0", 1)[0].decode()
+    return ""
+
+
+def dynamic(data: bytes, headers):
+    """(needed names, runpath entries) from the dynamic section."""
+    seg = next((p for p in headers if p[0] == PT_DYNAMIC), None)
+    if seg is None:
+        return [], []
+    _, off, _, size = seg
+    tags = []
+    at = off
+    while at + 16 <= off + size:
+        tag, val = struct.unpack_from("<qQ", data, at)
+        at += 16
+        if tag == 0:
+            break
+        tags.append((tag, val))
+    strtab = next((v for t, v in tags if t == DT_STRTAB), None)
+    strsz = next((v for t, v in tags if t == DT_STRSZ), 0)
+    if strtab is None:
+        return [], []
+    base = vaddr_to_off(headers, strtab)
+    if base is None:
+        return [], []
+    table = data[base:base + strsz]
+
+    def name(index: int) -> str:
+        end = table.find(b"\0", index)
+        return table[index:end if end >= 0 else None].decode(errors="replace")
+
+    needed = [name(v) for t, v in tags if t == DT_NEEDED]
+    paths = []
+    for t, v in tags:
+        if t in (DT_RUNPATH, DT_RPATH):
+            paths.extend(p for p in name(v).split(":") if p)
+    return needed, paths
+
+
+def find(sysroot: Path, name: str, extra: list) -> Path:
+    """A library by soname, inside the sysroot and nowhere else."""
+    if name.startswith("/"):
+        candidate = sysroot / name.lstrip("/")
+        return candidate if candidate.is_file() else None
+    for directory in list(extra) + list(DEFAULT_LIBDIRS):
+        candidate = sysroot / directory.lstrip("/") / name
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def closure(sysroot: Path, program: Path):
+    """Every file the program needs, as store path -> file on disk."""
+    out = {}
+    missing = []
+    queue = [("/" + str(program.relative_to(sysroot)), program)]
+    seen = set()
+    while queue:
+        store_path, disk = queue.pop()
+        if store_path in seen:
+            continue
+        seen.add(store_path)
+        data = disk.read_bytes()
+        out[store_path] = disk
+        headers = phdrs(data)
+        ld = interp(data, headers)
+        if ld:
+            target = sysroot / ld.lstrip("/")
+            if target.is_file():
+                queue.append((ld, target))
+            else:
+                missing.append(ld)
+        needed, runpath = dynamic(data, headers)
+        for name in needed:
+            found = find(sysroot, name, runpath)
+            if found is None:
+                missing.append(name)
+                continue
+            queue.append(("/" + str(found.relative_to(sysroot)), found))
+    return out, missing
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--sysroot", type=Path, required=True,
+                    help="root of the Linux distribution the program came from")
+    ap.add_argument("--program", type=Path, action="append", required=True,
+                    help="program to install, inside the sysroot; repeatable")
+    ap.add_argument("--data", action="append", default=[],
+                    help="a data file as STOREPATH=DISKPATH, or a path inside "
+                         "the sysroot to install where it already sits; "
+                         "repeatable. The keymap goes in this way.")
+    ap.add_argument("--sign", type=Path,
+                    help="capsule-sign binary. With it, each program is given "
+                         "a certificate, manifest and trailer beside it, over "
+                         "the closure computed here, and the personality "
+                         "refuses anything unproven.")
+    ap.add_argument("--publisher", type=Path,
+                    help="publisher seed prefix for --sign")
+    ap.add_argument("--image", type=Path,
+                    help="store image to write into; without it the entries are printed")
+    ap.add_argument("--lba", type=int, default=256, help="store LBA in the image")
+    ap.add_argument("--pack", type=Path, default=Path("tools/nonos-store-pack"),
+                    help="the packer to hand the entries to")
+    args = ap.parse_args()
+
+    if not args.sysroot.is_dir():
+        print(f"linux-pack: no sysroot at {args.sysroot}", file=sys.stderr)
+        return 2
+
+    entries, missing = {}, []
+    for program in args.program:
+        path = program if program.is_absolute() else args.sysroot / program
+        if not path.is_file():
+            print(f"linux-pack: no program at {path}", file=sys.stderr)
+            return 2
+        found, gone = closure(args.sysroot, path.resolve())
+        entries.update(found)
+        missing.extend(gone)
+
+    for item in args.data:
+        store, _, disk = item.partition("=")
+        path = Path(disk) if disk else (args.sysroot / store.lstrip("/"))
+        if not path.is_file():
+            print(f"linux-pack: no data file at {path}", file=sys.stderr)
+            return 2
+        entries["/" + store.lstrip("/")] = path
+
+    if missing:
+        print("linux-pack: unresolved inside the sysroot, refusing to pack a "
+              "program that cannot start:", file=sys.stderr)
+        for name in sorted(set(missing)):
+            print(f"  {name}", file=sys.stderr)
+        return 1
+
+    pairs = [f"{store}={disk}" for store, disk in sorted(entries.items())]
+    total = sum(disk.stat().st_size for disk in entries.values())
+    print(f"linux-pack: {len(pairs)} files, {total // 1024} KiB")
+    if args.image is None:
+        for pair in pairs:
+            print(f"  --entry {pair}")
+        return 0
+
+    cmd = [sys.executable, str(args.pack), "--image", str(args.image),
+           "--lba", str(args.lba)]
+    for pair in pairs:
+        cmd += ["--entry", pair]
+    return subprocess.call(cmd)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

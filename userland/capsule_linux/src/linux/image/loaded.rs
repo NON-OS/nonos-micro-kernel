@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! What the loader learned about an image, which is everything the
 //! auxiliary vector has to carry and the interpreter has to be told.
 
@@ -30,16 +29,27 @@ pub struct Loaded {
     pub phnum: u64,
     /// The interpreter this image asked for, if it asked for one.
     pub interp: Option<Vec<u8>>,
-    /// The bias every address in the image was shifted by.
-    pub bias: u64,
 }
 
 pub enum LoadError {
     NotElf,
     Map,
     Copy,
-    /// An interpreter was named and could not be read or parsed. The
-    /// program cannot start without it, and starting it anyway would
-    /// fault on the first unresolved call.
+    /// An interpreter was named and could not be read or parsed.
     Interp,
+    /// An interpreter was read and nothing vouches for it.
+    Unproven,
+}
+
+impl LoadError {
+    /// What to tell the console.
+    pub fn why(&self) -> &'static [u8] {
+        match self {
+            LoadError::NotElf => b"[LINUX] not an elf\n",
+            LoadError::Map => b"[LINUX] image would not map\n",
+            LoadError::Copy => b"[LINUX] image would not copy\n",
+            LoadError::Interp => b"[LINUX] interpreter missing or broken\n",
+            LoadError::Unproven => b"[LINUX] refused: nothing vouches for the interpreter\n",
+        }
+    }
 }

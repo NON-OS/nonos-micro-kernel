@@ -15,40 +15,45 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Hosting code the kernel does not trust and does not understand.
-//!
-//! A foreign process holds no capabilities, so every NONOS syscall it makes
-//! is refused at the contract gate. What it can do is issue a syscall
-//! number this kernel has never heard of, which is exactly what a binary
-//! built for another system does. Rather than answering `ENOSYS`, the
-//! kernel hands that register frame to the userspace supervisor that
-//! created the process and parks the caller until an answer comes back.
-//!
-//! The kernel copies six registers out and one value in. It does not read
-//! them, does not know what they mean, and holds no table that could tell
-//! it. Every syscall number, struct, path and errno belongs to the
-//! supervisor, an ordinary attested capsule that can be replaced or
-//! revoked without touching ring 0.
 
+mod exec;
+mod exec_context;
+mod exec_enter;
+mod fork;
 mod frame;
+mod frame_cpu;
+mod frame_snapshot;
 mod peer_chunk;
 mod peer_copy;
 mod peer_guard;
+mod peer_lock;
 mod peer_map;
 mod peer_protect;
+mod peer_tls;
+mod peer_unmap;
 mod registry;
+mod resume;
 mod spawn;
 mod spawn_start;
+mod start_context;
 mod thread;
 mod trap;
+mod trap_claim;
 mod trap_reply;
 mod trap_table;
+mod trap_wait;
 mod wait;
 
+pub use exec::sys_foreign_exec;
+pub use fork::sys_foreign_fork;
 pub use frame::ForeignFrame;
+pub use frame_snapshot::FRAME_WORDS;
 pub use peer_copy::sys_peer_copy;
 pub use peer_map::sys_peer_map;
 pub use peer_protect::sys_peer_protect;
-pub use registry::{clear, supervisor_of};
+pub use peer_tls::sys_peer_tls;
+pub use peer_unmap::sys_peer_unmap;
+pub use registry::{clear, is_foreign, supervisor_of};
 pub use spawn::sys_foreign_spawn;
 pub use spawn_start::sys_foreign_start;
 pub use thread::sys_foreign_thread;

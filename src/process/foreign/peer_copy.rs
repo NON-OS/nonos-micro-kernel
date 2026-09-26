@@ -15,28 +15,24 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Moving bytes between a supervisor and a guest it created.
-//!
-//! The guest address is translated page by page through the guest's own
-//! tables, so an unmapped byte is a refusal and never a read of somebody
-//! else's memory. This is the shape of ptrace and none of its semantics.
 
 use crate::memory::addr::VirtAddr;
 use crate::memory::paging::manager::translate_in_asid;
 use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL};
 
 use super::peer_chunk::{chunk_copy, validate};
-use super::peer_guard::{supervised_asid, MAX_SPAN, PAGE};
+use super::peer_guard::{in_user_half, supervised_asid, MAX_SPAN, PAGE};
 
 /// `MkPeerCopy`: `to_guest` chooses the direction; returns bytes moved.
 pub fn sys_peer_copy(pid: u64, guest_addr: u64, buf: u64, len: u64, to_guest: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let asid = match supervised_asid(caller, pid as u32) {
-        Ok(a) => a,
+    let (asid, _held) = match supervised_asid(caller, pid) {
+        Ok(pair) => pair,
         Err(e) => return e,
     };
-    if len == 0 || len > MAX_SPAN || guest_addr.checked_add(len).is_none() {
+    if len == 0 || len > MAX_SPAN || !in_user_half(guest_addr, len) {
         return ERRNO_INVAL;
     }
     let writing = to_guest != 0;

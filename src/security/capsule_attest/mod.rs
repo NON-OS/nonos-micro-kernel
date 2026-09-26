@@ -22,6 +22,7 @@
 //! the same strength, and the result records which of them vouched, because a
 //! measurement without its authority does not say who verified it.
 
+mod against_pedersen;
 mod against_root;
 mod error;
 pub(crate) mod layout;

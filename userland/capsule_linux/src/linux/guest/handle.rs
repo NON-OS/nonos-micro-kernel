@@ -20,12 +20,6 @@ use alloc::vec::Vec;
 
 use super::fd::Fd;
 
-/// Where a guest's heap and its anonymous mappings start. Both are chosen
-/// here rather than by the kernel, because a Linux program expects a Linux
-/// address space and this is the only place that knows what that means.
-pub const BRK_BASE: u64 = 0x0000_1000_0000;
-pub const MMAP_BASE: u64 = 0x0000_2000_0000;
-
 pub struct Guest {
     pub pid: u32,
     /// The program break, as `brk` moves it.
@@ -33,30 +27,40 @@ pub struct Guest {
     /// The next address an anonymous mapping gets, growing upward.
     pub mmap_next: u64,
     pub fds: Vec<Fd>,
+    /// Every span this capsule has backed for the guest, in the order
+    /// it did so. Fork copies exactly this list.
+    pub regions: Vec<crate::linux::guest::Region>,
+    /// Pipe buffers, named by index from the descriptors at each end.
+    pub pipes: Vec<Vec<u8>>,
+    /// Children this guest has forked, for wait to report on.
+    pub children: Vec<u32>,
     /// Tids of this guest's threads, not counting itself.
     pub threads: Vec<u32>,
     /// Threads parked in a futex wait, with the word they wait on.
     pub waits: Vec<(u32, u64)>,
+    /// The display connection, when the guest has opened one.
+    pub display: crate::linux::unix::Conn,
+    /// The Wayland objects that connection has created.
+    pub objects: crate::linux::wayland::Objects,
+    /// What those objects describe, and the surface it reaches.
+    pub scene: crate::linux::wayland::Scene,
+    /// Which signals the guest installed a handler for. Nothing is ever
+    /// raised against them; see `call::signal`.
+    pub handlers: [bool; 64],
     /// What a relative path is relative to.
     pub cwd: Vec<u8>,
+    /// Names this guest has resolved, each with the address it was given.
+    pub automap: Vec<(Vec<u8>, [u8; 4])>,
     /// Where the guest last asked its thread pointer to be set.
     pub fs_base: u64,
     /// Set once the guest asks to end, so the loop can drop it.
     pub exited: Option<i32>,
-}
-
-impl Guest {
-    pub fn new(pid: u32) -> Self {
-        Guest {
-            pid,
-            brk: BRK_BASE,
-            mmap_next: MMAP_BASE,
-            fds: Fd::standard(),
-            threads: Vec::new(),
-            waits: Vec::new(),
-            cwd: alloc::vec![b'/'],
-            fs_base: 0,
-            exited: None,
-        }
-    }
+    /// The personality, which hosts every guest it spawns.
+    pub parent: u32,
+    /// Process group and session.
+    pub pgid: u32,
+    pub sid: u32,
+    /// Remembered, not enforced: the store does not apply it when it creates a
+    /// file.
+    pub umask: u16,
 }

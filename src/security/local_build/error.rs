@@ -19,10 +19,6 @@ pub enum LocalBuildError {
     NoIdentity,
     ProofFailed,
     TrailerShape,
-    /// This kernel verifies capsules with a STARK, and minting one costs
-    /// minutes rather than milliseconds. A Pedersen trailer would be read as
-    /// malformed at spawn, so nothing is minted.
-    StarkRequired,
 }
 
 impl LocalBuildError {
@@ -31,7 +27,6 @@ impl LocalBuildError {
             Self::NoIdentity => "no local build identity",
             Self::ProofFailed => "local proof generation failed",
             Self::TrailerShape => "proof does not match the trailer layout",
-            Self::StarkRequired => "this image verifies with a STARK; local signing is not wired for it",
         }
     }
 }

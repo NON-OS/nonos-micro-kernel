@@ -15,22 +15,21 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Linux errno values, and the convention for returning them.
-//!
-//! A Linux syscall reports failure as a small negative number in `rax`,
-//! not as an errno variable. These are the values a guest expects to see,
-//! which are Linux's and not this system's.
 
 pub const EPERM: i64 = 1;
 pub const ENOENT: i64 = 2;
+pub const EINTR: i64 = 4;
 pub const EIO: i64 = 5;
 pub const EBADF: i64 = 9;
 pub const ECHILD: i64 = 10;
 pub const EAGAIN: i64 = 11;
 pub const ENOMEM: i64 = 12;
+pub const ESRCH: i64 = 3;
 pub const EACCES: i64 = 13;
 pub const EFAULT: i64 = 14;
 pub const EBUSY: i64 = 16;
 pub const EEXIST: i64 = 17;
+pub const ENOTEMPTY: i64 = 39;
 pub const ENODEV: i64 = 19;
 pub const ENOTDIR: i64 = 20;
 pub const ENOSPC: i64 = 28;
@@ -42,19 +41,29 @@ pub const ENOTTY: i64 = 25;
 pub const ESPIPE: i64 = 29;
 pub const EPIPE: i64 = 32;
 pub const ERANGE: i64 = 34;
+pub const ELOOP: i64 = 40;
+pub const ENOEXEC: i64 = 8;
 pub const ENOSYS: i64 = 38;
+pub const ECONNRESET: i64 = 104;
+pub const ENOTCONN: i64 = 107;
+pub const ENOTSOCK: i64 = 88;
 pub const ENOTSUP: i64 = 95;
 pub const EAFNOSUPPORT: i64 = 97;
 pub const ECONNREFUSED: i64 = 111;
 pub const EINPROGRESS: i64 = 115;
 
-/// The value a guest's `rax` receives for a failure.
 pub fn fail(errno: i64) -> u64 {
     (-errno) as u64
 }
 
-/// The value a guest's `rax` receives for a success carrying a count or a
-/// descriptor.
 pub fn ok(value: u64) -> u64 {
     value
+}
+
+/// A returned descriptor, or `None` if the call failed.
+pub fn slot(value: u64) -> Option<usize> {
+    match value {
+        v if v > u64::MAX - 4096 => None,
+        v => Some(v as usize),
+    }
 }

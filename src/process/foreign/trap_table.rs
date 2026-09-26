@@ -34,8 +34,18 @@ pub(super) struct Parked {
 
 pub(super) static PARKED: Mutex<Vec<Parked>> = Mutex::new(Vec::new());
 
-pub(super) fn park(frame: ForeignFrame) {
-    PARKED.lock().push(Parked { frame, answer: None, claimed: false });
+/// Park `frame`, unless its supervisor has gone in the meantime. False
+/// says nothing was parked and the guest must be refused instead.
+pub(super) fn park(frame: ForeignFrame) -> bool {
+    let pid = frame.pid;
+    let mut parked = PARKED.lock();
+    parked.push(Parked { frame, answer: None, claimed: false });
+    // Checked with the table held, and after the push rather than before.
+    if registry::is_foreign(pid) {
+        return true;
+    }
+    parked.pop();
+    false
 }
 
 /// The answer for `pid`, removing the entry once it is taken.
@@ -45,19 +55,4 @@ pub(super) fn take_answer(pid: u32) -> Option<u64> {
     let value = parked[at].answer?;
     parked.remove(at);
     Some(value)
-}
-
-/// The next unclaimed frame for `supervisor`, if one is waiting.
-pub(super) fn claim_next(supervisor: u32) -> Option<ForeignFrame> {
-    let mut parked = PARKED.lock();
-    for entry in parked.iter_mut() {
-        if entry.claimed || entry.answer.is_some() {
-            continue;
-        }
-        if registry::supervisor_of(entry.frame.pid) == Some(supervisor) {
-            entry.claimed = true;
-            return Some(entry.frame);
-        }
-    }
-    None
 }

@@ -36,19 +36,12 @@ fn context(elf: &[u8], granted_caps: u64) -> [u8; 48] {
 }
 
 /// Prove this machine may run `elf` holding `granted_caps`.
-///
-/// The capabilities are bound into the challenge, not attached to it, so a
-/// manifest cannot be widened after the proof is made. The root still has to
-/// be enrolled before any of this spawns.
 pub fn sign(elf: &[u8], granted_caps: u64) -> Result<Vec<u8>, LocalBuildError> {
-    // capsule_attest::against_root sends this build's trailers to
-    // stark::verify_against, which reads NZKSTRK1 and a serialized STARK. What
-    // is minted below is the NZKCAPS2 Pedersen trailer the other branch reads,
-    // so refuse here rather than hand back bytes that spawn will call
-    // malformed.
-    if cfg!(feature = "nonos-stark-attest") {
-        return Err(LocalBuildError::StarkRequired);
-    }
+    /*
+     * This used to refuse under `nonos-stark-attest`, because the verifier
+     * picked its parser from that flag and would have read these NZKCAPS2
+     * bytes as a malformed STARK.
+     */
     let ctx = context(elf, granted_caps);
     let proof = with_identity(|id| {
         prove_enrolled(&id.secret, &id.blinding, 0, &super::tree::empty_siblings(), &id.root, &ctx)

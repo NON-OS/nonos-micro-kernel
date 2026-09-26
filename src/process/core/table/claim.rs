@@ -31,3 +31,8 @@ pub fn claim_new(pid: Pid) -> bool {
     })
     .unwrap_or(false)
 }
+
+/// Put a claim back, for a caller whose setup failed after winning one.
+pub fn release_new(pid: Pid) {
+    crate::process::with_process(pid, |pcb| *pcb.state.lock() = ProcessState::New);
+}

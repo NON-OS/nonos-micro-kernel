@@ -14,10 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod all;
 mod as_str;
-mod bit;
 mod defs;
 mod display;
+mod guard;
+mod table;
 
 pub use defs::Capability;

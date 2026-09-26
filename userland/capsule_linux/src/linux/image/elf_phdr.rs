@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! Walking the program header table of a parsed image.
 
 use super::elf::Elf;
@@ -22,8 +21,11 @@ use super::phdr::Phdr;
 use super::read::{u32v, u64v};
 
 impl Elf<'_> {
+    /// The header at `index`, or nothing when the table it is in does not fit
+    /// an address.
     pub fn phdr(&self, index: u16) -> Option<Phdr> {
-        let at = (self.phoff + index as u64 * self.phentsize as u64) as usize;
+        let step = (index as u64).checked_mul(self.phentsize as u64)?;
+        let at = usize::try_from(self.phoff.checked_add(step)?).ok()?;
         Some(Phdr {
             kind: u32v(self.bytes, at)?,
             flags: u32v(self.bytes, at + 4)?,
@@ -38,20 +40,19 @@ impl Elf<'_> {
         self.phnum
     }
 
-    /// The address the program headers land on once the image is in
-    /// place, which a dynamic linker needs and finds nowhere else. It is
-    /// the load segment that happens to contain them; an image whose
-    /// headers are in no segment reports nothing rather than an address
-    /// the guest cannot read.
+    /// The address the program headers land on once the image is in place,
+    /// which a dynamic linker needs and finds nowhere else.
     pub fn phdr_addr(&self, bias: u64) -> Option<u64> {
         for i in 0..self.phnum {
             let ph = self.phdr(i)?;
             if ph.kind != super::elf::PT_LOAD {
                 continue;
             }
-            if self.phoff >= ph.offset && self.phoff < ph.offset + ph.filesz {
-                return Some(bias + ph.vaddr + (self.phoff - ph.offset));
+            let end = ph.offset.checked_add(ph.filesz)?;
+            if self.phoff < ph.offset || self.phoff >= end {
+                continue;
             }
+            return ph.at(bias)?.checked_add(self.phoff - ph.offset);
         }
         None
     }

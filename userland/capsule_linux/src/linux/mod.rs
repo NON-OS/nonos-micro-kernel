@@ -18,12 +18,24 @@
 //! one capsule that holds the capabilities its guests do not.
 
 mod abi;
+mod attest;
+mod attest_local;
+mod attest_paths;
+mod attest_publisher;
 mod call;
+mod env;
 mod file;
 mod guest;
 mod image;
+mod install;
+mod net;
+mod origin;
+mod request;
 pub mod serve;
 mod source;
 mod start;
+mod start_guest;
+mod unix;
+mod wayland;
 
 pub use start::run;

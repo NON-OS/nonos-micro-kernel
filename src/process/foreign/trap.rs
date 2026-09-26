@@ -15,44 +15,29 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! A refused syscall, parked until its supervisor answers.
-//!
-//! The guest's thread sleeps inside the syscall it made, so from the
-//! guest's side nothing happened except that its `syscall` took a while.
-//! The supervisor is a separate process with its own capabilities; the
-//! only thing crossing between them is a register frame out and one value
-//! back.
 
 use super::frame::ForeignFrame;
+use super::frame_snapshot::{capture, FRAME_WORDS};
 use super::registry;
-use super::trap_table::{park, take_answer};
+use super::trap_table::park;
+use super::trap_wait::wait_for_answer;
 
 /// The kernel's answer to a syscall number it does not know, made by the
-/// supervisor rather than by the kernel. `None` when the caller has no
-/// supervisor, which leaves the refusal the entry shim would have given.
-pub fn redirect(nr: u64, args: [u64; 6], rip: u64) -> Option<u64> {
+/// supervisor rather than by the kernel.
+pub fn redirect(nr: u64, args: [u64; 6], frame: &[u64; FRAME_WORDS]) -> Option<u64> {
     let pid = crate::process::current_pid()?;
     let supervisor = registry::supervisor_of(pid)?;
-    park(ForeignFrame::new(pid, nr, args, rip));
+    /*
+     * The frame is reachable only while this call is on the stack, and a fork
+     * asks for it long afterwards, so it is copied into the control block now.
+     */
+    let saved = capture(frame, super::frame_cpu::user_rsp());
+    crate::process::with_process(pid, |pcb| {
+        *pcb.saved_user_context.lock() = Some(saved);
+    });
+    if !park(ForeignFrame::new(pid, nr, args, saved.rip)) {
+        return Some(super::trap_reply::ABANDONED);
+    }
     crate::sched::wake_process(supervisor);
     Some(wait_for_answer(pid))
-}
-
-/*
- * The guest holds no locks here and owns nothing the supervisor needs, so
- * a supervisor that never answers costs exactly one parked thread. The
- * answer is re-checked after taking the wake token and again after the
- * sleep, so a reply landing in either window is not slept through.
- */
-fn wait_for_answer(pid: u32) -> u64 {
-    loop {
-        if let Some(value) = take_answer(pid) {
-            return value;
-        }
-        let token = crate::sched::wake_token(pid);
-        if let Some(value) = take_answer(pid) {
-            return value;
-        }
-        crate::sched::sleep_until_unless_woken(pid, u64::MAX, token);
-        crate::sched::yield_now();
-    }
 }

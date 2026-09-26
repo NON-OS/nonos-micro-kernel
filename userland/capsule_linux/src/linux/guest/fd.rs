@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! A guest's file descriptors. A descriptor is a number the guest chose to
-//! believe in; what it points at is this personality's business, and is
-//! never a NONOS handle the guest could name on its own.
+//! A guest's file descriptors.
 
 use alloc::string::String;
 use alloc::vec;
@@ -25,19 +22,7 @@ use alloc::vec::Vec;
 
 use nonos_app_skeleton::clients::vfs::VfsStream;
 
-#[derive(PartialEq, Eq)]
-pub enum Kind {
-    /// Closed, and reusable.
-    Free,
-    /// The guest's own console, carried to the host's output.
-    Stdin,
-    Stdout,
-    Stderr,
-    /// A file in the store, held open on the server.
-    File,
-    /// A directory, listed once when it was opened.
-    Dir,
-}
+pub use super::fd_kind::Kind;
 
 pub struct Fd {
     pub kind: Kind,
@@ -55,6 +40,19 @@ pub struct Fd {
     pub names: Vec<String>,
     /// Set when the guest asked to write, so close knows to flush.
     pub writable: bool,
+    /// The net.sockets handle behind a socket descriptor.
+    pub handle: u32,
+    /// An epoll interest list: descriptor, events, and the token the
+    /// program gets back, which is its own and never interpreted.
+    pub watch: Vec<(u64, u32, u64)>,
+    /// When a timer next fires, in milliseconds of uptime.
+    pub expiry: u64,
+    /// Datagrams waiting to be read, oldest first, each with the address it
+    /// should appear to come from.
+    pub replies: Vec<(Vec<u8>, [u8; 6])>,
+    /// Closed by exec rather than carried into the new program. A shell
+    /// leaves its own descriptors set this way before it runs a command.
+    pub cloexec: bool,
 }
 
 impl Fd {

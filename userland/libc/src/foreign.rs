@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Hosting a guest: create it, build its address space, answer the calls
-//! the kernel refuses on its behalf. The guest holds no capabilities, so
-//! everything it can do passes through the supervisor that made it.
+//! Hosting a guest: create it, build its address space, answer the calls the
+//! kernel refuses on its behalf.
 
 use crate::syscall::{
-    call_raw, N_MK_FOREIGN_REPLY, N_MK_FOREIGN_SPAWN, N_MK_FOREIGN_START, N_MK_FOREIGN_THREAD,
-    N_MK_FOREIGN_WAIT,
+    call_raw, N_MK_FOREIGN_EXEC, N_MK_FOREIGN_FORK, N_MK_FOREIGN_REPLY, N_MK_FOREIGN_SPAWN,
+    N_MK_FOREIGN_START,
+    N_MK_FOREIGN_THREAD, N_MK_FOREIGN_WAIT,
 };
 
 pub use crate::foreign_frame::ForeignFrame;
@@ -32,11 +32,25 @@ pub fn mk_foreign_spawn(name: &[u8]) -> i64 {
 }
 
 /// Give a built guest its entry point and make it runnable.
-/// `rsp` of zero lets the kernel allocate an ordinary user stack; any
-/// other value is the stack the supervisor built, which is what a program
-/// expecting argv and an auxiliary vector needs.
 pub fn mk_foreign_start(pid: u32, entry: u64, rsp: u64) -> i64 {
     call_raw(N_MK_FOREIGN_START, [pid as u64, entry, rsp, 0, 0, 0])
+}
+
+/// Make a guest runnable on the state it already carries, which is
+/// what a forked child was born holding.
+pub fn mk_foreign_resume(pid: u32) -> i64 {
+    call_raw(N_MK_FOREIGN_START, [pid as u64, 0, 0, 0, 0, 0])
+}
+
+/// A second process holding a guest's register state, with zero in its return
+/// register.
+pub fn mk_foreign_fork(pid: u32) -> i64 {
+    call_raw(N_MK_FOREIGN_FORK, [pid as u64, 0, 0, 0, 0, 0])
+}
+
+/// Replace the program a parked guest is running.
+pub fn mk_foreign_exec(pid: u32, entry: u64, rsp: u64) -> i64 {
+    call_raw(N_MK_FOREIGN_EXEC, [pid as u64, entry, rsp, 0, 0, 0])
 }
 
 /// A thread in a guest, sharing its address space. `tls` is the FS base

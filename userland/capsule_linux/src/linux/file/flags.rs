@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! The open flags and the special directory descriptor, as Linux defines
 //! them on x86_64. Transcribed, never chosen.
 
@@ -24,13 +23,11 @@ pub const O_CREAT: u64 = 0o100;
 pub const O_TRUNC: u64 = 0o1000;
 pub const O_APPEND: u64 = 0o2000;
 pub const O_DIRECTORY: u64 = 0o200000;
+pub const O_CLOEXEC: u64 = 0o2000000;
 
 /// `openat` with this as the directory means "relative to the working
 /// directory", which is the only relative form a static binary uses.
 pub const AT_FDCWD: u64 = (-100i64) as u64;
-
-/// Set by `newfstatat` when the caller means the link and not its target.
-pub const AT_EMPTY_PATH: u64 = 0x1000;
 
 /// A guest asked to write if it asked for anything but read.
 pub fn wants_write(flags: u64) -> bool {

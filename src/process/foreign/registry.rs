@@ -15,12 +15,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Which processes are foreign, and who supervises each one.
-//!
-//! The pairing is set once at creation and never changes: a supervisor
-//! cannot be handed a guest it did not create, and a guest cannot be moved
-//! between supervisors. Both directions of every peer operation check this
-//! table, so an ordinary capsule that learns a foreign pid can still do
-//! nothing with it.
 
 use alloc::vec::Vec;
 
@@ -43,6 +37,10 @@ pub(super) fn insert(pid: u32, supervisor: u32) -> bool {
     true
 }
 
+pub fn is_foreign(pid: u32) -> bool {
+    FOREIGN.read().iter().any(|e| e.pid == pid)
+}
+
 pub fn supervisor_of(pid: u32) -> Option<u32> {
     FOREIGN.read().iter().find(|e| e.pid == pid).map(|e| e.supervisor)
 }
@@ -56,8 +54,15 @@ pub(super) fn guests_of(supervisor: u32) -> Vec<u32> {
 /// Called from process teardown; a supervisor leaving takes its guests.
 pub fn clear(pid: u32) {
     let orphans = guests_of(pid);
-    FOREIGN.write().retain(|e| e.pid != pid);
+    // Both directions go, not just this process's own row.
+    FOREIGN.write().retain(|e| e.pid != pid && e.supervisor != pid);
     for guest in orphans {
         super::trap_reply::abandon(guest);
     }
+    /*
+     * A guest that died while parked leaves its frame behind, and
+     * `take_answer` finds a frame by pid alone, so a reused pid would collect
+     * an answer meant for a process that no longer exists.
+     */
+    super::trap_reply::forget(pid);
 }

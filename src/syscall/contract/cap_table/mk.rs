@@ -62,9 +62,9 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
          * handler asks the live token again and a human confirms out of band;
          * this is the first of the three refusals, not the only one.
          */
-        SyscallNumber::MkDevRootRequest | SyscallNumber::MkDevRootConfirm => {
-            caps.can_enrol_dev_root()
-        }
+        SyscallNumber::MkDevRootRequest
+        | SyscallNumber::MkDevRootConfirm
+        | SyscallNumber::MkDevRootLocal => caps.can_enrol_dev_root(),
 
         SyscallNumber::MkTimeAdjust => caps.can_set_time(),
 
@@ -141,7 +141,27 @@ pub(super) fn check(caps: &CapabilityToken, number: SyscallNumber) -> Option<boo
         | SyscallNumber::MkPeerMap
         | SyscallNumber::MkPeerCopy
         | SyscallNumber::MkPeerProtect
-        | SyscallNumber::MkForeignThread => caps.can_foreign_exec(),
+        | SyscallNumber::MkForeignThread
+        | SyscallNumber::MkPeerTls
+        | SyscallNumber::MkForeignFork
+        | SyscallNumber::MkPeerUnmap
+        | SyscallNumber::MkForeignExec => caps.can_foreign_exec(),
+
+        /*
+         * Minting a trailer is a trust operation, so it sits with the
+         * enrolment calls rather than with the installer ones.
+         */
+        SyscallNumber::MkLocalSign => caps.can_local_sign(),
+
+        /*
+         * Asking is not minting.
+         */
+        SyscallNumber::MkLocalVerify => caps.can_foreign_exec(),
+
+        /*
+         * The right to ask, which is not the right to host.
+         */
+        SyscallNumber::MkAppInstall => caps.can_app_install(),
 
         SyscallNumber::MkSurfaceRegister
         | SyscallNumber::MkSurfaceShare

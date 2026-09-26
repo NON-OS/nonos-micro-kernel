@@ -54,6 +54,7 @@ pub fn cap_bit(name: &str) -> Option<u64> {
         "AppInstall" => 1073741824,
         "AttestRead" => 2147483648,
         "ForeignExec" => 4294967296,
+        "LocalSign" => 8589934592,
         _ => return None,
     };
     Some(bit)

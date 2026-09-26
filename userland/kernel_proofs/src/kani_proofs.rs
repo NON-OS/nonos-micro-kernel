@@ -97,7 +97,7 @@ fn user_range_check_is_total_and_bounded() {
 #[kani::proof]
 fn capability_bits_equal_the_spec_for_all_tokens() {
     let token: u64 = kani::any();
-    for cap in crate::capabilities::Capability::all() {
+    for &cap in crate::capabilities::Capability::all() {
         let bit = crate::capabilities::bit_of(cap);
         assert!(crate::capabilities::bits::has_capability(token, cap) == crate::spec::has(token, bit));
         assert!(crate::capabilities::bits::add_capability(token, cap) == crate::spec::grant(token, bit));

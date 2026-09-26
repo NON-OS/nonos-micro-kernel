@@ -23,12 +23,14 @@ use crate::linux::guest::Guest;
 const ARCH_SET_FS: u64 = 0x1002;
 const ARCH_GET_FS: u64 = 0x1003;
 
-/// A guest setting `fs` is setting its thread pointer. It is recorded here
-/// and applied when the guest next runs; a guest cannot set a segment base
-/// itself because it holds no capability that would let it.
-pub fn arch_prctl(guest: &mut Guest, code: u64, addr: u64) -> u64 {
+/// The thread pointer belongs to the calling thread, not the process, so the
+/// tid is the one that traps and not the guest's own pid.
+pub fn arch_prctl(guest: &mut Guest, tid: u32, code: u64, addr: u64) -> u64 {
     match code {
         ARCH_SET_FS => {
+            if nonos_libc::peer::mk_peer_tls(tid, addr) < 0 {
+                return errno::fail(errno::EPERM);
+            }
             guest.fs_base = addr;
             errno::ok(0)
         }
@@ -40,10 +42,7 @@ pub fn arch_prctl(guest: &mut Guest, code: u64, addr: u64) -> u64 {
     }
 }
 
-/// Seconds and nanoseconds, from the host's own monotonic millisecond
-/// clock. Every clock a guest can name reads from the one clock this
-/// system has, which is honest and is not the same as pretending to have
-/// several.
+/// Seconds and nanoseconds, from the host's own monotonic millisecond clock.
 pub fn clock_gettime(guest: &mut Guest, _clock: u64, out: u64) -> u64 {
     let ms = nonos_libc::mk_uptime_ms().max(0) as u64;
     let mut buf = [0u8; 16];

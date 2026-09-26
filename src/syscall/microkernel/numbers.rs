@@ -82,6 +82,22 @@ pub const SYS_PEER_COPY: u64 = tag4(b"MPCP");
 pub const SYS_PEER_PROTECT: u64 = tag4(b"MPPT");
 /// A thread inside a guest, sharing its address space.
 pub const SYS_FOREIGN_THREAD: u64 = tag4(b"MFTH");
+/// The thread pointer a guest thread wakes with.
+pub const SYS_PEER_TLS: u64 = tag4(b"MPTL");
+/// A second process holding a guest's register state.
+pub const SYS_FOREIGN_FORK: u64 = tag4(b"MFFK");
+/// Take pages back from a guest, which exec needs.
+pub const SYS_PEER_UNMAP: u64 = tag4(b"MPUN");
+/// Replace the program a parked guest is running.
+pub const SYS_FOREIGN_EXEC: u64 = tag4(b"MFEX");
+/// Mint a trailer for something this machine is installing.
+pub const SYS_LOCAL_SIGN: u64 = tag4(b"MLSG");
+/// Ask whether an image is proved under a root this machine trusts.
+pub const SYS_LOCAL_VERIFY: u64 = tag4(b"MLVF");
+/// Ask for a distribution package to be installed.
+pub const SYS_APP_INSTALL: u64 = tag4(b"MAIN");
+/// Ask to enrol this machine's own build root.
+pub const SYS_DEV_ROOT_LOCAL: u64 = tag4(b"MDRO");
 /// Ask to enrol a signing root so software built here runs here. Prints a
 /// confirmation code; enrols nothing on its own.
 pub const SYS_DEV_ROOT_REQUEST: u64 = tag4(b"MDRQ");

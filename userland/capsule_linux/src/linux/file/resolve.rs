@@ -14,14 +14,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! Guest path to store key. The store has no cwd and no dot-dot, so both
-//! are resolved here.
+//! Guest path to store key.
 
 use alloc::vec::Vec;
 
-/// Dot-dot past the root stops at the root, as Linux does.
-pub fn absolute(cwd: &[u8], path: &[u8]) -> Vec<u8> {
+use super::root::Key;
+
+/// The store key for a path the guest named.
+pub fn key(visible: &[u8]) -> Key {
+    Key::under_root(visible)
+}
+
+/// The absolute path as the guest sees it, which is what `getcwd` reports and
+/// what a descriptor remembers.
+pub fn visible(cwd: &[u8], path: &[u8]) -> Vec<u8> {
     let mut joined: Vec<u8> = Vec::new();
     if path.first() != Some(&b'/') {
         joined.extend_from_slice(cwd);

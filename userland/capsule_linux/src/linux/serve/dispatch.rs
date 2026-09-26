@@ -30,9 +30,12 @@ pub fn answer(guest: &mut Guest, frame: &ForeignFrame) -> Answer {
     let a = frame.args();
     match frame.nr {
         nr::CLONE => clone(guest, frame),
+        nr::FORK | nr::VFORK => crate::linux::call::fork(guest),
+        nr::EXECVE => crate::linux::call::execve(guest, frame.pid, a[0], a[1], a[2]),
+        nr::WAIT4 => crate::linux::call::wait4(guest, a[0], a[1], a[2]),
         // A thread exiting is not the process exiting.
         nr::EXIT if frame.pid != guest.pid => Answer::Reply(exit_thread(guest, frame.pid)),
         nr::FUTEX => futex(guest, frame.pid, a[0], a[1], a[2]),
-        other => Answer::Reply(plain(guest, other, a)),
+        other => Answer::Reply(plain(guest, frame.pid, other, a)),
     }
 }

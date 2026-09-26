@@ -14,44 +14,46 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+//! Every number a guest can ask for.
 
-//! Every number a guest can ask for, and where it goes.
-
-use crate::linux::abi::{errno, nr};
+use crate::linux::abi::{errno, nr, nr_path as np};
 use crate::linux::call;
-use crate::linux::file;
-use crate::linux::file::flags;
 use crate::linux::guest::Guest;
 
-pub fn plain(guest: &mut Guest, nr: u64, a: [u64; 6]) -> u64 {
+use super::table_file::file_ops;
+use super::table_mem::mem_ops;
+use super::table_net::net_ops;
+use super::table_proc::proc_ops;
+
+pub fn plain(guest: &mut Guest, tid: u32, nr: u64, a: [u64; 6]) -> u64 {
+    if let Some(v) = file_ops(guest, tid, nr, a) {
+        return v;
+    }
+    if let Some(v) = net_ops(guest, tid, nr, a) {
+        return v;
+    }
+    if let Some(v) = mem_ops(guest, nr, a) {
+        return v;
+    }
+    if let Some(v) = proc_ops(guest, nr, a) {
+        return v;
+    }
+    rest(guest, tid, nr, a)
+}
+
+fn rest(guest: &mut Guest, tid: u32, nr: u64, a: [u64; 6]) -> u64 {
     match nr {
-        nr::WRITE => call::write(guest, a[0], a[1], a[2]),
-        nr::WRITEV => call::writev(guest, a[0], a[1], a[2]),
-        nr::READ => call::read(guest, a[0], a[1], a[2]),
-        nr::CLOSE => call::close(guest, a[0]),
-        nr::OPENAT => file::openat(guest, a[0], a[1], a[2]),
-        nr::OPEN => file::openat(guest, flags::AT_FDCWD, a[0], a[1]),
-        nr::LSEEK => file::lseek(guest, a[0], a[1], a[2]),
-        nr::FSTAT => file::fstat(guest, a[0], a[1]),
-        nr::STAT | nr::LSTAT => file::newfstatat(guest, flags::AT_FDCWD, a[0], a[1]),
-        nr::NEWFSTATAT => file::newfstatat(guest, a[0], a[1], a[2]),
-        nr::GETDENTS64 => file::getdents64(guest, a[0], a[1], a[2]),
-        nr::PREAD64 => file::pread64(guest, a[0], a[1], a[2], a[3]),
-        nr::GETCWD => file::getcwd(guest, a[0], a[1]),
-        nr::ACCESS => file::access(guest, a[0]),
-        nr::READLINK => file::readlink(guest, a[0]),
         nr::IOCTL => call::ioctl(guest, a[0], a[1]),
-        nr::FCNTL => call::fcntl(guest, a[0], a[1]),
+        nr::FCNTL => call::fcntl(guest, a[0], a[1], a[2]),
         nr::UNAME => call::uname(guest, a[0]),
-        nr::BRK => call::brk(guest, a[0]),
-        nr::MMAP => call::mmap(guest, call::MapReq::from_args(a)),
-        nr::MUNMAP => call::munmap(guest, a[0], a[1]),
-        nr::MPROTECT => call::mprotect(guest, a[0], a[1], a[2]),
-        nr::MADVISE | nr::RSEQ | nr::SET_ROBUST_LIST => errno::ok(0),
-        nr::ARCH_PRCTL => call::arch_prctl(guest, a[0], a[1]),
-        nr::SET_TID_ADDRESS | nr::GETTID | nr::GETPID => errno::ok(guest.pid as u64),
-        nr::GETUID | nr::GETEUID | nr::GETGID | nr::GETEGID => errno::ok(0),
-        nr::CLOCK_GETTIME => call::clock_gettime(guest, a[0], a[1]),
+        np::GETRLIMIT => call::getrlimit(guest, a[0], a[1]),
+        np::UMASK => call::umask(guest, a[0]),
+        np::PRLIMIT64 => call::prlimit64(guest, a[1], a[2], a[3]),
+        nr::RT_SIGACTION => call::rt_sigaction(guest, a[0], a[1], a[2]),
+        nr::RT_SIGPROCMASK => call::rt_sigprocmask(guest, a[2]),
+        nr::SIGALTSTACK => call::sigaltstack(guest, a[1]),
+        nr::RSEQ | nr::SET_ROBUST_LIST => errno::ok(0),
+        nr::ARCH_PRCTL => call::arch_prctl(guest, tid, a[0], a[1]),
         nr::GETRANDOM => call::getrandom(guest, a[0], a[1], a[2]),
         nr::EXIT | nr::EXIT_GROUP => call::exit(guest, a[0]),
         other => super::unserved::unserved(other),

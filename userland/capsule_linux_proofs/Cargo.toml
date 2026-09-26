@@ -1,0 +1,19 @@
+# NØNOS userland: capsule_linux_proofs
+# eK@nonos.systems
+#
+# Host proofs for the parts of the Linux personality that are pure: the
+# Wayland wire codec, path resolution, directory entries, the stat
+# buffer, and the ELF reader. Each includes the shipped source through
+# #[path], so a proof here constrains the code that runs and not a copy
+# of it.
+
+[package]
+name = "nonos_capsule_linux_proofs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "AGPL-3.0"
+authors = ["eK@nonos.systems"]
+
+[lib]
+path = "src/lib.rs"

@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! The Linux contract a compiled binary was built against: its numbers,
-//! its errnos, and the names it knows them by.
-//!
-//! The tables are the whole contract and not only the part served today,
-//! so a call that arrives before its handler is named rather than guessed
-//! at, and coverage is a list anyone can read.
+//! The Linux contract a compiled binary was built against: its numbers, its
+//! errnos, and the names it knows them by.
 #![allow(dead_code)]
 
 pub mod errno;
 pub mod name;
 pub mod nr;
+pub mod nr_path;
+pub mod nr_high;

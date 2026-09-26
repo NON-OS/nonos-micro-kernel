@@ -61,3 +61,5 @@ pub const CAP_APP_INSTALL: u64 = 1073741824;
 pub const CAP_ATTEST_READ: u64 = 2147483648;
 /// Host a foreign binary the kernel has not verified.
 pub const CAP_FOREIGN_EXEC: u64 = 4294967296;
+/// Mint a proof that this machine agreed to run bytes it installed itself.
+pub const CAP_LOCAL_SIGN: u64 = 8589934592;

@@ -65,6 +65,7 @@ def idx : capabilities.types.defs.Capability → Nat
   | .AppInstall => 30
   | .AttestRead => 31
   | .ForeignExec => 32
+  | .LocalSign => 33
 
 theorem idx_lt_64 (cap : capabilities.types.defs.Capability) : idx cap < 64 := by
   cases cap <;> decide
@@ -84,19 +85,19 @@ private theorem nat_bridge2 (n v k : Nat) (hv : v = 2 ^ k) :
 /-- The extracted bit table is total and yields exactly one bit: the power of
     two at the capability's index. -/
 theorem bit_spec (cap : capabilities.types.defs.Capability) :
-    ∃ v, capabilities.types.bit.Capability.bit cap = ok v ∧ v.val = 2 ^ idx cap := by
+    ∃ v, capabilities.types.defs.Capability.bit cap = ok v ∧ v.val = 2 ^ idx cap := by
   cases cap <;> exact ⟨_, rfl, by decide⟩
 
 /-- A single test never fails, and answers exactly the denotation: the
     extracted has_capability IS the Grants semantics of the token word. -/
 theorem has_capability_spec (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
     capabilities.bits.has_capability bits cap = ok (capsOf bits.val (idx cap)) := by
-  cases cap <;> (
-    simp only [capabilities.bits.has_capability, capabilities.types.bit.Capability.bit,
-      lift, bind_tc_ok, ok.injEq, Nonos.CapabilityBits.capsOf, idx]
-    rw [u64_ne_zero]
-    simp only [UScalar.val_and]
-    exact nat_bridge2 bits.val _ _ (by decide))
+  obtain ⟨v, hv, hval⟩ := bit_spec cap
+  simp only [capabilities.bits.has_capability, hv, lift, bind_tc_ok, ok.injEq,
+    Nonos.CapabilityBits.capsOf]
+  rw [u64_ne_zero]
+  simp only [UScalar.val_and]
+  exact nat_bridge2 bits.val _ _ hval
 
 /-- Corollary in the vocabulary of the lattice theorems: the extracted test
     accepts exactly when the abstract token grants the capability. -/
@@ -115,8 +116,9 @@ theorem has_capability_iff_grants (bits : Std.U64) (cap : capabilities.types.def
 theorem add_capability_spec (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
     ∃ r, capabilities.bits.add_capability bits cap = ok r ∧
       r.val = bits.val ||| bitOf (idx cap) := by
-  cases cap <;>
-    exact ⟨_, rfl, by simp [Nonos.CapabilityBits.bitOf, idx, Nat.shiftLeft_eq]⟩
+  obtain ⟨v, hv, hval⟩ := bit_spec cap
+  refine ⟨bits ||| v, by simp only [capabilities.bits.add_capability, hv, bind_tc_ok], ?_⟩
+  simp [UScalar.val_or, hval, Nonos.CapabilityBits.bitOf, Nat.shiftLeft_eq]
 
 /-- Semantic corollary: the token produced by the extracted add grants
     exactly what the abstract grant does, for every capability id. -/

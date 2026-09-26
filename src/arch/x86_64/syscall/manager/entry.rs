@@ -17,6 +17,7 @@
 use crate::security::hardening::speculation::kernel_entry;
 use crate::syscall::contract::{dispatch as contract_dispatch, SyscallArgs};
 use crate::syscall::numbers::SyscallNumber;
+use crate::process::foreign::FRAME_WORDS;
 use crate::syscall::types::errnos;
 
 #[no_mangle]
@@ -28,24 +29,24 @@ pub(super) extern "C" fn syscall_handler(
     arg4: u64,
     arg5: u64,
     arg6: u64,
+    frame: *const u64,
 ) -> u64 {
     // A capsule reaching this point last controlled the branch predictors and
-    // the return stack. Refilling the RSB and re-asserting IBRS before any
-    // kernel branch runs is the whole point of the entry side, and it was the
-    // side with no caller: `kernel_exit` was wired on the return path, so
-    // mitigations were being applied leaving the kernel but not entering it.
+    // the return stack.
     kernel_entry();
 
     let Some(sc) = SyscallNumber::from_u64(number) else {
-        /*
-         * A number this kernel does not know. NONOS numbers are four
-         * character tags, so nothing legitimate lands here; a foreign
-         * binary's own numbering does. When the caller is a guest, its
-         * supervisor answers and the kernel stays ignorant of what was
-         * asked. Everyone else still gets ENOSYS.
-         */
+        // A number this kernel does not know.
         let args = [arg1, arg2, arg3, arg4, arg5, arg6];
-        return match crate::process::foreign::redirect(number, args, 0) {
+        /*
+         * SAFETY: `frame` is the rsp the entry code took after its last save,
+         * so it points at FRAME_WORDS eight-byte words it pushed on this kernel
+         * stack; syscall.S refuses to assemble if it saves any other number.
+         * They stay live and untouched until this call returns, and nothing
+         * downstream of this reference is unsafe.
+         */
+        let saved = unsafe { &*(frame as *const [u64; FRAME_WORDS]) };
+        return match crate::process::foreign::redirect(number, args, saved) {
             Some(value) => value,
             None => (-(errnos::ENOSYS as i64)) as u64,
         };

@@ -14,32 +14,28 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
 //! Which program to run.
-//!
-//! The path comes from this capsule's own arguments, so the personality
-//! runs whatever it was asked to run and is not a wrapper around one
-//! binary. With no argument it falls back to the image built into it,
-//! which exists so the mechanism can be proved on a machine with nothing
-//! in the store yet.
 
 use alloc::vec::Vec;
 
-use nonos_app_skeleton::clients::vfs::read_file;
-use nonos_libc::{mk_args, mk_getpid};
+use nonos_libc::mk_args;
 
-/// The proof image: a static Linux executable, embedded so the first run
-/// needs no disk.
-static BUILT_IN: &[u8] = include_bytes!("../../guests/hello.elf");
+use crate::linux::file::{key, store_read, visible};
+
+use super::origin::Origin;
+
+/// The built-in program: Alpine's static busybox, embedded so a machine with
+/// nothing in the store still runs a real Linux binary.
+static BUILT_IN: &[u8] = include_bytes!("../../guests/busybox.elf");
 
 const MAX_IMAGE: u32 = 64 << 20;
 const MAX_ARGS: usize = 256;
 
-/// The program's path and its bytes.
-pub fn source() -> (Vec<u8>, Vec<u8>) {
+/// The program's path, its bytes, and where they came from.
+pub fn source() -> (Vec<u8>, Vec<u8>, Origin) {
     match named() {
-        Some(pair) => pair,
-        None => (b"/guest/hello".to_vec(), BUILT_IN.to_vec()),
+        Some((path, bytes)) => (path, bytes, Origin::Store),
+        None => (b"/bin/busybox".to_vec(), BUILT_IN.to_vec(), Origin::BuiltIn),
     }
 }
 
@@ -49,18 +45,18 @@ fn named() -> Option<(Vec<u8>, Vec<u8>)> {
     if n <= 0 {
         return None;
     }
-    /*
-     * The first argument is the path. Anything after it is the guest's
-     * own business and is not passed on yet: a program's argument vector
-     * has to be built into its stack before it starts, and only the path
-     * is needed to get it there.
-     */
+    // The first argument is the path.
     let args = &buf[..n as usize];
     let end = args.iter().position(|b| *b == 0 || *b == b' ').unwrap_or(args.len());
     let path = args.get(..end)?;
     if path.is_empty() {
         return None;
     }
-    let bytes = read_file(mk_getpid() as u32, path, MAX_IMAGE).ok()?;
-    Some((path.to_vec(), bytes))
+    /*
+     * The argument is not a guest's, but the program it names is a
+     * Linux one and lives where Linux programs live.
+     */
+    let at = visible(b"/", path);
+    let bytes = store_read(&key(&at), MAX_IMAGE).ok()?;
+    Some((at, bytes))
 }

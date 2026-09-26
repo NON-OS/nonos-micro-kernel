@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Linux x86_64 syscall numbers, by family. These are Linux's numbers and
-//! never this system's: they are the contract a compiled binary was built
-//! against, so they are transcribed rather than chosen.
+
+//! Linux x86_64 syscall numbers, by family.
+
+pub use super::nr_high::*;
 
 pub const READ: u64 = 0;
 pub const WRITE: u64 = 1;
@@ -40,29 +41,25 @@ pub const READV: u64 = 19;
 pub const WRITEV: u64 = 20;
 pub const ACCESS: u64 = 21;
 pub const MADVISE: u64 = 28;
+pub const DUP: u64 = 32;
+pub const DUP2: u64 = 33;
+pub const PIPE: u64 = 22;
 pub const NANOSLEEP: u64 = 35;
 pub const GETPID: u64 = 39;
+pub const SOCKET: u64 = 41;
+pub const CONNECT: u64 = 42;
+pub const SENDTO: u64 = 44;
+pub const RECVFROM: u64 = 45;
+pub const SENDMSG: u64 = 46;
+pub const RECVMSG: u64 = 47;
+pub const SHUTDOWN: u64 = 48;
 pub const CLONE: u64 = 56;
+pub const FORK: u64 = 57;
+pub const VFORK: u64 = 58;
+pub const EXECVE: u64 = 59;
 pub const EXIT: u64 = 60;
 pub const UNAME: u64 = 63;
 pub const FCNTL: u64 = 72;
+pub const FTRUNCATE: u64 = 77;
 pub const GETCWD: u64 = 79;
 pub const READLINK: u64 = 89;
-pub const GETUID: u64 = 102;
-pub const GETGID: u64 = 104;
-pub const GETEUID: u64 = 107;
-pub const GETEGID: u64 = 108;
-pub const SIGALTSTACK: u64 = 131;
-pub const ARCH_PRCTL: u64 = 158;
-pub const GETTID: u64 = 186;
-pub const FUTEX: u64 = 202;
-pub const GETDENTS64: u64 = 217;
-pub const SET_TID_ADDRESS: u64 = 218;
-pub const CLOCK_GETTIME: u64 = 228;
-pub const EXIT_GROUP: u64 = 231;
-pub const OPENAT: u64 = 257;
-pub const NEWFSTATAT: u64 = 262;
-pub const SET_ROBUST_LIST: u64 = 273;
-pub const PRLIMIT64: u64 = 302;
-pub const GETRANDOM: u64 = 318;
-pub const RSEQ: u64 = 334;

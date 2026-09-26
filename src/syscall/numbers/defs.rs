@@ -120,4 +120,12 @@ pub enum SyscallNumber {
     MkPeerCopy = tag4(b"MPCP"),
     MkPeerProtect = tag4(b"MPPT"),
     MkForeignThread = tag4(b"MFTH"),
+    MkPeerTls = tag4(b"MPTL"),
+    MkForeignFork = tag4(b"MFFK"),
+    MkPeerUnmap = tag4(b"MPUN"),
+    MkForeignExec = tag4(b"MFEX"),
+    MkLocalSign = tag4(b"MLSG"),
+    MkLocalVerify = tag4(b"MLVF"),
+    MkAppInstall = tag4(b"MAIN"),
+    MkDevRootLocal = tag4(b"MDRO"),
 }

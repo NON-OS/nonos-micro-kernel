@@ -14,9 +14,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! Names for the numbers, so a guest that asks for something not yet
-//! served is reported by name rather than by integer. Coverage is then a
-//! measured list and never a claim.
+//! Names for the numbers, so a guest that asks for something not yet served is
+//! reported by name rather than by integer.
 
 use super::nr;
 
@@ -57,6 +56,11 @@ pub fn of(number: u64) -> &'static [u8] {
         nr::CLOCK_GETTIME => b"clock_gettime",
         nr::EXIT_GROUP => b"exit_group",
         nr::CLONE => b"clone",
+        nr::SOCKET => b"socket",
+        nr::SENDMSG => b"sendmsg",
+        nr::RECVMSG => b"recvmsg",
+        nr::MEMFD_CREATE => b"memfd_create",
+        nr::CONNECT => b"connect",
         nr::GETDENTS64 => b"getdents64",
         nr::OPENAT => b"openat",
         nr::NEWFSTATAT => b"newfstatat",

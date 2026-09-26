@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""Which packages the personality can actually run, and what stops the rest.
+
+A listing that installs and then dies on its first unimplemented syscall
+is worse than one that was never offered, so this answers the question
+before anyone clicks: disassemble every executable in every fetched
+package, find the immediate loaded into eax ahead of each `syscall`, and
+compare that set against what the personality's dispatch tables answer.
+
+The analysis is deliberately static and deliberately pessimistic. A
+number reached only on a path the program never takes still counts as
+required here, because nothing in the binary says which paths run. So a
+package this reports as covered is covered; one it reports as blocked
+may still work, and the named syscall is where to look first.
+"""
+
+import argparse
+import io
+import re
+import subprocess
+import sys
+import tarfile
+import zlib
+from collections import Counter
+from pathlib import Path
+
+# `mov $N, %eax` close enough before a syscall to be its number. objdump
+# writes the immediate in hex with a $ prefix.
+MOV_EAX = re.compile(r"mov\s+\$0x([0-9a-f]+),%eax")
+SYSCALL = re.compile(r"\bsyscall\b")
+
+# How far back to look. A compiler may schedule a few instructions
+# between loading the number and making the call.
+WINDOW = 12
+
+
+def payload(apk: Path) -> bytes:
+    """The tar stream inside an apk.
+
+    An apk is several gzip members end to end: a signature, a control
+    segment, then the data. `tarfile.open(r:gz)` stops after the first,
+    which holds no files at all, so reading one that way finds nothing
+    and looks exactly like a package with no binaries in it. Every
+    member is inflated and concatenated instead.
+    """
+    raw = apk.read_bytes()
+    out, at = bytearray(), 0
+    while at < len(raw):
+        d = zlib.decompressobj(47)
+        try:
+            out += d.decompress(raw[at:])
+        except zlib.error:
+            break
+        if d.unused_data == raw[at:]:
+            break
+        at = len(raw) - len(d.unused_data)
+    return bytes(out)
+
+
+def executables(apk: Path, into: Path) -> list:
+    """Every ELF in the package, unpacked to a scratch directory."""
+    out = []
+    try:
+        with tarfile.open(fileobj=io.BytesIO(payload(apk))) as t:
+            for member in t.getmembers():
+                if not member.isfile() or member.size < 128:
+                    continue
+                f = t.extractfile(member)
+                if f is None:
+                    continue
+                head = f.read(4)
+                if head != b"\x7fELF":
+                    continue
+                f.seek(0)
+                at = into / member.name.replace("/", "_")
+                at.write_bytes(f.read())
+                out.append(at)
+    except (tarfile.TarError, OSError, EOFError):
+        # Alpine's apk is a concatenated stream; a truncated tail after
+        # the payload is normal and not a reason to discard what parsed.
+        pass
+    return out
+
+
+def numbers_used(elf: Path) -> set:
+    try:
+        text = subprocess.run(
+            ["objdump", "-d", "--no-show-raw-insn", str(elf)],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=120,
+        ).stdout.decode(errors="replace")
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    lines = text.splitlines()
+    used, recent = set(), []
+    for line in lines:
+        m = MOV_EAX.search(line)
+        if m:
+            recent.append(int(m.group(1), 16))
+            recent = recent[-WINDOW:]
+            continue
+        if SYSCALL.search(line) and recent:
+            used.add(recent[-1])
+    return used
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--cache", type=Path, default=Path("target/market-cache"))
+    ap.add_argument("--served", type=Path, required=True,
+                    help="file of syscall numbers the personality answers")
+    ap.add_argument("--scratch", type=Path, default=Path("target/coverage-scratch"))
+    ap.add_argument("--names", type=Path,
+                    help="capsule_linux abi/nr.rs, to name the gaps")
+    args = ap.parse_args()
+
+    served = {int(x) for x in args.served.read_text().split()}
+    naming = {}
+    if args.names and args.names.exists():
+        for name, num in re.findall(r"pub const ([A-Z0-9_]+): u64 = (\d+);",
+                                    args.names.read_text()):
+            naming[int(num)] = name.lower()
+
+    args.scratch.mkdir(parents=True, exist_ok=True)
+    covered, blocked, missing = [], [], Counter()
+    for apk in sorted(args.cache.glob("*.apk")):
+        used = set()
+        for elf in executables(apk, args.scratch):
+            used |= numbers_used(elf)
+            elf.unlink(missing_ok=True)
+        if not used:
+            continue
+        gap = used - served
+        name = apk.name.rsplit("-", 2)[0]
+        if gap:
+            blocked.append((name, sorted(gap)))
+            missing.update(gap)
+        else:
+            covered.append(name)
+
+    total = len(covered) + len(blocked)
+    if total == 0:
+        # Finding no syscalls in 76 packages means the reader is broken,
+        # not that the packages are empty. Saying "0 of 0 covered" here
+        # reads as a clean pass, which is the worst possible answer.
+        print("no binaries were read; the extractor or objdump is not working",
+              file=sys.stderr)
+        return 2
+    print(f"{len(covered)} of {total} packages need nothing the personality lacks\n")
+    if covered:
+        print("runs today:", ", ".join(sorted(covered)))
+    print(f"\nmost common gaps across {len(blocked)} blocked packages:")
+    for num, count in missing.most_common(20):
+        print(f"  {count:3} packages need {num:4} {naming.get(num, '(unnamed)')}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -15,20 +15,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Backing a span of a guest's address space with fresh frames.
-//!
-//! The supervisor builds the guest's image itself, page by page, because
-//! the kernel parses no foreign format. Pages are private to the guest:
-//! the supervisor reaches them only through `MkPeerCopy`.
 
 use crate::memory::addr::VirtAddr;
 use crate::memory::paging::manager::{map_page_in_asid, translate_in_asid};
 use crate::memory::paging::types::PagePermissions;
 use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NOMEM};
 
-use super::peer_guard::{supervised_asid, MAX_SPAN, PAGE, PROT_EXEC, PROT_WRITE};
+use super::peer_guard::{in_user_half, supervised_asid, MAX_SPAN, PAGE, PROT_EXEC, PROT_WRITE};
 
 fn span_ok(addr: u64, len: u64) -> bool {
-    len != 0 && len <= MAX_SPAN && addr % PAGE == 0 && addr.checked_add(len).is_some()
+    len != 0 && len <= MAX_SPAN && addr % PAGE == 0 && in_user_half(addr, len)
 }
 
 pub(super) fn perms_of(prot: u64) -> PagePermissions {
@@ -43,14 +39,12 @@ pub(super) fn perms_of(prot: u64) -> PagePermissions {
 }
 
 /// `MkPeerMap`: map `[addr, addr + len)` in a guest the caller supervises.
-/// A page that is already mapped is left alone, so a supervisor may lay
-/// down overlapping segments the way an ELF does.
 pub fn sys_peer_map(pid: u64, addr: u64, len: u64, prot: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let asid = match supervised_asid(caller, pid as u32) {
-        Ok(a) => a,
+    let (asid, _held) = match supervised_asid(caller, pid) {
+        Ok(pair) => pair,
         Err(e) => return e,
     };
     if !span_ok(addr, len) {

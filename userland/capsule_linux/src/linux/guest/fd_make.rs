@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! The three ways a descriptor comes into being. Kept apart from the type
-//! so the fields a caller must fill are a short list in one place, and a
-//! field added later cannot be forgotten at one of the call sites.
+//! The three ways a descriptor comes into being.
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -40,25 +37,28 @@ impl Fd {
         fd
     }
 
+    pub fn memfd() -> Fd {
+        Fd::empty(Kind::Memfd)
+    }
+
+    pub fn unix() -> Fd {
+        Fd::empty(Kind::Unix)
+    }
+
+    pub fn resolver() -> Fd {
+        Fd::empty(Kind::Resolver)
+    }
+
+    pub fn socket(handle: u32) -> Fd {
+        let mut fd = Fd::empty(Kind::Socket);
+        fd.handle = handle;
+        fd
+    }
+
     pub fn dir(path: Vec<u8>, names: Vec<String>) -> Fd {
         let mut fd = Fd::empty(Kind::Dir);
         fd.path = path;
         fd.names = names;
         fd
-    }
-
-    /// Everything off. A descriptor always leaves here before a maker
-    /// sets the fields its kind actually uses.
-    pub fn empty(kind: Kind) -> Fd {
-        Fd {
-            kind,
-            offset: 0,
-            size: 0,
-            path: Vec::new(),
-            stream: None,
-            pending: Vec::new(),
-            names: Vec::new(),
-            writable: false,
-        }
     }
 }

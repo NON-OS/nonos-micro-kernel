@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+# NONOS Operating System
+# Copyright (C) 2026 NONOS Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+"""Install a Linux program and everything it needs, from a distribution.
+
+`nonos-linux-pack` says which shared libraries a program needs and refuses to
+pack one whose closure is incomplete. This closes that loop: it reads the
+distribution's package index, finds the package providing each missing
+library, unpacks it into the sysroot, and repeats until the closure is whole
+or nothing can supply the rest.
+
+The index is the distribution's own, fetched over TLS and used as data: a
+package is only ever unpacked into the sysroot directory, never executed, and
+nothing here runs a package's scripts.
+"""
+
+import argparse
+import subprocess
+import sys
+import tarfile
+import urllib.request
+from pathlib import Path
+
+MIRROR = "https://dl-cdn.alpinelinux.org/alpine"
+BRANCHES = ("main", "community")
+
+
+def fetch(url: str, into: Path) -> Path:
+    if into.exists():
+        return into
+    into.parent.mkdir(parents=True, exist_ok=True)
+    with urllib.request.urlopen(url, timeout=120) as r:
+        into.write_bytes(r.read())
+    return into
+
+
+def index(cache: Path, release: str, arch: str, branch: str):
+    """(soname -> package, name -> package), from the branch's APKINDEX."""
+    base = f"{MIRROR}/{release}/{branch}/{arch}"
+    tgz = fetch(f"{base}/APKINDEX.tar.gz", cache / f"{branch}-APKINDEX.tar.gz")
+    with tarfile.open(tgz) as t:
+        raw = t.extractfile("APKINDEX").read().decode(errors="replace")
+    libs, pkgs = {}, {}
+    name = version = None
+    for line in raw.split("\n"):
+        if line.startswith("P:"):
+            name = line[2:]
+        elif line.startswith("V:"):
+            version = line[2:]
+            if name:
+                pkgs.setdefault(name, (name, version, base))
+        elif line.startswith("p:") and name and version:
+            for token in line[2:].split():
+                if token.startswith("so:"):
+                    libs.setdefault(token[3:].split("=")[0], (name, version, base))
+    return libs, pkgs
+
+
+def missing(pack: Path, sysroot: Path, programs) -> list:
+    """What the closure tool says it cannot resolve."""
+    cmd = [sys.executable, str(pack), "--sysroot", str(sysroot)]
+    for p in programs:
+        cmd += ["--program", p]
+    done = subprocess.run(cmd, capture_output=True, text=True)
+    if done.returncode == 0:
+        return []
+    out = []
+    for line in done.stderr.split("\n"):
+        line = line.strip()
+        if line and not line.startswith("linux-pack:"):
+            out.append(line)
+    return out
+
+
+def safe(member, dest: str):
+    """Reject anything that would write outside the sysroot, and rewrite a
+    link whose target is absolute so it points inside it instead.
+
+    A distribution is full of absolute symlinks: every coreutils applet
+    points at /bin/busybox. Following one during extraction would write to
+    the real root, so the target is made relative to the sysroot rather
+    than the archive being trusted or the link being dropped."""
+    name = member.name.lstrip("./")
+    if name.startswith("/") or ".." in Path(name).parts:
+        return None
+    member = member.replace(name=name, deep=False)
+    if member.issym() or member.islnk():
+        target = member.linkname
+        if target.startswith("/"):
+            up = "../" * (len(Path(name).parts) - 1)
+            member = member.replace(linkname=up + target.lstrip("/"), deep=False)
+    return member
+
+
+def install(sysroot: Path, cache: Path, package: str, version: str, base: str) -> bool:
+    apk = fetch(f"{base}/{package}-{version}.apk", cache / f"{package}-{version}.apk")
+    with tarfile.open(apk) as t:
+        members = [m for m in t.getmembers() if not m.name.startswith(".")]
+        for m in members:
+            # A package may replace a file an earlier one installed, and
+            # the earlier one is often read-only. Clear the way rather
+            # than stopping halfway through a package.
+            at = sysroot / m.name.lstrip("./")
+            if at.is_symlink() or at.is_file():
+                at.unlink()
+        t.extractall(sysroot, members=members, filter=safe)
+    return True
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--sysroot", type=Path, required=True)
+    ap.add_argument("--program", action="append", default=[],
+                    help="path inside the sysroot; repeatable")
+    ap.add_argument("--package", action="append", default=[],
+                    help="a package to install by name before resolving; "
+                         "repeatable. Use it to bring in the programs "
+                         "themselves, not only the libraries under them.")
+    ap.add_argument("--release", default="v3.20")
+    ap.add_argument("--arch", default="x86_64")
+    ap.add_argument("--cache", type=Path, default=Path(".apk-cache"))
+    ap.add_argument("--pack", type=Path, default=Path("tools/nonos-linux-pack"))
+    ap.add_argument("--rounds", type=int, default=16,
+                    help="give up after this many, rather than looping on a "
+                         "library no package provides")
+    args = ap.parse_args()
+
+    provides, names = {}, {}
+    for branch in BRANCHES:
+        libs, pkgs = index(args.cache, args.release, args.arch, branch)
+        provides.update(libs)
+        names.update(pkgs)
+    print(f"linux-fetch: {len(provides)} libraries, {len(names)} packages in the index")
+
+    for want in args.package:
+        found = names.get(want)
+        if not found:
+            print(f"linux-fetch: no package named {want}", file=sys.stderr)
+            return 1
+        package, version, base = found
+        print(f"  package {package} {version}")
+        install(args.sysroot, args.cache, package, version, base)
+    if not args.program:
+        return 0
+
+    for round_no in range(args.rounds):
+        gaps = missing(args.pack, args.sysroot, args.program)
+        if not gaps:
+            print(f"linux-fetch: closure complete after {round_no} rounds")
+            return 0
+        added = 0
+        for soname in gaps:
+            found = provides.get(soname)
+            if not found:
+                continue
+            package, version, base = found
+            print(f"  {soname} -> {package} {version}")
+            install(args.sysroot, args.cache, package, version, base)
+            added += 1
+        if added == 0:
+            print("linux-fetch: nothing in the index provides:", file=sys.stderr)
+            for soname in gaps:
+                print(f"  {soname}", file=sys.stderr)
+            return 1
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

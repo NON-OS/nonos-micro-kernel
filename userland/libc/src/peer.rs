@@ -15,11 +15,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 
-//! Reaching into a guest this process supervises: its pages, their
-//! protection, and the bytes in them. Every one of these is refused by
-//! the kernel unless the caller created the process it names.
+//! Reaching into a guest this process supervises: its pages, their protection,
+//! and the bytes in them.
 
-use crate::syscall::{call_raw, N_MK_PEER_COPY, N_MK_PEER_MAP, N_MK_PEER_PROTECT};
+use crate::syscall::{
+    call_raw, N_MK_PEER_COPY, N_MK_PEER_MAP, N_MK_PEER_PROTECT, N_MK_PEER_TLS, N_MK_PEER_UNMAP,
+};
 
 /// Pages of a guest may be written, and may be executed.
 pub const PEER_PROT_WRITE: u64 = 1 << 0;
@@ -30,12 +31,21 @@ pub fn mk_peer_map(pid: u32, addr: u64, len: u64, prot: u64) -> i64 {
     call_raw(N_MK_PEER_MAP, [pid as u64, addr, len, prot, 0, 0])
 }
 
-/// Set the protection of pages a guest already has. Every page in the
-/// span must be mapped: the kernel refuses a hole rather than filling it,
-/// because a caller asking for execute on a range it has not written is
-/// not asking for what it thinks.
+/// Set the protection of pages a guest already has.
 pub fn mk_peer_protect(pid: u32, addr: u64, len: u64, prot: u64) -> i64 {
     call_raw(N_MK_PEER_PROTECT, [pid as u64, addr, len, prot, 0, 0])
+}
+
+/// Take a span back from a guest. What exec needs, so a replacing
+/// image cannot see the pages of the one it replaced.
+pub fn mk_peer_unmap(pid: u32, addr: u64, len: u64) -> i64 {
+    call_raw(N_MK_PEER_UNMAP, [pid as u64, addr, len, 0, 0, 0])
+}
+
+/// The thread pointer a guest thread wakes with. A C runtime sets this
+/// during startup and dereferences it immediately afterwards.
+pub fn mk_peer_tls(pid: u32, base: u64) -> i64 {
+    call_raw(N_MK_PEER_TLS, [pid as u64, base, 0, 0, 0, 0])
 }
 
 /// Copy into a guest this process supervises.

@@ -14,33 +14,56 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! One file per family of Linux calls. A family gets its own file the
-//! moment it has more than a handful, so the table stays readable as the
-//! surface grows toward the whole of it.
+//! One file per family of Linux calls; declarations and re-exports only.
 
-mod io;
-mod life;
-mod clone;
+mod console;
 mod ctl;
-mod map;
-mod map_file;
-mod map_req;
-mod memory;
+mod cwd;
 mod futex;
-mod prot;
+mod ident;
+mod io;
+mod io_socket;
+mod life;
+mod limits;
+mod limits_table;
+mod mem;
+mod pipe;
+mod pipe_dup;
+mod pipe_end;
+mod pipe_io;
+mod pipe_read;
+mod session;
+mod signal;
+mod signal_send;
+mod sleep;
+mod spawn;
 mod thread;
+mod timeops;
+mod umask;
 mod uname;
 mod vector;
+mod vector_read;
 
-pub use io::{close, read, write};
-pub use clone::clone;
 pub use ctl::{fcntl, ioctl};
+pub use cwd::{chdir, fchdir, getcwd};
 pub use futex::futex;
+pub use ident::{getppid, setuid};
+pub use io::{close, read, write};
 pub use life::{exit, exit_thread};
-pub use map::mmap;
-pub use map_req::MapReq;
-pub use memory::{brk, munmap};
-pub use prot::mprotect;
+pub use limits::{getrlimit, prlimit64};
+pub use mem::{brk, mmap, mprotect, munmap, MapReq};
+pub use pipe::pipe2;
+pub use pipe_dup::{dup, dup2};
+pub use pipe_io::write as pipe_write;
+pub use pipe_read::read as pipe_read;
+pub use session::{getpgid, getsid, setpgid, setsid};
+pub use signal::{rt_sigaction, rt_sigprocmask, sigaltstack};
+pub use signal_send::kill;
+pub use sleep::nanosleep;
+pub use spawn::{clone, execve, fork, wait4};
 pub use thread::{arch_prctl, clock_gettime, getrandom};
+pub use timeops::{gettimeofday, time};
+pub use umask::{umask, DEFAULT_UMASK};
 pub use uname::uname;
 pub use vector::writev;
+pub use vector_read::readv;

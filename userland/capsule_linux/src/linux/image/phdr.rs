@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-//! One program header: what to map, from where, and how much of it is in
-//! the file rather than in the zeroes after it.
+//! One program header: what to map, from where, and how much of it is in the
+//! file rather than in the zeroes after it.
+
+use core::ops::Range;
 
 pub struct Phdr {
     pub kind: u32,
@@ -24,4 +26,18 @@ pub struct Phdr {
     pub vaddr: u64,
     pub filesz: u64,
     pub memsz: u64,
+}
+
+impl Phdr {
+    /// The bytes of the image this header names.
+    pub(super) fn file_range(&self) -> Option<Range<usize>> {
+        let from = usize::try_from(self.offset).ok()?;
+        let len = usize::try_from(self.filesz).ok()?;
+        Some(from..from.checked_add(len)?)
+    }
+
+    /// Where this segment lands once the image is biased.
+    pub(super) fn at(&self, bias: u64) -> Option<u64> {
+        self.vaddr.checked_add(bias)
+    }
 }

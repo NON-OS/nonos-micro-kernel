@@ -18,8 +18,10 @@
 //! kernel, and the spawn that admits them.
 
 mod embed;
+mod install;
 mod spawn;
 mod state;
 
+pub use install::spawn_install;
 pub use spawn::{spawn_linux_capsule, LINUX_CAPS};
 pub use state::shared_state;

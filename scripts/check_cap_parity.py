@@ -33,7 +33,7 @@ import re
 import sys
 from pathlib import Path
 
-KERNEL_BITS = Path("src/capabilities/types/bit.rs")
+KERNEL_BITS = Path("src/capabilities/types/defs.rs")
 USER_BITS = Path("userland/nonos_cap/src/bits.rs")
 MANIFEST_BITS = Path("userland/platform/nonos_manifest/src/caps/bit.rs")
 
@@ -51,8 +51,8 @@ def canonical(name: str) -> str:
 
 def read_kernel(root: Path):
     text = (root / KERNEL_BITS).read_text()
-    pairs = re.findall(r"Self::(\w+)\s*=>\s*(\d+)\s*,", text)
-    return {canonical(n): int(v) for n, v in pairs}
+    pairs = re.findall(r"^\s*(\w+)\s*=\s*1\s*<<\s*(\d+)\s*,", text, re.M)
+    return {canonical(n): 1 << int(v) for n, v in pairs}
 
 
 def read_userland(root: Path):

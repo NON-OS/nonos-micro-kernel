@@ -40,9 +40,11 @@ TARGET = os.environ.get("NONOS_USER_TARGET", "x86_64-nonos-user")
 
 EM_MACHINES = {62: "x86-64", 183: "AArch64", 243: "RISC-V"}
 
-# Mirrors Capability::bit in src/capabilities/types/bit.rs. A bit the kernel
-# knows and this does not is reported as its number rather than dropped, so the
-# two cannot drift apart quietly.
+# Mirrors the capability list in src/capabilities/types/defs.rs, which is the
+# one place the kernel declares them. A bit the kernel knows and this does not
+# is reported as its number rather than dropped, so the two cannot drift apart
+# quietly. ForeignExec was missing here for the same reason it was missing from
+# the kernel's own array: a list kept by hand beside another list.
 CAPABILITIES = [
     (1 << 0, "CoreExec"), (1 << 1, "IO"), (1 << 2, "Network"), (1 << 3, "IPC"),
     (1 << 4, "Memory"), (1 << 5, "Crypto"), (1 << 6, "FileSystem"),
@@ -54,6 +56,7 @@ CAPABILITIES = [
     (1 << 23, "SpawnBroker"), (1 << 24, "SpawnWindow"), (1 << 25, "ProcessControl"),
     (1 << 26, "StoreWrite"), (1 << 27, "EnrolDevRoot"), (1 << 28, "Keyring"),
     (1 << 29, "Entropy"), (1 << 30, "AppInstall"), (1 << 31, "AttestRead"),
+    (1 << 32, "ForeignExec"), (1 << 33, "LocalSign"),
 ]
 
 # Authority that lets its holder act on something it does not own: put pixels
@@ -62,7 +65,8 @@ CAPABILITIES = [
 # explaining, which is the whole reason to print them separately.
 SCARCE = {
     "Admin", "RegisterService", "GfxPresent", "TimeSet",
-    "SpawnBroker", "SpawnWindow", "ProcessControl", "Pio",
+    "SpawnBroker", "SpawnWindow", "ProcessControl", "Pio", "ForeignExec",
+    "LocalSign",
 }
 
 BOLD = "\033[1m"

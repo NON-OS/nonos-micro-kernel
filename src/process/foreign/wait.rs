@@ -20,14 +20,12 @@
 use core::mem::size_of;
 
 use super::frame::ForeignFrame;
-use super::trap_table;
+use super::trap_claim;
 use crate::syscall::microkernel::errnos::{ERRNO_FAULT, ERRNO_INVAL, ERRNO_TIMEDOUT};
 use crate::usercopy::{validate_user_write, write_user_value};
 
-/// `MkForeignWait`: wait for a guest of the calling process to issue a
-/// syscall this kernel refuses, and copy its frame out. Returns the size
-/// written, or `ERRNO_TIMEDOUT` when the deadline passes with nothing
-/// waiting. A caller that supervises nothing waits like any other.
+/// `MkForeignWait`: wait for a guest of the calling process to issue a syscall
+/// this kernel refuses, and copy its frame out.
 pub fn sys_foreign_wait(out_ptr: u64, out_len: u64, timeout_ms: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
@@ -41,11 +39,8 @@ pub fn sys_foreign_wait(out_ptr: u64, out_len: u64, timeout_ms: u64) -> i64 {
     }
     let start = crate::time::timestamp_millis();
     loop {
-        if let Some(frame) = trap_table::claim_next(caller) {
-            if write_user_value(out_ptr, &frame).is_err() {
-                return ERRNO_FAULT;
-            }
-            return size as i64;
+        if let Some(frame) = trap_claim::claim_next(caller) {
+            return deliver(out_ptr, frame, size);
         }
         let waited = crate::time::timestamp_millis().saturating_sub(start);
         if timeout_ms > 0 && waited >= timeout_ms {
@@ -53,13 +48,20 @@ pub fn sys_foreign_wait(out_ptr: u64, out_len: u64, timeout_ms: u64) -> i64 {
         }
         let deadline = if timeout_ms == 0 { u64::MAX } else { start.saturating_add(timeout_ms) };
         let token = crate::sched::wake_token(caller);
-        if let Some(frame) = trap_table::claim_next(caller) {
-            if write_user_value(out_ptr, &frame).is_err() {
-                return ERRNO_FAULT;
-            }
-            return size as i64;
+        if let Some(frame) = trap_claim::claim_next(caller) {
+            return deliver(out_ptr, frame, size);
         }
         crate::sched::sleep_until_unless_woken(caller, deadline, token);
         crate::sched::yield_now();
     }
+}
+
+/// Hand one claimed frame over, or give it back when the supervisor's buffer
+/// will not take it.
+fn deliver(out_ptr: u64, frame: ForeignFrame, size: usize) -> i64 {
+    if write_user_value(out_ptr, &frame).is_err() {
+        trap_claim::unclaim(frame.pid);
+        return ERRNO_FAULT;
+    }
+    size as i64
 }

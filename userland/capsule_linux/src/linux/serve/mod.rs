@@ -20,6 +20,10 @@ mod answer;
 mod dispatch;
 mod loop_impl;
 mod table;
+mod table_file;
+mod table_mem;
+mod table_net;
+mod table_proc;
 mod unserved;
 
 pub use answer::Answer;

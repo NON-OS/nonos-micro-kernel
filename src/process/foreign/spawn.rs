@@ -15,25 +15,21 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 //! Creating a guest: a process, a kernel stack, and nothing else.
-//!
-//! The kernel parses no image here. It hands back an empty process with no
-//! capabilities, and the supervisor fills the address space itself through
-//! the peer calls. Two steps rather than one, so a half-built guest never
-//! becomes runnable: this file makes it, `spawn_start` runs it.
 
 use alloc::format;
 
 use crate::kernel_core::process_spawn::allocate_kernel_stack;
 use crate::process::core::types::Priority;
 use crate::process::core::{create_process_with_parent, ProcessState};
-use crate::syscall::microkernel::errnos::{ERRNO_EXIST, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM};
+use crate::syscall::microkernel::errnos::{
+    ERRNO_EXIST, ERRNO_FAULT, ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM,
+};
 use crate::usercopy::read_user_bytes;
 
 const MAX_NAME: usize = 24;
 
 /// `MkForeignSpawn`: an empty, capability-free process supervised by the
-/// caller. Returns its pid. The name is for the process table and the logs
-/// only; it grants nothing and is not a service name.
+/// caller.
 pub fn sys_foreign_spawn(name_ptr: u64, name_len: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
@@ -47,22 +43,30 @@ pub fn sys_foreign_spawn(name_ptr: u64, name_len: u64) -> i64 {
     let Ok(name) = core::str::from_utf8(&bytes) else {
         return ERRNO_INVAL;
     };
-    let tag = format!("foreign:{name}");
-    let Ok(pid) = create_process_with_parent(&tag, ProcessState::New, Priority::Normal, 0, None)
-    else {
-        return ERRNO_NOMEM;
-    };
+    match empty_guest(caller, name.as_bytes()) {
+        Ok(pid) => pid as i64,
+        Err(e) => e,
+    }
+}
+
+/// The one place a guest comes into being.
+pub(super) fn empty_guest(supervisor: u32, name: &[u8]) -> Result<u32, i64> {
+    let tag = format!("foreign:{}", core::str::from_utf8(name).unwrap_or("guest"));
+    let pid = create_process_with_parent(&tag, ProcessState::New, Priority::Normal, 0, None)
+        .map_err(|_| ERRNO_NOMEM)?;
     if allocate_kernel_stack(pid).is_err() {
-        return ERRNO_NOMEM;
+        return Err(ERRNO_NOMEM);
     }
     /*
-     * No capabilities are installed. The contract gate then refuses every
-     * NONOS syscall this process can name, which is the confinement
-     * itself: the supervisor's own policy is a second layer, not the
-     * only one.
+     * Every process is born with its parent's capabilities bounded by the
+     * ambient set, which for a guest of this capsule means core exec, IPC and
+     * memory.
      */
-    if !super::registry::insert(pid, caller) {
-        return ERRNO_EXIST;
+    if crate::process::caps::install_spawn(pid, 0).is_none() {
+        return Err(ERRNO_PERM);
     }
-    pid as i64
+    if !super::registry::insert(pid, supervisor) {
+        return Err(ERRNO_EXIST);
+    }
+    Ok(pid)
 }

@@ -15,7 +15,7 @@ set_option maxRecDepth 2048
 namespace nonos_caps
 
 /-- [nonos_caps::capabilities::types::defs::Capability]
-    Source: 'src/capabilities/../../../../../src/capabilities/types/defs.rs', lines 18:0-115:1
+    Source: 'src/capabilities/../../../../../src/capabilities/types/table.rs', lines 22:8-24:9
     Visibility: public -/
 @[discriminant isize]
 inductive capabilities.types.defs.Capability where
@@ -52,45 +52,48 @@ inductive capabilities.types.defs.Capability where
 | AppInstall : capabilities.types.defs.Capability
 | AttestRead : capabilities.types.defs.Capability
 | ForeignExec : capabilities.types.defs.Capability
+| LocalSign : capabilities.types.defs.Capability
 
-/-- [nonos_caps::capabilities::types::bit::{nonos_caps::capabilities::types::defs::Capability}::bit]:
-    Source: 'src/capabilities/../../../../../src/capabilities/types/bit.rs', lines 21:4-57:5 -/
-def capabilities.types.bit.Capability.bit
+/-- [nonos_caps::capabilities::types::defs::{nonos_caps::capabilities::types::defs::Capability}::bit]:
+    Source: 'src/capabilities/../../../../../src/capabilities/types/table.rs', lines 28:12-32:13 -/
+def capabilities.types.defs.Capability.bit
   (self : capabilities.types.defs.Capability) : Result Std.U64 := do
   match self with
-  | capabilities.types.defs.Capability.CoreExec => ok 1#u64
-  | capabilities.types.defs.Capability.IO => ok 2#u64
-  | capabilities.types.defs.Capability.Network => ok 4#u64
-  | capabilities.types.defs.Capability.IPC => ok 8#u64
-  | capabilities.types.defs.Capability.Memory => ok 16#u64
-  | capabilities.types.defs.Capability.Crypto => ok 32#u64
-  | capabilities.types.defs.Capability.FileSystem => ok 64#u64
-  | capabilities.types.defs.Capability.Hardware => ok 128#u64
-  | capabilities.types.defs.Capability.Debug => ok 256#u64
-  | capabilities.types.defs.Capability.Admin => ok 512#u64
-  | capabilities.types.defs.Capability.RegisterService => ok 1024#u64
-  | capabilities.types.defs.Capability.GraphicsDisplayQuery => ok 2048#u64
-  | capabilities.types.defs.Capability.GraphicsSurfaceCreate => ok 4096#u64
-  | capabilities.types.defs.Capability.GraphicsSurfaceMap => ok 8192#u64
-  | capabilities.types.defs.Capability.GraphicsPresent => ok 16384#u64
-  | capabilities.types.defs.Capability.DeviceEnum => ok 32768#u64
-  | capabilities.types.defs.Capability.Driver => ok 65536#u64
-  | capabilities.types.defs.Capability.Mmio => ok 131072#u64
-  | capabilities.types.defs.Capability.Irq => ok 262144#u64
-  | capabilities.types.defs.Capability.Dma => ok 524288#u64
-  | capabilities.types.defs.Capability.Pio => ok 1048576#u64
-  | capabilities.types.defs.Capability.InputSource => ok 2097152#u64
-  | capabilities.types.defs.Capability.TimeSet => ok 4194304#u64
-  | capabilities.types.defs.Capability.SpawnBroker => ok 8388608#u64
-  | capabilities.types.defs.Capability.SpawnWindow => ok 16777216#u64
-  | capabilities.types.defs.Capability.ProcessControl => ok 33554432#u64
-  | capabilities.types.defs.Capability.StoreWrite => ok 67108864#u64
-  | capabilities.types.defs.Capability.EnrolDevRoot => ok 134217728#u64
-  | capabilities.types.defs.Capability.Keyring => ok 268435456#u64
-  | capabilities.types.defs.Capability.Entropy => ok 536870912#u64
-  | capabilities.types.defs.Capability.AppInstall => ok 1073741824#u64
-  | capabilities.types.defs.Capability.AttestRead => ok 2147483648#u64
-  | capabilities.types.defs.Capability.ForeignExec => ok 4294967296#u64
+  | capabilities.types.defs.Capability.CoreExec => 1#u64 <<< 0#i32
+  | capabilities.types.defs.Capability.IO => 1#u64 <<< 1#i32
+  | capabilities.types.defs.Capability.Network => 1#u64 <<< 2#i32
+  | capabilities.types.defs.Capability.IPC => 1#u64 <<< 3#i32
+  | capabilities.types.defs.Capability.Memory => 1#u64 <<< 4#i32
+  | capabilities.types.defs.Capability.Crypto => 1#u64 <<< 5#i32
+  | capabilities.types.defs.Capability.FileSystem => 1#u64 <<< 6#i32
+  | capabilities.types.defs.Capability.Hardware => 1#u64 <<< 7#i32
+  | capabilities.types.defs.Capability.Debug => 1#u64 <<< 8#i32
+  | capabilities.types.defs.Capability.Admin => 1#u64 <<< 9#i32
+  | capabilities.types.defs.Capability.RegisterService => 1#u64 <<< 10#i32
+  | capabilities.types.defs.Capability.GraphicsDisplayQuery => 1#u64 <<< 11#i32
+  | capabilities.types.defs.Capability.GraphicsSurfaceCreate =>
+    1#u64 <<< 12#i32
+  | capabilities.types.defs.Capability.GraphicsSurfaceMap => 1#u64 <<< 13#i32
+  | capabilities.types.defs.Capability.GraphicsPresent => 1#u64 <<< 14#i32
+  | capabilities.types.defs.Capability.DeviceEnum => 1#u64 <<< 15#i32
+  | capabilities.types.defs.Capability.Driver => 1#u64 <<< 16#i32
+  | capabilities.types.defs.Capability.Mmio => 1#u64 <<< 17#i32
+  | capabilities.types.defs.Capability.Irq => 1#u64 <<< 18#i32
+  | capabilities.types.defs.Capability.Dma => 1#u64 <<< 19#i32
+  | capabilities.types.defs.Capability.Pio => 1#u64 <<< 20#i32
+  | capabilities.types.defs.Capability.InputSource => 1#u64 <<< 21#i32
+  | capabilities.types.defs.Capability.TimeSet => 1#u64 <<< 22#i32
+  | capabilities.types.defs.Capability.SpawnBroker => 1#u64 <<< 23#i32
+  | capabilities.types.defs.Capability.SpawnWindow => 1#u64 <<< 24#i32
+  | capabilities.types.defs.Capability.ProcessControl => 1#u64 <<< 25#i32
+  | capabilities.types.defs.Capability.StoreWrite => 1#u64 <<< 26#i32
+  | capabilities.types.defs.Capability.EnrolDevRoot => 1#u64 <<< 27#i32
+  | capabilities.types.defs.Capability.Keyring => 1#u64 <<< 28#i32
+  | capabilities.types.defs.Capability.Entropy => 1#u64 <<< 29#i32
+  | capabilities.types.defs.Capability.AppInstall => 1#u64 <<< 30#i32
+  | capabilities.types.defs.Capability.AttestRead => 1#u64 <<< 31#i32
+  | capabilities.types.defs.Capability.ForeignExec => 1#u64 <<< 32#i32
+  | capabilities.types.defs.Capability.LocalSign => 1#u64 <<< 33#i32
 
 /-- [nonos_caps::capabilities::bits::has_capability]:
     Source: 'src/capabilities/../../../../../src/capabilities/bits.rs', lines 34:0-36:1
@@ -99,7 +102,7 @@ def capabilities.bits.has_capability
   (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
   Result Bool
   := do
-  let i ← capabilities.types.bit.Capability.bit cap
+  let i ← capabilities.types.defs.Capability.bit cap
   let i1 ← lift (bits &&& i)
   ok (i1 != 0#u64)
 
@@ -110,7 +113,7 @@ def capabilities.bits.add_capability
   (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
   Result Std.U64
   := do
-  let i ← capabilities.types.bit.Capability.bit cap
+  let i ← capabilities.types.defs.Capability.bit cap
   ok (bits ||| i)
 
 /-- [nonos_caps::capabilities::bits::remove_capability]:
@@ -120,7 +123,7 @@ def capabilities.bits.remove_capability
   (bits : Std.U64) (cap : capabilities.types.defs.Capability) :
   Result Std.U64
   := do
-  let i ← capabilities.types.bit.Capability.bit cap
+  let i ← capabilities.types.defs.Capability.bit cap
   let i1 ← lift (~~~ i)
   ok (bits &&& i1)
 

@@ -26,7 +26,7 @@ fn capability_bits_match_the_spec_for_every_capability_and_token() {
     for seed in 1..200_000u64 {
         let mut s = seed;
         let token = xorshift(&mut s);
-        for cap in Capability::all() {
+        for &cap in Capability::all() {
             let bit = bit_of(cap);
             assert_eq!(bits::has_capability(token, cap), spec::has(token, bit));
             assert_eq!(bits::add_capability(token, cap), spec::grant(token, bit));
@@ -38,7 +38,7 @@ fn capability_bits_match_the_spec_for_every_capability_and_token() {
 #[test]
 fn every_capability_bit_is_a_distinct_single_bit() {
     let all = Capability::all();
-    for cap in all {
+    for &cap in all {
         let bit = bit_of(cap);
         assert!(bit.is_power_of_two(), "a capability mask must be one bit");
     }

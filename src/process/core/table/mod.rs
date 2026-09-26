@@ -24,7 +24,7 @@ mod thread_spawn;
 mod types;
 
 pub(crate) use create::create_process_with_parent;
-pub use claim::claim_new;
+pub use claim::{claim_new, release_new};
 pub use create::{create_process, create_process_with_mem};
 pub use thread_spawn::{admit_thread, spawn_thread, spawn_thread_in, spawn_thread_parked};
 pub use types::{allocate_tid, ProcessTable, CURRENT_PID, PROCESS_TABLE};

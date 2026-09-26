@@ -14,34 +14,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-
-//! NUL-terminated path out of a guest, a page at a time: a peer copy that
-//! crosses into an unmapped page fails whole and loses the mapped part.
+//! A path out of a guest, which is a string under the store's ceiling.
 
 use alloc::vec::Vec;
 
-use crate::linux::guest::{page_down, Guest, PAGE};
+use crate::linux::guest::Guest;
+
+use super::cstr::read_cstr;
 
 /// The vfs length prefix is one byte.
 pub const MAX_PATH: usize = 255;
 
 pub fn read_path(guest: &Guest, addr: u64) -> Option<Vec<u8>> {
-    if addr == 0 {
-        return None;
-    }
-    let mut out: Vec<u8> = Vec::new();
-    let mut at = addr;
-    while out.len() <= MAX_PATH {
-        let page_end = page_down(at) + PAGE;
-        let room = (MAX_PATH + 1 - out.len()) as u64;
-        let take = (page_end - at).min(room);
-        let chunk = guest.read(at, take as usize)?;
-        if let Some(i) = chunk.iter().position(|b| *b == 0) {
-            out.extend_from_slice(&chunk[..i]);
-            return Some(out);
-        }
-        out.extend_from_slice(&chunk);
-        at = page_end;
-    }
-    None
+    read_cstr(guest, addr, MAX_PATH)
 }

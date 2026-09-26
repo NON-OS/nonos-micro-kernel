@@ -27,7 +27,7 @@ pub fn caps_to_bits(caps: &[Capability]) -> u64 {
 
 #[inline]
 pub fn bits_to_caps(bits: u64) -> Vec<Capability> {
-    Capability::all().into_iter().filter(|c| bits & c.bit() != 0).collect()
+    Capability::all().iter().copied().filter(|c| bits & c.bit() != 0).collect()
 }
 
 #[inline]
