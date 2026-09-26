@@ -18,3 +18,30 @@
 extern "C" {
     pub fn syscall_entry_asm();
 }
+
+/// Words the entry code saves before it calls the handler, read from the file
+/// the entry code itself assembles against, so the two cannot disagree.
+pub const SYSCALL_FRAME_WORDS: usize = set_value(include_str!("syscall_frame.inc"));
+
+/*
+ * The value after the last comma of the `.set` line. A file this does not
+ * parse fails the build here rather than yielding a wrong count.
+ */
+const fn set_value(text: &str) -> usize {
+    let b = text.as_bytes();
+    let mut i = b.len();
+    while i > 0 && !b[i - 1].is_ascii_digit() {
+        i -= 1;
+    }
+    let end = i;
+    while i > 0 && b[i - 1].is_ascii_digit() {
+        i -= 1;
+    }
+    assert!(i < end && i > 0 && b[i - 1] == b' ', "syscall_frame.inc: no count");
+    let mut n = 0;
+    while i < end {
+        n = n * 10 + (b[i] - b'0') as usize;
+        i += 1;
+    }
+    n
+}

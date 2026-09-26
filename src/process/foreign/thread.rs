@@ -16,7 +16,7 @@
 
 //! A second thread inside a guest.
 
-use super::peer_guard::in_user_half;
+use super::peer_guard::{in_user_half, pid_arg};
 use crate::process::core::{admit_thread, spawn_thread_parked};
 use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NOMEM, ERRNO_PERM};
 
@@ -26,7 +26,10 @@ pub fn sys_foreign_thread(pid: u64, entry: u64, rsp: u64, tls: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let pid = pid as u32;
+    let pid = match pid_arg(pid) {
+        Ok(p) => p,
+        Err(e) => return e,
+    };
     if super::registry::supervisor_of(pid) != Some(caller) {
         return ERRNO_PERM;
     }

@@ -20,11 +20,12 @@
 use crate::arch::context::SavedUser;
 use crate::process::userspace::{USER_CS, USER_DS};
 
-/// Words the syscall.S entry pushes before it calls the handler.
-pub const FRAME_WORDS: usize = 16;
+pub use crate::arch::x86_64::asm::SYSCALL_FRAME_WORDS as FRAME_WORDS;
 
-/// Offsets into that frame. rax is pushed last so it sits at zero and
-/// the rest count upward from it.
+/*
+ * rax is pushed last and sits at zero; the callee-saved five go first, so they
+ * count down from the top and move with the constant.
+ */
 const RAX: usize = 0;
 const R8: usize = 1;
 const R9: usize = 2;
@@ -35,11 +36,12 @@ const RBP: usize = 6;
 const RDI: usize = 7;
 const RSI: usize = 8;
 const RDX: usize = 9;
-const RBX: usize = 11;
-const R12: usize = 12;
-const R13: usize = 13;
-const R14: usize = 14;
-const R15: usize = 15;
+const RBX: usize = FRAME_WORDS - 5;
+const R12: usize = FRAME_WORDS - 4;
+const R13: usize = FRAME_WORDS - 3;
+const R14: usize = FRAME_WORDS - 2;
+const R15: usize = FRAME_WORDS - 1;
+const _: () = assert!(RDX < RBX);
 
 pub fn capture(frame: &[u64; FRAME_WORDS], user_rsp: u64) -> SavedUser {
     SavedUser {

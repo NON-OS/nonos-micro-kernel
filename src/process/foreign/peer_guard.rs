@@ -40,9 +40,16 @@ pub const PROT_WRITE: u64 = 1 << 0;
 pub const PROT_EXEC: u64 = 1 << 1;
 
 
+/// The pid a syscall argument names. Refused rather than truncated: `as u32`
+/// on 2^32 + n would name process n, a real one the caller never asked for.
+pub(super) fn pid_arg(raw: u64) -> Result<u32, i64> {
+    u32::try_from(raw).map_err(|_| ERRNO_INVAL)
+}
+
 /// The guest's address space and the lock over it, or the errno the
 /// caller gets instead.
-pub(super) fn supervised_asid(caller: u32, pid: u32) -> Result<(u32, Held), i64> {
+pub(super) fn supervised_asid(caller: u32, pid: u64) -> Result<(u32, Held), i64> {
+    let pid = pid_arg(pid)?;
     if super::registry::supervisor_of(pid) != Some(caller) {
         return Err(ERRNO_PERM);
     }

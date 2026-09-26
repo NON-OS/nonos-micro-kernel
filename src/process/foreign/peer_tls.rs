@@ -17,7 +17,7 @@
 
 //! Setting a guest thread's thread pointer.
 
-use super::peer_guard::in_user_half;
+use super::peer_guard::{in_user_half, pid_arg};
 use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NOENT, ERRNO_PERM};
 
 /// `MkPeerTls`: the FS base `pid` wakes with from now on.
@@ -25,7 +25,10 @@ pub fn sys_peer_tls(pid: u64, base: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let pid = pid as u32;
+    let pid = match pid_arg(pid) {
+        Ok(p) => p,
+        Err(e) => return e,
+    };
     if super::registry::supervisor_of(pid) != Some(caller) {
         return ERRNO_PERM;
     }

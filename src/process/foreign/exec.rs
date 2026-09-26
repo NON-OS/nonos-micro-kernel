@@ -19,7 +19,7 @@
 use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_PERM};
 
 use super::exec_context::fresh;
-use super::peer_guard::in_user_half;
+use super::peer_guard::{in_user_half, pid_arg};
 
 type Saved = Option<crate::arch::context::SavedUser>;
 
@@ -31,7 +31,10 @@ pub fn sys_foreign_exec(pid: u64, entry: u64, rsp: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let pid = pid as u32;
+    let pid = match pid_arg(pid) {
+        Ok(p) => p,
+        Err(e) => return e,
+    };
     if super::registry::supervisor_of(pid) != Some(caller) {
         return ERRNO_PERM;
     }

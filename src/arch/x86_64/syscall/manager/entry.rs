@@ -38,11 +38,13 @@ pub(super) extern "C" fn syscall_handler(
     let Some(sc) = SyscallNumber::from_u64(number) else {
         // A number this kernel does not know.
         let args = [arg1, arg2, arg3, arg4, arg5, arg6];
-        // SAFETY: eK@nonos.systems - `frame` is the pointer the entry
-        // code in syscall.S passed, naming the sixteen words it pushed
-        // on this kernel stack, which outlive this call. This is the
-        // one place that pointer is turned into a reference; everything
-        // downstream of it is safe code.
+        /*
+         * SAFETY: `frame` is the rsp the entry code took after its last save,
+         * so it points at FRAME_WORDS eight-byte words it pushed on this kernel
+         * stack; syscall.S refuses to assemble if it saves any other number.
+         * They stay live and untouched until this call returns, and nothing
+         * downstream of this reference is unsafe.
+         */
         let saved = unsafe { &*(frame as *const [u64; FRAME_WORDS]) };
         return match crate::process::foreign::redirect(number, args, saved) {
             Some(value) => value,

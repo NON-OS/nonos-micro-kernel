@@ -28,7 +28,7 @@ pub fn sys_peer_copy(pid: u64, guest_addr: u64, buf: u64, len: u64, to_guest: u6
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let (asid, _held) = match supervised_asid(caller, pid as u32) {
+    let (asid, _held) = match supervised_asid(caller, pid) {
         Ok(pair) => pair,
         Err(e) => return e,
     };

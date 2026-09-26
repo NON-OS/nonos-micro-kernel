@@ -16,6 +16,7 @@
 
 //! The supervisor's answer, and what happens to a guest left without one.
 
+use super::peer_guard::pid_arg;
 use super::registry;
 use super::trap_table::PARKED;
 use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NOENT, ERRNO_PERM};
@@ -30,7 +31,10 @@ pub fn sys_foreign_reply(pid: u64, value: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let pid = pid as u32;
+    let pid = match pid_arg(pid) {
+        Ok(p) => p,
+        Err(e) => return e,
+    };
     if registry::supervisor_of(pid) != Some(caller) {
         return ERRNO_PERM;
     }

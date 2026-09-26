@@ -684,7 +684,7 @@ ret  = {type="i64"}
 
 [desc.MDRO]
 nr   = 0x4F52444D
-caps = ["valid_token"]
+caps = ["EnrolDevRoot"]
 args = []
 ret  = {type="i64"}
 

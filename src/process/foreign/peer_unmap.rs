@@ -33,7 +33,7 @@ pub fn sys_peer_unmap(pid: u64, addr: u64, len: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let (asid, _held) = match supervised_asid(caller, pid as u32) {
+    let (asid, _held) = match supervised_asid(caller, pid) {
         Ok(pair) => pair,
         Err(e) => return e,
     };

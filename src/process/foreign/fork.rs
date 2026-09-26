@@ -16,6 +16,7 @@
 
 //! Duplicating a guest.
 
+use super::peer_guard::pid_arg;
 use crate::process::core::ProcessState;
 use crate::syscall::microkernel::errnos::{ERRNO_INVAL, ERRNO_NOENT, ERRNO_PERM};
 
@@ -26,7 +27,10 @@ pub fn sys_foreign_fork(pid: u64) -> i64 {
     let Some(caller) = crate::process::current_pid() else {
         return ERRNO_INVAL;
     };
-    let parent = pid as u32;
+    let parent = match pid_arg(pid) {
+        Ok(p) => p,
+        Err(e) => return e,
+    };
     if super::registry::supervisor_of(parent) != Some(caller) {
         return ERRNO_PERM;
     }

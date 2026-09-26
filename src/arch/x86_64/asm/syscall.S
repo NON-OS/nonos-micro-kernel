@@ -14,6 +14,18 @@
 .set USER_CS,           0x23
 .set USER_DS,           0x1B
 
+#include "syscall_frame.inc"
+
+.set FRAME_SAVED, 0
+.macro SAVE reg
+    push    \reg
+    .set FRAME_SAVED, FRAME_SAVED + 1
+.endm
+.macro SAVE_PAD
+    sub     rsp, 8
+    .set FRAME_SAVED, FRAME_SAVED + 1
+.endm
+
 syscall_entry_asm:
     swapgs
     /* Rust and C string/memory code require DF=0 even if user RFLAGS had DF set. */
@@ -34,24 +46,27 @@ syscall_entry_asm:
        resume with the parent's whole register state, so the capture has
        to happen here or not at all. Six slots is 0 (mod 16), so every
        offset below stays exactly where it was. */
-    push    r15
-    push    r14
-    push    r13
-    push    r12
-    push    rbx
-    sub     rsp, 8
+    SAVE    r15
+    SAVE    r14
+    SAVE    r13
+    SAVE    r12
+    SAVE    rbx
+    SAVE_PAD
 
-    sub     rsp, 8
-    push    rdx
-    push    rsi
-    push    rdi
-    push    rbp
-    push    r11
-    push    rcx
-    push    r10
-    push    r9
-    push    r8
-    push    rax
+    SAVE_PAD
+    SAVE    rdx
+    SAVE    rsi
+    SAVE    rdi
+    SAVE    rbp
+    SAVE    r11
+    SAVE    rcx
+    SAVE    r10
+    SAVE    r9
+    SAVE    r8
+    SAVE    rax
+.if FRAME_SAVED != SYSCALL_FRAME_WORDS
+.error "syscall frame: the words saved disagree with SYSCALL_FRAME_WORDS"
+.endif
 
     /* User ABI -> SysV: nr,a1..a6. rdi/rsi/rdx still hold the user args here.
        The frame offsets match the original 7-push layout because the arg-saves

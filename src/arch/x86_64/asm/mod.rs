@@ -18,4 +18,4 @@ mod start;
 mod syscall;
 
 pub use start::_start;
-pub use syscall::syscall_entry_asm;
+pub use syscall::{syscall_entry_asm, SYSCALL_FRAME_WORDS};
