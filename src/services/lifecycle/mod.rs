@@ -28,6 +28,7 @@
 // generation, even if the request_id happens to match.
 
 mod registry;
+mod reply_wait;
 mod state;
 pub mod supervisor;
 pub mod transport;

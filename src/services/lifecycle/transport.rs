@@ -42,11 +42,13 @@ const RECV_YIELDS: u32 = 50_000;
 /// can never run to release the lock (the deadlock involuntary preemption now
 /// makes reachable). On contention, hand the CPU to the holder and retry.
 pub fn lock_yielding(lock: &'static Mutex<()>) -> MutexGuard<'static, ()> {
+    let mut round = 0u32;
     loop {
         if let Some(guard) = lock.try_lock() {
             return guard;
         }
-        crate::sched::yield_now();
+        super::reply_wait::rest(round);
+        round = round.saturating_add(1);
     }
 }
 
@@ -183,7 +185,8 @@ pub fn round_trip(
         }
     }
 
-    for _ in 0..RECV_YIELDS {
+    let started_ms = crate::time::timestamp_millis();
+    for round in 0..RECV_YIELDS {
         if !state.is_alive() {
             return Err(TransportError::Dead);
         }
@@ -200,7 +203,9 @@ pub fn round_trip(
             }
             return Ok(ResponseBytes { status: resp.status, body: resp.body.to_vec() });
         }
-        crate::sched::yield_now();
+        if !super::reply_wait::pause(round, started_ms) {
+            break;
+        }
     }
     Err(TransportError::TransportFailure)
 }
