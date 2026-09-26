@@ -21,16 +21,15 @@ use nonos_libc::{mk_getpid, mk_local_consent_grant, mk_local_consent_revoke};
 
 use super::restore::TOKEN;
 
-/// Apply what the person chose. Withdrawing deletes the token too, so the
-/// next boot does not quietly restore what was just taken back. `keep` is
-/// the persistence choice: an amnesic machine keeps nothing, this included.
+/// Apply what the person chose. `keep` is the persistence choice: an amnesic
+/// machine keeps nothing, this included.
 pub fn apply(allow: bool, was_allowed: bool, keep: bool) {
     match (allow, was_allowed) {
         (true, false) => grant(keep),
         (false, true) => {
             let _ = mk_local_consent_revoke();
-            let _ = vfs::store_remove(TOKEN);
-            let _ = vfs::unlink(mk_getpid(), TOKEN);
+            // Zeros prove nothing, so the next boot restores nothing.
+            store(&[0u8; 32]);
         }
         _ => {}
     }
@@ -42,13 +41,23 @@ fn grant(keep: bool) {
     let Ok(Some(token)) = mk_local_consent_grant() else {
         return;
     };
-    if !keep {
-        return;
+    if keep {
+        store(&token);
     }
+}
+
+/*
+ * The disk cannot drop a record, only overwrite one of the same length, and
+ * only by the file's owner. A token loaded from an earlier boot belongs to
+ * nobody, so it is unlinked first and written afresh, which makes it this
+ * capsule's to persist over the old record.
+ */
+fn store(bytes: &[u8; 32]) {
     let pid = mk_getpid();
+    let _ = vfs::unlink(pid, TOKEN);
     let _ = vfs::mkdir(pid, b"/nonos");
     let _ = vfs::mkdir(pid, b"/nonos/consent");
-    if vfs::write_file(pid, TOKEN, &token).is_ok() {
+    if vfs::write_file(pid, TOKEN, bytes).is_ok() {
         let _ = vfs::persist(pid, TOKEN);
     }
 }

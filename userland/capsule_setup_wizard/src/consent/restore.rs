@@ -43,5 +43,8 @@ pub fn restore() -> Restore {
     let Ok(token) = <[u8; 32]>::try_from(raw.as_slice()) else {
         return Restore::Known(false);
     };
+    if token == [0u8; 32] {
+        return Restore::Known(false);
+    }
     Restore::Known(mk_local_restore(&token) == 0)
 }
