@@ -60,7 +60,6 @@ import check_syscall_caps as caps  # noqa: E402
 ABI = Path("abi/syscalls.toml")
 ENUM = Path("src/syscall/numbers/defs.rs")
 REGISTRY = Path("src/syscall/abi/registry")
-CHECKS = Path("src/syscall/caps/checks")
 CAP_TABLE = Path("src/syscall/contract/cap_table")
 ROUTER = Path("src/syscall/dispatch/router")
 MK_NUMBERS = Path("src/syscall/microkernel/numbers.rs")
@@ -194,8 +193,9 @@ def main() -> int:
     fatal = check_kernel_side(k)
     for tag, value in sorted(published.items()):
         fatal += check_published(tag, value, k, described)
-    fatal += caps.compare(k["registry"], caps.demanded(args.root / CAP_TABLE, args.root / CHECKS),
-                          caps.published(dict(sections(read_text(args.root, ABI)))))
+    gates, unread = caps.demanded(args.root, CAP_TABLE)
+    fatal += caps.compare(k["registry"], gates,
+                          caps.published(dict(sections(read_text(args.root, ABI)))), unread)
 
     unpublished = [f"  {tag} ({name})" for tag, name in sorted(k["enum"].items())
                    if tag not in published]
