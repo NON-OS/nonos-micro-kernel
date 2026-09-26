@@ -23,7 +23,6 @@ pub unsafe extern "C" fn _start() -> ! {
         Err(_) => mk_exit(2),
     };
     let mut ctx = ctx;
-    ctx.local_was = consent::restore();
-    ctx.local_sel = ctx.local_was as u8;
+    server::restore_poll::poll(&mut ctx);
     server::runner::run(ctx)
 }

@@ -22,6 +22,8 @@ pub struct Context {
     /// decided, so setup shows the standing choice rather than asking again.
     pub local_sel: u8,
     pub local_was: bool,
+    /// The disk was still loading when setup asked, so it asks again.
+    pub local_pending: bool,
     pub privacy: u16,
     pub admin_len: usize,
     pub admin_buf: [u8; 64],
@@ -62,6 +64,7 @@ impl Context {
             persist_sel: 0,
             local_sel: 0,
             local_was: false,
+            local_pending: false,
             privacy: 0b0000_0011,
             admin_len: 0,
             admin_buf: [0u8; 64],
