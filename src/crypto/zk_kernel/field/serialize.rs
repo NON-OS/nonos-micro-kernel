@@ -25,65 +25,10 @@ impl FieldElement {
         Self { bytes: sc_reduce_mod_l(&mut wide) }
     }
 
-    // SECURITY: Constant-time Barrett reduction for 64-byte input.
+    /// A 64-byte value reduced mod L by the same routine `from_bytes` uses.
     pub fn from_bytes_wide(bytes: &[u8; 64]) -> Self {
-        const MU: [u8; 32] = [
-            0x1d, 0x95, 0x98, 0x4d, 0x74, 0x31, 0xec, 0xd6, 0x70, 0xcf, 0x7d, 0x73, 0xf4, 0x5b,
-            0xef, 0xc6, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-            0xff, 0xff, 0xff, 0x0f,
-        ];
-
-        let mut acc = [0u32; 64];
-
-        for i in 0..32 {
-            acc[i] += bytes[i] as u32;
-        }
-
-        for i in 0..32 {
-            let hi = bytes[32 + i] as u32;
-            for j in 0..32 {
-                acc[i + j] += hi * (MU[j] as u32);
-            }
-        }
-
-        for i in 0..63 {
-            acc[i + 1] += acc[i] >> 8;
-            acc[i] &= 0xFF;
-        }
-
-        let mut result = [0u8; 32];
-        for i in 0..32 {
-            result[i] = acc[i] as u8;
-        }
-
-        let mut high_acc = [0u32; 64];
-        for i in 32..64 {
-            let hi = acc[i] as u32;
-            for j in 0..32 {
-                high_acc[i - 32 + j] += hi * (MU[j] as u32);
-            }
-        }
-
-        for i in 0..63 {
-            high_acc[i + 1] += high_acc[i] >> 8;
-            high_acc[i] &= 0xFF;
-        }
-
-        let mut extra = [0u8; 32];
-        for i in 0..32 {
-            extra[i] = high_acc[i] as u8;
-        }
-
-        let mut carry: u16 = 0;
-        for i in 0..32 {
-            let sum = result[i] as u16 + extra[i] as u16 + carry;
-            result[i] = sum as u8;
-            carry = sum >> 8;
-        }
-
-        let mut fe = Self { bytes: result };
-        fe.reduce();
-        fe
+        let mut wide = *bytes;
+        Self { bytes: sc_reduce_mod_l(&mut wide) }
     }
 
     pub fn to_bytes(&self) -> [u8; 32] {
